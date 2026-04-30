@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import ModalShell from "@/components/ui/ModalShell";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 
 type CertPublic = {
@@ -106,6 +106,7 @@ export function CertificateOverviewModal({ registryId, onClose }: Props) {
     setError(null);
 
     void (async () => {
+      const supabase = getSupabaseBrowserClient();
       const { data: artwork, error: awErr } = await supabase
         .from("artworks")
         .select("id, title, registry_id, verification_status, created_at, artist_id")

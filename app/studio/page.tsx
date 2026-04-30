@@ -1,6 +1,6 @@
 "use client";
 
-import { supabase } from "../../lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 import { useEffect, useState, useMemo, useRef, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
@@ -65,6 +65,7 @@ function isSaleLikeValueType(valueType: string | null | undefined) {
 }
 
 export default function Dashboard() {
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [artworks, setArtworks] = useState<any[]>([]);
@@ -958,7 +959,7 @@ useEffect(() => {
   // When the session becomes unavailable, show a clearer message to the user.
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (event: unknown, session: unknown) => {
         if (!session) {
           showAuthToast(
             event && String(event).toUpperCase().includes("REFRESH")

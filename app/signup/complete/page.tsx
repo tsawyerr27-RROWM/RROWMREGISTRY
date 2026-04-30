@@ -1,6 +1,6 @@
 "use client";
 
-import { supabase } from "../../../lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -31,6 +31,7 @@ function defaultDisplayName(user: User) {
 
 async function waitForUser(maxAttempts = 20): Promise<User | null> {
   for (let i = 0; i < maxAttempts; i++) {
+    const supabase = getSupabaseBrowserClient();
     const { data: sessionData } = await supabase.auth.getSession();
     if (sessionData.session?.user) return sessionData.session.user;
 
@@ -49,6 +50,7 @@ export default function CompleteSignupPage() {
 
   useEffect(() => {
     const run = async () => {
+      const supabase = getSupabaseBrowserClient();
       const params = new URLSearchParams(window.location.search);
       let roleParam: string | null = params.get("role");
       if (!isRole(roleParam) && typeof window !== "undefined") {

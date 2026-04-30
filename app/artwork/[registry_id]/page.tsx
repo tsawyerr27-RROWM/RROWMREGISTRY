@@ -18,6 +18,8 @@ import {
 } from "@/lib/get-current-owner";
 import { PageNav } from "@/components/ui/PageNav";
 
+export const dynamic = "force-dynamic";
+
 function formatEditionLine(extras: {
   edition_number?: number | null;
   edition_total?: number | null;

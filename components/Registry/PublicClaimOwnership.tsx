@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getSessionSafe, supabase } from "@/lib/supabase";
+import { getSessionSafe, getSupabaseBrowserClient } from "@/lib/supabase";
 import ModalShell from "@/components/ui/ModalShell";
 
 type Props = {
@@ -23,14 +23,17 @@ export function PublicClaimOwnership({
   const [done, setDone] = useState(false);
 
   useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
     const run = async () => {
       const session = await getSessionSafe();
       setUserId(session?.user?.id ?? null);
     };
     run();
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      setUserId(session?.user?.id ?? null);
-    });
+    const { data: sub } = supabase.auth.onAuthStateChange(
+      (_e: unknown, session: unknown) => {
+        setUserId((session as any)?.user?.id ?? null);
+      }
+    );
     return () => sub.subscription.unsubscribe();
   }, []);
 
@@ -39,6 +42,7 @@ export function PublicClaimOwnership({
   const submit = async () => {
     if (!userId) return;
     setLoading(true);
+    const supabase = getSupabaseBrowserClient();
     const { data: existing } = await supabase
       .from("ownership_claims")
       .select("id")

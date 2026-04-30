@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { deferredRouterRefresh } from "@/lib/deferred-app-router";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { normalizeVerificationStatus } from "@/lib/ownership-ledger";
 import {
   OwnershipLedgerActionConfirmModal,
@@ -39,6 +39,7 @@ export function OwnershipVerificationControls({
 
   const requestVerification = async () => {
     setPending(true);
+    const supabase = getSupabaseBrowserClient();
     const { error } = await supabase.rpc("ownership_request_verification", {
       p_event_id: eventId,
     });
@@ -52,6 +53,7 @@ export function OwnershipVerificationControls({
 
   const adminVerify = async () => {
     setPending(true);
+    const supabase = getSupabaseBrowserClient();
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData?.session?.access_token;
     if (!token) {

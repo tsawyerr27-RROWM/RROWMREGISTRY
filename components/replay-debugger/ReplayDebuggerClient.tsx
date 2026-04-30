@@ -106,7 +106,8 @@ export default function ReplayDebuggerClient() {
   useEffect(() => {
     void (async () => {
       const mod = await import("@/lib/supabase");
-      const { data } = await mod.supabase.auth.getSession();
+      const supabase = mod.getSupabaseBrowserClient();
+      const { data } = await supabase.auth.getSession();
       setAccessToken(data.session?.access_token ?? null);
     })();
   }, []);
@@ -125,7 +126,8 @@ export default function ReplayDebuggerClient() {
     setLoading(true);
     try {
       const mod = await import("@/lib/supabase");
-      const { data: sess } = await mod.supabase.auth.getSession();
+      const supabase = mod.getSupabaseBrowserClient();
+      const { data: sess } = await supabase.auth.getSession();
       const token = sess?.session?.access_token ?? accessToken;
       const res = await fetch("/api/internal/replay-data", {
         method: "POST",

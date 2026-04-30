@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
-import { getSessionSafe, supabase } from "@/lib/supabase";
+import { getSessionSafe, getSupabaseBrowserClient } from "@/lib/supabase";
 
 const LOGIN_NEXT = "/login?next=" + encodeURIComponent("/studio");
 
@@ -64,10 +64,11 @@ export default function Header() {
         setHydrated(true);
       }
     })();
+    const supabase = getSupabaseBrowserClient();
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s);
+    } = supabase.auth.onAuthStateChange((_e: unknown, s: unknown) => {
+      setSession(((s as any) ?? null) as Session | null);
       setHydrated(true);
     });
     return () => {
@@ -233,6 +234,7 @@ export default function Header() {
                 type="button"
                 className={`min-h-[44px] min-w-[44px] rounded-xl px-3 py-2 text-xs font-medium transition sm:min-h-0 sm:min-w-0 sm:px-4 sm:text-sm ${subtleClass}`}
                 onClick={async () => {
+                  const supabase = getSupabaseBrowserClient();
                   await supabase.auth.signOut();
                   window.location.href = "/";
                 }}

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { GalleryVerifyAttestationModal } from "@/components/gallery/GalleryVerifyAttestationModal";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 function summarizeRpcError(err: { message?: string } | null): string {
   return err?.message?.trim() || "";
@@ -33,6 +33,7 @@ export function ProvenanceGalleryVerify({
   const onConfirm = async () => {
     setBusy(true);
     setError(null);
+    const supabase = getSupabaseBrowserClient();
     const { error: rpcError } = await supabase.rpc("gallery_verify_artwork", {
       p_artwork_id: artworkId,
     });

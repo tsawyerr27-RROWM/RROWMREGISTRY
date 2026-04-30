@@ -5,6 +5,8 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { warnSupabaseRpc } from "@/lib/supabase-rpc-error";
 import { PageNav } from "@/components/ui/PageNav";
 
+export const dynamic = "force-dynamic";
+
 export default async function VerifyPage({
   params,
 }: {

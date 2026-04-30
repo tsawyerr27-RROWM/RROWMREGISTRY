@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { supabase, setRememberMe } from "@/lib/supabase";
+import { getSupabaseBrowserClient, setRememberMe } from "@/lib/supabase";
 import { deferredRouterReplace } from "@/lib/deferred-app-router";
 import { getOnboardingRedirectPath, homePathForRole } from "@/lib/onboarding";
 import { AuthPageShell } from "@/components/auth/AuthPageShell";
@@ -42,6 +42,7 @@ export default function LoginPage() {
     }
     setSubmitting(true);
     setRememberMe(rememberMe);
+    const supabase = getSupabaseBrowserClient();
     const { error } = await supabase.auth.signInWithPassword({
       email: cleanEmail,
       password,
@@ -86,6 +87,7 @@ export default function LoginPage() {
       return;
     }
     setSubmitting(true);
+    const supabase = getSupabaseBrowserClient();
     const origin =
       typeof window !== "undefined" ? window.location.origin : "";
     const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {

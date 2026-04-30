@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { deferredRouterReplace } from "@/lib/deferred-app-router";
 import { AuthPageShell } from "@/components/auth/AuthPageShell";
 import {
@@ -23,16 +23,17 @@ export default function ResetPasswordPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (event: string, session: unknown) => {
         if (event === "PASSWORD_RECOVERY" || session) {
           setSessionReady(!!session);
         }
       },
     );
 
-    void supabase.auth.getSession().then(({ data }) => {
-      setSessionReady(!!data.session);
+    void supabase.auth.getSession().then((res: any) => {
+      setSessionReady(!!res?.data?.session);
       setChecked(true);
     });
 
@@ -53,6 +54,7 @@ export default function ResetPasswordPage() {
     }
 
     setSubmitting(true);
+    const supabase = getSupabaseBrowserClient();
     const { error } = await supabase.auth.updateUser({ password });
     setSubmitting(false);
 

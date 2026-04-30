@@ -1,6 +1,6 @@
 "use client";
 
-import { supabase } from "@/lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { deferredRouterPush } from "@/lib/deferred-app-router";
@@ -11,6 +11,7 @@ export default function InternalVerify() {
   const [artworks, setArtworks] = useState<any[]>([]);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const router = useRouter();
+  const supabase = getSupabaseBrowserClient();
 
   useEffect(() => {
     const init = async () => {

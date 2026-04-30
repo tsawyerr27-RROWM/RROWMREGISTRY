@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import {
   isPostgresUniqueViolation,
   summarizeRpcError,
@@ -38,6 +38,7 @@ export function OnboardingClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const focus = searchParams.get("focus");
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
   const [step, setStep] = useState<Step>("loading");
   const [userId, setUserId] = useState<string | null>(null);

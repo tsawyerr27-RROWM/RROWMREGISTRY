@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { deferredRouterReplace } from "@/lib/deferred-app-router";
 import { AuthPageShell } from "@/components/auth/AuthPageShell";
 import {
@@ -73,6 +73,7 @@ export function SignupClient() {
       typeof window !== "undefined" ? window.location.origin : "";
     const emailRedirectTo = `${origin}/signup/complete?role=${encodeURIComponent(role)}`;
 
+    const supabase = getSupabaseBrowserClient();
     const { data, error } = await supabase.auth.signUp({
       email: cleanEmail,
       password,

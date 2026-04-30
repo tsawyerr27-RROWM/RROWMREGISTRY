@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { deferredRouterReplace } from "@/lib/deferred-app-router";
 
 export default function LogoutPage() {
@@ -12,6 +12,7 @@ export default function LogoutPage() {
     let cancelled = false;
     void (async () => {
       try {
+        const supabase = getSupabaseBrowserClient();
         await supabase.auth.signOut();
       } finally {
         if (!cancelled) deferredRouterReplace(router, "/login");

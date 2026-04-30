@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 export default function ArtworkModal({
   userId,
@@ -19,6 +19,7 @@ export default function ArtworkModal({
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   const handleSubmit = async () => {
+    const supabase = getSupabaseBrowserClient();
     let imageUrl = null;
 
     if (imageFile) {

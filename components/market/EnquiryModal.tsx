@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 export type EnquiryModalProps = {
   open: boolean;
@@ -31,6 +31,7 @@ export function EnquiryModal({
       return;
     }
     setSending(true);
+    const supabase = getSupabaseBrowserClient();
     const { data: sessionData } = await supabase.auth.getSession();
     const uid = sessionData?.session?.user?.id ?? null;
     if (!uid) {

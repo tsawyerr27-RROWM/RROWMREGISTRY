@@ -14,6 +14,8 @@ import { RegistryListPagination } from "@/components/Registry/RegistryListPagina
 import { RegistryListFilters } from "@/components/Registry/RegistryListFilters";
 import { parsePublicPresence } from "@/lib/public-presence";
 
+export const dynamic = "force-dynamic";
+
 export default async function ArtistPage({
   params,
   searchParams,

@@ -89,12 +89,35 @@ const hybridAuthStorage = {
   },
 };
 
-export const supabase = createBrowserClient(supabaseUrl ?? "", supabaseAnonKey ?? "", {
-  auth: {
-    storage: hybridAuthStorage,
-    persistSession: true,
-  },
-});
+let browserClient:
+  | ReturnType<typeof createBrowserClient>
+  | null = null;
+
+/**
+ * Browser-only Supabase client.
+ *
+ * IMPORTANT: Do not initialize Supabase at module scope. Next/Vercel may evaluate
+ * client modules during prerender/build, and env may not be present there.
+ */
+export function getSupabaseBrowserClient() {
+  if (typeof window === "undefined") {
+    throw new Error("[RROWM] Supabase browser client requested on the server.");
+  }
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error(
+      "[RROWM] Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY."
+    );
+  }
+  if (!browserClient) {
+    browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        storage: hybridAuthStorage,
+        persistSession: true,
+      },
+    });
+  }
+  return browserClient;
+}
 
 export function setRememberMe(remember: boolean) {
   if (typeof window === "undefined") return;
@@ -113,7 +136,13 @@ export function setRememberMe(remember: boolean) {
 
   // Best-effort migrate any existing auth payload to the preferred storage.
   // This keeps the app consistent when toggling remember-me between sessions.
-  const storageKey = (supabase.auth as unknown as { storageKey?: string }).storageKey;
+  let storageKey: string | undefined;
+  try {
+    const supabase = getSupabaseBrowserClient();
+    storageKey = (supabase.auth as unknown as { storageKey?: string }).storageKey;
+  } catch {
+    storageKey = undefined;
+  }
   if (!storageKey) return;
 
   try {
@@ -137,8 +166,10 @@ export function setRememberMe(remember: boolean) {
  * must not surface as an unhandled rejection in the console.
  */
 export async function getSessionSafe(): Promise<Session | null> {
+  if (typeof window === "undefined") return null;
   if (!supabaseUrl || !supabaseAnonKey) return null;
   try {
+    const supabase = getSupabaseBrowserClient();
     const { data, error } = await supabase.auth.getSession();
     if (error) {
       if (process.env.NODE_ENV === "development") {

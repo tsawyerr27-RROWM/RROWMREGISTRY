@@ -7,7 +7,7 @@ import {
   deferredRouterRefresh,
   deferredRouterReplace,
 } from "@/lib/deferred-app-router";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { PageNav } from "@/components/ui/PageNav";
 import { OwnershipVerificationControls } from "@/components/Registry/OwnershipVerificationControls";
 import { StudioSaleTransferModal } from "@/components/Studio/StudioSaleTransferModal";
@@ -49,6 +49,7 @@ type Props = {
 export function StudioArtworkClient({ registryId }: Props) {
   const router = useRouter();
   const cleanId = registryId.trim();
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);

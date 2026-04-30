@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import {
   WorkspaceShell,
   WorkspaceShellFooterLinks,
@@ -125,6 +125,7 @@ type GalleryRole = "admin" | "staff";
 
 export default function GalleryDashboardPage() {
   const router = useRouter();
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [gallery, setGallery] = useState<GalleryRow | null>(null);
@@ -338,18 +339,18 @@ export default function GalleryDashboardPage() {
         .from("artists")
         .select("id, display_name, full_name, slug, represented_by_gallery")
         .eq("gallery_id", g.id)
-        .returns<ArtistRow[]>(),
+        .returns(),
       supabase
         .from("gallery_artist_invites")
         .select("id, artist_email, status, created_at")
         .eq("gallery_id", g.id)
         .order("created_at", { ascending: false })
-        .returns<InviteRow[]>(),
+        .returns(),
     ]);
 
-    const artistList = ar || [];
+    const artistList: ArtistRow[] = (ar as ArtistRow[] | null) || [];
     setArtists(artistList);
-    setInvites(inv || []);
+    setInvites(((inv as InviteRow[] | null) || []) satisfies InviteRow[]);
 
     const ids = artistList.map((a) => a.id).filter(Boolean);
     if (ids.length === 0) {
@@ -380,9 +381,9 @@ export default function GalleryDashboardPage() {
       )
       .in("artist_id", ids)
       .order("created_at", { ascending: false })
-      .returns<ArtworkRow[]>();
+      .returns();
 
-    const list = aw || [];
+    const list: ArtworkRow[] = (aw as ArtworkRow[] | null) || [];
     const artworkIds = list.map((a) => a.id).filter(Boolean);
     const ownershipByArtworkId: Record<string, number> = {};
     const hasDeclaredValueByArtworkId: Record<string, boolean> = {};

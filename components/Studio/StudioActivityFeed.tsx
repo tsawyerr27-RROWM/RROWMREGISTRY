@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 
 export type StudioActivityFeedProps = {
@@ -50,6 +50,7 @@ export function StudioActivityFeed({
     let cancelled = false;
 
     const run = async () => {
+      const supabase = getSupabaseBrowserClient();
       if (artworkIds.length === 0) {
         setRows([]);
         setLoading(false);

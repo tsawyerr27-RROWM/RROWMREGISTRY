@@ -13,6 +13,8 @@ import { CertificateArtistActions } from "@/components/certificate/CertificateAr
 import { StudioCertificateAckEffect } from "@/components/Studio/StudioCertificateAckEffect";
 import * as QRCode from "qrcode";
 
+export const dynamic = "force-dynamic";
+
 type Certificate = {
   certificate_number: string;
   issued_at: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getSessionSafe, supabase } from "@/lib/supabase";
+import { getSessionSafe, getSupabaseBrowserClient } from "@/lib/supabase";
 
 interface Props {
   artworkId: string;
@@ -25,6 +25,7 @@ export default function OwnershipClaimModal({ artworkId, onClose }: Props) {
       return;
     }
 
+    const supabase = getSupabaseBrowserClient();
     const { error } = await supabase
       .from("ownership_claims")
       .insert({

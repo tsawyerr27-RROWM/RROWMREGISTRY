@@ -10,8 +10,6 @@ import { CookieBanner } from "@/components/CookieBanner";
 import { LocalePreferencesProvider } from "@/components/providers/LocalePreferencesProvider";
 import NavigationHistory from "@/components/navigation/NavigationHistory";
 
-export const dynamic = "force-dynamic";
-
 const raleway = Raleway({
   subsets: ["latin"],
   variable: "--font-raleway",

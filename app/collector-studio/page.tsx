@@ -7,7 +7,7 @@ import {
   deferredRouterPush,
   deferredRouterReplace,
 } from "@/lib/deferred-app-router";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import {
   WorkspaceShell,
   WorkspaceShellFooterLinks,
@@ -76,6 +76,7 @@ function transferWord(n: number) {
 
 export default function CollectorStudioPage() {
   const router = useRouter();
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
@@ -175,7 +176,7 @@ export default function CollectorStudioPage() {
         .from("collector_profiles")
         .select("user_id, display_name, slug, location")
         .eq("user_id", uid)
-        .maybeSingle<CollectorProfile>();
+        .maybeSingle();
       if (!cancelled && cp) setCollectorProfile(cp);
 
       const ownedIds = await getCollectorOwnedArtworkIds(supabase, uid);

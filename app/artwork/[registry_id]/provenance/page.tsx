@@ -9,6 +9,8 @@ import { ProvenanceGalleryVerify } from "@/components/provenance/ProvenanceGalle
 import { PageNav } from "@/components/ui/PageNav";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
+export const dynamic = "force-dynamic";
+
 export default async function ArtworkProvenancePage({
   params,
 }: {

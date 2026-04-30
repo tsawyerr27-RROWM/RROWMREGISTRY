@@ -24,6 +24,8 @@ import {
   fetchCertificatePublicStatusByArtworkIds,
 } from "@/lib/fetch-certificate-public-status-map";
 
+export const dynamic = "force-dynamic";
+
 type CollectorProfileRow = {
   user_id: string;
   display_name: string | null;

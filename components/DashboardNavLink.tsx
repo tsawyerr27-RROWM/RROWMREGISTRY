@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getSessionSafe, supabase } from "@/lib/supabase";
+import { getSessionSafe, getSupabaseBrowserClient } from "@/lib/supabase";
 
 const LOGIN_WITH_NEXT =
   "/login?next=" + encodeURIComponent("/studio");
@@ -26,9 +26,10 @@ export function DashboardNavLink({
       if (!mounted) return;
       setHref(session ? "/studio" : LOGIN_WITH_NEXT);
     })();
+    const supabase = getSupabaseBrowserClient();
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event: unknown, session: unknown) => {
       setHref(session ? "/studio" : LOGIN_WITH_NEXT);
     });
     return () => {

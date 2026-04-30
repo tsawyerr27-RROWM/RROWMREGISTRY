@@ -13,6 +13,8 @@ import { RegistryExplorerHero } from "@/components/Registry/RegistryExplorerHero
 import { PageNav } from "@/components/ui/PageNav";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 type ArtworkRow = {
   id: string;
   title: string | null;

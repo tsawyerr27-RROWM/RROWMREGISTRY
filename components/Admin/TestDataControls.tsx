@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 import { testModeEnabled } from "@/lib/test-mode";
 
@@ -16,6 +16,7 @@ export function TestDataControls() {
   useEffect(() => {
     if (!testModeEnabled()) return;
     void (async () => {
+      const supabase = getSupabaseBrowserClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -34,6 +35,7 @@ export function TestDataControls() {
       setBusy(label);
       setMessage(null);
       try {
+        const supabase = getSupabaseBrowserClient();
         const { data: sessionData } = await supabase.auth.getSession();
         const token = sessionData.session?.access_token;
         const res = await fetch(path, {

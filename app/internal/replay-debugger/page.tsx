@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { deferredRouterReplace } from "@/lib/deferred-app-router";
 import ReplayDebuggerClient from "@/components/replay-debugger/ReplayDebuggerClient";
 
@@ -12,6 +12,7 @@ export default function ReplayDebuggerPage() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
     const gate = async () => {
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData?.session) {

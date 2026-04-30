@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import ModalShell from "@/components/ui/ModalShell";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 
 function isUuid(value: string) {
@@ -96,6 +96,7 @@ export function StudioSaleTransferModal({
         className="mt-6 grid gap-4"
         onSubmit={async (e) => {
           e.preventDefault();
+          const supabase = getSupabaseBrowserClient();
           const buyerUid =
             buyerMode === "user" ? buyerUserId.trim() || null : null;
           const buyerNm =

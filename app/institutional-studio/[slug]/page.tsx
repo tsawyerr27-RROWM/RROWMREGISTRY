@@ -7,6 +7,8 @@ import { parsePublicPresence } from "@/lib/public-presence";
 import { GalleryPublicHero } from "@/components/gallery/GalleryPublicHero";
 import { GalleryPublicSections } from "@/components/gallery/GalleryPublicSections";
 
+export const dynamic = "force-dynamic";
+
 type GalleryRow = {
   id: string;
   name: string | null;
