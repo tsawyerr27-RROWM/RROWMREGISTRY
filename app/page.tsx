@@ -31,7 +31,7 @@ export default function LandingPage() {
     <div className="ds-page-environment relative min-h-[100dvh] overflow-x-clip text-neutral-900 selection:bg-neutral-900/10">
       <div className="ds-narrative-chrome" aria-hidden />
       <AmbientNarrativeField />
-      {/* Quant-style: keep the page calm — no vertical network rails */}
+      {/* Quant-style: keep the page calm; no vertical network rails */}
       <JourneyProgress />
       <ScrollInvitation />
 

@@ -28,7 +28,7 @@ export function LandingThesisBand() {
             </h2>
             <p className="mt-8 max-w-[40rem] text-base leading-[1.86] text-neutral-600 md:text-lg md:leading-[1.8]">
               The registry makes authorship, provenance, and verification durable.
-              Records do not depend on a single PDF, inbox thread, or claim — they
+              Records do not depend on a single PDF, inbox thread, or claim. They
               bind certificates and events to one stable identity, with explicit
               rules for what is visible in public search and what remains private.
             </p>
@@ -39,7 +39,7 @@ export function LandingThesisBand() {
               {[
                 {
                   t: "Durable identity",
-                  b: "One record per work — consistent across time and transfers.",
+                  b: "One record per work, consistent across time and transfers.",
                 },
                 {
                   t: "Verification surface",
@@ -47,7 +47,7 @@ export function LandingThesisBand() {
                 },
                 {
                   t: "Policy clarity",
-                  b: "Visibility is explicit: public, authenticated, or private — by design.",
+                  b: "Visibility is explicit: public, authenticated, or private by design.",
                 },
               ].map((x) => (
                 <div key={x.t} className="rounded-2xl border border-neutral-200/55 bg-white/70 px-5 py-4">

@@ -10,7 +10,7 @@ const PERSONAS = [
   {
     title: "Artists & studios",
     body:
-      "establishing a long-lived record for works they stand behind, with certificates and provenance tied to one identity.",
+      "establishing a lasting record for works they stand behind, with certificates and provenance tied to one identity.",
   },
   {
     title: "Galleries & estates",

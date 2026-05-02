@@ -37,8 +37,8 @@ export function AboutPrinciplesChapter() {
               A registry designed for trust
             </h2>
             <p className="mt-5 max-w-[min(100%,22rem)] text-[13px] leading-[1.72] text-neutral-600 md:text-sm md:leading-[1.75]">
-              A record layer built to stay stable, readable, and verifiable —
-              not a product category page.
+              A record layer built to stay stable, readable, and verifiable, not
+              a product category page.
             </p>
           </div>
           <div

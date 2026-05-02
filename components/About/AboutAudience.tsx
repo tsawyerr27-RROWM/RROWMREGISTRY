@@ -40,7 +40,7 @@ export function AboutAudience({ density = "default" }: AboutAudienceProps) {
           <span className="font-medium text-neutral-900">
             Artists &amp; studios
           </span>{" "}
-          establishing a long-lived record for works they stand behind, with
+          establishing a lasting record for works they stand behind, with
           certificates and provenance tied to one identity.
         </p>
         <p

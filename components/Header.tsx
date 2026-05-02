@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { RrowmLogo } from "@/components/brand/RrowmLogo";
 import type { Session } from "@supabase/supabase-js";
 import { getSessionSafe, getSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -157,18 +157,19 @@ export default function Header() {
       />
 
       <nav className="relative mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4 md:py-5">
-        <Link href="/" className="group relative z-10 flex shrink-0 items-center">
-          <Image
-            src="/rrowm.svg"
-            alt="RROWM"
-            width={128}
-            height={50}
-            className={`h-[2.75rem] w-auto max-w-[160px] object-contain object-left transition duration-300 md:h-[3rem] md:max-w-[170px] group-hover:opacity-90 ${
-              headerOnDarkStudio
-                ? "brightness-0 invert drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]"
-                : "drop-shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
-            }`}
+        <Link
+          href="/"
+          className="group relative z-10 flex shrink-0 items-center"
+          aria-label="RROWM home"
+        >
+          <RrowmLogo
             priority
+            sizes="(max-width: 767px) min(160px, 42vw), 170px"
+            className={`h-11 w-auto max-w-[160px] object-contain object-left transition-opacity duration-300 md:h-12 md:max-w-[170px] group-hover:opacity-90 motion-reduce:transition-none ${
+              headerOnDarkStudio
+                ? "[filter:brightness(0)_invert(1)_drop-shadow(0_1px_1px_rgb(0_0_0/0.45))]"
+                : ""
+            }`}
           />
         </Link>
 

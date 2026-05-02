@@ -77,7 +77,7 @@ export function WhatRegistryIs({ density = "default" }: WhatRegistryIsProps) {
               and time.
             </p>
             <p className={digest ? "max-w-3xl" : "max-w-3xl"}>
-              Certificates and provenance events refer to that identity — so
+              Certificates and provenance events refer to that identity, so
               authenticity documents and history stay aligned instead of
               drifting across disconnected files or claims.
             </p>

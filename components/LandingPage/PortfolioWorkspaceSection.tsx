@@ -15,7 +15,7 @@ function PortfolioCommandDeck() {
         <div className="flex items-center justify-between gap-3 border-b border-neutral-900/[0.06] bg-white/70 px-5 py-4">
           <span className="text-sm font-medium text-neutral-700">Workspace</span>
           <span className="text-[11px] font-medium tracking-wide text-neutral-500">
-            Registry-linked
+            Registry linked
           </span>
         </div>
 
@@ -72,7 +72,7 @@ export function PortfolioWorkspaceSection() {
               <p className="mt-10 text-sm leading-[1.8] text-neutral-600 md:text-base md:leading-[1.76]">
                 Beyond public discovery: a workspace where your records stay
                 organized, current, and ready for the next transaction or
-                exhibition — always anchored to the same registry identity.
+                exhibition, always anchored to the same registry identity.
               </p>
               <div className="mt-12 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-5">
                 <a href="/get-started" className={`${control.secondary} w-fit`}>

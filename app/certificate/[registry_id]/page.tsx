@@ -5,7 +5,6 @@
 import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
 import Link from "next/link";
-import Image from "next/image";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { warnSupabaseRpc } from "@/lib/supabase-rpc-error";
 import { PageNav } from "@/components/ui/PageNav";
@@ -138,13 +137,10 @@ export default async function CertificatePage({
       <div className="ds-page-environment min-h-screen px-6 py-24 text-neutral-900">
         <div className="liquid-glass-tile mx-auto max-w-lg overflow-hidden">
           <div className="liquid-glass-inset px-10 py-8">
-            <Link href="/" className="inline-block">
-              <Image
-                src="/rrowm.svg"
-                alt="RROWM"
-                width={140}
-                height={56}
-                className="h-10 w-auto max-w-[150px] object-contain object-left opacity-90"
+            <Link href="/" className="inline-flex max-w-[150px]" aria-label="RROWM home">
+              <RrowmLogo
+                sizes="148px"
+                className="h-10 w-auto max-h-10 max-w-full object-contain object-left opacity-95"
               />
             </Link>
           </div>
@@ -266,13 +262,10 @@ export default async function CertificatePage({
 
               <header className="flex shrink-0 flex-col gap-8 pb-10 shadow-[inset_0_-1px_0_0_rgba(15,23,42,0.06)] sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-9 print:flex-row print:items-end print:justify-between print:gap-2 print:border-b print:border-neutral-200/90 print:pb-2 print:shadow-none">
                 <div className="min-w-0">
-                  <Link href="/" className="inline-block print:block">
-                    <Image
-                      src="/rrowm.svg"
-                      alt="RROWM"
-                      width={136}
-                      height={52}
-                      className="h-9 w-auto max-w-[148px] object-contain object-left opacity-95 sm:h-10 sm:max-w-[156px] print:h-8 print:max-w-[128px]"
+                  <Link href="/" className="inline-flex max-w-[156px] print:block print:max-w-[128px]" aria-label="RROWM home">
+                    <RrowmLogo
+                      sizes="(max-width: 640px) 148px, 156px"
+                      className="h-9 w-auto max-h-9 max-w-full object-contain object-left opacity-95 sm:h-10 sm:max-h-10 print:h-8 print:max-h-8"
                     />
                   </Link>
                   <p className="mt-5 text-sm text-neutral-500 print:mt-1.5">

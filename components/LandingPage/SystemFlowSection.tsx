@@ -50,7 +50,7 @@ export function SystemFlowSection() {
           A single record, maintained over time
         </h2>
         <p className="mt-8 max-w-[40rem] text-base leading-[1.86] text-neutral-600 md:text-lg md:leading-[1.8]">
-          From object to durable registry identity — certificates and provenance
+          From object to durable registry identity, certificates and provenance
           events remain attached to the same record instead of drifting across
           disconnected files.
         </p>

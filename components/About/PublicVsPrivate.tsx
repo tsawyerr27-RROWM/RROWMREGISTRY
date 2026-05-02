@@ -64,7 +64,7 @@ export function PublicVsPrivate({ density = "default" }: PublicVsPrivateProps) {
                   : "mt-6 text-base leading-[1.85] text-neutral-700 md:text-[1.05rem]"
               }
             >
-              Searchable entries show what the public layer includes — typically
+              Searchable entries show what the public layer includes: typically
               identifiers, record status, and what has been opted into
               visibility. This is the open verification surface.
             </p>
@@ -94,7 +94,7 @@ export function PublicVsPrivate({ density = "default" }: PublicVsPrivateProps) {
                   }
                 >
                   Full certificates and sensitive documentation are available
-                  through authenticated access — viewing is tied to login and
+                  through authenticated access. Viewing is tied to login and
                   permissions, not to anonymous browsing.
                 </p>
               </div>

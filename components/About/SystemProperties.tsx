@@ -7,7 +7,7 @@ type SystemPropertiesProps = {
 const ITEMS = [
   {
     title: "Immutable records",
-    body: "Once committed, core registry facts and timestamps are not silently rewritten — changes are explicit, not overwritten in place.",
+    body: "Once committed, core registry facts and timestamps are not silently rewritten. Changes are explicit, not overwritten in place.",
   },
   {
     title: "Verification layer",

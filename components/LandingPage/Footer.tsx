@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import { RrowmLogo } from "@/components/brand/RrowmLogo";
 import { usePathname } from "next/navigation";
 import { DashboardNavLink } from "@/components/DashboardNavLink";
 import { FooterRegionSelector } from "@/components/LandingPage/FooterRegionSelector";
@@ -23,13 +23,10 @@ export function Footer() {
       <div className="mx-auto w-full max-w-[min(100%,88rem)] px-6 md:px-14 lg:px-[max(1.5rem,calc((100vw-72rem)/2+1rem))]">
         <div className="flex flex-col gap-14 md:flex-row md:items-start md:justify-between md:gap-20">
           <div className="max-w-md md:max-w-sm">
-            <Link href="/" className="inline-block">
-              <Image
-                src="/rrowm.svg"
-                alt="RROWM"
-                width={140}
-                height={56}
-                className="h-11 w-auto max-w-[160px] object-contain object-left opacity-90"
+            <Link href="/" className="inline-flex max-w-[160px] shrink-0" aria-label="RROWM home">
+              <RrowmLogo
+                sizes="(max-width: 430px) min(148px, 40vw), 160px"
+                className="h-11 w-auto max-h-11 max-w-full shrink-0 object-contain object-left"
               />
             </Link>
             <p className="mt-8 text-sm leading-relaxed text-neutral-600">

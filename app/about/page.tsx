@@ -104,7 +104,7 @@ export default function AboutPage() {
                 </h1>
                 <p className="mt-8 max-w-xl text-sm leading-[1.82] text-neutral-600 md:max-w-2xl md:text-base md:leading-[1.78]">
                   The registry is a shared layer for how artworks are
-                  identified, documented, and checked over time — with clear
+                  identified, documented, and checked over time, with clear
                   rules for what is visible, what requires access, and what
                   stays private.
                 </p>
