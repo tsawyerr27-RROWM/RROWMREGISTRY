@@ -32,13 +32,7 @@ export default async function ArtworkProvenancePage({
     return (
       <div className="min-h-screen rrowm-bg-page pt-20 text-neutral-900">
         <main className="mx-auto max-w-3xl px-6 py-12 md:py-20">
-          <PageNav
-            backHref={artworkHref}
-            crumbs={[
-              { label: "Artwork", href: artworkHref },
-              { label: "Provenance" },
-            ]}
-          />
+          <PageNav backHref={artworkHref} />
 
           <header className="mt-10 border-b border-black/[0.06] pb-12">
             <h1 className="font-serif text-3xl font-normal leading-tight tracking-tight text-neutral-950 md:text-4xl">
@@ -109,13 +103,7 @@ export default async function ArtworkProvenancePage({
   return (
     <div className="min-h-screen rrowm-bg-page pt-20 text-neutral-900">
       <main className="mx-auto max-w-3xl px-6 py-12 md:py-20">
-        <PageNav
-          backHref={artworkHref}
-          crumbs={[
-            { label: "Artwork", href: artworkHref },
-            { label: "Provenance" },
-          ]}
-        />
+        <PageNav backHref={artworkHref} />
 
         <header className="mt-10 border-b border-black/[0.06] pb-12">
           <h1 className="font-serif text-3xl font-normal leading-tight tracking-tight text-neutral-950 md:text-4xl">

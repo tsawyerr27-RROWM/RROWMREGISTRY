@@ -20,7 +20,7 @@ const COPY: Record<
 > = {
   admin_verify: {
     title: "Verify this ownership step?",
-    body: `You are about to mark this ownership transfer as verified. In plain terms, you are telling the registry that this change of hands is correct and should be treated as trusted, permanent history for the artwork—similar to signing off on a formal record.
+    body: `You are about to mark this ownership transfer as verified. You are telling the registry this change of hands is correct and should read as trusted, permanent history for the artwork, similar to signing off on a formal record.
 
 Only continue if you have checked the sale or transfer details and you are comfortable that they are accurate. Reversing or editing this kind of decision later is difficult, so it deserves a deliberate second look.`,
     confirmLabel: "Yes, verify ownership",
@@ -29,7 +29,7 @@ Only continue if you have checked the sale or transfer details and you are comfo
     title: "Request verification for this transfer?",
     body: `You are asking to move this ownership step forward in the verification process. That request becomes part of the work’s provenance story and may be visible to others who rely on the registry.
 
-Use this when you believe the transfer details are correct and you want them reviewed—not as a casual click. Make sure what you see in the ledger matches what actually happened.`,
+Use this when you believe the transfer details are correct and you want them reviewed, not as a casual click. Make sure what you see in the ledger matches what actually happened.`,
     confirmLabel: "Yes, submit request",
   },
 };
@@ -49,11 +49,9 @@ export function OwnershipLedgerActionConfirmModal({
       onClose={() => {
         if (!pending) onClose();
       }}
-      panelClassName="liquid-glass rrowm-modal-surface relative max-w-lg w-full overflow-hidden rounded-2xl p-6 ring-1 ring-black/[0.06] shadow-[0_28px_64px_-28px_rgba(0,0,0,0.35)] sm:p-8"
-      overlayClassName="liquid-glass-backdrop backdrop-blur-xl ds-z-modal-backdrop fixed inset-0 flex items-center justify-center p-4 sm:p-8"
-      closeClassName="liquid-glass-close absolute right-4 top-4 rounded-2xl px-4 py-2 text-xs font-medium text-neutral-600 hover:bg-white/85 hover:text-neutral-900 disabled:opacity-40"
+      tone="silver"
     >
-      <h2 className="text-lg font-semibold text-neutral-900 sm:text-xl">
+      <h2 className="font-serif text-xl font-normal tracking-tight text-neutral-950">
         {copy.title}
       </h2>
       <div className="mt-4 space-y-3 text-sm leading-relaxed text-neutral-600">

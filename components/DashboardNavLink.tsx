@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getSessionSafe, getSupabaseBrowserClient } from "@/lib/supabase";
+import { getSessionSafe } from "@/lib/supabase";
+import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 
 const LOGIN_WITH_NEXT =
   "/login?next=" + encodeURIComponent("/studio");
@@ -17,6 +18,7 @@ export function DashboardNavLink({
   className?: string;
   children?: React.ReactNode;
 }) {
+  const sb = useSupabaseBrowserLazy();
   const [href, setHref] = useState(LOGIN_WITH_NEXT);
 
   useEffect(() => {
@@ -26,7 +28,7 @@ export function DashboardNavLink({
       if (!mounted) return;
       setHref(session ? "/studio" : LOGIN_WITH_NEXT);
     })();
-    const supabase = getSupabaseBrowserClient();
+    const supabase = sb();
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event: unknown, session: unknown) => {
@@ -36,7 +38,7 @@ export function DashboardNavLink({
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [sb]);
 
   return (
     <Link href={href} prefetch={false} className={className}>

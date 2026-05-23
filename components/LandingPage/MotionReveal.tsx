@@ -5,6 +5,8 @@ import { useMemo, type ReactNode } from "react";
 
 import {
   NARRATIVE_REVEAL_DURATION_S,
+  NARRATIVE_REVEAL_REFLECTIVE_DURATION_S,
+  NARRATIVE_REVEAL_REFLECTIVE_Y,
   NARRATIVE_REVEAL_Y,
   narrativeEase,
 } from "@/styles/narrative-layout";
@@ -24,21 +26,31 @@ export function MotionReveal({
   className = "",
   delay = 0,
   id,
+  pace = "default",
 }: {
   children: ReactNode;
   className?: string;
   delay?: number;
   id?: string;
+  /** `reflective` — slower, slightly deeper offset (About). */
+  pace?: "default" | "reflective";
 }) {
   const reduce = useReducedMotion();
+  const duration =
+    pace === "reflective"
+      ? NARRATIVE_REVEAL_REFLECTIVE_DURATION_S
+      : NARRATIVE_REVEAL_DURATION_S;
+  const revealY =
+    pace === "reflective" ? NARRATIVE_REVEAL_REFLECTIVE_Y : NARRATIVE_REVEAL_Y;
+
   const transition = useMemo(
     () =>
       ({
-        duration: NARRATIVE_REVEAL_DURATION_S,
+        duration,
         delay,
         ease: narrativeEase,
       }) as const,
-    [delay]
+    [delay, duration]
   );
 
   if (reduce) {
@@ -52,7 +64,7 @@ export function MotionReveal({
     <motion.div
       id={id}
       className={`transform-gpu [backface-visibility:hidden] ${className}`}
-      initial={{ opacity: 0, y: NARRATIVE_REVEAL_Y }}
+      initial={{ opacity: 0, y: revealY }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={MOTION_REVEAL_VIEWPORT}
       transition={transition}

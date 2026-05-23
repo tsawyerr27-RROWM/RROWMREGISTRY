@@ -9,9 +9,8 @@ import {
   JourneyProgress,
   InstitutionalCredibilityStrip,
   LandingPersonaStrip,
-  LandingThesisBand,
   MotionReveal,
-  PortfolioWorkspaceSection,
+  PortfolioManagementSection,
   ScrollAtmosphere,
   ScrollInvitation,
   SectionFadeDivider,
@@ -28,10 +27,9 @@ export default function LandingPage() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <div className="ds-page-environment relative min-h-[100dvh] overflow-x-clip text-neutral-900 selection:bg-neutral-900/10">
+    <div className="rrowm-narrative-page ds-page-environment relative min-h-[100dvh] overflow-x-clip text-neutral-900 selection:bg-neutral-900/10">
       <div className="ds-narrative-chrome" aria-hidden />
       <AmbientNarrativeField />
-      {/* Quant-style: keep the page calm; no vertical network rails */}
       <JourneyProgress />
       <ScrollInvitation />
 
@@ -52,21 +50,9 @@ export default function LandingPage() {
         </div>
 
         <MotionReveal
-          id="net-thesis"
+          id="net-system"
           delay={0.03}
           className={`${narrativeLayout.scrollAnchor} ${narrativeLayout.postHeroTop}`}
-        >
-          <ScrollAtmosphere parallax={4} edgeSoftening>
-            <LandingThesisBand />
-          </ScrollAtmosphere>
-        </MotionReveal>
-
-        <SectionFadeDivider />
-
-        <MotionReveal
-          id="net-system"
-          delay={0.04}
-          className={narrativeLayout.scrollAnchor}
         >
           <ScrollAtmosphere parallax={10}>
             <SystemFlowSection />
@@ -78,8 +64,8 @@ export default function LandingPage() {
         <MotionReveal id="net-trust" delay={0.03} className={narrativeLayout.scrollAnchor}>
           <ScrollAtmosphere parallax={0} edgeSoftening={false}>
             <InstitutionalCredibilityStrip>
-              Cryptographic verification · Clear visibility rules · One registry
-              identity per work
+              Participant-confirmed listings where shown · Rule-based visibility · One
+              current record per work, with chronology on file
             </InstitutionalCredibilityStrip>
           </ScrollAtmosphere>
         </MotionReveal>
@@ -87,8 +73,20 @@ export default function LandingPage() {
         <SectionFadeDivider />
 
         <MotionReveal
-          id="net-personas"
+          id="net-portfolio"
           delay={0.04}
+          className={narrativeLayout.scrollAnchor}
+        >
+          <ScrollAtmosphere parallax={0} edgeSoftening={false}>
+            <PortfolioManagementSection />
+          </ScrollAtmosphere>
+        </MotionReveal>
+
+        <SectionFadeDivider />
+
+        <MotionReveal
+          id="net-personas"
+          delay={0.05}
           className={narrativeLayout.scrollAnchor}
         >
           <ScrollAtmosphere parallax={6} edgeSoftening>
@@ -97,16 +95,6 @@ export default function LandingPage() {
         </MotionReveal>
 
         <SectionFadeDivider />
-
-        <MotionReveal
-          id="net-portfolio"
-          delay={0.05}
-          className={narrativeLayout.scrollAnchor}
-        >
-          <ScrollAtmosphere parallax={8}>
-            <PortfolioWorkspaceSection />
-          </ScrollAtmosphere>
-        </MotionReveal>
 
         <MotionReveal
           id="net-cta"

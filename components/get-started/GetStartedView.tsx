@@ -3,18 +3,19 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
 import Link from "next/link";
+import { AmbientNarrativeField } from "@/components/LandingPage/AmbientNarrativeField";
 import { GalleryPricingModal } from "./GalleryPricingModal";
 import { IconArtist, IconCollector, IconGallery } from "./role-icons";
 
-/** Stroke/fill use `currentColor` on the SVG — tint only the icon, no box outline. */
+/** Stroke/fill use `currentColor` on the SVG — restrained neutral tints only. */
 const ICON_TINT: Record<"artist" | "gallery" | "collector", string> = {
-  artist: "text-emerald-600",
-  gallery: "text-violet-600",
-  collector: "text-sky-600",
+  artist: "text-stone-600",
+  gallery: "text-slate-600",
+  collector: "text-neutral-600",
 };
 
 const CARD_CLASS =
-  "group flex h-full w-full flex-col rounded-[1.35rem] border border-white/90 bg-gradient-to-b from-white/95 to-white/[0.72] p-7 text-left shadow-[0_2px_8px_-2px_rgba(15,23,42,0.05),0_18px_48px_-32px_rgba(15,23,42,0.14),inset_0_1px_0_0_rgba(255,255,255,1),inset_0_-12px_32px_-20px_rgba(186,199,214,0.14)] backdrop-blur-[18px] transition duration-300 ease-out hover:-translate-y-[2px] hover:border-white hover:shadow-[0_8px_32px_-16px_rgba(15,23,42,0.12),0_24px_56px_-36px_rgba(15,23,42,0.16)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900/20 md:p-8";
+  "group flex h-full w-full flex-col rounded-[1.35rem] border border-[color:var(--rrowm-atmo-rim)] bg-[color-mix(in_srgb,var(--rrowm-atmo-panel)_82%,transparent)] p-7 text-left shadow-[0_18px_48px_-32px_rgba(15,23,42,0.14)] backdrop-blur-sm transition-[transform,opacity,box-shadow,background-color,border-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-[color:color-mix(in_srgb,var(--rrowm-atmo-rim)_88%,rgb(55_48_43))] hover:bg-[color-mix(in_srgb,var(--rrowm-atmo-panel-raise)_76%,transparent)] hover:shadow-[0_22px_52px_-34px_rgba(15,23,42,0.16)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900/20 md:p-8";
 
 type CardContentProps = {
   role: keyof typeof ICON_TINT;
@@ -66,15 +67,18 @@ export function GetStartedView() {
   const [galleryModalOpen, setGalleryModalOpen] = useState(false);
 
   return (
-    <div className="ds-page-environment min-h-screen px-5 pb-24 pt-24 sm:px-8 md:pb-32 md:pt-28 lg:px-12">
-      <main className="mx-auto w-full max-w-[min(100%,72rem)]">
+    <div className="rrowm-narrative-page ds-page-environment relative min-h-screen overflow-x-clip px-5 pb-24 pt-24 sm:px-8 md:pb-32 md:pt-28 lg:px-12">
+      <div className="ds-narrative-chrome" aria-hidden />
+      <AmbientNarrativeField />
+
+      <main className="relative z-10 mx-auto w-full max-w-[min(100%,72rem)]">
         <header className="max-w-2xl">
           <h1 className="font-serif text-[2rem] font-normal leading-[1.1] tracking-tight text-neutral-950 md:text-[2.35rem] md:leading-[1.08]">
-            Get started
+            Choose how you take part
           </h1>
           <p className="mt-5 text-base leading-relaxed text-neutral-600 md:text-lg md:leading-relaxed">
-            Choose how you will use the registry — each path opens the right
-            workspace and onboarding.
+            Each path opens the right studio (artist, institutional, or collector).
+            Underneath: one chronology per work, on file.
           </p>
           <p className="mt-5 text-sm leading-relaxed text-neutral-500">
             Already have an account?{" "}
@@ -84,59 +88,65 @@ export function GetStartedView() {
             >
               Sign in
             </Link>
-            — your role follows your profile, not this page alone.
+            . Your role follows your profile, not this page alone.
           </p>
         </header>
 
-        <nav
-          className="mt-14 grid grid-cols-1 gap-6 sm:mt-16 sm:gap-7 lg:mt-20 lg:grid-cols-3 lg:gap-8"
-          aria-label="Choose how you will use the registry"
+        <section
+          className="rrowm-atmo-section--warm relative mt-14 overflow-hidden rounded-[1.75rem] sm:mt-16 lg:mt-20"
+          aria-label="Role paths"
         >
-          <Link href="/signup?role=artist" className={CARD_CLASS}>
-            <CardBody
-              role="artist"
-              title="I am an Artist"
-              description="Register works, anchor identity, and build provenance and value history with immutable records."
-              cta="Continue as Artist"
-              icon={<IconArtist />}
-            />
-          </Link>
-
-          <button
-            type="button"
-            onClick={() => setGalleryModalOpen(true)}
-            className={CARD_CLASS}
+          <nav
+            className="relative z-10 grid grid-cols-1 gap-6 p-6 sm:gap-7 sm:p-8 lg:grid-cols-3 lg:gap-8 lg:p-10"
+            aria-label="Choose how you take part on the registry"
           >
-            <CardBody
-              role="gallery"
-              title="I run an institutional studio"
-              description="Run verification-oriented workflows and multi-artist registry operations — paid institutional access."
-              cta="View plans & continue"
-              icon={<IconGallery />}
-            />
-          </button>
+            <Link href="/signup?role=artist" className={CARD_CLASS}>
+              <CardBody
+                role="artist"
+                title="I am an Artist"
+                description="Register represented works so your catalogue presence, chronology, and certificates stay on one record."
+                cta="Continue as artist"
+                icon={<IconArtist />}
+              />
+            </Link>
 
-          <Link href="/signup?role=collector" className={CARD_CLASS}>
-            <CardBody
-              role="collector"
-              title="I am a Collector"
-              description="Search the registry, verify records, and claim ownership when you hold a work."
-              cta="Continue as Collector"
-              icon={<IconCollector />}
-            />
-          </Link>
-        </nav>
+            <button
+              type="button"
+              onClick={() => setGalleryModalOpen(true)}
+              className={CARD_CLASS}
+            >
+              <CardBody
+                role="gallery"
+                title="I run an institutional studio"
+                description="Verified gallery workflows: participant confirmations and listings on file for represented artists."
+                cta="View plans and continue"
+                icon={<IconGallery />}
+              />
+            </button>
 
-        <div className="mt-20 max-w-2xl border-t border-black/[0.06] pt-12 md:mt-24 md:pt-14">
-          <h2 className="font-serif text-xl font-normal text-neutral-950">
-            Why this matters
-          </h2>
-          <p className="mt-4 text-sm leading-[1.75] text-neutral-600 md:text-[15px]">
-            RROWM records identity, provenance, and value over time so
-            collectors and the public can rely on a consistent verification
-            layer — not a marketplace pitch.
-          </p>
-        </div>
+            <Link href="/signup?role=collector" className={CARD_CLASS}>
+              <CardBody
+                role="collector"
+                title="I am a Collector"
+                description="Browse the public catalogue, read the current record, and file custody when you hold a work."
+                cta="Continue as collector"
+                icon={<IconCollector />}
+              />
+            </Link>
+          </nav>
+        </section>
+
+        <section className="rrowm-atmo-section--blend relative mt-16 overflow-hidden rounded-[1.5rem] md:mt-20">
+          <div className="relative z-10 max-w-2xl px-6 py-10 md:px-8 md:py-12">
+            <h2 className="font-serif text-xl font-normal text-neutral-950">
+              On the catalogue
+            </h2>
+            <p className="mt-4 text-sm leading-[1.75] text-neutral-600 md:text-[15px]">
+              Verified listings and chronology offer a shared surface for inquiry, not a
+              marketplace pitch.
+            </p>
+          </div>
+        </section>
       </main>
 
       <GalleryPricingModal

@@ -41,8 +41,8 @@ export function ArtworkDetailModal({
     <ModalShell
       isOpen={!!artwork}
       onClose={onClose}
-      panelClassName="liquid-glass rrowm-modal-surface relative max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-2xl ring-1 ring-black/[0.06] shadow-[0_32px_80px_-28px_rgba(0,0,0,0.2)]"
-      closeClassName="liquid-glass-close absolute right-4 top-4 z-20 rounded-2xl px-4 py-2.5 text-xs font-semibold text-neutral-600 transition hover:bg-white/90 hover:text-neutral-900 sm:right-5 sm:top-5"
+      tone="light"
+      panelClassName="relative max-h-[90vh] w-full max-w-4xl overflow-hidden"
     >
       {artwork && (
         <div className="relative max-h-[90vh] overflow-y-auto overscroll-contain">

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { deferredRouterReplace } from "@/lib/deferred-app-router";
 import { AuthPageShell } from "@/components/auth/AuthPageShell";
 import {
@@ -14,6 +14,7 @@ import {
 
 export default function ResetPasswordPage() {
   const router = useRouter();
+  const sb = useSupabaseBrowserLazy();
   const [sessionReady, setSessionReady] = useState(false);
   const [checked, setChecked] = useState(false);
   const [password, setPassword] = useState("");
@@ -23,7 +24,7 @@ export default function ResetPasswordPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const supabase = getSupabaseBrowserClient();
+    const supabase = sb();
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event: string, session: unknown) => {
         if (event === "PASSWORD_RECOVERY" || session) {
@@ -38,7 +39,7 @@ export default function ResetPasswordPage() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [sb]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,8 +55,7 @@ export default function ResetPasswordPage() {
     }
 
     setSubmitting(true);
-    const supabase = getSupabaseBrowserClient();
-    const { error } = await supabase.auth.updateUser({ password });
+    const { error } = await sb().auth.updateUser({ password });
     setSubmitting(false);
 
     if (error) {

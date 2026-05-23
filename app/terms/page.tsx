@@ -8,7 +8,7 @@ import {
 } from "@/components/legal/LegalPageShell";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — RROWM Registry",
+  title: "Terms of Service · RROWM Registry",
   description:
     "Terms governing use of the RROWM registry, verification, and user responsibilities.",
 };
@@ -28,12 +28,11 @@ export default function TermsPage() {
         <LegalH2>What RROWM is</LegalH2>
         <LegalP>
           RROWM provides a cultural registry layer for recording and checking
-          information about artworks — including identifiers, verification
-          status, provenance-related events, and optional value metadata. It is
-          not a marketplace, auction house, or dealer. Listings, offers, and
-          commercial transactions, where they exist, are outside the core
-          registry contract unless expressly stated otherwise in a separate
-          agreement.
+          information about artworks, including identifiers, verification status,
+          provenance-related events, and optional value metadata. It is not a
+          marketplace, auction house, or dealer. Listings, offers, and commercial
+          transactions, where they exist, are outside the core registry contract
+          unless expressly stated otherwise in a separate agreement.
         </LegalP>
       </section>
 

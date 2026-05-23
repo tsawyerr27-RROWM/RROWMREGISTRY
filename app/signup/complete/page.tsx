@@ -1,6 +1,7 @@
 "use client";
 
-import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -10,6 +11,7 @@ import {
   getOnboardingRedirectPath,
   homePathForRole,
 } from "@/lib/onboarding";
+import { acceptPendingGalleryInvite } from "@/lib/accept-gallery-invite-client";
 import { deferredRouterReplace } from "@/lib/deferred-app-router";
 
 const allowedRoles = ["artist", "gallery", "collector"] as const;
@@ -29,9 +31,12 @@ function defaultDisplayName(user: User) {
   return "Registry member";
 }
 
-async function waitForUser(maxAttempts = 20): Promise<User | null> {
+async function waitForUser(
+  getClient: () => SupabaseClient,
+  maxAttempts = 20
+): Promise<User | null> {
   for (let i = 0; i < maxAttempts; i++) {
-    const supabase = getSupabaseBrowserClient();
+    const supabase = getClient();
     const { data: sessionData } = await supabase.auth.getSession();
     if (sessionData.session?.user) return sessionData.session.user;
 
@@ -45,12 +50,13 @@ async function waitForUser(maxAttempts = 20): Promise<User | null> {
 
 export default function CompleteSignupPage() {
   const router = useRouter();
+  const sb = useSupabaseBrowserLazy();
   const [status, setStatus] = useState<"loading" | "error">("loading");
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const run = async () => {
-      const supabase = getSupabaseBrowserClient();
+      const supabase = sb();
       const params = new URLSearchParams(window.location.search);
       let roleParam: string | null = params.get("role");
       if (!isRole(roleParam) && typeof window !== "undefined") {
@@ -69,7 +75,7 @@ export default function CompleteSignupPage() {
 
       const role = roleParam;
 
-      const user = await waitForUser();
+      const user = await waitForUser(sb);
       if (!user) {
         setStatus("error");
         setMessage(
@@ -99,6 +105,13 @@ export default function CompleteSignupPage() {
       }
 
       const displayName = defaultDisplayName(user);
+
+      if (role === "artist") {
+        const inviteResult = await acceptPendingGalleryInvite();
+        if (!inviteResult.ok && inviteResult.error) {
+          console.warn("[signup/complete] invite accept", inviteResult.error);
+        }
+      }
 
       if (existing) {
         const finished = Boolean(existing.onboarding_complete);
@@ -170,7 +183,7 @@ export default function CompleteSignupPage() {
     };
 
     void run();
-  }, [router]);
+  }, [router, sb]);
 
   if (status === "error") {
     return (

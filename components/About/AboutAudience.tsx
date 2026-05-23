@@ -10,7 +10,11 @@ export function AboutAudience({ density = "default" }: AboutAudienceProps) {
 
   return (
     <Shell
-      className={digest ? "" : narrativeLayout.sectionPadY}
+      className={
+        digest
+          ? ""
+          : `rrowm-atmo-section--dusk ${narrativeLayout.gutter} ${narrativeLayout.sectionPadY}`
+      }
       {...(!digest ? { "aria-labelledby": "about-audience-heading" } : {})}
     >
       <h2
@@ -25,9 +29,9 @@ export function AboutAudience({ density = "default" }: AboutAudienceProps) {
       </h2>
       <div
         className={
-          digest
-            ? "mt-6 grid gap-8 md:mt-7 md:grid-cols-3 md:gap-0 md:divide-x md:divide-neutral-200/50"
-            : "mt-16 grid gap-14 md:mt-20 md:grid-cols-3 md:gap-0 md:divide-x md:divide-neutral-200/50"
+            digest
+              ? "mt-6 grid gap-8 md:mt-7 md:grid-cols-3 md:gap-0 md:divide-x md:divide-[color:var(--rrowm-atmo-rim)]"
+              : "mt-16 grid gap-14 md:mt-20 md:grid-cols-3 md:gap-0 md:divide-x md:divide-[color:var(--rrowm-atmo-rim)]"
         }
       >
         <p

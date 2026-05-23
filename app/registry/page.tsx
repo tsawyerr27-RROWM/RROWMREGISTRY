@@ -10,7 +10,6 @@ import {
 import { RegistryListPagination } from "@/components/Registry/RegistryListPagination";
 import { RegistryListFilters } from "@/components/Registry/RegistryListFilters";
 import { RegistryExplorerHero } from "@/components/Registry/RegistryExplorerHero";
-import { PageNav } from "@/components/ui/PageNav";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -72,8 +71,6 @@ export default async function RegistryExplorer({
         aria-hidden
       />
       <main className="relative mx-auto max-w-[min(100%,88rem)] px-4 sm:px-6 lg:px-8">
-        <PageNav crumbs={[{ label: "Registry" }]} />
-
         <RegistryExplorerHero
           searchQuery={q}
           headline="Browse verified records"

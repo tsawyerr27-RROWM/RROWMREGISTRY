@@ -7,8 +7,8 @@ import { ShareRecordButton } from "@/components/Registry/ShareRecordButton";
 import { PublicClaimOwnership } from "@/components/Registry/PublicClaimOwnership";
 import { RegistryTechnicalDetails } from "@/components/Registry/RegistryTechnicalDetails";
 import { PageNav } from "@/components/ui/PageNav";
-import { ProvenanceTimeline } from "@/components/Registry/ProvenanceTimeline";
-import { getProvenanceTimeline } from "@/lib/provenance-timeline";
+import { ArchivalProvenanceTimeline } from "@/components/provenance/ArchivalProvenanceTimeline";
+import { getArchivalProvenanceBundle } from "@/lib/provenance-timeline";
 import { getProvenanceInsights } from "@/lib/provenance-insights";
 import {
   formatOwnershipTransferTypeLabel,
@@ -261,7 +261,7 @@ export default async function PublicRegistryPage({
   const editionLine = !extrasError ? formatEditionLine(extras ?? null) : null;
   const claimReturnPath = `/registry/${encodeURIComponent(artwork.registry_id)}`;
 
-  const provenanceTimeline = await getProvenanceTimeline({
+  const provenanceBundle = await getArchivalProvenanceBundle({
     supabase,
     artwork: {
       id: artwork.id,
@@ -286,14 +286,7 @@ return (
           className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[min(52vh,28rem)] bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(16,185,129,0.07),transparent_58%),radial-gradient(ellipse_55%_45%_at_100%_0%,rgba(14,165,233,0.06),transparent_50%)]"
           aria-hidden
         />
-        <PageNav
-          backHref={backHref}
-          crumbs={[
-            crumbsRoot,
-            { label: "Registry", href: `/registry/${encodeURIComponent(registryId)}` },
-            { label: registryId },
-          ]}
-        />
+        <PageNav backHref={backHref} />
         {/* Trust bar — compact status strip */}
         <div
           className={`mb-8 rounded-lg border px-3.5 py-2 shadow-sm md:px-4 md:py-2.5 ${trustBarToneClass}`}
@@ -501,7 +494,7 @@ return (
                   </div>
                 ) : null}
                 <div className="mt-8">
-                  <ProvenanceTimeline events={provenanceTimeline} />
+                  <ArchivalProvenanceTimeline bundle={provenanceBundle} />
                 </div>
               </div>
             </section>

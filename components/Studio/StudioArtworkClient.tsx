@@ -7,7 +7,7 @@ import {
   deferredRouterRefresh,
   deferredRouterReplace,
 } from "@/lib/deferred-app-router";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { PageNav } from "@/components/ui/PageNav";
 import { OwnershipVerificationControls } from "@/components/Registry/OwnershipVerificationControls";
 import { StudioSaleTransferModal } from "@/components/Studio/StudioSaleTransferModal";
@@ -49,7 +49,7 @@ type Props = {
 export function StudioArtworkClient({ registryId }: Props) {
   const router = useRouter();
   const cleanId = registryId.trim();
-  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const sb = useSupabaseBrowserLazy();
 
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -69,7 +69,7 @@ export function StudioArtworkClient({ registryId }: Props) {
   const [saleModalOpen, setSaleModalOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const refresh = useCallback(async (): Promise<string | null> => {
-    const { data: a } = await supabase
+    const { data: a } = await sb()
       .from("artworks")
       .select("*")
       .eq("registry_id", cleanId)
@@ -81,7 +81,7 @@ export function StudioArtworkClient({ registryId }: Props) {
     }
     setNotFound(false);
     setArtwork(a as Record<string, unknown>);
-    const { data: artist } = await supabase
+    const { data: artist } = await sb()
       .from("artists")
       .select("display_name, full_name")
       .eq("id", a.artist_id)
@@ -92,21 +92,21 @@ export function StudioArtworkClient({ registryId }: Props) {
         "Artist"
     );
 
-    const { data: own } = await supabase
+    const { data: own } = await sb()
       .from("ownership_events")
       .select("*")
       .eq("artwork_id", a.id)
       .order("created_at", { ascending: true });
     setOwnershipRows((own || []) as Record<string, unknown>[]);
 
-    const { data: val } = await supabase
+    const { data: val } = await sb()
       .from("value_events")
       .select("*")
       .eq("artwork_id", a.id)
       .order("created_at", { ascending: true });
     setValueRows((val || []) as Record<string, unknown>[]);
 
-    const { data: certRows } = await supabase.rpc(
+    const { data: certRows } = await sb().rpc(
       "get_certificate_public_status_single",
       { p_artwork_id: a.id }
     );
@@ -123,12 +123,12 @@ export function StudioArtworkClient({ registryId }: Props) {
     );
 
     return String(a.id);
-  }, [cleanId]);
+  }, [cleanId, sb]);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData } = await sb().auth.getSession();
       if (!sessionData?.session) {
         deferredRouterReplace(
           router,
@@ -140,7 +140,7 @@ export function StudioArtworkClient({ registryId }: Props) {
       if (cancelled) return;
       setUser({ id: uid });
 
-      const { data: actor } = await supabase
+      const { data: actor } = await sb()
         .from("actor_profiles")
         .select("role")
         .eq("user_id", uid)
@@ -150,7 +150,7 @@ export function StudioArtworkClient({ registryId }: Props) {
         return;
       }
 
-      const { data: adminRow } = await supabase
+      const { data: adminRow } = await sb()
         .from("artists")
         .select("is_admin")
         .eq("id", uid)
@@ -162,7 +162,7 @@ export function StudioArtworkClient({ registryId }: Props) {
         setLoading(false);
         return;
       }
-      const owned = await getCollectorOwnedArtworkIds(supabase, uid);
+      const owned = await getCollectorOwnedArtworkIds(sb(), uid);
       setIsOwner(owned.includes(artId));
 
       setLoading(false);
@@ -170,7 +170,7 @@ export function StudioArtworkClient({ registryId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [cleanId, router, refresh]);
+  }, [cleanId, router, refresh, sb]);
 
   const saleContext = useMemo(() => {
     if (!artwork?.id) return { unresolved: false as const, sale: null };
@@ -242,13 +242,7 @@ export function StudioArtworkClient({ registryId }: Props) {
       ) : null}
 
       <main className="mx-auto max-w-4xl px-5 md:px-8">
-        <PageNav
-          backHref="/collector-studio"
-          crumbs={[
-            { label: "Collector studio", href: "/collector-studio" },
-            { label: title },
-          ]}
-        />
+        <PageNav backHref="/collector-studio" />
 
         {!isOwner ? (
           <div className="rounded-2xl border border-amber-200/80 bg-amber-50/90 px-5 py-4 text-sm text-amber-950">

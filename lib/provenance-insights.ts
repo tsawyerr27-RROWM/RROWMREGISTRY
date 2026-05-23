@@ -110,7 +110,7 @@ export async function getProvenanceInsights(args: {
     if (!resolved) {
       insights.push({
         type: "neutral",
-        message: "Sale recorded — ownership transfer incomplete.",
+        message: "Sale recorded. Ownership transfer incomplete.",
         priority: 8,
       });
     }

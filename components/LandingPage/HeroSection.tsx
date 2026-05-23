@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef } from "react";
+import Link from "next/link";
+import { useMemo, useRef } from "react";
 import {
   motion,
   useReducedMotion,
@@ -9,7 +10,8 @@ import {
 } from "framer-motion";
 
 import { HeroPigmentField } from "@/components/LandingPage/HeroPigmentField";
-import { control } from "@/styles/system-design";
+import { useMaxWidth767 } from "@/hooks/useMaxWidth767";
+import { narrativeControl } from "@/styles/system-design";
 
 /**
  * Entry: full-viewport hero with local pigment field, typographic watermark, scroll depth.
@@ -17,6 +19,7 @@ import { control } from "@/styles/system-design";
 export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
+  const narrow = useMaxWidth767();
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -24,22 +27,39 @@ export default function HeroSection() {
     layoutEffect: false,
   });
 
-  const contentY = useTransform(
-    scrollYProgress,
-    [0, 1],
-    reduce ? [0, 0] : [0, -18]
+  const contentYOutput = useMemo(
+    () => (reduce ? ([0, 0] as const) : narrow ? ([0, -11] as const) : ([0, -18] as const)),
+    [narrow, reduce]
+  );
+  const contentOpacityOutput = useMemo(
+    () =>
+      reduce
+        ? ([1, 1, 1] as const)
+        : narrow
+          ? ([1, 1, 0.88] as const)
+          : ([1, 1, 0.82] as const),
+    [narrow, reduce]
+  );
+  const fieldOpacityOutput = useMemo(
+    () =>
+      reduce
+        ? ([1, 1, 1] as const)
+        : narrow
+          ? ([1, 0.96, 0.78] as const)
+          : ([1, 0.95, 0.72] as const),
+    [narrow, reduce]
   );
 
+  const contentY = useTransform(scrollYProgress, [0, 1], [...contentYOutput]);
   const contentOpacity = useTransform(
     scrollYProgress,
     [0, 0.45, 1],
-    reduce ? [1, 1, 1] : [1, 1, 0.82]
+    [...contentOpacityOutput]
   );
-
   const fieldOpacity = useTransform(
     scrollYProgress,
     [0, 0.7, 1],
-    reduce ? [1, 1, 1] : [1, 0.95, 0.72]
+    [...fieldOpacityOutput]
   );
 
   return (
@@ -55,7 +75,7 @@ export default function HeroSection() {
         <HeroPigmentField variant="landing" bold chromatic />
       </motion.div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-[var(--rrowm-base-soft,#fafcfd)] via-[var(--rrowm-base-soft,#fafcfd)]/35 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-[color-mix(in_srgb,var(--rrowm-base-soft)_90%,var(--rrowm-parchment)_10%)] via-[var(--rrowm-base-soft)]/32 to-transparent" />
 
       <div className="relative z-10 mx-auto w-full max-w-[min(100%,88rem)] px-6 md:px-14 lg:px-[max(1.5rem,calc((100vw-72rem)/2+1rem))]">
         <div className="grid gap-12 lg:grid-cols-12 lg:items-end lg:gap-6">
@@ -64,30 +84,30 @@ export default function HeroSection() {
             style={{ y: contentY, opacity: contentOpacity }}
           >
             <h1 className="mt-7 max-w-[min(100%,46rem)] font-serif text-[clamp(2.5rem,7.4vw,5.2rem)] font-normal leading-[0.985] tracking-[-0.02em] text-neutral-950 md:mt-8 lg:max-w-[min(100%,52rem)]">
-              Protecting authorship of contemporary art
+              Authorship and chronology, on one catalogue record
             </h1>
 
             <p className="mt-10 max-w-[38rem] text-sm leading-[1.78] text-neutral-600 md:text-base md:leading-[1.75]">
-              A cryptographically verifiable registry for artworks, provenance,
-              and certificates of authenticity.
+              Each work keeps one stable registry identity. Chronology and the current
+              record show what participants file. Open a work to watch continuity accrue.
             </p>
 
             <nav
               className="mt-14 flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6 md:mt-16"
               aria-label="Primary actions"
             >
-              <a href="/registry" className={`${control.primary} w-fit`}>
-                Explore registry
-              </a>
-              <a href="/get-started" className={`${control.secondary} w-fit`}>
-                Get started
-              </a>
-              <a
+              <Link href="/registry" className={`${narrativeControl.primary} w-fit`}>
+                Browse catalogue
+              </Link>
+              <Link href="/get-started" className={`${narrativeControl.secondary} w-fit`}>
+                Take part
+              </Link>
+              <Link
                 href="/about"
-                className={`${control.quietLink} w-fit sm:ml-2`}
+                className={`${narrativeControl.quietLink} w-fit sm:ml-2`}
               >
-                How the registry works
-              </a>
+                Overview
+              </Link>
             </nav>
           </motion.div>
 

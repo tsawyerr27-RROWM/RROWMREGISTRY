@@ -12,8 +12,8 @@ type Props = {
  */
 export function InstitutionalCredibilityStrip({ children }: Props) {
   return (
-    <div className="border-y border-neutral-200/55 bg-white/60 backdrop-blur-sm">
-      <div className={`${narrativeLayout.gutter} py-8 md:py-10`}>
+    <div className="rrowm-atmo-section--mist backdrop-blur-[2px]">
+      <div className={`${narrativeLayout.gutter} py-6 md:py-8`}>
         <p className="mx-auto max-w-3xl text-center text-sm leading-relaxed text-neutral-600 md:text-[15px] md:leading-relaxed">
           {children}
         </p>

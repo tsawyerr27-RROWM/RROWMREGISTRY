@@ -10,27 +10,27 @@ const PERSONAS = [
   {
     title: "Artists & studios",
     body:
-      "establishing a lasting record for works they stand behind, with certificates and provenance tied to one identity.",
+      "File represented works and certificates so the public catalogue and chronology stay aligned with what you stand behind.",
   },
   {
     title: "Galleries & estates",
     body:
-      "maintaining continuity across exhibitions and transfers without fragmenting the story of each piece.",
+      "Keep institutional association and participant confirmations on record as exhibitions and custody change.",
   },
   {
     title: "Collectors & researchers",
     body:
-      "using the public layer to verify what is on record before going further through authenticated channels.",
+      "Read the current record in public search, then go deeper through sign-in when a work invites authenticated access.",
   },
 ] as const;
 
 export function LandingPersonaStrip() {
   return (
     <section
-      className="border-y border-neutral-200/55 bg-[var(--rrowm-base-soft)]/75"
+      className="rrowm-atmo-section--dusk"
       aria-labelledby="landing-personas-heading"
     >
-      <div className={`${narrativeLayout.gutter} py-20 md:py-28`}>
+      <div className={`${narrativeLayout.gutter} ${narrativeLayout.sectionPadYTight}`}>
         <div className="max-w-3xl">
           <h2
             id="landing-personas-heading"
@@ -40,7 +40,7 @@ export function LandingPersonaStrip() {
           </h2>
         </div>
 
-        <ul className="mt-12 grid gap-10 md:mt-14 md:grid-cols-3 md:gap-0 md:gap-y-0 md:divide-x md:divide-neutral-200/60 md:pl-0">
+        <ul className="mt-12 grid gap-10 md:mt-14 md:grid-cols-3 md:gap-0 md:gap-y-0 md:divide-x md:divide-[color:var(--rrowm-atmo-rim)] md:pl-0">
           {PERSONAS.map((item, i) => (
             <li
               key={item.title}

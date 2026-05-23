@@ -4,7 +4,7 @@ import { SignupClient } from "./SignupClient";
 
 function SignupFallback() {
   return (
-    <AuthPageShell title="Create account" subtitle="Loading…">
+    <AuthPageShell title="Join the registry" subtitle="Loading…">
       <p className="text-center text-[14px] text-neutral-500 sm:text-[15px]">
         One moment.
       </p>

@@ -32,7 +32,7 @@ export function ScrollInvitation() {
           aria-hidden
         >
           <span className="text-sm font-medium text-neutral-600/85">
-            Scroll
+            Continue
           </span>
           <motion.span
             className="flex h-9 w-9 transform-gpu items-center justify-center rounded-full border border-black/10 bg-white/40 text-neutral-500 shadow-sm backdrop-blur-sm [backface-visibility:hidden]"

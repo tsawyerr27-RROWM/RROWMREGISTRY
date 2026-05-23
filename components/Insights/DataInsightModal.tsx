@@ -39,6 +39,7 @@ export function DataInsightModal({
   onClose,
   title,
   subtitle,
+  chartLoading,
   kind,
   data,
   lines,
@@ -51,6 +52,8 @@ export function DataInsightModal({
   onClose: () => void;
   title: string;
   subtitle?: string | null;
+  /** When true, chart area shows a quiet loading state (subtitle stays interpretive copy). */
+  chartLoading?: boolean;
   kind: "line" | "bar";
   data: any[];
   lines?: LineSpec[];
@@ -63,7 +66,7 @@ export function DataInsightModal({
   const lineSpecs = lines || [{ key: "value", label: "Value" }];
   const showLegend = kind === "line" && lineSpecs.length > 1;
   const hasChartData = Array.isArray(data) && data.length > 0;
-  const isLoadingChart = subtitle === "Loading…";
+  const isLoadingChart = Boolean(chartLoading);
 
   return (
     <AnimatePresence>
@@ -71,9 +74,8 @@ export function DataInsightModal({
         <ModalShell
           isOpen={open}
           onClose={onClose}
-          overlayClassName="liquid-glass-backdrop backdrop-blur-xl ds-z-modal-backdrop fixed inset-0 flex items-center justify-center p-6 transition-opacity duration-200 ease-out md:p-8"
-          panelClassName="liquid-glass rrowm-modal-surface flex min-h-0 w-full max-w-3xl max-h-[min(92vh,56rem)] flex-col overflow-hidden"
-          closeClassName="liquid-glass-close absolute right-4 top-4 z-20 rounded-xl px-4 py-2 text-sm font-medium text-neutral-600 transition duration-200 ease-out hover:bg-white/75 hover:text-neutral-900 md:right-5 md:top-5"
+          tone="light"
+          panelClassName="flex min-h-0 w-full max-w-3xl max-h-[min(92vh,56rem)] flex-col overflow-hidden"
         >
           <div className="relative flex min-h-0 flex-1 flex-col">
             <div
@@ -108,7 +110,7 @@ export function DataInsightModal({
                             aria-hidden
                           />
                           <p className="text-sm text-neutral-500">
-                            Loading chart…
+                            Retrieving series on file…
                           </p>
                         </div>
                       ) : (

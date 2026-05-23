@@ -59,7 +59,7 @@ type StudioSearchRowProps = {
   searchPlaceholder?: string;
   /** Filter dropdowns / primary actions (right column on large screens) */
   aside?: ReactNode;
-  /** `light` = Artworks surfaces; `dark` = Certificates / Ownership */
+  /** `light` = studio list surfaces (artworks, certificates, ownership) */
   tone?: StudioListTone;
 };
 

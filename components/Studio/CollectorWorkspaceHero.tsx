@@ -2,6 +2,13 @@
 
 import Link from "next/link";
 import { ArtworksHeroPreview } from "@/components/Dashboard/ArtworksHeroPreview";
+import {
+  CompletenessMeter,
+  HeroActionButton,
+  HeroInlineLink,
+  HeroStat,
+  HeroTile,
+} from "@/components/workspace/WorkspaceHeroPrimitives";
 
 type PreviewArtwork = {
   id: string;
@@ -10,26 +17,21 @@ type PreviewArtwork = {
   registry_id?: string | null;
 };
 
-const STEWARDSHIP_TILES = [
-  {
-    title: "Ownership on record",
-    body: "Verified holdings, transfers, and claims — structured for yourself first, public only when you choose.",
-  },
-  {
-    title: "Private by default",
-    body: "This workspace is yours. The public collection page follows the visibility you set under Account.",
-  },
-  {
-    title: "Continuity",
-    body: "Certificates and timeline notes trace how works move through stewardship over time.",
-  },
-];
+export type CollectorWorkspaceSnapshot = {
+  held: number;
+  verifiedOwnership: number;
+  attentionCount: number;
+  profilePublic: boolean;
+  anonymousOnPublic: boolean;
+};
 
 type Props = {
   displayName: string;
   location: string | null;
   publicPageHref: string | null;
   previewArtworks: PreviewArtwork[];
+  snapshot: CollectorWorkspaceSnapshot;
+  onGoToSection: (section: "works" | "attention") => void;
 };
 
 export function CollectorWorkspaceHero({
@@ -37,12 +39,18 @@ export function CollectorWorkspaceHero({
   location,
   publicPageHref,
   previewArtworks,
+  snapshot,
+  onGoToSection,
 }: Props) {
   const headline = displayName.trim() || "Your collection";
   const hasPreview = previewArtworks.length > 0;
   const anyPreviewImage = previewArtworks.some(
     (a) => a.image_url && String(a.image_url).trim() !== ""
   );
+  const verifiedPct =
+    snapshot.held > 0
+      ? Math.round((snapshot.verifiedOwnership / snapshot.held) * 100)
+      : 0;
 
   return (
     <div className="relative overflow-hidden rounded-[1.25rem] border border-white/10 bg-gradient-to-br from-neutral-950 via-[#0f1714] to-neutral-950 shadow-[0_32px_64px_-24px_rgba(0,0,0,0.45),inset_0_1px_0_0_rgba(255,255,255,0.06)]">
@@ -57,7 +65,10 @@ export function CollectorWorkspaceHero({
       <div className="relative grid gap-10 px-6 py-12 lg:grid-cols-12 lg:gap-8 lg:px-10 lg:py-14 xl:px-14">
         <div className="flex flex-col justify-between lg:col-span-7">
           <div>
-            <h1 className="font-serif text-[2rem] font-normal leading-[1.05] tracking-tight text-white md:text-[2.65rem] lg:text-[2.85rem]">
+            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-white/45">
+              Collector stewardship workspace
+            </p>
+            <h1 className="mt-3 font-serif text-[2rem] font-normal leading-[1.05] tracking-tight text-white md:text-[2.65rem] lg:text-[2.85rem]">
               {headline}
             </h1>
             {location ? (
@@ -71,15 +82,97 @@ export function CollectorWorkspaceHero({
 
           <div className="mt-10 space-y-5 lg:mt-12">
             <ul className="grid gap-4 sm:grid-cols-3 sm:gap-5">
-              {STEWARDSHIP_TILES.map((t) => (
-                <li
-                  key={t.title}
-                  className="rounded-lg bg-white/[0.06] p-4 ring-1 ring-white/10"
-                >
-                  <p className="text-[13px] font-medium text-white">{t.title}</p>
-                  <p className="mt-2 text-xs leading-relaxed text-white/55">{t.body}</p>
-                </li>
-              ))}
+              <HeroTile
+                title="Ownership on record"
+                footer={
+                  <HeroActionButton onClick={() => onGoToSection("works")}>
+                    View works
+                  </HeroActionButton>
+                }
+              >
+                <HeroStat
+                  value={snapshot.held}
+                  sub={snapshot.held === 1 ? "work" : "works"}
+                  label="In your stewardship"
+                />
+                <CompletenessMeter
+                  percent={verifiedPct}
+                  label="Verified ownership"
+                  accent="teal"
+                />
+              </HeroTile>
+
+              <HeroTile
+                title="Private by default"
+                footer={
+                  <HeroInlineLink href="/account" className="block w-full">
+                    Account &amp; presence
+                  </HeroInlineLink>
+                }
+              >
+                <div className="flex items-center gap-4">
+                  <div
+                    className={`flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl ring-1 ${
+                      snapshot.profilePublic
+                        ? "bg-emerald-500/15 ring-emerald-400/30"
+                        : "bg-white/5 ring-white/15"
+                    }`}
+                  >
+                    <span className="text-[9px] uppercase text-white/45">Profile</span>
+                    <span
+                      className={`text-sm font-semibold ${
+                        snapshot.profilePublic ? "text-emerald-200" : "text-white/40"
+                      }`}
+                    >
+                      {snapshot.profilePublic ? "On" : "Off"}
+                    </span>
+                  </div>
+                  <div className="min-w-0 space-y-1.5">
+                    <p className="text-[11px] leading-relaxed text-white/55">
+                      {snapshot.profilePublic
+                        ? "Public collection page is available."
+                        : "No public profile — workspace stays private."}
+                    </p>
+                    <span
+                      className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                        snapshot.anonymousOnPublic
+                          ? "bg-violet-500/20 text-violet-200/90"
+                          : "bg-white/10 text-white/50"
+                      }`}
+                    >
+                      {snapshot.anonymousOnPublic ? "Anonymous label" : "Name shown"}
+                    </span>
+                  </div>
+                </div>
+              </HeroTile>
+
+              <HeroTile
+                title="Continuity"
+                footer={
+                  snapshot.attentionCount > 0 ? (
+                    <HeroActionButton onClick={() => onGoToSection("attention")}>
+                      Open attention ({snapshot.attentionCount})
+                    </HeroActionButton>
+                  ) : (
+                    <span className="text-[11px] text-white/40">Nothing needs attention</span>
+                  )
+                }
+              >
+                <HeroStat
+                  value={snapshot.attentionCount}
+                  sub={
+                    snapshot.attentionCount === 1 ? "item" : "items"
+                  }
+                  label="Transfers, claims & verification"
+                />
+                {snapshot.attentionCount > 0 ? (
+                  <span className="inline-flex w-fit rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-medium text-amber-100/95 ring-1 ring-amber-400/30">
+                    Action suggested
+                  </span>
+                ) : (
+                  <span className="text-[11px] text-emerald-300/80">All clear</span>
+                )}
+              </HeroTile>
             </ul>
           </div>
 

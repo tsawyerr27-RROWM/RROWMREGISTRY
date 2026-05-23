@@ -9,11 +9,11 @@ import { narrativeLayout } from "@/styles/narrative-layout";
 export function LandingThesisBand() {
   return (
     <section
-      className="relative border-b border-neutral-200/45 bg-gradient-to-b from-[var(--rrowm-base-soft)] via-[var(--rrowm-base-mid)]/18 to-[var(--rrowm-base-soft)]"
+      className="rrowm-atmo-section--warm"
       aria-labelledby="landing-context-heading"
     >
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-neutral-200/70 to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px rrowm-atmo-section__hairline"
         aria-hidden
       />
 
@@ -24,33 +24,35 @@ export function LandingThesisBand() {
               id="landing-context-heading"
               className="max-w-[min(100%,46rem)] font-serif text-[clamp(1.6rem,2.8vw,2.35rem)] font-normal leading-[1.16] tracking-tight text-neutral-950"
             >
-              Provenance should not drift across disconnected files
+              Continuity belongs with the work, not scattered across files
             </h2>
             <p className="mt-8 max-w-[40rem] text-base leading-[1.86] text-neutral-600 md:text-lg md:leading-[1.8]">
-              The registry makes authorship, provenance, and verification durable.
-              Records do not depend on a single PDF, inbox thread, or claim. They
-              bind certificates and events to one stable identity, with explicit
-              rules for what is visible in public search and what remains private.
+              Artists, institutions, and collectors can each leave filings on the same
+              chronology. The public catalogue shows what is on file; deeper material
+              stays behind sign-in where it belongs.
             </p>
           </div>
 
           <div className="lg:col-span-5 lg:pt-1">
-            <div className="grid gap-4 rounded-3xl border border-neutral-200/60 bg-white/60 p-7 shadow-[0_24px_70px_-52px_rgba(15,23,42,0.22)] backdrop-blur-sm md:p-8">
+            <div className="grid gap-4 rounded-3xl border border-[color:var(--rrowm-atmo-rim)] bg-gradient-to-br from-[color-mix(in_srgb,var(--rrowm-atmo-panel)_88%,transparent)] via-[color-mix(in_srgb,var(--rrowm-atmo-panel-muted)_82%,transparent)] to-[color-mix(in_srgb,var(--rrowm-atmo-panel-muted)_78%,transparent)] p-7 shadow-[0_24px_70px_-52px_rgba(15,23,42,0.18)] backdrop-blur-sm transition-[border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] md:p-8 md:hover:border-[color:color-mix(in_srgb,var(--rrowm-atmo-rim)_75%,rgb(55_48_43))] md:hover:bg-gradient-to-br md:from-[color-mix(in_srgb,var(--rrowm-atmo-panel-raise)_90%,transparent)] md:via-[color-mix(in_srgb,var(--rrowm-atmo-panel)_86%,transparent)] md:to-[color-mix(in_srgb,var(--rrowm-atmo-panel-muted)_80%,transparent)] md:hover:shadow-[0_28px_76px_-50px_rgba(15,23,42,0.2)]">
               {[
                 {
-                  t: "Durable identity",
-                  b: "One record per work, consistent across time and transfers.",
+                  t: "Current record",
+                  b: "One catalogue entry per work: the listing you verify against today.",
                 },
                 {
-                  t: "Verification surface",
-                  b: "Public entries show what is on record without exposing private details.",
+                  t: "Chronology on file",
+                  b: "Milestones accumulate in order; later filings sit alongside earlier ones.",
                 },
                 {
-                  t: "Policy clarity",
-                  b: "Visibility is explicit: public, authenticated, or private by design.",
+                  t: "Participant roles",
+                  b: "Institutional association and collector stewardship appear where participants file them.",
                 },
               ].map((x) => (
-                <div key={x.t} className="rounded-2xl border border-neutral-200/55 bg-white/70 px-5 py-4">
+                <div
+                  key={x.t}
+                  className="rounded-2xl border border-[color:var(--rrowm-atmo-rim)] bg-[color-mix(in_srgb,var(--rrowm-atmo-panel-muted)_90%,transparent)] px-5 py-4 transition-[border-color,background-color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] md:hover:border-[color:color-mix(in_srgb,var(--rrowm-atmo-rim)_78%,rgb(55_48_43))] md:hover:bg-[color-mix(in_srgb,var(--rrowm-atmo-panel-raise)_88%,transparent)] md:hover:shadow-[0_14px_44px_-36px_rgba(15,23,42,0.12)]"
+                >
                   <p className="text-sm font-medium text-neutral-900">{x.t}</p>
                   <p className="mt-2 text-sm leading-[1.7] text-neutral-600">{x.b}</p>
                 </div>

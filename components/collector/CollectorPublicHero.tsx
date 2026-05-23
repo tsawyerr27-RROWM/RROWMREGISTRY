@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { collectorTemporalPresenceLines } from "@/lib/archival-temporal";
 
 export type CollectorPublicHeroStats = {
   total_owned: number;
@@ -23,6 +24,8 @@ export function CollectorPublicHero({
   stats,
   ownerTools,
 }: Props) {
+  const temporalPresence = collectorTemporalPresenceLines(stats);
+
   return (
     <section className="relative mt-8 overflow-hidden rounded-[1.25rem] border border-neutral-900/[0.07] bg-gradient-to-br from-[#f8faf9] via-white to-sky-50/40 shadow-[0_24px_48px_-28px_rgba(15,23,42,0.12),inset_0_1px_0_0_rgba(255,255,255,0.9)]">
       <div
@@ -48,21 +51,29 @@ export function CollectorPublicHero({
                 {stats.total_owned}
               </span>
               <span className="ml-1.5 text-neutral-500">
-                {stats.total_owned === 1 ? "work" : "works"} held
+                {stats.total_owned === 1 ? "work" : "works"} on file
               </span>
             </span>
-            <span className="inline-flex items-center rounded-full border border-emerald-900/15 bg-emerald-50/80 px-3.5 py-1.5 text-[13px] tabular-nums text-emerald-950/90 backdrop-blur-sm">
+            <span className="inline-flex items-center rounded-full border border-neutral-900/10 bg-white/60 px-3.5 py-1.5 text-[13px] tabular-nums text-neutral-800 backdrop-blur-sm">
               <span className="font-semibold">{stats.verified_owned}</span>
-              <span className="ml-1.5 font-normal text-emerald-900/75">
-                verified on registry
+              <span className="ml-1.5 font-normal text-neutral-600">
+                with verified catalogue listing
               </span>
             </span>
             {stats.first_activity_at &&
             !Number.isNaN(new Date(stats.first_activity_at).getTime()) ? (
               <span className="inline-flex items-center rounded-full border border-neutral-900/8 bg-white/50 px-3.5 py-1.5 text-[12px] tabular-nums text-neutral-500 backdrop-blur-sm">
-                Since {new Date(stats.first_activity_at).getFullYear()}
+                Stewardship since {new Date(stats.first_activity_at).getFullYear()}
               </span>
             ) : null}
+          </div>
+        ) : null}
+
+        {temporalPresence.length > 0 ? (
+          <div className="mt-5 max-w-xl space-y-2 text-[12px] leading-relaxed text-neutral-500">
+            {temporalPresence.map((line) => (
+              <p key={line}>{line}</p>
+            ))}
           </div>
         ) : null}
 

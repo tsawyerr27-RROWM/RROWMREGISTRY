@@ -36,6 +36,7 @@ export function CookieBanner() {
 
   return (
     <div
+      data-rrowm-chrome-suppress-invite-signup
       className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex justify-center p-4 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] md:p-6 md:pb-[max(2rem,env(safe-area-inset-bottom,0px))]"
       role="dialog"
       aria-label="Cookie preferences"

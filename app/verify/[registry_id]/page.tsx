@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { warnSupabaseRpc } from "@/lib/supabase-rpc-error";
 import { PageNav } from "@/components/ui/PageNav";
+import { recordVerificationPendingLabel } from "@/lib/representation-language";
 
 export const dynamic = "force-dynamic";
 
@@ -85,15 +86,7 @@ export default async function VerifyPage({
   return (
     <div className="ds-page-environment relative flex min-h-screen items-center justify-center px-6 py-24 pt-28">
       <div className="absolute left-0 right-0 top-24 mx-auto max-w-4xl px-6">
-        <PageNav
-          backHref={backHref}
-          crumbs={[
-            crumbsRoot,
-            { label: "Verify", href: `/verify/${encodeURIComponent(artwork.registry_id)}` },
-            { label: artwork.registry_id },
-          ]}
-          className="mb-6"
-        />
+        <PageNav backHref={backHref} className="mb-6" />
       </div>
       {isRevoked && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -146,7 +139,7 @@ export default async function VerifyPage({
             </span>
             <p className="mt-1 capitalize">
               {!isVerified
-                ? "Pending verification"
+                ? recordVerificationPendingLabel()
                 : !certificate?.has_certificate
                   ? "Certificate not recorded"
                   : isRevoked

@@ -20,7 +20,9 @@ export function WhatRegistryIs({ density = "default" }: WhatRegistryIsProps) {
   return (
     <Shell
       className={
-        digest ? "relative" : `relative ${narrativeLayout.sectionPadY}`
+        digest
+          ? "relative"
+          : `rrowm-atmo-section--warm ${narrativeLayout.gutter} ${narrativeLayout.sectionPadY}`
       }
       {...(!digest ? { "aria-labelledby": "about-what-heading" } : {})}
     >
@@ -35,7 +37,7 @@ export function WhatRegistryIs({ density = "default" }: WhatRegistryIsProps) {
           className={
             digest
               ? ""
-              : "lg:border-r lg:border-neutral-200/55 lg:pr-14"
+              : "lg:border-r lg:border-[color:var(--rrowm-atmo-rim)] lg:pr-14"
           }
         >
           <div className={digest ? "" : "lg:sticky lg:top-32 lg:max-w-[13rem]"}>
@@ -49,7 +51,7 @@ export function WhatRegistryIs({ density = "default" }: WhatRegistryIsProps) {
           {!digest ? (
             <>
               <div
-                className="pointer-events-none absolute -right-24 top-0 h-[min(100%,42rem)] w-[min(58%,22rem)] bg-gradient-to-bl from-neutral-200/55 via-white/30 to-transparent opacity-80 blur-2xl md:-right-32"
+                className="pointer-events-none absolute -right-24 top-0 h-[min(100%,42rem)] w-[min(58%,22rem)] rounded-full bg-gradient-to-bl from-stone-200/35 via-[color-mix(in_srgb,var(--rrowm-atmo-panel-muted)_40%,transparent)] to-transparent opacity-75 blur-2xl md:-right-32"
                 aria-hidden
               />
               <div

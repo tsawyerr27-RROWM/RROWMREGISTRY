@@ -25,14 +25,18 @@ export function SystemProperties({ density = "default" }: SystemPropertiesProps)
 
   return (
     <Shell
-      className={digest ? "" : narrativeLayout.sectionPadY}
+      className={
+        digest
+          ? ""
+          : `rrowm-atmo-section--mist ${narrativeLayout.gutter} ${narrativeLayout.sectionPadY}`
+      }
       {...(!digest ? { "aria-labelledby": "about-properties-heading" } : {})}
     >
       <div
         className={
           digest
             ? "pt-0"
-            : "border-t border-neutral-200/60 pt-16 md:pt-20"
+            : "border-t border-[color:var(--rrowm-atmo-rim)] pt-16 md:pt-20"
         }
       >
         <h2
@@ -48,8 +52,8 @@ export function SystemProperties({ density = "default" }: SystemPropertiesProps)
         <ul
           className={
             digest
-              ? "mt-6 divide-y divide-neutral-200/50 border-y border-neutral-200/50"
-              : "mt-12 divide-y divide-neutral-200/55 border-y border-neutral-200/55 md:mt-16"
+              ? "mt-6 divide-y divide-[color:var(--rrowm-atmo-rim)] border-y border-[color:var(--rrowm-atmo-rim)]"
+              : "mt-12 divide-y divide-[color:var(--rrowm-atmo-rim)] border-y border-[color:var(--rrowm-atmo-rim)] md:mt-16"
           }
         >
           {ITEMS.map((item) => (

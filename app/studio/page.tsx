@@ -1,8 +1,23 @@
 "use client";
 
-import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
-import { useEffect, useState, useMemo, useRef, type ReactNode } from "react";
+import {
+  mapAmendmentRequestRow,
+  type RepresentationAmendmentListItem,
+} from "@/lib/representation-amendments";
+import { parseArtistRepresentationState } from "@/lib/artwork-representation";
+import { EndRepresentationModal } from "@/components/Studio/EndRepresentationModal";
+import { GovernanceSectionShell } from "@/components/Studio/GovernanceSectionShell";
+import { REPRESENTATION_PHRASES } from "@/lib/representation-language";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  useMemo,
+  useRef,
+  type ReactNode,
+} from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CertificateOverviewModal } from "@/components/certificate/CertificateOverviewModal";
@@ -11,7 +26,13 @@ import {
   ArtworksSection,
   type ArtworksListFilter,
 } from "@/components/Dashboard/ArtworksSection";
-import { ArtworksHeroPreview } from "@/components/Dashboard/ArtworksHeroPreview";
+import { ArtistWorkspaceHero } from "@/components/Studio/ArtistWorkspaceHero";
+import {
+  ArtistRepresentationReviewSection,
+  type ArtistRepresentationReviewItem,
+} from "@/components/Studio/ArtistRepresentationReviewSection";
+import { ArchivalAuthorshipContributionModal } from "@/components/Studio/ArchivalAuthorshipContributionModal";
+import { RepresentationAmendmentsSection } from "@/components/Studio/RepresentationAmendmentsSection";
 import { ArtworkDetailModal } from "@/components/Dashboard/ArtworkDetailModal";
 import { OwnershipSection } from "@/components/Dashboard/OwnershipSection";
 import {
@@ -19,6 +40,11 @@ import {
   type CertificatesListFilter,
 } from "@/components/Dashboard/CertificatesSection";
 import ModalShell from "@/components/ui/ModalShell";
+import {
+  WorkspaceShell,
+  WorkspaceShellFooterLinks,
+} from "@/components/Studio/WorkspaceShell";
+import { workspace } from "@/styles/workspace-design";
 import { OwnershipLedgerActionConfirmModal } from "@/components/ownership/OwnershipLedgerActionConfirmModal";
 import { AddValueEventModal } from "@/components/Dashboard/AddValueEventModal";
 import { DataInsightModal } from "@/components/Insights/DataInsightModal";
@@ -29,6 +55,7 @@ import { testModeEnabled } from "@/lib/test-mode";
 import { TestDataControls } from "@/components/Admin/TestDataControls";
 import { getOnboardingRedirectPath } from "@/lib/onboarding";
 import { parseStudioArtworksAccent } from "@/lib/studio-artworks-accent";
+import { consumePendingStudioSection } from "@/lib/studio-workspace-nav";
 import {
   deferredRouterPush,
   deferredRouterReplace,
@@ -65,9 +92,26 @@ function isSaleLikeValueType(valueType: string | null | undefined) {
 }
 
 export default function Dashboard() {
-  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const sb = useSupabaseBrowserLazy();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [representationReviewQueue, setRepresentationReviewQueue] = useState<
+    ArtistRepresentationReviewItem[]
+  >([]);
+  const [representationConfirmBusyId, setRepresentationConfirmBusyId] =
+    useState<string | null>(null);
+  const [authorshipContributionTarget, setAuthorshipContributionTarget] =
+    useState<ArtistRepresentationReviewItem | null>(null);
+  const [authorshipContributionBusy, setAuthorshipContributionBusy] =
+    useState(false);
+  const [representationAmendments, setRepresentationAmendments] = useState<
+    RepresentationAmendmentListItem[]
+  >([]);
+  const [amendmentBusyId, setAmendmentBusyId] = useState<string | null>(null);
+  const [repStateActive, setRepStateActive] = useState(false);
+  const [repGalleryName, setRepGalleryName] = useState<string | null>(null);
+  const [endRepOpen, setEndRepOpen] = useState(false);
+  const [endRepBusy, setEndRepBusy] = useState(false);
   const [artworks, setArtworks] = useState<any[]>([]);
   const [certificateRows, setCertificateRows] = useState<any[]>([]);
   type SaleSignal = {
@@ -92,6 +136,11 @@ export default function Dashboard() {
   >({});
   const [activeSection, setActiveSection] = useState("Studio");
   const [isTransitioningSection, setIsTransitioningSection] = useState(false);
+
+  useEffect(() => {
+    const pending = consumePendingStudioSection();
+    if (pending) setActiveSection(pending);
+  }, []);
   const [certificateOverviewRegistryId, setCertificateOverviewRegistryId] =
     useState<string | null>(null);
   const [ownershipClaims, setOwnershipClaims] = useState<any[]>([]);
@@ -186,7 +235,7 @@ export default function Dashboard() {
   // FETCH
   // =============================
   const fetchArtworks = async (artistId: string) => {
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from("artwork_read_model")
       .select("*")
       .eq("artist_id", artistId)
@@ -209,6 +258,70 @@ export default function Dashboard() {
     }
   };
 
+  const fetchRepresentationReviewQueue = async () => {
+    try {
+      const { data, error } = await sb().rpc(
+        "get_artist_representation_review_queue"
+      );
+      if (error) {
+        console.warn(
+          "[studio] representation review queue",
+          summarizeRpcError(error)
+        );
+        setRepresentationReviewQueue([]);
+        return;
+      }
+      const rows = (data || []) as Record<string, unknown>[];
+      setRepresentationReviewQueue(
+        rows.map((r) => ({
+          artwork_id: String(r.artwork_id ?? ""),
+          registry_id: r.registry_id != null ? String(r.registry_id) : null,
+          title: r.title != null ? String(r.title) : null,
+          image_url: r.image_url != null ? String(r.image_url) : null,
+          gallery_id: String(r.gallery_id ?? ""),
+          gallery_name: r.gallery_name != null ? String(r.gallery_name) : null,
+          filed_at: r.filed_at != null ? String(r.filed_at) : null,
+          catalogue_artist_name:
+            r.catalogue_artist_name != null
+              ? String(r.catalogue_artist_name)
+              : null,
+          artist_linked: Boolean(r.artist_linked),
+        }))
+      );
+    } catch {
+      setRepresentationReviewQueue([]);
+    }
+  };
+
+  const fetchRepresentationAmendments = async () => {
+    try {
+      const { data, error } = await sb()
+        .from("representation_amendment_requests")
+        .select(
+          `id, artwork_id, gallery_id, requester_role, notes, proposed_changes, status, created_at, resolved_at, resolution_notes,
+          artworks ( title, registry_id, image_url, artist_id ),
+          galleries ( name )`
+        )
+        .order("created_at", { ascending: false })
+        .limit(40);
+      if (error) {
+        console.warn(
+          "[studio] representation amendments",
+          summarizeRpcError(error)
+        );
+        setRepresentationAmendments([]);
+        return;
+      }
+      setRepresentationAmendments(
+        (data || [])
+          .map((x) => mapAmendmentRequestRow(x))
+          .filter((x): x is RepresentationAmendmentListItem => x != null)
+      );
+    } catch {
+      setRepresentationAmendments([]);
+    }
+  };
+
   const openInsight = async (kind: "works" | "value" | "health") => {
     if (!user?.id) return;
     setInsightOpen(kind);
@@ -225,7 +338,7 @@ export default function Dashboard() {
 
       if (kind === "works") {
         const insights = await getDashboardInsights({
-          supabase,
+          supabase: sb(),
           userId: user.id,
           artworkIds,
         });
@@ -254,7 +367,7 @@ export default function Dashboard() {
 
       if (kind === "health") {
         const insights = await getDashboardInsights({
-          supabase,
+          supabase: sb(),
           userId: user.id,
           artworkIds,
         });
@@ -280,13 +393,13 @@ export default function Dashboard() {
         ]);
         setInsightDataNotes([
           "These bars are not additive: one work can count toward more than one category.",
-          "“Fully verified” requires a non-revoked certificate, a gallery attestation, and verified ownership — stricter than the per-row “verified” badge in your studio list.",
+          "“Fully verified” needs a non-revoked certificate, a gallery attestation, and verified ownership. That bar is stricter than the per-row “verified” badge in your studio list.",
         ]);
         return;
       }
 
       const insights = await getDashboardInsights({
-        supabase,
+        supabase: sb(),
         userId: user.id,
         artworkIds,
       });
@@ -307,7 +420,7 @@ export default function Dashboard() {
         }));
       setInsightBreakdown(breakdown);
       setInsightDataNotes([
-        "Figures are the latest declared value per currency from your value events — the same basis as the chart series — not a roll-up of every artwork’s current list price.",
+        "Figures are the latest declared value per currency from your value events (the same basis as the chart series), not a roll-up of every artwork’s current list price.",
       ]);
     } finally {
       setInsightLoading(false);
@@ -315,7 +428,7 @@ export default function Dashboard() {
   };
 
   const fetchLatestOwnersForArtworks = async (artworkIds: string[]) => {
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from("ownership_events")
       .select(
         "artwork_id, transfer_type, to_user_id, to_owner_id, to_name, to_type, created_at, id"
@@ -400,7 +513,7 @@ export default function Dashboard() {
         }>
       | null = null;
 
-    const withResolved = await supabase
+    const withResolved = await sb()
       .from("value_events")
       .select("id, artwork_id, value_type, created_at, ownership_resolved")
       .in("artwork_id", artworkIds)
@@ -408,7 +521,7 @@ export default function Dashboard() {
 
     if (withResolved.error) {
       // Fallback for projects where ownership_resolved column is missing.
-      const fallback = await supabase
+      const fallback = await sb()
         .from("value_events")
         .select("id, artwork_id, value_type, created_at")
         .in("artwork_id", artworkIds)
@@ -449,7 +562,7 @@ export default function Dashboard() {
     }
 
     const saleIds = sales.map((s) => s.id);
-    const ownershipLinkFetch = await supabase
+    const ownershipLinkFetch = await sb()
       .from("ownership_events")
       .select("value_event_id")
       .in("value_event_id", saleIds);
@@ -479,13 +592,13 @@ export default function Dashboard() {
   };
 
   const refreshSelectedArtworkEvents = async (artworkId: string) => {
-    const { data: values } = await supabase
+    const { data: values } = await sb()
       .from("value_events")
       .select("*")
       .eq("artwork_id", artworkId)
       .order("created_at", { ascending: true });
 
-    const { data: ownership } = await supabase
+    const { data: ownership } = await sb()
       .from("ownership_events")
       .select("*")
       .eq("artwork_id", artworkId)
@@ -498,7 +611,7 @@ export default function Dashboard() {
   refreshSelectedArtworkEventsRef.current = refreshSelectedArtworkEvents;
 
   const fetchCertificatesForArtist = async (artistId: string) => {
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from("artwork_read_model")
       .select(
         `
@@ -548,29 +661,29 @@ export default function Dashboard() {
   const requestOwnershipVerification = async (eventId: string) => {
     if (!user?.id || !selectedArtwork?.id) return;
     setOwnershipUiBusyId(eventId);
-    const { error } = await supabase.rpc("ownership_request_verification", {
+    const { error } = await sb().rpc("ownership_request_verification", {
       p_event_id: eventId,
     });
     if (error) {
       console.error(error);
       showToast(
         "error",
-        error.message || "Could not request verification"
+        error.message || "Verification request could not be recorded."
       );
       setOwnershipUiBusyId(null);
       return;
     }
     await refreshSelectedArtworkEventsRef.current(selectedArtwork.id);
-    showToast("success", "Verification requested");
+    showToast("success", "Verification request recorded on file.");
     setOwnershipUiBusyId(null);
   };
 
   const adminVerifyOwnership = async (eventId: string) => {
     setOwnershipUiBusyId(eventId);
-    const { data: sessionData } = await supabase.auth.getSession();
+    const { data: sessionData } = await sb().auth.getSession();
     const token = sessionData?.session?.access_token;
     if (!token) {
-      showToast("error", "Session expired");
+      showToast("error", "Session ended. Sign in again to continue.");
       setOwnershipUiBusyId(null);
       return;
     }
@@ -586,7 +699,7 @@ export default function Dashboard() {
     if (!res.ok) {
       showToast(
         "error",
-        typeof json?.error === "string" ? json.error : "Verification failed"
+        typeof json?.error === "string" ? json.error : "Verification did not complete."
       );
       setOwnershipUiBusyId(null);
       return;
@@ -594,7 +707,7 @@ export default function Dashboard() {
     if (selectedArtwork?.id) {
       await refreshSelectedArtworkEventsRef.current(selectedArtwork.id);
     }
-    showToast("success", "Ownership verified");
+    showToast("success", "Custody step verified on the chronology.");
     setOwnershipUiBusyId(null);
   };
 
@@ -603,7 +716,7 @@ useEffect(() => {
   const init = async () => {
     try {
       const { data: sessionData, error: sessionError } =
-        await supabase.auth.getSession();
+        await sb().auth.getSession();
       if (sessionError) throw sessionError;
 
       if (!sessionData?.session) {
@@ -618,7 +731,7 @@ useEffect(() => {
       setUser(currentUser);
 
       const onboardingPath = await getOnboardingRedirectPath(
-        supabase,
+        sb(),
         currentUser.id
       );
       if (onboardingPath) {
@@ -626,7 +739,7 @@ useEffect(() => {
         return;
       }
 
-      const { data: actorRow, error: actorError } = await supabase
+      const { data: actorRow, error: actorError } = await sb()
         .from("actor_profiles")
         .select("role")
         .eq("user_id", currentUser.id)
@@ -642,41 +755,62 @@ useEffect(() => {
         return;
       }
 
-      const { data: profileData } = await supabase
+      const { data: profileData } = await sb()
         .from("artists")
         .select("*")
         .eq("id", currentUser.id)
         .single();
 
       setProfile(profileData);
+      try {
+        const { data: repRaw } = await sb().rpc("get_artist_representation_state", {
+          p_artist_id: currentUser.id,
+        });
+        const rep = parseArtistRepresentationState(repRaw);
+        setRepStateActive(rep.active);
+        setRepGalleryName(null);
+        if (rep.gallery_id) {
+          const { data: gal } = await sb()
+            .from("galleries")
+            .select("name")
+            .eq("id", rep.gallery_id)
+            .maybeSingle();
+          setRepGalleryName(gal?.name ? String(gal.name) : null);
+        }
+      } catch {
+        setRepStateActive(false);
+        setRepGalleryName(null);
+      }
       await fetchArtworks(currentUser.id);
+      await fetchRepresentationReviewQueue();
+      await fetchRepresentationAmendments();
       await fetchCertificatesForArtist(currentUser.id);
       await fetchActivity(currentUser.id);
       await fetchOwnershipClaimsForArtist(currentUser.id);
     } catch (e) {
       showToast(
         "error",
-        "Network disconnected — reconnect to refresh your session."
+        "Connection interrupted. Reconnect, then open the studio again."
       );
       // Let the rest of the UI render; the app will fail gracefully when calls error.
     }
   };
 
   init();
-}, [router]);
+}, [router, sb]);
 
 // 2️ FETCH VALUE + OWNERSHIP EVENTS
 useEffect(() => {
   if (!selectedArtwork) return;
 
   const fetchEvents = async () => {
-    const { data: values } = await supabase
+    const { data: values } = await sb()
       .from("value_events")
       .select("*")
       .eq("artwork_id", selectedArtwork.id)
       .order("created_at", { ascending: true });
 
-    const { data: ownership } = await supabase
+    const { data: ownership } = await sb()
       .from("ownership_events")
       .select("*")
       .eq("artwork_id", selectedArtwork.id)
@@ -715,7 +849,7 @@ useEffect(() => {
     if (!showOwnershipLedgerModal || !selectedArtwork?.id || !user?.id) return;
     let cancelled = false;
     void (async () => {
-      const { error } = await supabase.rpc("ownership_certificate_verify", {
+      const { error } = await sb().rpc("ownership_certificate_verify", {
         p_artwork_id: selectedArtwork.id,
       });
       if (cancelled || error) return;
@@ -906,16 +1040,72 @@ useEffect(() => {
   /** Aligned with public artwork / registry editorial surfaces */
   const sectionAtmosphere = {
     Studio: "rrowm-grad-studio",
+    Records: "rrowm-grad-studio",
     Artworks: "rrowm-grad-artworks",
-    Certificates:
-      "bg-[radial-gradient(ellipse_80%_55%_at_50%_-10%,rgba(55,55,62,0.55),transparent_55%),linear-gradient(to_bottom_right,#131316_0%,#0d0d10_45%,#12121a_100%)]",
-    Ownership:
-      "bg-[radial-gradient(ellipse_70%_50%_at_80%_100%,rgba(32,32,38,0.45),transparent_50%),linear-gradient(to_bottom,#101014_0%,#0a0a0c_100%)]",
+    Certificates: "rrowm-grad-continuity",
+    Ownership: "rrowm-grad-continuity",
   };
 
   const isStudio = activeSection === "Studio";
+  const isRecordsSection = activeSection === "Records";
   const isArtworksSection = activeSection === "Artworks";
-  const isLightSection = isStudio || isArtworksSection;
+  const isContinuitySection =
+    activeSection === "Certificates" || activeSection === "Ownership";
+  const isLightSection =
+    isStudio || isRecordsSection || isArtworksSection || isContinuitySection;
+
+  const amendmentResponsesNeeded = useMemo(
+    () =>
+      representationAmendments.filter(
+        (r) => r.status === "pending" && r.requester_role === "institution"
+      ).length,
+    [representationAmendments]
+  );
+
+  const governanceAttention =
+    representationReviewQueue.length > 0 || amendmentResponsesNeeded > 0;
+
+  const studioNavItems = useMemo(
+    () =>
+      (["Studio", "Records", "Artworks", "Certificates", "Ownership"] as const).map(
+        (item) => ({
+          id: item,
+          label: item,
+          showDot:
+            (item === "Records" && governanceAttention) ||
+            (item === "Ownership" && Object.keys(saleSignals).length > 0),
+        })
+      ),
+    [saleSignals, governanceAttention]
+  );
+
+  const amendmentArtworkOptions = useMemo(
+    () =>
+      artworks.map((a: any) => ({
+        id: String(a.id),
+        title: a.title ?? null,
+        registry_id: a.registry_id ?? null,
+      })),
+    [artworks]
+  );
+
+  const showAmendmentRequestForArtist = useMemo(
+    () => Boolean(profile?.represented_by_gallery && profile?.gallery_id),
+    [profile?.represented_by_gallery, profile?.gallery_id]
+  );
+
+  const selectStudioSection = useCallback(
+    (id: string) => {
+      if (id === activeSection) return;
+      setIsTransitioningSection(true);
+      setTimeout(() => {
+        setActiveSection(id);
+        setSearchQuery("");
+        setIsTransitioningSection(false);
+      }, 180);
+    },
+    [activeSection]
+  );
 
   const [toast, setToast] = useState<{
     type: "success" | "error";
@@ -946,7 +1136,191 @@ useEffect(() => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Prevent repeating the same network/session toast many times while the app is offline.
+  const submitAuthorshipContribution = async (payload: {
+    authorship_statement: string;
+    chronology_contribution: string;
+  }) => {
+    if (!authorshipContributionTarget) return;
+    setAuthorshipContributionBusy(true);
+    try {
+      const res = await fetch("/api/representation/artist-contribute-authorship", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          artwork_id: authorshipContributionTarget.artwork_id,
+          authorship_statement: payload.authorship_statement,
+          chronology_contribution: payload.chronology_contribution,
+        }),
+      });
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        showToast("error", j?.error || "Could not file contribution.");
+        return;
+      }
+      showToast("success", "Authorship contribution filed on the chronology.");
+      setAuthorshipContributionTarget(null);
+      await fetchRepresentationReviewQueue();
+      if (user?.id) await fetchArtworks(user.id);
+    } catch {
+      showToast("error", "Could not file contribution.");
+    } finally {
+      setAuthorshipContributionBusy(false);
+    }
+  };
+
+  const confirmRepresentationOnFile = async (artworkId: string) => {
+    setRepresentationConfirmBusyId(artworkId);
+    try {
+      const res = await fetch("/api/representation/artist-confirm", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ artwork_id: artworkId }),
+      });
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        showToast("error", j?.error || "Could not confirm.");
+        return;
+      }
+      showToast("success", "Confirmation recorded on file.");
+      await fetchRepresentationReviewQueue();
+      await fetchRepresentationAmendments();
+      if (user?.id) await fetchArtworks(user.id);
+    } catch {
+      showToast("error", "Could not confirm.");
+    } finally {
+      setRepresentationConfirmBusyId(null);
+    }
+  };
+
+  const goToRecordsSection = useCallback(
+    (scrollTargetId?: string) => {
+      selectStudioSection("Records");
+      if (!scrollTargetId || typeof document === "undefined") return;
+      window.setTimeout(() => {
+        document
+          .getElementById(scrollTargetId)
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 220);
+    },
+    [selectStudioSection]
+  );
+
+  const scrollToRepresentationReview = () => {
+    goToRecordsSection("artist-record-deepening");
+  };
+
+  const scrollToRepresentationAmendments = () => {
+    goToRecordsSection("artist-representation-amendments");
+  };
+
+  const resolveArtistAmendment = async (
+    amendmentId: string,
+    accept: boolean,
+    resolutionNotes: string | null
+  ) => {
+    setAmendmentBusyId(amendmentId);
+    try {
+      const res = await fetch("/api/representation/amendment/resolve", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amendment_id: amendmentId,
+          accept,
+          resolution_notes: resolutionNotes,
+        }),
+      });
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        showToast("error", j?.error || "Could not resolve amendment.");
+        return;
+      }
+      showToast(
+        "success",
+        accept ? "Amendment accepted on file." : "Amendment declined on file."
+      );
+      await fetchRepresentationAmendments();
+      if (user?.id) await fetchArtworks(user.id);
+    } catch {
+      showToast("error", "Could not resolve amendment.");
+    } finally {
+      setAmendmentBusyId(null);
+    }
+  };
+
+  const withdrawArtistAmendment = async (amendmentId: string) => {
+    setAmendmentBusyId(amendmentId);
+    try {
+      const res = await fetch("/api/representation/amendment/withdraw", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amendment_id: amendmentId }),
+      });
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        showToast("error", j?.error || "Could not withdraw.");
+        return;
+      }
+      showToast("success", "Amendment withdrawn on file.");
+      await fetchRepresentationAmendments();
+    } catch {
+      showToast("error", "Could not withdraw.");
+    } finally {
+      setAmendmentBusyId(null);
+    }
+  };
+
+  const confirmEndArtistRepresentation = async (notes: string) => {
+    if (!user?.id) return;
+    setEndRepBusy(true);
+    try {
+      const res = await fetch("/api/representation/end", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ artist_id: user.id, notes: notes || null }),
+      });
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        showToast("error", j?.error || "Could not end representation.");
+        return;
+      }
+      showToast("success", "Representation ended on file.");
+      setEndRepOpen(false);
+      setRepStateActive(false);
+      await fetchRepresentationReviewQueue();
+      await fetchRepresentationAmendments();
+      await fetchArtworks(user.id);
+    } catch {
+      showToast("error", "Could not end representation.");
+    } finally {
+      setEndRepBusy(false);
+    }
+  };
+
+  const submitArtistAmendmentRequest = async (payload: {
+    artwork_id: string;
+    notes: string;
+    proposed_changes: Record<string, string>;
+  }) => {
+    const res = await fetch("/api/representation/amendment/request", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const j = (await res.json().catch(() => ({}))) as { error?: string };
+    if (!res.ok) {
+      throw new Error(j?.error || "Request failed.");
+    }
+    showToast("success", "Amendment request filed on the chronology.");
+    await fetchRepresentationAmendments();
+    if (user?.id) await fetchArtworks(user.id);
+  };
+
   const lastAuthToastAtRef = useRef(0);
   const showAuthToast = (message: string) => {
     const now = Date.now();
@@ -958,20 +1332,20 @@ useEffect(() => {
   // Supabase auth refresh issues commonly surface as FAILED refresh requests.
   // When the session becomes unavailable, show a clearer message to the user.
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange(
+    const { data: listener } = sb().auth.onAuthStateChange(
       (event: unknown, session: unknown) => {
         if (!session) {
           showAuthToast(
             event && String(event).toUpperCase().includes("REFRESH")
-              ? "Session refresh failed — please reconnect."
-              : "Session expired or disconnected — please reconnect."
+              ? "Session refresh failed. Please reconnect."
+              : "Session expired or disconnected. Please reconnect."
           );
         }
       }
     );
 
     const onOffline = () => {
-      showAuthToast("Network disconnected — reconnect to continue.");
+      showAuthToast("Network disconnected. Reconnect to continue.");
     };
 
     window.addEventListener("offline", onOffline);
@@ -984,7 +1358,7 @@ useEffect(() => {
   }, []);
 
   const fetchActivity = async (userId: string) => {
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from("activity_events")
       .select("*")
       .eq("user_id", userId)
@@ -1001,7 +1375,7 @@ useEffect(() => {
 
   /** Pending claims only for artworks owned by this artist (not global). */
   const fetchOwnershipClaimsForArtist = async (artistId: string) => {
-    const { data: owned, error: ownedErr } = await supabase
+    const { data: owned, error: ownedErr } = await sb()
       .from("artworks")
       .select("id")
       .eq("artist_id", artistId);
@@ -1018,7 +1392,7 @@ useEffect(() => {
       return;
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from("ownership_claims")
       .select(
         `
@@ -1068,7 +1442,7 @@ useEffect(() => {
       params.p_metadata = metadata;
     }
 
-    const { error } = await supabase.rpc("log_activity_event", params);
+    const { error } = await sb().rpc("log_activity_event", params);
 
     if (error) {
       console.error(
@@ -1078,7 +1452,7 @@ useEffect(() => {
       );
       showToast(
         "error",
-        "Could not save activity — your last action may still have succeeded. Check the console for details."
+        "Activity log could not be written. The underlying action may still be on file."
       );
     }
   };
@@ -1090,36 +1464,36 @@ useEffect(() => {
 
     setClaimActionId(claimId);
 
-    const { error: claimError } = await supabase
+    const { error: claimError } = await sb()
       .from("ownership_claims")
       .update({ status: "approved" })
       .eq("id", claimId);
 
     if (claimError) {
       console.error(claimError);
-      showToast("error", "Failed to approve claim");
+      showToast("error", "Claim could not be approved.");
       setClaimActionId(null);
       return;
     }
 
     const claimNote =
       claim.note && String(claim.note).trim()
-        ? `Ownership confirmed by artist — ${String(claim.note).trim()}`
+        ? `Ownership confirmed by artist: ${String(claim.note).trim()}`
         : "Ownership confirmed by artist";
 
     const { data: latestRow, error: latestErr } = await getLatestOwnershipEvent(
-      supabase,
+      sb(),
       claim.artwork_id
     );
     if (latestErr) {
       console.error(latestErr);
-      showToast("error", "Failed to load ownership ledger");
+      showToast("error", "Custody ledger could not be opened.");
       setClaimActionId(null);
       return;
     }
 
     if (latestRow?.id) {
-      const { error: eventError } = await supabase
+      const { error: eventError } = await sb()
         .from("ownership_events")
         .update({
           to_user_id: claim.collector_id,
@@ -1137,12 +1511,12 @@ useEffect(() => {
 
       if (eventError) {
         console.error(eventError);
-        showToast("error", "Failed to update ownership event");
+        showToast("error", "Custody row could not be updated.");
         setClaimActionId(null);
         return;
       }
     } else {
-      const { error: eventError } = await supabase
+      const { error: eventError } = await sb()
         .from("ownership_events")
         .insert({
           artwork_id: claim.artwork_id,
@@ -1157,7 +1531,7 @@ useEffect(() => {
 
       if (eventError) {
         console.error(eventError);
-        showToast("error", "Failed to record ownership event");
+        showToast("error", "Custody row could not be recorded.");
         setClaimActionId(null);
         return;
       }
@@ -1165,10 +1539,10 @@ useEffect(() => {
 
     // current_owner_id / test_owner_id refreshed by DB trigger when to_user_id is set.
 
-    showToast("success", "Ownership confirmed");
+    showToast("success", "Ownership claim recorded on the chronology.");
     await logActivity({
       type: "ownership_confirmed",
-      message: `Ownership confirmed — ${claim.artworks?.title || claim.artwork_id}`,
+      message: `Ownership confirmed: ${claim.artworks?.title || claim.artwork_id}`,
       artworkId: claim.artwork_id,
     });
     if (user?.id) {
@@ -1181,19 +1555,19 @@ useEffect(() => {
 
   const rejectClaim = async (claimId: string) => {
     setClaimActionId(claimId);
-    const { error } = await supabase
+    const { error } = await sb()
       .from("ownership_claims")
       .update({ status: "rejected" })
       .eq("id", claimId);
 
     if (error) {
       console.error(error);
-      showToast("error", "Failed to reject claim");
+      showToast("error", "Claim could not be withdrawn.");
       setClaimActionId(null);
       return;
     }
 
-    showToast("success", "Claim rejected");
+    showToast("success", "Claim withdrawn from review.");
     await logActivity({
       type: "ownership_claim_rejected",
       message: "Ownership claim rejected",
@@ -1227,13 +1601,13 @@ const handleRegisterArtwork = async () => {
       const fileExt = newArtwork.imageFile.name.split(".").pop();
       const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
 
-      const { error } = await supabase.storage
+      const { error } = await sb().storage
         .from("artwork-images")
         .upload(fileName, newArtwork.imageFile);
 
       if (error) throw error;
 
-      const { data } = supabase.storage
+      const { data } = sb().storage
         .from("artwork-images")
         .getPublicUrl(fileName);
 
@@ -1258,7 +1632,7 @@ const handleRegisterArtwork = async () => {
       }),
     );
 
-    const { data: registered, error } = await supabase.rpc(
+    const { data: registered, error } = await sb().rpc(
       "register_artwork_atomic",
       {
       p_artist_id: user.id,
@@ -1283,7 +1657,7 @@ const handleRegisterArtwork = async () => {
     if (registered && typeof registered === "object" && "id" in registered) {
       artworkIdForValue = (registered as any).id as string;
     } else {
-      const { data: latestArtworks } = await supabase
+      const { data: latestArtworks } = await sb()
         .from("artworks")
         .select("id")
         .eq("artist_id", user.id)
@@ -1295,7 +1669,7 @@ const handleRegisterArtwork = async () => {
 
     // If an initial value was provided, create a value event using the artwork id.
     if (newArtwork.declared_value && artworkIdForValue) {
-      await supabase.rpc("add_value_event", {
+      await sb().rpc("add_value_event", {
         p_artwork_id: artworkIdForValue,
         p_declared_value: Number(newArtwork.declared_value),
         p_currency: String(newArtwork.currency || "").toUpperCase(),
@@ -1308,7 +1682,7 @@ const handleRegisterArtwork = async () => {
     setShowRegisterModal(false);
     await logActivity({
       type: "artwork_registered",
-      message: `Artwork registered — ${newArtwork.title}`,
+      message: `Artwork registered: ${newArtwork.title}`,
       artworkId: artworkIdForValue,
     });
     if (user?.id) await fetchActivity(user.id);
@@ -1327,7 +1701,7 @@ const handleRegisterArtwork = async () => {
 
   } catch (err) {
     console.error(err);
-    showToast("error", "Error registering artwork");
+    showToast("error", "Work could not be registered on file.");
   }
 
   setRegisterLoading(false);
@@ -1343,7 +1717,7 @@ const handleRegisterArtwork = async () => {
         <p className="mt-8 text-sm font-medium text-neutral-500">
           RROWM
         </p>
-        <p className="mt-2 text-sm text-neutral-700">Loading your studio…</p>
+        <p className="mt-2 text-sm text-neutral-700">Opening studio…</p>
       </div>
     );
   }
@@ -1494,14 +1868,33 @@ const averageByCurrency: Record<string, number> = Object.keys(
   return acc;
 }, {});
 
+const studioSidebarActivity =
+  activityFeed.length === 0 ? (
+    <p className="text-xs text-neutral-500">No recent activity yet.</p>
+  ) : (
+    <div
+      className={
+        activityFeed.length > 3
+          ? "max-h-[14rem] space-y-3 overflow-y-auto overscroll-y-contain pr-1"
+          : "space-y-3"
+      }
+    >
+      {activityFeed.map((item) => (
+        <div key={item.id} className="text-xs text-neutral-600">
+          <p>{item.message}</p>
+          <p className="mt-1 text-[10px] text-neutral-400">
+            {new Date((item.created_at ?? item.at) || Date.now()).toLocaleString()}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+
+const ledgerFieldClass = workspace.modal.field;
+const ledgerInsetFieldClass = `${workspace.modal.field} mt-2`;
+
 return (
-  <div
-    className={`relative min-h-screen pt-20 ${
-      sectionAtmosphere[
-        activeSection as keyof typeof sectionAtmosphere
-      ]
-    } transition-[background] duration-500 ease-out`}
-  >
+  <>
     {toast && (
       <div className="fixed right-6 top-24 z-50 pointer-events-none">
         <div
@@ -1516,308 +1909,57 @@ return (
       </div>
     )}
 
-    <div
-      className={`relative z-10 mx-auto flex w-full max-w-[1600px] min-h-[calc(100vh-5rem)] ${
-        isLightSection ? "text-neutral-800" : "text-white"
-      }`}
+    <WorkspaceShell
+      atmosphereClassName={
+        sectionAtmosphere[activeSection as keyof typeof sectionAtmosphere]
+      }
+      navItems={studioNavItems}
+      activeId={activeSection}
+      onSelect={selectStudioSection}
+      isLightChrome={isLightSection}
+      isTransitioning={isTransitioningSection}
+      sidebarFooter={<WorkspaceShellFooterLinks isLight={isLightSection} />}
+      sidebarActivity={studioSidebarActivity}
+      onSignOut={async () => {
+        await sb().auth.signOut();
+        deferredRouterPush(
+          router,
+          "/login?next=" + encodeURIComponent("/studio")
+        );
+      }}
     >
-      {/* Sidebar */}
-      <aside className="hidden w-72 shrink-0 px-6 py-10 lg:block lg:w-80 lg:px-8 xl:px-10 xl:py-12">
-        <div
-          className={`sticky top-24 py-2 pr-6 transition-colors duration-300 xl:pr-8`}
-        >
-          <div className="flex flex-col gap-8 text-[13px]">
-            {(["Studio", "Artworks", "Certificates", "Ownership"] as const).map(
-              (item) => (
-                <button
-                  key={item}
-                  onClick={() => {
-                    if (item === activeSection) return;
-                    setIsTransitioningSection(true);
-                    setTimeout(() => {
-                      setActiveSection(item);
-                      setSearchQuery("");
-                      setIsTransitioningSection(false);
-                    }, 180);
-                  }}
-                  className={`group relative text-left transition-colors ${
-                    activeSection === item
-                      ? isLightSection
-                        ? "text-neutral-900"
-                        : "text-white"
-                      : isLightSection
-                        ? "text-neutral-500 hover:text-neutral-800"
-                        : "text-white/60 hover:text-white"
-                  }`}
-                >
-                  <span className="flex items-center gap-2 text-sm">
-                    <span>
-                      {item}
-                    </span>
-                    {item === "Ownership" &&
-                    Object.keys(saleSignals).length > 0 ? (
-                      <span
-                        className="inline-flex h-2 w-2 rounded-full bg-amber-300/80"
-                        aria-label="New sale recorded"
-                        title="New sale recorded"
-                      />
-                    ) : null}
-                  </span>
-                  <span
-                    className={`absolute -bottom-2 left-0 h-px w-8 rounded-full transition-opacity ${
-                      activeSection === item
-                        ? isLightSection
-                          ? "bg-neutral-900 opacity-70"
-                          : "bg-white opacity-70"
-                        : "opacity-0 group-hover:opacity-40"
-                    }`}
-                  />
-                </button>
-              )
-            )}
-          </div>
-
-          <div className={`mt-10 pt-6 ${isLightSection ? "border-t border-black/10" : ""}`}>
-            <Link
-              href="/account"
-              className={`mb-4 block text-sm font-medium transition ${
-                isLightSection
-                  ? "text-neutral-500 hover:text-neutral-800"
-                  : "text-white hover:text-white/90"
-              }`}
-            >
-              My account →
-            </Link>
-            <Link
-              href="/registry"
-              className={`text-sm font-medium transition ${
-                isLightSection
-                  ? "text-neutral-500 hover:text-neutral-800"
-                  : "text-white hover:text-white/90"
-              }`}
-            >
-              Public registry →
-            </Link>
-          </div>
-
-          <div className={`mt-8 pt-6 ${isLightSection ? "border-t border-black/10" : ""}`}>
-            <p
-              className={`text-sm font-medium ${
-                isLightSection ? "text-neutral-500" : "text-white/70"
-              }`}
-            >
-              <span>Activity</span>
-            </p>
-            {activityFeed.length === 0 ? (
-              <p
-                className={`mt-3 text-xs ${
-                  isLightSection ? "text-neutral-500" : "text-white/75"
-                }`}
-              >
-                No recent activity yet.
-              </p>
-            ) : (
-              <div
-                className={`mt-3 space-y-3 ${
-                  activityFeed.length > 3
-                    ? "max-h-[14rem] overflow-y-auto overscroll-y-contain pr-1"
-                    : ""
-                }`}
-              >
-                {activityFeed.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`text-xs ${
-                      isLightSection ? "text-neutral-600" : "text-white/90"
-                    }`}
-                  >
-                    <p>{item.message}</p>
-                    <p
-                      className={`mt-1 text-[10px] ${
-                        isLightSection ? "text-neutral-400" : "text-white/45"
-                      }`}
-                    >
-                      {new Date(
-                        (item.created_at ?? item.at) || Date.now()
-                      ).toLocaleString()}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <button
-            type="button"
-            className={`mt-10 w-full text-left text-sm font-medium transition-colors ${
-              isLightSection
-                ? "text-neutral-400 hover:text-neutral-700"
-                : "text-white/60 hover:text-white"
-            }`}
-            onClick={async () => {
-              await supabase.auth.signOut();
-              deferredRouterPush(
-                router,
-                "/login?next=" + encodeURIComponent("/studio")
-              );
-            }}
-          >
-            Sign out
-          </button>
-        </div>
-      </aside>
-
-      {/* Main */}
-      <div
-        className={`flex min-h-0 flex-1 flex-col px-5 pb-16 pt-8 transition-all duration-300 md:px-10 md:pt-10 lg:px-14 xl:px-20 xl:pb-24 xl:pt-12 ${
-          isTransitioningSection
-            ? "translate-y-2 opacity-0"
-            : "translate-y-0 opacity-100"
-        }`}
-      >
         {testModeEnabled() ? (
           <div className="mb-6 max-w-2xl">
             <TestDataControls />
           </div>
         ) : null}
-        {/* Mobile section switcher (sidebar is desktop-first) */}
-        <div className="mb-8 flex gap-6 overflow-x-auto pb-0 [-ms-overflow-style:none] [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden">
-          {(["Studio", "Artworks", "Certificates", "Ownership"] as const).map(
-            (item) => (
-              <button
-                key={item}
-                type="button"
-                onClick={() => {
-                  if (item === activeSection) return;
-                  setIsTransitioningSection(true);
-                  setTimeout(() => {
-                    setActiveSection(item);
-                    setSearchQuery("");
-                    setIsTransitioningSection(false);
-                  }, 180);
-                }}
-                className={`shrink-0 border-b-2 pb-3 text-sm font-medium transition ${
-                  activeSection === item
-                    ? isLightSection
-                      ? "border-neutral-900 text-neutral-950"
-                      : "border-white text-white"
-                    : isLightSection
-                      ? "border-transparent text-neutral-500 hover:text-neutral-800"
-                      : "border-transparent text-white/55 hover:text-white/90"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <span>
-                    {item}
-                  </span>
-                  {item === "Ownership" &&
-                  Object.keys(saleSignals).length > 0 ? (
-                    <span className="inline-flex h-2 w-2 rounded-full bg-amber-300/80" />
-                  ) : null}
-                </span>
-              </button>
-            )
-          )}
-        </div>
-
         {/* STUDIO (overview) */}
         {isStudio && (
           <div className="max-w-6xl space-y-14 pb-8">
-            {/* Overview — typographic; optional angled artwork preview on the right */}
-            <div className="relative overflow-hidden rounded-[1.25rem] border border-white/55 bg-gradient-to-br from-white/50 via-neutral-100/35 to-slate-400/30 shadow-[0_25px_50px_-18px_rgba(15,23,42,0.14),0_12px_24px_-16px_rgba(148,163,184,0.35),inset_0_1px_0_0_rgba(255,255,255,0.95),inset_0_-1px_0_0_rgba(100,116,139,0.1),inset_0_0_80px_-40px_rgba(255,255,255,0.35)] ring-1 ring-neutral-300/25 backdrop-blur-2xl backdrop-saturate-150">
-              {/* Specular gloss + glass */}
-              <div
-                className="pointer-events-none absolute inset-x-0 top-0 h-[46%] bg-gradient-to-b from-white/70 via-white/25 to-transparent"
-                aria-hidden
-              />
-              <div
-                className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-transparent via-white/8 to-white/20"
-                aria-hidden
-              />
-              <div
-                className="pointer-events-none absolute -right-12 top-4 h-56 w-56 rounded-full bg-white/45 blur-3xl"
-                aria-hidden
-              />
-              <div
-                className="pointer-events-none absolute -left-8 bottom-4 h-52 w-52 rounded-full bg-slate-200/50 blur-3xl"
-                aria-hidden
-              />
-              <div
-                className="pointer-events-none absolute bottom-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent"
-                aria-hidden
-              />
-              <div className="relative z-[1] flex flex-col gap-10 p-8 lg:flex-row lg:items-stretch lg:justify-between lg:gap-12 lg:p-12 xl:p-14">
-                <div className="min-w-0 flex-1 lg:max-w-2xl">
-                  <h3 className="font-serif text-4xl font-normal leading-[1.08] tracking-tight text-neutral-950 md:text-5xl md:leading-[1.05]">
-                    {profile?.display_name?.trim() ||
-                      profile?.full_name?.trim() ||
-                      "Artist"}
-                  </h3>
-                  <p className="mt-3 font-serif text-[1.75rem] font-normal leading-[1.12] tracking-tight text-neutral-700 md:text-4xl">
-                    Overview
-                  </p>
-                  <div className="mt-8 flex flex-wrap gap-2.5">
-                    <button
-                      type="button"
-                      onClick={() => void openInsight("works")}
-                      className="inline-flex items-center rounded-full border border-white/55 bg-white/40 px-3.5 py-1.5 text-[13px] tabular-nums text-neutral-800 shadow-sm backdrop-blur-md transition hover:border-white/70 hover:bg-white/55"
-                    >
-                      <span className="font-semibold text-neutral-950">
-                        {totalWorks}
-                      </span>
-                      <span className="ml-1.5 text-neutral-500">
-                        {totalWorks === 1 ? "work" : "works"}
-                      </span>
-                      <span className="ml-2 text-sm font-semibold text-neutral-600">
-                        Details
-                      </span>
-                    </button>
-                    <span className="inline-flex items-center rounded-full border border-emerald-300/35 bg-emerald-50/50 px-3.5 py-1.5 text-[13px] tabular-nums text-emerald-950/90 shadow-sm backdrop-blur-md">
-                      <span className="font-semibold">{verifiedWorks}</span>
-                      <span className="ml-1.5 font-normal text-emerald-900/75">
-                        verified
-                      </span>
-                    </span>
-                    <span className="inline-flex items-center rounded-full border border-white/45 bg-white/35 px-3.5 py-1.5 text-[13px] tabular-nums text-neutral-700 shadow-sm backdrop-blur-md">
-                      <span className="font-semibold text-neutral-950">
-                        {pricedWorks}
-                      </span>
-                      <span className="ml-1.5 text-neutral-500">priced</span>
-                    </span>
-                  </div>
-                  <div className="mt-10 flex flex-wrap gap-2.5 border-t border-white/35 pt-8">
-                    {[
-                      { label: "Artworks", section: "Artworks" as const },
-                      { label: "Certificates", section: "Certificates" as const },
-                      { label: "Ownership", section: "Ownership" as const },
-                    ].map(({ label, section }) => (
-                      <button
-                        key={section}
-                        type="button"
-                        onClick={() => {
-                          setIsTransitioningSection(true);
-                          setTimeout(() => {
-                            setActiveSection(section);
-                            setSearchQuery("");
-                            setIsTransitioningSection(false);
-                          }, 180);
-                        }}
-                        className="inline-flex items-center rounded-full border border-white/50 bg-white/40 px-4 py-2 text-sm font-semibold text-neutral-800 shadow-sm backdrop-blur-md transition hover:border-white/65 hover:bg-white/55"
-                      >
-                        {label}
-                        <span className="ml-1.5 text-neutral-400">→</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex shrink-0 items-start justify-center lg:pt-2">
-                  <ArtworksHeroPreview
-                    artworks={artworks}
-                    variant="editorial"
-                  />
-                </div>
-              </div>
-            </div>
+            <ArtistWorkspaceHero
+              displayName={
+                profile?.display_name?.trim() ||
+                profile?.full_name?.trim() ||
+                "Artist"
+              }
+              totalWorks={totalWorks}
+              verifiedWorks={verifiedWorks}
+              pricedWorks={pricedWorks}
+              percentVerified={percentVerified}
+              percentPriced={percentPriced}
+              previewArtworks={artworks}
+              publicPageHref={
+                profile?.slug
+                  ? `/artist/${encodeURIComponent(String(profile.slug))}`
+                  : null
+              }
+              onGoToSection={(section) => selectStudioSection(section)}
+              onRegister={() => setShowRegisterModal(true)}
+              representationPendingCount={representationReviewQueue.length}
+              onGoToRepresentationReview={scrollToRepresentationReview}
+              amendmentResponsesNeeded={amendmentResponsesNeeded}
+              onGoToAmendments={scrollToRepresentationAmendments}
+            />
 
             <DashboardSection
               title="Value & coverage"
@@ -1901,7 +2043,7 @@ return (
             {/* Ownership requests */}
             <DashboardSection
               title="Ownership requests"
-              subtitle="Collectors requesting recognition—review and respond."
+              subtitle="Collectors requesting recognition. Review and respond."
             >
               {ownershipClaims.length === 0 ? (
                 <div className="border-t border-dashed border-black/20 py-14 text-center">
@@ -2085,6 +2227,60 @@ return (
         )}
 
         {/* ARTWORKS */}
+        {isRecordsSection && (
+          <div className="max-w-6xl space-y-10 pb-8">
+            <ArtistRepresentationReviewSection
+              items={representationReviewQueue}
+              busyArtworkId={representationConfirmBusyId}
+              onConfirm={confirmRepresentationOnFile}
+              onContribute={(item) => setAuthorshipContributionTarget(item)}
+            />
+
+            {repStateActive ? (
+              <GovernanceSectionShell
+                eyebrow="Institutional relationship"
+                title="Relationship on file"
+                description={`${REPRESENTATION_PHRASES.representationOnFile}. Ending active relationship does not remove prior attestations; ${REPRESENTATION_PHRASES.priorFilingsRemainVisible.toLowerCase()}.`}
+                actions={
+                  <button
+                    type="button"
+                    onClick={() => setEndRepOpen(true)}
+                    className="rounded-xl border border-neutral-900/[0.12] bg-white/90 px-4 py-2.5 text-xs font-medium text-neutral-800 transition hover:bg-neutral-50"
+                  >
+                    End on file
+                  </button>
+                }
+              >
+                <p className="text-sm text-neutral-600">
+                  {repGalleryName
+                    ? `Linked with ${repGalleryName}.`
+                    : "Your institution link remains visible on prior filings after ending."}
+                </p>
+              </GovernanceSectionShell>
+            ) : null}
+
+            <RepresentationAmendmentsSection
+              viewer="artist"
+              items={representationAmendments}
+              artworkOptions={amendmentArtworkOptions}
+              showRequestButton={showAmendmentRequestForArtist}
+              busyAmendmentId={amendmentBusyId}
+              onRequest={submitArtistAmendmentRequest}
+              onResolve={resolveArtistAmendment}
+              onWithdraw={withdrawArtistAmendment}
+            />
+
+            {representationReviewQueue.length === 0 &&
+            !repStateActive &&
+            representationAmendments.length === 0 ? (
+              <p className="text-sm leading-relaxed text-neutral-500">
+                No records awaiting your attestation. When a canonical record is
+                associated with your practice, it appears here to authenticate and deepen.
+              </p>
+            ) : null}
+          </div>
+        )}
+
         {activeSection === "Artworks" && (
           <ArtworksSection
             searchQuery={searchQuery}
@@ -2169,8 +2365,7 @@ return (
             saleSignals={saleSignals}
           />
         )}
-      </div>
-    </div>
+    </WorkspaceShell>
 
     {/* REGISTER MODAL */}
     <RegisterModal
@@ -2180,6 +2375,16 @@ return (
       onArtworkChange={(artwork) => setNewArtwork(artwork)}
       onRegister={handleRegisterArtwork}
       registerLoading={registerLoading}
+    />
+
+    <ArchivalAuthorshipContributionModal
+      isOpen={authorshipContributionTarget !== null}
+      onClose={() => setAuthorshipContributionTarget(null)}
+      artworkTitle={authorshipContributionTarget?.title?.trim() || "Work on file"}
+      registryId={authorshipContributionTarget?.registry_id}
+      institutionName={authorshipContributionTarget?.gallery_name}
+      busy={authorshipContributionBusy}
+      onSubmit={submitAuthorshipContribution}
     />
 
     <AddValueEventModal
@@ -2195,7 +2400,7 @@ return (
 
         setValueLoading(true);
 
-        const { error } = await supabase.rpc("add_value_event", {
+        const { error } = await sb().rpc("add_value_event", {
           p_artwork_id: artworkId,
           p_declared_value: Number(valueForm.declared_value),
           p_currency: String(valueForm.currency || "").toUpperCase(),
@@ -2206,15 +2411,15 @@ return (
 
         if (error) {
           console.error(error);
-          showToast("error", "Error adding value event");
+          showToast("error", "Value filing could not be recorded.");
         } else {
           await fetchArtworks(user.id);
           setValueModalArtwork(null);
-          showToast("success", "Value event added");
+          showToast("success", "Value event recorded on file.");
 
           await logActivity({
             type: "value_added",
-            message: `Value updated — ${titleForLog}`,
+            message: `Value updated: ${titleForLog}`,
             artworkId,
             metadata: {
               value: Number(valueForm.declared_value),
@@ -2248,9 +2453,8 @@ return (
         setSelectedArtwork(null);
         setShowOwnershipLedgerModal(false);
       }}
-      panelClassName="liquid-glass-dark rrowm-modal-surface relative w-full max-w-4xl space-y-10 overflow-y-auto overflow-x-hidden rounded-2xl p-8 ring-1 ring-white/[0.09] shadow-[0_32px_80px_-28px_rgba(0,0,0,0.65)] max-h-[min(85vh,52rem)] sm:p-10 xl:p-12"
-      overlayClassName="liquid-glass-backdrop backdrop-blur-xl ds-z-modal-backdrop fixed inset-0 flex items-center justify-center p-5 sm:p-8"
-      closeClassName="liquid-glass-close-dark absolute right-4 top-4 z-20 rounded-2xl px-4 py-2.5 text-xs font-semibold text-white/80 transition hover:bg-white/[0.12] hover:text-white sm:right-5 sm:top-5"
+      tone="silver"
+      panelClassName="relative w-full max-w-4xl space-y-12 overflow-y-auto overflow-x-hidden max-h-[min(85vh,52rem)] p-8 sm:p-10 xl:p-12"
     >
       {selectedArtwork && showOwnershipLedgerModal && (
         <>
@@ -2288,16 +2492,16 @@ return (
               : "";
 
             return (
-              <div className="relative mb-8 overflow-hidden rounded-2xl border border-amber-400/30 bg-gradient-to-br from-amber-500/[0.14] via-amber-950/25 to-transparent px-6 py-5 text-amber-50 shadow-[0_24px_56px_-28px_rgba(120,53,15,0.45)] backdrop-blur-xl ring-1 ring-amber-300/15">
+              <div className="relative mb-8 overflow-hidden rounded-2xl border border-amber-200/90 bg-gradient-to-br from-amber-50 via-white to-neutral-50/90 px-6 py-5 text-amber-950 shadow-[0_20px_48px_-28px_rgba(120,53,15,0.12)] ring-1 ring-amber-200/80">
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-amber-200/80">
+                    <p className="text-sm font-semibold text-amber-900/85">
                       Sale recorded
                     </p>
-                    <p className="mt-2 text-sm text-amber-50/90">
+                    <p className="mt-2 text-sm text-amber-950/90">
                       Complete ownership transfer to keep provenance accurate.
                     </p>
-                    <p className="mt-2 text-xs text-amber-100/80">
+                    <p className="mt-2 text-xs text-amber-800/85">
                       {new Intl.NumberFormat("en-US", {
                         style: "currency",
                         currency: prefillCurrency,
@@ -2350,15 +2554,15 @@ return (
                           ? saleTransferForm.buyer_type
                           : null;
                       if (buyerUserId && !isUuid(buyerUserId)) {
-                        showToast("error", "Buyer user id must be a UUID.");
+                        showToast("error", "Buyer account id must be a UUID.");
                         return;
                       }
                       if (saleTransferForm.buyer_mode === "user" && !buyerUserId) {
-                        showToast("error", "Buyer user id is required.");
+                        showToast("error", "Buyer account id is required.");
                         return;
                       }
                       if (saleTransferForm.buyer_mode === "external" && !buyerName) {
-                        showToast("error", "Buyer name is required.");
+                        showToast("error", "Buyer name is required for this filing.");
                         return;
                       }
 
@@ -2376,9 +2580,9 @@ return (
                         sale_type: saleTransferForm.sale_type,
                         sale_date: saleDateIso,
                       });
-                      showToast("success", "Saving transfer…");
+                      showToast("success", "Recording transfer on file…");
 
-                      const { error: insertErr } = await supabase
+                      const { error: insertErr } = await sb()
                         .from("ownership_events")
                         .insert({
                           artwork_id: selectedArtwork.id,
@@ -2409,7 +2613,7 @@ return (
                         );
                         showToast(
                           "error",
-                          `Could not record transfer: ${summarizeRpcError(insertErr)}`
+                          `Transfer could not be filed: ${summarizeRpcError(insertErr)}`
                         );
                         return;
                       }
@@ -2419,7 +2623,7 @@ return (
                       // rules on older value_events rows and return 400 while the insert succeeded.
 
                       if (buyerUserId) {
-                        const { error: ownerUpdateErr } = await supabase
+                        const { error: ownerUpdateErr } = await sb()
                           .from("artworks")
                           .update({
                             current_owner_id: buyerUserId,
@@ -2429,7 +2633,7 @@ return (
                         if (ownerUpdateErr) {
                           showToast(
                             "error",
-                            "Transfer recorded, but could not update current owner."
+                            "Transfer recorded; current owner could not be updated automatically."
                           );
                           return;
                         }
@@ -2439,17 +2643,17 @@ return (
                       await refreshSelectedArtworkEvents(selectedArtwork.id);
                       await fetchArtworks(user.id);
                       setShowSaleTransferForm(false);
-                      showToast("success", "Ownership transfer recorded");
+                      showToast("success", "Chronology continued for this transfer.");
                     }}
                   >
                     <div className="md:col-span-2">
-                      <p className="text-sm font-semibold text-amber-200/80">
+                      <p className="text-sm font-semibold text-amber-900/85">
                         Transfer details
                       </p>
                     </div>
 
                     <label className="block">
-                      <span className="text-sm text-amber-100/70">
+                      <span className="text-sm text-neutral-600">
                         Seller (prefilled)
                       </span>
                       <input
@@ -2460,13 +2664,13 @@ return (
                             seller_id: e.target.value,
                           }))
                         }
-                        className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-amber-200/40"
+                        className={ledgerInsetFieldClass}
                         placeholder="Seller user id"
                       />
                     </label>
 
                     <label className="block md:col-span-2">
-                      <span className="text-sm text-amber-100/70">
+                      <span className="text-sm text-neutral-600">
                         Buyer
                       </span>
                       <div className="mt-2 grid gap-3 md:grid-cols-2">
@@ -2478,7 +2682,7 @@ return (
                               buyer_mode: e.target.value as "user" | "external",
                             }))
                           }
-                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-200/40"
+                          className={ledgerInsetFieldClass}
                         >
                           <option value="external">External buyer</option>
                           <option value="user">Existing user</option>
@@ -2493,7 +2697,7 @@ return (
                                 buyer_user_id: e.target.value,
                               }))
                             }
-                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-amber-200/40"
+                            className={ledgerInsetFieldClass}
                             placeholder="Buyer user id (UUID)"
                           />
                         ) : (
@@ -2505,7 +2709,7 @@ return (
                                 buyer_name: e.target.value,
                               }))
                             }
-                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-amber-200/40"
+                            className={ledgerInsetFieldClass}
                             placeholder="Buyer name"
                           />
                         )}
@@ -2526,7 +2730,7 @@ return (
                                   | "unknown",
                               }))
                             }
-                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-200/40"
+                            className={ledgerInsetFieldClass}
                           >
                             <option value="collector">Collector</option>
                             <option value="gallery">Gallery</option>
@@ -2542,7 +2746,7 @@ return (
                     </label>
 
                     <label className="block">
-                      <span className="text-sm text-amber-100/70">
+                      <span className="text-sm text-neutral-600">
                         Sale type
                       </span>
                       <select
@@ -2553,7 +2757,7 @@ return (
                             sale_type: e.target.value as "primary" | "secondary",
                           }))
                         }
-                        className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-200/40"
+                        className={ledgerInsetFieldClass}
                       >
                         <option value="primary">Primary</option>
                         <option value="secondary">Secondary</option>
@@ -2561,7 +2765,7 @@ return (
                     </label>
 
                     <label className="block">
-                      <span className="text-sm text-amber-100/70">
+                      <span className="text-sm text-neutral-600">
                         Date of sale
                       </span>
                       <input
@@ -2573,12 +2777,12 @@ return (
                             sale_date: e.target.value,
                           }))
                         }
-                        className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-200/40"
+                        className={ledgerInsetFieldClass}
                       />
                     </label>
 
                     <label className="block md:col-span-2">
-                      <span className="text-sm text-amber-100/70">
+                      <span className="text-sm text-neutral-600">
                         Notes
                       </span>
                       <textarea
@@ -2589,7 +2793,7 @@ return (
                             note: e.target.value,
                           }))
                         }
-                        className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-amber-200/40"
+                        className={ledgerInsetFieldClass}
                         rows={3}
                         placeholder="Optional context (invoice, venue, etc.)"
                       />
@@ -2598,7 +2802,7 @@ return (
                       <button
                         type="button"
                         onClick={() => setShowSaleTransferForm(false)}
-                        className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
+                        className="rounded-2xl border border-neutral-200/90 bg-white/70 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-900"
                       >
                         Cancel
                       </button>
@@ -2616,21 +2820,21 @@ return (
           })()}
 
           {/* Header */}
-          <div className="flex flex-col gap-6 border-b border-white/[0.08] pb-8">
+          <div className="flex flex-col gap-6 border-b border-neutral-200/90 pb-8">
             <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start sm:gap-8">
               {selectedArtwork.image_url ? (
-                <div className="relative h-36 w-36 shrink-0 overflow-hidden rounded-2xl bg-white/[0.04] ring-1 ring-white/15 shadow-[0_20px_50px_-24px_rgba(0,0,0,0.55)]">
+                <div className="relative h-36 w-36 shrink-0 overflow-hidden rounded-2xl bg-neutral-100 ring-1 ring-neutral-200/90 shadow-[0_20px_50px_-24px_rgba(15,23,42,0.12)]">
                   <img
                     src={selectedArtwork.image_url}
                     alt={String(selectedArtwork.title || "Artwork")}
                     className="h-full w-full object-cover"
                   />
-                  <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
+                  <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-neutral-200/80" />
                 </div>
               ) : (
-                <div className="flex h-36 w-36 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] ring-1 ring-white/10">
+                <div className="flex h-36 w-36 shrink-0 items-center justify-center rounded-2xl bg-neutral-100 ring-1 ring-neutral-200/90">
                   <svg
-                    className="h-14 w-14 text-white/15"
+                    className="h-14 w-14 text-neutral-300"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -2646,14 +2850,14 @@ return (
                 </div>
               )}
               <div className="min-w-0 flex-1 text-center sm:text-left">
-                <p className="text-sm text-emerald-300/75">
+                <p className="text-sm font-medium text-emerald-800/85">
                   Ownership ledger
                 </p>
-                <h2 className="mt-3 font-serif text-3xl font-normal leading-[1.1] tracking-tight text-white md:text-[2.15rem]">
+                <h2 className="mt-3 font-serif text-3xl font-normal leading-[1.1] tracking-tight text-neutral-950 md:text-[2.15rem]">
                   {selectedArtwork.registry_id ? (
                     <Link
                       href={`/artwork/${encodeURIComponent(selectedArtwork.registry_id)}`}
-                      className="transition hover:text-emerald-200/90 hover:underline decoration-emerald-400/50 underline-offset-4"
+                      className="transition hover:text-emerald-800 hover:underline decoration-emerald-400/40 underline-offset-4"
                     >
                       {selectedArtwork.title}
                     </Link>
@@ -2662,7 +2866,7 @@ return (
                   )}
                 </h2>
                 {selectedArtwork.registry_id ? (
-                  <p className="mt-2 inline-flex rounded-xl bg-white/[0.06] px-3 py-1.5 font-mono text-xs text-emerald-100/85 ring-1 ring-white/10">
+                  <p className="mt-2 inline-flex rounded-xl bg-neutral-100/90 px-3 py-1.5 font-mono text-xs text-neutral-800 ring-1 ring-neutral-200/90">
                     {selectedArtwork.registry_id}
                   </p>
                 ) : null}
@@ -2673,13 +2877,13 @@ return (
           {/* Content */}
           <div className="grid gap-8 xl:gap-10 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
             {/* Value Timeline */}
-            <div className="rounded-2xl border border-emerald-500/25 bg-gradient-to-b from-emerald-950/55 via-emerald-950/35 to-emerald-950/15 p-6 shadow-[inset_0_1px_0_0_rgba(52,211,153,0.12),0_24px_56px_-28px_rgba(0,0,0,0.4)] backdrop-blur-md md:p-8">
+            <div className="rounded-2xl border border-emerald-200/80 bg-gradient-to-b from-white via-emerald-50/40 to-neutral-50/90 p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.95)] md:p-8">
               <div className="mb-6 flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-emerald-300/85">
+                  <p className="text-xs font-semibold text-emerald-800/85">
                     Value history
                   </p>
-                  <p className="mt-1 text-sm text-emerald-100/80">
+                  <p className="mt-1 text-sm text-neutral-600">
                     Every declared value event for this work.
                   </p>
                 </div>
@@ -2688,10 +2892,10 @@ return (
               <div className="relative min-h-0">
                 <div className="pointer-events-none absolute bottom-0 left-2 top-2 w-px bg-gradient-to-b from-emerald-400/80 via-emerald-400/40 to-emerald-500/10" />
                 <div
-                  className="max-h-[min(52vh,34rem)] space-y-4 overflow-y-auto overscroll-y-contain pl-8 pr-1 [scrollbar-color:rgba(52,211,153,0.45)_transparent] [scrollbar-width:thin]"
+                  className="max-h-[min(52vh,34rem)] space-y-4 overflow-y-auto overscroll-y-contain pl-8 pr-1 [scrollbar-color:rgba(16,185,129,0.35)_transparent] [scrollbar-width:thin]"
                 >
                   {valueHistory.length === 0 && (
-                    <p className="text-emerald-200/70 text-sm">
+                    <p className="text-neutral-500 text-sm">
                       No value events recorded yet.
                     </p>
                   )}
@@ -2699,28 +2903,28 @@ return (
                   {valueHistory.map((event) => (
                     <div
                       key={event.id}
-                      className="flex justify-between gap-4 rounded-xl border border-white/[0.06] bg-white/[0.04] px-3 py-3 text-white/85"
+                      className="flex justify-between gap-4 rounded-xl border border-neutral-200/90 bg-white/80 px-3 py-3 text-neutral-800"
                     >
                       <div>
-                        <p className="text-xs text-emerald-200/80">
+                        <p className="text-xs text-neutral-500">
                           {event.value_type.replace("_", " ")}
                         </p>
-                        <p className="mt-1 text-sm text-emerald-100/90">
+                        <p className="mt-1 text-sm text-neutral-700">
                           {event.note || "No additional context"}
                         </p>
-                        <p className="mt-1 text-xs text-emerald-200/70">
+                        <p className="mt-1 text-xs text-neutral-500">
                           {new Date(event.created_at).toLocaleString()}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-semibold text-emerald-300">
+                        <p className="text-lg font-semibold text-emerald-900">
                           {new Intl.NumberFormat("en-US", {
                             style: "currency",
                             currency: event.currency || "USD",
                             maximumFractionDigits: 0,
                           }).format(Number(event.declared_value))}
                         </p>
-                        <p className="mt-1 text-xs text-emerald-200/70">
+                        <p className="mt-1 text-xs text-neutral-500">
                           Visibility: {event.visibility_level}
                         </p>
                       </div>
@@ -2732,19 +2936,19 @@ return (
 
             {/* Ownership Timeline */}
             <div className="space-y-6">
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-sm md:p-6">
-                <p className="text-xs text-emerald-300/85">
+              <div className="rounded-2xl border border-neutral-200/90 bg-white/70 p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)] md:p-6">
+                <p className="text-xs font-semibold text-emerald-800/85">
                   Ownership history
                 </p>
-                <p className="mt-1 text-sm text-emerald-100/80">
+                <p className="mt-1 text-sm text-neutral-600">
                   Every transfer and confirmation for this work.
                 </p>
 
                 <div className="relative mt-5">
-                  <div className="pointer-events-none absolute bottom-0 left-2 top-2 w-px bg-gradient-to-b from-white/35 via-white/15 to-transparent" />
-                  <div className="h-[min(42vh,18rem)] space-y-5 overflow-y-auto overscroll-y-contain pl-8 pr-1 [scrollbar-color:rgba(255,255,255,0.28)_transparent] [scrollbar-width:thin]">
+                  <div className="pointer-events-none absolute bottom-0 left-2 top-2 w-px bg-gradient-to-b from-neutral-300/80 via-neutral-200/40 to-transparent" />
+                  <div className="h-[min(42vh,18rem)] space-y-5 overflow-y-auto overscroll-y-contain pl-8 pr-1 [scrollbar-color:rgba(15,23,42,0.15)_transparent] [scrollbar-width:thin]">
                   {ownershipHistory.length === 0 && (
-                    <p className="text-emerald-200/70 text-sm mt-4">
+                    <p className="text-neutral-500 text-sm mt-4">
                       No ownership events recorded yet.
                     </p>
                   )}
@@ -2790,7 +2994,7 @@ return (
                       <div key={event.id} className="relative">
                         {showTrustBreak ? (
                           <div
-                            className="mb-5 border-t border-white/[0.06]"
+                            className="mb-5 border-t border-neutral-200/80"
                             aria-hidden
                           />
                         ) : null}
@@ -2912,11 +3116,11 @@ return (
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.02] p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
-                <p className="text-xs text-emerald-200/85">
+              <div className="rounded-2xl border border-neutral-200/90 bg-white/75 p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.95)]">
+                <p className="text-xs font-semibold text-neutral-500">
                   Integrity notes
                 </p>
-                <p className="mt-2 text-sm text-emerald-50/90">
+                <p className="mt-2 text-sm text-neutral-600">
                   Any anomalies or special situations with this work’s
                   ownership journey will appear here.
                 </p>
@@ -2925,17 +3129,17 @@ return (
                   <ul
                     className={
                       ownershipHistory.length > 3
-                        ? "mt-4 max-h-[min(28vh,12rem)] space-y-2 overflow-y-auto overscroll-y-contain pr-1 text-sm text-emerald-100/80 [scrollbar-color:rgba(255,255,255,0.28)_transparent] [scrollbar-width:thin]"
-                        : "mt-4 space-y-2 text-sm text-emerald-100/80"
+                        ? "mt-4 max-h-[min(28vh,12rem)] space-y-2 overflow-y-auto overscroll-y-contain pr-1 text-sm text-neutral-600 [scrollbar-color:rgba(15,23,42,0.15)_transparent] [scrollbar-width:thin]"
+                        : "mt-4 space-y-2 text-sm text-neutral-600"
                     }
                   >
                     {ownershipHistory.map((event) => {
                       const st = latestOwnershipSystemStatus(event);
-                      const b = ownershipStatusBadge(st, "dark");
+                      const b = ownershipStatusBadge(st, "light");
                       return (
                         <li key={event.id} className="leading-relaxed">
                           <span className={b.className}>{b.label}</span>
-                          <span className="text-emerald-100/70">
+                          <span className="text-neutral-500">
                             {" "}
                             · {event.transfer_type.replace("_", " ")} on{" "}
                             {new Date(event.created_at).toLocaleDateString()}
@@ -2960,7 +3164,8 @@ return (
       open={insightOpen !== null}
       onClose={() => setInsightOpen(null)}
       title={insightTitle || "Insight"}
-      subtitle={insightLoading ? "Loading…" : insightSubtitle || null}
+      subtitle={insightSubtitle || null}
+      chartLoading={insightLoading}
       kind={insightKind}
       data={insightData}
       lines={insightLines}
@@ -2991,7 +3196,20 @@ return (
         }
       }}
     />
-  </div>
+
+    <EndRepresentationModal
+      open={endRepOpen}
+      onClose={() => !endRepBusy && setEndRepOpen(false)}
+      subjectName={
+        profile?.display_name?.trim() ||
+        profile?.full_name?.trim() ||
+        "Artist"
+      }
+      institutionName={repGalleryName}
+      busy={endRepBusy}
+      onConfirm={confirmEndArtistRepresentation}
+    />
+  </>
 );}
 
 function DashboardSection({

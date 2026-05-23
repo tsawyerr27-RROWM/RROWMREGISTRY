@@ -24,18 +24,18 @@ export function AboutDigestTabs() {
 
   return (
     <div
-      className="relative overflow-hidden rounded-[1.75rem] border border-neutral-200/60 bg-gradient-to-br from-white/90 via-[var(--rrowm-base-soft)]/95 to-white/80 shadow-[0_32px_90px_-58px_rgba(15,23,42,0.22)] backdrop-blur-md"
+      className="rrowm-atmo-section--reflective relative overflow-hidden rounded-[1.75rem] border border-[color:var(--rrowm-atmo-rim)] shadow-[0_32px_90px_-58px_rgba(15,23,42,0.2)] backdrop-blur-md transition-[border-color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] md:hover:border-[color:color-mix(in_srgb,var(--rrowm-atmo-rim)_82%,rgb(75_72_88))] md:hover:shadow-[0_34px_92px_-56px_rgba(15,23,42,0.21)]"
       aria-label="About the registry"
     >
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.45]"
+        className="pointer-events-none absolute inset-0 opacity-[0.32]"
         aria-hidden
       >
-        <div className="absolute -right-24 top-0 h-72 w-72 rounded-full bg-gradient-to-bl from-violet-200/25 via-transparent to-transparent blur-3xl" />
-        <div className="absolute -left-16 bottom-0 h-64 w-64 rounded-full bg-gradient-to-tr from-sky-200/20 via-transparent to-transparent blur-3xl" />
+        <div className="absolute -right-24 top-0 h-72 w-72 rounded-full bg-gradient-to-bl from-stone-200/18 via-transparent to-transparent blur-3xl" />
+        <div className="absolute -left-16 bottom-0 h-64 w-64 rounded-full bg-gradient-to-tr from-slate-200/12 via-transparent to-transparent blur-3xl" />
       </div>
 
-      <div className="relative border-b border-neutral-200/55 bg-white/40 px-4 py-4 md:px-6 md:py-5">
+      <div className="relative border-b border-[color:var(--rrowm-atmo-rim)] bg-[color-mix(in_srgb,var(--rrowm-atmo-panel-muted)_65%,transparent)] px-4 py-4 md:px-6 md:py-5">
         <div
           className="flex flex-wrap gap-2 md:gap-2.5"
           role="tablist"
@@ -53,10 +53,10 @@ export function AboutDigestTabs() {
                 aria-controls={`${baseId}-${tab.id}-panel`}
                 tabIndex={selected ? 0 : -1}
                 onClick={() => setActive(tab.id)}
-                className={`rounded-full px-3.5 py-2 text-left text-[13px] font-medium transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] md:px-4 md:text-sm ${
+                className={`rounded-full px-3.5 py-2 text-left text-[13px] font-medium transition-[transform,opacity,background-color,color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] md:px-4 md:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/15 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--rrowm-base-soft)] ${
                   selected
-                    ? "bg-neutral-900 text-white shadow-sm"
-                    : "bg-white/70 text-neutral-700 ring-1 ring-neutral-200/60 hover:bg-white hover:text-neutral-950"
+                    ? "bg-neutral-900 text-white shadow-[0_10px_36px_-28px_rgba(0,0,0,0.45)]"
+                    : "border border-[color:var(--rrowm-atmo-rim)] bg-[color-mix(in_srgb,var(--rrowm-atmo-panel)_78%,transparent)] text-neutral-700 hover:bg-[color-mix(in_srgb,var(--rrowm-atmo-panel-raise)_82%,transparent)] hover:text-neutral-950 active:scale-[0.99]"
                 }`}
               >
                 {tab.label}
@@ -66,7 +66,7 @@ export function AboutDigestTabs() {
         </div>
       </div>
 
-      <div className="relative px-4 py-8 md:px-8 md:py-10 lg:px-10 lg:py-11">
+      <div className="relative px-4 py-9 md:px-8 md:py-11 lg:px-10 lg:py-12">
         <div
           id={`${baseId}-what-panel`}
           role="tabpanel"

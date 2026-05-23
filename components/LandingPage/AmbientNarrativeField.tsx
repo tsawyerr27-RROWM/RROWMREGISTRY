@@ -16,6 +16,7 @@ export function AmbientNarrativeField() {
     >
       <div className="ds-narrative-track absolute inset-0" />
       <div className="ds-narrative-depth absolute inset-0" />
+      <div className="ds-narrative-parchment absolute inset-0" aria-hidden />
       <div
         className={`ds-institutional-aurora absolute inset-0 ${reduce ? "opacity-[0.55]" : "opacity-100"}`}
         aria-hidden

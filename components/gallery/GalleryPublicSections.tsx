@@ -1,10 +1,14 @@
 import Link from "next/link";
 
+import { ArtistTierBadge } from "@/components/artist/ArtistTierBadge";
+import type { ArtistTier } from "@/lib/artist-tier";
+
 type ArtistRow = {
   id: string;
   display_name: string | null;
   full_name: string | null;
   slug: string | null;
+  tier?: ArtistTier;
 };
 
 type ArtworkRow = {
@@ -48,10 +52,11 @@ export function GalleryPublicSections({
                 id="gallery-roster-heading"
                 className="font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-3xl"
               >
-                Represented artists
+                Represented participants
               </h2>
               <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-neutral-600">
-                Artists linked to this institution on the registry.
+                Artists with an institution-linked association on file—presence follows
+                representation and chronology participation, not promotion.
               </p>
             </div>
             {artists.length > 0 ? (
@@ -63,9 +68,10 @@ export function GalleryPublicSections({
 
           {artists.length === 0 ? (
             <div className="mt-10 rounded-[1.25rem] border border-dashed border-neutral-900/15 bg-gradient-to-br from-neutral-50/90 to-white/60 px-8 py-14 text-center shadow-[0_20px_50px_-38px_rgba(15,23,42,0.1)] sm:px-12">
-              <p className="font-serif text-xl text-neutral-800">No artists listed yet</p>
+              <p className="font-serif text-xl text-neutral-800">No represented participants on file yet</p>
               <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-neutral-500">
-                When the gallery connects artists, they will appear here with links to public profiles.
+                When associations are filed, represented artists appear here with links to
+                their catalogue profiles.
               </p>
             </div>
           ) : (
@@ -93,8 +99,18 @@ export function GalleryPublicSections({
                         ) : (
                           <span className="font-medium text-neutral-950">{label}</span>
                         )}
+                        {a.tier ? (
+                          <div className="mt-2 space-y-1">
+                            <ArtistTierBadge tier={a.tier} />
+                            {a.tier === "disputed" ? (
+                              <p className="text-[11px] leading-snug text-neutral-600">
+                                This record is under review.
+                              </p>
+                            ) : null}
+                          </div>
+                        ) : null}
                         <p className="mt-2 text-[12px] text-neutral-400">
-                          {a.slug ? "Public artist profile" : "Profile pending"}
+                          {a.slug ? "Catalogue profile" : "Profile not yet on file"}
                         </p>
                       </div>
                     </div>
@@ -113,11 +129,11 @@ export function GalleryPublicSections({
               id="gallery-catalogue-heading"
               className="font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-3xl"
             >
-              Registered works
+              Represented works
             </h2>
             <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-neutral-600">
-              Works registered through represented artists. Open a record for full provenance and
-              verification detail.
+              Works attributed to represented participants. Each record carries its own
+              chronology and current catalogue listing—continuity deepens as filings accrue.
             </p>
           </div>
           {artworks.length > 0 ? (
@@ -126,8 +142,8 @@ export function GalleryPublicSections({
                 {artworks.length} {artworks.length === 1 ? "work" : "works"}
               </span>
               {verifiedCount > 0 ? (
-                <p className="mt-1 text-[11px] text-emerald-800/80">
-                  {verifiedCount} verified
+                <p className="mt-1 text-[11px] text-neutral-500">
+                  {verifiedCount} with verified listing on file
                 </p>
               ) : null}
             </div>
@@ -137,7 +153,7 @@ export function GalleryPublicSections({
         {artworks.length === 0 ? (
           <div className="mt-10 rounded-[1.25rem] border border-neutral-900/[0.07] bg-gradient-to-br from-white/90 to-neutral-50/50 px-8 py-14 shadow-[0_24px_56px_-36px_rgba(15,23,42,0.14)] sm:px-10 sm:py-16">
             <h3 className="font-serif text-2xl font-normal tracking-tight text-neutral-950">
-              No works published yet
+              No represented works on file yet
             </h3>
             <p className="mt-4 max-w-lg text-[15px] leading-[1.65] text-neutral-600">
               When artists register works under this gallery, they will appear here with images and
@@ -175,13 +191,13 @@ export function GalleryPublicSections({
                       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/35 to-transparent" />
                       <div className="absolute right-3 top-3">
                         <span
-                          className={`rounded-full px-2.5 py-1 text-[10px] font-semibold backdrop-blur-md ${
+                          className={`rounded-full px-2.5 py-1 text-[10px] font-medium backdrop-blur-md ${
                             isVerified
-                              ? "bg-emerald-950/75 text-emerald-50"
-                              : "bg-black/40 text-white/90"
+                              ? "bg-neutral-950/80 text-white/95"
+                              : "bg-black/45 text-white/90"
                           }`}
                         >
-                          {isVerified ? "Verified" : "Registered"}
+                          {isVerified ? "Verified listing" : "On file"}
                         </span>
                       </div>
                     </div>

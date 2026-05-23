@@ -108,9 +108,8 @@ export function PublicClaimOwnership({
       <ModalShell
         isOpen={open}
         onClose={() => !loading && setOpen(false)}
-        panelClassName="liquid-glass rrowm-modal-surface relative max-w-md w-full p-8"
-        overlayClassName="liquid-glass-backdrop backdrop-blur-xl ds-z-modal-backdrop fixed inset-0 flex items-center justify-center p-6"
-        closeClassName="liquid-glass-close absolute right-5 top-5 px-4 py-2 text-sm font-medium text-neutral-600 hover:text-neutral-900"
+        tone="silver"
+        panelClassName="relative max-w-md w-full p-8"
       >
         <p className="text-sm text-neutral-400">
           Ownership claim

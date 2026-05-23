@@ -5,7 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { RrowmLogo } from "@/components/brand/RrowmLogo";
 import type { Session } from "@supabase/supabase-js";
-import { getSessionSafe, getSupabaseBrowserClient } from "@/lib/supabase";
+import { getSessionSafe } from "@/lib/supabase";
+import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 
 const LOGIN_NEXT = "/login?next=" + encodeURIComponent("/studio");
 
@@ -13,12 +14,15 @@ const LOGIN_NEXT = "/login?next=" + encodeURIComponent("/studio");
 const FADE_RANGE = 420;
 
 export default function Header() {
+  const sb = useSupabaseBrowserLazy();
   const pathname = usePathname();
   /** Site chrome is hidden when printing certificates (Save as PDF / print). */
   const hideChromeWhenPrinting = pathname?.startsWith("/certificate") ?? false;
   const [scrollY, setScrollY] = useState(0);
   const [hovered, setHovered] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
+  /** actor_profiles.role — drives stewardship destination */
+  const [actorRole, setActorRole] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   const isRegistrySurface =
@@ -33,7 +37,9 @@ export default function Header() {
     pathname?.startsWith("/gallery-dashboard") ||
     pathname?.startsWith("/studio") ||
     pathname?.startsWith("/account") ||
-    pathname?.startsWith("/admin");
+    pathname?.startsWith("/admin") ||
+    pathname?.startsWith("/collector-studio") ||
+    pathname?.startsWith("/institutional-studio");
 
   const isAuthPage =
     pathname?.startsWith("/login") ||
@@ -64,7 +70,7 @@ export default function Header() {
         setHydrated(true);
       }
     })();
-    const supabase = getSupabaseBrowserClient();
+    const supabase = sb();
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_e: unknown, s: unknown) => {
@@ -75,7 +81,34 @@ export default function Header() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [sb]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!session?.user?.id) {
+      setActorRole(null);
+      return;
+    }
+    void (async () => {
+      const supabase = sb();
+      const { data } = await supabase
+        .from("actor_profiles")
+        .select("role")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      if (!cancelled) setActorRole(data?.role ? String(data.role) : null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.id, sb]);
+
+  const stewardshipHref =
+    actorRole === "collector"
+      ? "/collector-studio"
+      : actorRole === "gallery"
+        ? "/institutional-studio-dashboard"
+        : "/studio";
 
   const fadeT = Math.min(1, scrollY / FADE_RANGE);
   /** Whole header fades out as you scroll; hover brings it back for interaction */
@@ -136,6 +169,7 @@ export default function Header() {
 
   return (
     <header
+      data-rrowm-chrome-suppress-invite-signup
       className={`ds-z-floating fixed left-0 right-0 top-0 transition-opacity duration-500 ease-out${
         hideChromeWhenPrinting ? " print:hidden" : ""
       }`}
@@ -222,21 +256,20 @@ export default function Header() {
                 My account
               </Link>
               <Link
-                href="/studio"
+                href={stewardshipHref}
                 className={`hidden rounded-xl px-4 py-2 text-sm font-medium rrowm-motion transition-[transform,background-color,box-shadow] sm:inline-flex ${
                   headerOnDarkStudio
                     ? "bg-white text-neutral-950 shadow-[0_12px_36px_-16px_rgba(0,0,0,0.4)] hover:bg-white/95"
-                    : "bg-neutral-950 text-white shadow-[0_12px_32px_-18px_rgba(0,0,0,0.35)] hover:bg-neutral-900"
+                    : "border border-neutral-800/20 bg-neutral-100/90 text-neutral-900 shadow-[0_8px_24px_-18px_rgba(0,0,0,0.2)] hover:bg-neutral-200/90"
                 }`}
               >
-                Studio
+                Stewardship
               </Link>
               <button
                 type="button"
                 className={`min-h-[44px] min-w-[44px] rounded-xl px-3 py-2 text-xs font-medium transition sm:min-h-0 sm:min-w-0 sm:px-4 sm:text-sm ${subtleClass}`}
                 onClick={async () => {
-                  const supabase = getSupabaseBrowserClient();
-                  await supabase.auth.signOut();
+                  await sb().auth.signOut();
                   window.location.href = "/";
                 }}
               >
@@ -259,7 +292,7 @@ export default function Header() {
                     : "bg-neutral-950 text-white hover:bg-neutral-900"
                 }`}
               >
-                Get started
+                Take part
               </Link>
             </>
           )}

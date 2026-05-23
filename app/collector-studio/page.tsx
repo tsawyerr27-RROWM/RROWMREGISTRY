@@ -7,7 +7,7 @@ import {
   deferredRouterPush,
   deferredRouterReplace,
 } from "@/lib/deferred-app-router";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import {
   WorkspaceShell,
   WorkspaceShellFooterLinks,
@@ -27,6 +27,7 @@ import { testModeEnabled } from "@/lib/test-mode";
 import { TestDataControls } from "@/components/Admin/TestDataControls";
 import { getOnboardingRedirectPath } from "@/lib/onboarding";
 import { CollectorStudioActivityPreview } from "@/components/Studio/CollectorStudioActivityPreview";
+import { consumePendingCollectorSection } from "@/lib/collector-workspace-nav";
 import { CollectorWorkspaceHero } from "@/components/Studio/CollectorWorkspaceHero";
 import {
   certificateStatusMapToCollectorRecord,
@@ -51,6 +52,8 @@ type CollectorProfile = {
   display_name: string | null;
   slug: string;
   location: string | null;
+  is_public: boolean | null;
+  anonymous_on_public: boolean | null;
 };
 
 type CollectionSnapshot = {
@@ -76,7 +79,7 @@ function transferWord(n: number) {
 
 export default function CollectorStudioPage() {
   const router = useRouter();
-  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const sb = useSupabaseBrowserLazy();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
@@ -112,6 +115,11 @@ export default function CollectorStudioPage() {
   >("workspace");
   const [isTransitioningSection, setIsTransitioningSection] = useState(false);
 
+  useEffect(() => {
+    const pending = consumePendingCollectorSection();
+    if (pending) setActiveSection(pending);
+  }, []);
+
   const selectSection = useCallback((id: string) => {
     if (
       id !== "workspace" &&
@@ -129,14 +137,14 @@ export default function CollectorStudioPage() {
   }, [activeSection]);
 
   const handleSignOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    await sb().auth.signOut();
     deferredRouterPush(router, "/login");
-  }, [router]);
+  }, [router, sb]);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData } = await sb().auth.getSession();
       if (!sessionData?.session) {
         deferredRouterReplace(
           router,
@@ -147,13 +155,13 @@ export default function CollectorStudioPage() {
       const uid = sessionData.session.user.id;
       setUserId(uid);
 
-      const onboardingPath = await getOnboardingRedirectPath(supabase, uid);
+      const onboardingPath = await getOnboardingRedirectPath(sb(), uid);
       if (onboardingPath) {
         deferredRouterReplace(router, onboardingPath);
         return;
       }
 
-      const { data: actor } = await supabase
+      const { data: actor } = await sb()
         .from("actor_profiles")
         .select("role")
         .eq("user_id", uid)
@@ -172,14 +180,16 @@ export default function CollectorStudioPage() {
         return;
       }
 
-      const { data: cp } = await supabase
+      const { data: cp } = await sb()
         .from("collector_profiles")
-        .select("user_id, display_name, slug, location")
+        .select(
+          "user_id, display_name, slug, location, is_public, anonymous_on_public"
+        )
         .eq("user_id", uid)
         .maybeSingle();
       if (!cancelled && cp) setCollectorProfile(cp);
 
-      const ownedIds = await getCollectorOwnedArtworkIds(supabase, uid);
+      const ownedIds = await getCollectorOwnedArtworkIds(sb(), uid);
       if (ownedIds.length === 0) {
         if (!cancelled) {
           setRows([]);
@@ -204,7 +214,7 @@ export default function CollectorStudioPage() {
         return;
       }
 
-      const { data: artRows, error } = await supabase
+      const { data: artRows, error } = await sb()
         .from("artwork_read_model")
         .select(
           "id, title, registry_id, image_url, artist_id, verification_status, latest_value, latest_currency, latest_transfer_at, created_at"
@@ -223,7 +233,7 @@ export default function CollectorStudioPage() {
       ] as string[];
       const nameMap: Record<string, string> = {};
       if (artistIds.length) {
-        const { data: artists } = await supabase
+        const { data: artists } = await sb()
           .from("artists")
           .select("id, display_name, full_name")
           .in("id", artistIds);
@@ -235,13 +245,13 @@ export default function CollectorStudioPage() {
       setArtistNames(nameMap);
 
       const certStatusMap = await fetchCertificatePublicStatusByArtworkIds(
-        supabase,
+        sb(),
         ownedIds
       );
       const certMap = certificateStatusMapToCollectorRecord(certStatusMap);
       setCertByArtwork(certMap);
 
-      const { data: ownEv } = await supabase
+      const { data: ownEv } = await sb()
         .from("ownership_events")
         .select(
           "artwork_id, verification_status, created_at, id, to_user_id, to_owner_id, to_name"
@@ -303,7 +313,7 @@ export default function CollectorStudioPage() {
         .filter(Boolean) as { registryId: string; title: string }[];
 
       const { artworkIds: unresolvedArtIds, valueEventIds } =
-        await getUnresolvedSaleSignals(supabase, ownedIds);
+        await getUnresolvedSaleSignals(sb(), ownedIds);
       const unresolvedLinks = unresolvedArtIds
         .map(toLink)
         .filter(Boolean) as { registryId: string; title: string }[];
@@ -352,7 +362,7 @@ export default function CollectorStudioPage() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [router, sb]);
 
   const sorted = useMemo(
     () => sortPortfolioRows(rows, sortMode),
@@ -486,12 +496,7 @@ export default function CollectorStudioPage() {
     >
       {activeSection === "workspace" ? (
         <>
-          <PageNav
-            crumbs={[
-              { label: "Registry", href: "/registry" },
-              { label: "Collection" },
-            ]}
-          />
+          <PageNav backHref="/registry" />
 
           {testModeEnabled() ? (
             <div className="mt-6 rounded-xl border border-neutral-900/[0.06] bg-white/35 px-4 py-6 sm:px-6">
@@ -505,6 +510,14 @@ export default function CollectorStudioPage() {
               location={locationLine}
               publicPageHref={publicCollectionHref}
               previewArtworks={heroPreviewArtworks}
+              snapshot={{
+                held: snap?.held ?? rows.length,
+                verifiedOwnership: snap?.verifiedOwnership ?? 0,
+                attentionCount: intelligenceItems.length,
+                profilePublic: Boolean(collectorProfile?.is_public),
+                anonymousOnPublic: Boolean(collectorProfile?.anonymous_on_public),
+              }}
+              onGoToSection={(section) => selectSection(section)}
             />
           </div>
 

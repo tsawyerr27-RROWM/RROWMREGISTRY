@@ -70,7 +70,7 @@ export function CollectorPublicWorkCard({
               <p className="text-[11px] leading-snug text-neutral-500">{heldLine}</p>
             ) : null}
             {certLabel ? (
-              <p className="pt-1 text-sm font-semibold text-teal-800/70">
+              <p className="pt-1 text-[11px] font-medium leading-snug text-neutral-600">
                 {certLabel}
               </p>
             ) : null}

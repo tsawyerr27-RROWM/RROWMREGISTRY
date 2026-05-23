@@ -112,9 +112,8 @@ export function AddValueEventModal({
     <ModalShell
       isOpen={!!artwork}
       onClose={onClose}
-      panelClassName="liquid-glass rrowm-modal-surface relative max-h-[92vh] w-full max-w-lg overflow-hidden"
-      overlayClassName="liquid-glass-backdrop backdrop-blur-xl ds-z-modal-backdrop fixed inset-0 flex items-center justify-center p-6 md:p-8"
-      closeClassName="liquid-glass-close absolute right-4 top-4 z-10 rounded-xl px-4 py-2 text-xs font-medium text-neutral-600 transition hover:bg-white/85 hover:text-neutral-900 md:right-5 md:top-5"
+      tone="light"
+      panelClassName="relative max-h-[92vh] w-full max-w-lg overflow-hidden"
     >
       {artwork ? (
         <div className="relative max-h-[92vh] overflow-y-auto overscroll-contain">
@@ -142,7 +141,7 @@ export function AddValueEventModal({
                     <p>
                       The figure you are logging for this event (valuation, sale
                       price, estimate, etc.). Match what was actually stated or
-                      agreed—this becomes part of your provenance trail.
+                      agreed. This becomes part of your provenance trail.
                     </p>
                   }
                 />
@@ -195,31 +194,30 @@ export function AddValueEventModal({
                   tip={
                     <ul className="list-disc space-y-1.5 pl-4 text-[11px] text-neutral-600">
                       <li>
-                        <strong className="text-neutral-800">Initial</strong> —
-                        first recorded anchor for the work.
+                        <strong className="text-neutral-800">Initial</strong>
+                        : first recorded anchor for the work.
                       </li>
                       <li>
                         <strong className="text-neutral-800">
                           Primary sale
-                        </strong>{" "}
-                        — first sale from the artist or primary market.
+                        </strong>
+                        : first sale from the artist or primary market.
                       </li>
                       <li>
                         <strong className="text-neutral-800">
                           Secondary sale
-                        </strong>{" "}
-                        — resale on the secondary market.
+                        </strong>
+                        : resale on the secondary market.
                       </li>
                       <li>
-                        <strong className="text-neutral-800">Appraisal</strong>{" "}
-                        — formal or expert valuation.
+                        <strong className="text-neutral-800">Appraisal</strong>
+                        : formal or expert valuation.
                       </li>
                       <li>
                         <strong className="text-neutral-800">
                           Internal estimate
-                        </strong>{" "}
-                        — your studio reference figure (not necessarily
-                        public).
+                        </strong>
+                        : your studio reference figure (not necessarily public).
                       </li>
                     </ul>
                   }
@@ -251,22 +249,22 @@ export function AddValueEventModal({
                   tip={
                     <ul className="list-disc space-y-1.5 pl-4 text-[11px] text-neutral-600">
                       <li>
-                        <strong className="text-neutral-800">Private</strong> —
-                        only you (and authorised roles) in the studio.
+                        <strong className="text-neutral-800">Private</strong>
+                        : only you (and authorised roles) in the studio.
                       </li>
                       <li>
-                        <strong className="text-neutral-800">Gallery</strong> —
-                        shared in gallery-facing contexts where enabled.
+                        <strong className="text-neutral-800">Gallery</strong>
+                        : shared in gallery-facing contexts where enabled.
                       </li>
                       <li>
                         <strong className="text-neutral-800">
                           Certificate
-                        </strong>{" "}
-                        — can appear on or alongside the certificate layer.
+                        </strong>
+                        : can appear on or alongside the certificate layer.
                       </li>
                       <li>
-                        <strong className="text-neutral-800">Public</strong> —
-                        eligible for public registry surfaces when policy allows.
+                        <strong className="text-neutral-800">Public</strong>
+                        : eligible for public registry surfaces when policy allows.
                       </li>
                     </ul>
                   }

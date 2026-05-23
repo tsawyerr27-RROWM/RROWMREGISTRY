@@ -2,18 +2,18 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { deferredRouterReplace } from "@/lib/deferred-app-router";
 
 export default function LogoutPage() {
   const router = useRouter();
+  const sb = useSupabaseBrowserLazy();
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       try {
-        const supabase = getSupabaseBrowserClient();
-        await supabase.auth.signOut();
+        await sb().auth.signOut();
       } finally {
         if (!cancelled) deferredRouterReplace(router, "/login");
       }
@@ -21,7 +21,7 @@ export default function LogoutPage() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [router, sb]);
 
   return (
     <main className="flex min-h-screen items-center justify-center rrowm-bg-page px-6 py-24 pt-28">

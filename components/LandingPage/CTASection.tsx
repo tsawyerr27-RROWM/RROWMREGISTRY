@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { narrativeLayout } from "@/styles/narrative-layout";
+import { narrativeControl } from "@/styles/system-design";
 
 /**
  * Closing band — same light surface rhythm as thesis / system flow.
@@ -8,31 +9,32 @@ import { narrativeLayout } from "@/styles/narrative-layout";
 export function CTASection() {
   return (
     <section
-      className="relative border-y border-neutral-200/55 bg-gradient-to-b from-[var(--rrowm-base-soft)] via-[var(--rrowm-base-mid)]/18 to-[var(--rrowm-base-soft)]"
+      className="rrowm-atmo-section--blend"
       aria-labelledby="landing-cta-heading"
     >
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-neutral-200/70 to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px rrowm-atmo-section__hairline"
         aria-hidden
       />
 
-      <div className={`${narrativeLayout.gutter} py-16 md:py-24`}>
+      <div className={`${narrativeLayout.gutter} ${narrativeLayout.sectionPadYTight}`}>
         <h2
           id="landing-cta-heading"
           className="max-w-[min(100%,46rem)] font-serif text-[clamp(1.6rem,2.8vw,2.35rem)] font-normal leading-[1.16] tracking-tight text-neutral-950"
         >
-          Begin with a record
+          Join a work’s continuity
         </h2>
         <p className="mt-8 max-w-[40rem] text-base leading-[1.86] text-neutral-600 md:text-lg md:leading-[1.8]">
-          Artists and verified galleries can register works and bind certificates
-          to the same registry identity.
+          Artists and verified galleries register represented works; collectors can
+          appear on the record when custody is filed. Everything stays on one
+          chronology per piece.
         </p>
         <p className="mt-6 max-w-[40rem] text-sm leading-[1.82] text-neutral-600 md:text-base md:leading-[1.78]">
-          For how the record is structured, what stays private, and what appears
-          in public search, read the{" "}
+          For visibility rules and how the current record reads in public search, see
+          the{" "}
           <Link
             href="/about"
-            className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-[0.25em] transition hover:decoration-neutral-500"
+            className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-[0.25em] transition-[text-decoration-color,color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:decoration-neutral-500 hover:text-neutral-950 focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/12 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--rrowm-base-soft)]"
           >
             registry overview
           </Link>
@@ -43,18 +45,15 @@ export function CTASection() {
           className="mt-10 flex flex-wrap items-baseline gap-x-10 gap-y-4 text-sm font-medium md:mt-12"
           aria-label="Primary actions"
         >
-          <a
+          <Link
             href="/get-started"
-            className="border-b border-neutral-900/20 pb-0.5 text-neutral-900 transition duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-neutral-900/45"
+            className={`${narrativeControl.ctaInline} pb-0.5`}
           >
-            Get started →
-          </a>
-          <a
-            href="/registry"
-            className="border-b border-transparent pb-0.5 text-neutral-600 transition duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-neutral-500/35 hover:text-neutral-900"
-          >
+            Take part →
+          </Link>
+          <Link href="/registry" className={narrativeControl.ctaMuted}>
             Browse registry
-          </a>
+          </Link>
         </nav>
       </div>
     </section>

@@ -19,7 +19,11 @@ export function AboutHowItWorks({ density = "default" }: AboutHowItWorksProps) {
 
   return (
     <Shell
-      className={digest ? "" : narrativeLayout.sectionPadY}
+      className={
+        digest
+          ? ""
+          : `rrowm-atmo-section--cool ${narrativeLayout.gutter} ${narrativeLayout.sectionPadY}`
+      }
       {...(!digest ? { "aria-labelledby": "about-how-heading" } : {})}
     >
       <h2

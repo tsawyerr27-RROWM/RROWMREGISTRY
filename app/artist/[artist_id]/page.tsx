@@ -13,6 +13,15 @@ import {
 import { RegistryListPagination } from "@/components/Registry/RegistryListPagination";
 import { RegistryListFilters } from "@/components/Registry/RegistryListFilters";
 import { parsePublicPresence } from "@/lib/public-presence";
+import { ParticipationLayersStrip } from "@/components/Registry/ParticipationLayersStrip";
+import { parseArtistRepresentationState } from "@/lib/artwork-representation";
+import {
+  REGISTRY_FILTER_LABELS,
+  REPRESENTATION_PHRASES,
+  artworkCardParticipationLabel,
+  representationStatusPublicLabel,
+} from "@/lib/representation-language";
+import type { ParticipationLayer } from "@/lib/get-artwork-participation-layers";
 
 export const dynamic = "force-dynamic";
 
@@ -76,39 +85,69 @@ export default async function ArtistPage({
     ? artist.galleries[0]
     : artist.galleries;
 
+  const { data: repStateRaw } = await supabase.rpc(
+    "get_artist_representation_state",
+    { p_artist_id: artist.id }
+  );
+  const repState = parseArtistRepresentationState(repStateRaw);
+
   const formKey = `${q}|${sort}|${status}`;
 
   const filterHint =
     status === "verified"
-      ? "Verified only"
+      ? REGISTRY_FILTER_LABELS.verifiedOnly
       : status === "pending"
-        ? "Pending verification only"
+        ? REGISTRY_FILTER_LABELS.participationPending
         : null;
+
+  const artistParticipationLayers: ParticipationLayer[] = [];
+  if (gallery && repState.historical) {
+    artistParticipationLayers.push({
+      id: "historical_representation",
+      label: representationStatusPublicLabel("representation_ended"),
+      state: "neutral",
+    });
+  } else if (gallery && (repState.active || repState.represented_by_gallery)) {
+    artistParticipationLayers.push({
+      id: "representation",
+      label: gallery.verified
+        ? REPRESENTATION_PHRASES.representationOnFile
+        : REPRESENTATION_PHRASES.institutionLinkedContinuity,
+      state: "on_file",
+    });
+  } else if (gallery) {
+    artistParticipationLayers.push({
+      id: "representation",
+      label: REPRESENTATION_PHRASES.institutionLinkedContinuity,
+      state: "on_file",
+    });
+  }
+  if (artist.verification_status === "verified") {
+    artistParticipationLayers.push({
+      id: "artist",
+      label: REPRESENTATION_PHRASES.artistConfirmationOnFile,
+      state: "on_file",
+    });
+  }
 
   return (
     <div className="min-h-screen rrowm-bg-page-warm pt-20 text-neutral-900">
       <main className="mx-auto max-w-6xl px-6 py-12 md:py-16">
-        <PageNav
-          backHref="/registry"
-          crumbs={[
-            { label: "Registry", href: "/registry" },
-            { label: "Artist", href: `/artist/${encodeURIComponent(artist.slug)}` },
-            { label: artist.display_name },
-          ]}
-        />
+        <PageNav backHref="/registry" />
         {/* Hero */}
         <section className="max-w-3xl">
           <h1 className="font-serif text-4xl font-normal leading-[1.08] tracking-tight text-neutral-950 md:text-5xl lg:text-[3.25rem]">
             {artist.display_name}
           </h1>
 
-          {artist.verification_status === "verified" && (
-            <div className="mt-6">
-              <span className="inline-flex items-center rounded-full border border-emerald-200/80 bg-emerald-50/90 px-4 py-1.5 text-xs font-medium tracking-wide text-emerald-900">
-                Verified on RROWM
-              </span>
+          {artistParticipationLayers.length > 0 ? (
+            <div className="mt-8 max-w-xl">
+              <ParticipationLayersStrip
+                layers={artistParticipationLayers}
+                variant="light"
+              />
             </div>
-          )}
+          ) : null}
 
           {artist.bio ? (
             <div className="mt-10 space-y-6 text-lg leading-[1.75] text-neutral-700">
@@ -152,11 +191,11 @@ export default async function ArtistPage({
               <h2 className="text-xl font-medium text-neutral-900">
                 {gallery.name}
               </h2>
-              {gallery.verified ? (
-                <p className="mt-2 text-xs text-neutral-500">
-                  Represented by a verified gallery on RROWM
-                </p>
-              ) : null}
+              <p className="mt-2 text-xs text-neutral-500">
+                {gallery.verified
+                  ? "Institution-linked representation on file"
+                  : "Institutional representation on file"}
+              </p>
             </div>
           </section>
         ) : null}
@@ -170,7 +209,7 @@ export default async function ArtistPage({
               </h2>
               <p className="mt-3 max-w-xl text-sm leading-relaxed text-neutral-600">
                 Open a piece for the curated view; use the registry link for the
-                verification record.
+                continuity record on file.
               </p>
             </div>
             {total > 0 ? (
@@ -241,15 +280,12 @@ export default async function ArtistPage({
                           </div>
                         )}
                         <div className="absolute left-4 top-4">
-                          {isVerified ? (
-                            <span className="inline-flex rounded-full border border-emerald-200/90 bg-emerald-50/95 px-3 py-1 text-sm font-semibold text-emerald-900 backdrop-blur-sm">
-                              Verified
-                            </span>
-                          ) : (
-                            <span className="inline-flex rounded-full border border-amber-200/90 bg-amber-50/95 px-3 py-1 text-sm font-semibold text-amber-950 backdrop-blur-sm">
-                              Pending
-                            </span>
-                          )}
+                          <span className="inline-flex max-w-[calc(100%-2rem)] rounded-full border border-neutral-200/90 bg-white/95 px-3 py-1 text-[11px] font-medium leading-tight text-neutral-800 backdrop-blur-sm">
+                            {artworkCardParticipationLabel({
+                              institutionLinked: Boolean(gallery),
+                              artistConfirmed: isVerified,
+                            })}
+                          </span>
                         </div>
                       </Link>
 
@@ -308,15 +344,9 @@ export default async function ArtistPage({
         <section className="mx-auto mt-20 max-w-2xl rounded-3xl border border-black/[0.06] bg-white/70 px-8 py-10 text-center shadow-sm md:mt-24 md:px-12">
           <p className="text-base leading-relaxed text-neutral-700">
             Discover works on the artwork pages, then confirm details on the
-            public registry—the verification layer for each record.
+            public registry—the continuity layer for each record on file.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link
-              href="/registry"
-              className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
-            >
-              Browse registry
-            </Link>
             <Link
               href="/registry"
               className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"

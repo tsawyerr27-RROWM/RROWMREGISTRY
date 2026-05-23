@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import {
   isPostgresUniqueViolation,
   summarizeRpcError,
@@ -12,6 +12,7 @@ import {
   getOnboardingRedirectPath,
   homePathForRole,
 } from "@/lib/onboarding";
+import { acceptPendingGalleryInvite } from "@/lib/accept-gallery-invite-client";
 import { deferredRouterReplace } from "@/lib/deferred-app-router";
 
 type Step = "loading" | "role" | "artist" | "collector" | "gallery";
@@ -38,7 +39,7 @@ export function OnboardingClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const focus = searchParams.get("focus");
-  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const sb = useSupabaseBrowserLazy();
 
   const [step, setStep] = useState<Step>("loading");
   const [userId, setUserId] = useState<string | null>(null);
@@ -62,7 +63,7 @@ export function OnboardingClient() {
   }, [galleryName, userId]);
 
   const decideStep = useCallback(async (uid: string) => {
-    const { data: actor } = await supabase
+    const { data: actor } = await sb()
       .from("actor_profiles")
       .select("role, onboarding_complete")
       .eq("user_id", uid)
@@ -78,7 +79,7 @@ export function OnboardingClient() {
     }
 
     if (actor.role === "artist") {
-      const { data: ar } = await supabase
+      const { data: ar } = await sb()
         .from("artists")
         .select("id")
         .eq("id", uid)
@@ -88,7 +89,7 @@ export function OnboardingClient() {
         return;
       }
     } else if (actor.role === "collector") {
-      const { data: cp } = await supabase
+      const { data: cp } = await sb()
         .from("collector_profiles")
         .select("user_id")
         .eq("user_id", uid)
@@ -98,7 +99,7 @@ export function OnboardingClient() {
         return;
       }
     } else if (actor.role === "gallery") {
-      const { data: gu } = await supabase
+      const { data: gu } = await sb()
         .from("gallery_users")
         .select("gallery_id")
         .eq("user_id", uid)
@@ -110,17 +111,17 @@ export function OnboardingClient() {
       }
     }
 
-    const { data: a } = await supabase
+    const { data: a } = await sb()
       .from("actor_profiles")
       .select("role")
       .eq("user_id", uid)
       .maybeSingle();
     deferredRouterReplace(router, homePathForRole(a?.role) || "/studio");
-  }, [router]);
+  }, [router, sb]);
 
   useEffect(() => {
     void (async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData } = await sb().auth.getSession();
       if (!sessionData?.session) {
         deferredRouterReplace(
           router,
@@ -130,11 +131,11 @@ export function OnboardingClient() {
       }
       const uid = sessionData.session.user.id;
       setUserId(uid);
-      await supabase.auth.refreshSession();
+      await sb().auth.refreshSession();
 
-      const needOnboarding = await getOnboardingRedirectPath(supabase, uid);
+      const needOnboarding = await getOnboardingRedirectPath(sb(), uid);
       if (!needOnboarding) {
-        const { data: actor } = await supabase
+        const { data: actor } = await sb()
           .from("actor_profiles")
           .select("role")
           .eq("user_id", uid)
@@ -144,7 +145,7 @@ export function OnboardingClient() {
       }
 
       if (focus === "gallery") {
-        await supabase.rpc("set_onboarding_role", {
+        await sb().rpc("set_onboarding_role", {
           p_payload: { p_role: "gallery", p_display_name: "" },
         });
         setStep("gallery");
@@ -153,12 +154,12 @@ export function OnboardingClient() {
 
       await decideStep(uid);
     })();
-  }, [router, focus, decideStep]);
+  }, [router, focus, decideStep, sb]);
 
   const pickRole = async (r: "artist" | "collector" | "gallery") => {
     setBusy(true);
     setError(null);
-    const { error: e } = await supabase.rpc("set_onboarding_role", {
+    const { error: e } = await sb().rpc("set_onboarding_role", {
       p_payload: { p_role: r, p_display_name: "" },
     });
     setBusy(false);
@@ -178,7 +179,11 @@ export function OnboardingClient() {
       return;
     }
     setBusy(true);
-    const { error: rpcErr } = await supabase.rpc("complete_onboarding_artist", {
+    const inviteResult = await acceptPendingGalleryInvite();
+    if (!inviteResult.ok && inviteResult.error) {
+      console.warn("[onboarding] invite accept", inviteResult.error);
+    }
+    const { error: rpcErr } = await sb().rpc("complete_onboarding_artist", {
       p_full_name: artistFull.trim() || null,
       p_display_name: disp,
       p_bio: artistBio.trim() || null,
@@ -187,6 +192,14 @@ export function OnboardingClient() {
     if (rpcErr) {
       setError(summarizeRpcError(rpcErr) || "Could not save profile.");
       return;
+    }
+    try {
+      await fetch("/api/invite/complete-verification", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch {
+      /* non-fatal: gallery notification retries can be handled later */
     }
     deferredRouterReplace(router, "/studio");
   };
@@ -200,7 +213,7 @@ export function OnboardingClient() {
       return;
     }
     setBusy(true);
-    const { error: rpcErr } = await supabase.rpc("complete_onboarding_collector", {
+    const { error: rpcErr } = await sb().rpc("complete_onboarding_collector", {
       p_display_name: disp,
       p_location: collectorLocation.trim() || null,
     });
@@ -221,7 +234,7 @@ export function OnboardingClient() {
       return;
     }
     setBusy(true);
-    const { error: rpcErr } = await supabase.rpc("bootstrap_gallery_profile", {
+    const { error: rpcErr } = await sb().rpc("bootstrap_gallery_profile", {
       p_name: n,
       p_slug: slugBaseFromName(galleryName),
       p_location: galleryLocation.trim() || null,
@@ -262,11 +275,11 @@ export function OnboardingClient() {
       <>
         <header className="border-b border-black/[0.05] pb-12">
           <h1 className="font-serif text-3xl font-normal tracking-tight text-neutral-950 md:text-[2rem]">
-            What best describes you?
+            How you take part
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-            Choose how you&apos;ll use the registry. You can refine details on the
-            next screen.
+            Pick the role that matches your filings. The next screen asks for basics.
+            Depth accrues later in the studio.
           </p>
         </header>
         <div className="mt-12 divide-y divide-black/[0.08]">
@@ -275,17 +288,17 @@ export function OnboardingClient() {
               {
                 id: "artist" as const,
                 title: "Artist",
-                line: "Introduce your work",
+                line: "Represented works and public catalogue presence",
               },
               {
                 id: "collector" as const,
                 title: "Collector",
-                line: "Establish your presence",
+                line: "Custody and holdings on file when you participate",
               },
               {
                 id: "gallery" as const,
                 title: "Gallery",
-                line: "Create your institutional profile",
+                line: "Institutional association for represented artists",
               },
             ] as const
           ).map((opt) => (
@@ -320,11 +333,11 @@ export function OnboardingClient() {
       <>
         <header className="border-b border-black/[0.05] pb-12">
           <h1 className="font-serif text-3xl font-normal tracking-tight text-neutral-950">
-            Introduce your work
+            Your name on the catalogue
           </h1>
           <p className="mt-3 text-sm text-neutral-600">
-            Set up your artist profile. This appears on public records and your
-            studio.
+            This is how you read on public records and in the studio. Detail accrues as
+            you register represented works.
           </p>
         </header>
         <form onSubmit={(e) => void submitArtist(e)} className="mt-10 space-y-6">
@@ -386,11 +399,10 @@ export function OnboardingClient() {
       <>
         <header className="border-b border-black/[0.05] pb-12">
           <h1 className="font-serif text-3xl font-normal tracking-tight text-neutral-950">
-            Establish your presence
+            How you appear when custody is on file
           </h1>
           <p className="mt-3 text-sm text-neutral-600">
-            A minimal public-facing name for ownership and presence—nothing
-            social.
+            A simple public-facing name for the current record. No feed, no social layer.
           </p>
         </header>
         <form
@@ -442,10 +454,11 @@ export function OnboardingClient() {
       <>
         <header className="border-b border-black/[0.05] pb-12">
           <h1 className="font-serif text-3xl font-normal tracking-tight text-neutral-950">
-            Create your institutional profile
+            Name your institution on the catalogue
           </h1>
           <p className="mt-3 text-sm text-neutral-600">
-            This establishes your presence and authority within the registry.
+            This is the label artists and the public see next to institutional
+            association. Participant confirmations stay on the chronology.
           </p>
         </header>
         <form onSubmit={(e) => void submitGallery(e)} className="mt-10 space-y-6">

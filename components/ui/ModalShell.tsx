@@ -1,12 +1,41 @@
 import { ReactNode } from "react";
 
+import { workspaceModal } from "@/styles/workspace-design";
+
+export type ModalTone = "light" | "dark" | "silver";
+
 type ModalShellProps = {
   isOpen: boolean;
   onClose: () => void;
   children: ReactNode;
-  panelClassName: string;
+  panelClassName?: string;
   overlayClassName?: string;
   closeClassName?: string;
+  tone?: ModalTone;
+};
+
+const tonePresets: Record<
+  ModalTone,
+  { overlay: string; panelGlass: string; panelSize: string; close: string }
+> = {
+  light: {
+    overlay: workspaceModal.overlay,
+    panelGlass: workspaceModal.panelGlassLight,
+    panelSize: workspaceModal.panelSize,
+    close: workspaceModal.closeLight,
+  },
+  dark: {
+    overlay: workspaceModal.overlay,
+    panelGlass: workspaceModal.panelGlassDark,
+    panelSize: `${workspaceModal.panelSize} text-white`,
+    close: workspaceModal.closeDark,
+  },
+  silver: {
+    overlay: workspaceModal.overlaySilver,
+    panelGlass: workspaceModal.panelGlassSilver,
+    panelSize: workspaceModal.panelSize,
+    close: workspaceModal.closeSilver,
+  },
 };
 
 export default function ModalShell({
@@ -14,23 +43,35 @@ export default function ModalShell({
   onClose,
   children,
   panelClassName,
-  overlayClassName = "liquid-glass-backdrop backdrop-blur-xl ds-z-modal-backdrop fixed inset-0 flex items-center justify-center p-6 transition-opacity duration-300 ease-out md:p-8",
-  closeClassName =
-    "liquid-glass-close absolute right-5 top-5 z-10 rounded-xl px-4 py-2 text-xs font-medium text-neutral-600 transition duration-200 ease-out hover:bg-white/75 hover:text-neutral-900 md:right-6 md:top-6",
+  overlayClassName,
+  closeClassName,
+  tone = "light",
 }: ModalShellProps) {
   if (!isOpen) return null;
 
+  const preset = tonePresets[tone];
+
   return (
-    <div className={overlayClassName} onClick={onClose}>
+    <div
+      className={overlayClassName ?? preset.overlay}
+      onClick={onClose}
+      role="presentation"
+    >
       <div
-        className={`ds-z-modal relative ${panelClassName}`}
+        className={[
+          "ds-z-modal relative rrowm-modal-surface",
+          preset.panelGlass,
+          panelClassName ?? preset.panelSize,
+        ].join(" ")}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
       >
         <button
           type="button"
           onClick={onClose}
-          className={closeClassName}
-          aria-label="Close modal"
+          className={closeClassName ?? preset.close}
+          aria-label="Close"
         >
           Close
         </button>
@@ -39,4 +80,3 @@ export default function ModalShell({
     </div>
   );
 }
-

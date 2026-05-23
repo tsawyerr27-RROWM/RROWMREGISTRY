@@ -3,6 +3,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { workspace } from "@/styles/workspace-design";
+
 export type WorkspaceNavItem = {
   id: string;
   label: string;
@@ -32,7 +34,7 @@ type WorkspaceShellProps = {
  * Role-specific nav labels and main content are passed by each page.
  */
 export function WorkspaceShell({
-  atmosphereClassName = "ds-page-environment",
+  atmosphereClassName = workspace.atmosphere.environment,
   navItems,
   activeId,
   onSelect,
@@ -62,44 +64,40 @@ export function WorkspaceShell({
         <aside className="hidden w-72 shrink-0 px-6 py-10 lg:block lg:w-80 lg:px-8 xl:px-10 xl:py-12">
           <div className="sticky top-24 py-2 pr-6 transition-colors duration-300 xl:pr-8">
             <div className="flex flex-col gap-8 text-[13px]">
-              {navItems.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => {
-                    if (item.id === activeId) return;
-                    onSelect(item.id);
-                  }}
-                  className={`group relative text-left transition-colors ${
-                    activeId === item.id
-                      ? isLight
-                        ? "text-neutral-900"
-                        : "text-white"
-                      : isLight
-                        ? "text-neutral-500 hover:text-neutral-800"
-                        : "text-white/60 hover:text-white"
-                  }`}
-                >
-                  <span className="flex items-center gap-2 text-sm">
-                    <span>{item.label}</span>
-                    {item.showDot ? (
-                      <span
-                        className="inline-flex h-2 w-2 rounded-full bg-amber-300/80"
-                        aria-hidden
-                      />
-                    ) : null}
-                  </span>
-                  <span
-                    className={`absolute -bottom-2 left-0 h-px w-8 rounded-full transition-opacity ${
-                      activeId === item.id
+              {navItems.map((item) => {
+                const active = activeId === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      if (item.id === activeId) return;
+                      onSelect(item.id);
+                    }}
+                    className={`${workspace.nav.item} ${
+                      active
                         ? isLight
-                          ? "bg-neutral-900 opacity-70"
-                          : "bg-white opacity-70"
-                        : "opacity-0 group-hover:opacity-40"
+                          ? workspace.type.navItemActive
+                          : "text-sm font-medium text-white"
+                        : isLight
+                          ? workspace.type.navItemIdle
+                          : "text-sm font-medium text-white/60 hover:text-white"
                     }`}
-                  />
-                </button>
-              ))}
+                  >
+                    <span className={workspace.nav.label}>
+                      <span>{item.label}</span>
+                      {item.showDot ? (
+                        <span className={workspace.nav.dot} aria-hidden />
+                      ) : null}
+                    </span>
+                    <span
+                      className={`${workspace.nav.underline} ${
+                        active ? "w-8 opacity-70" : "w-0 opacity-0 group-hover:w-6 group-hover:opacity-35"
+                      } ${isLight ? "bg-neutral-900" : "bg-white"}`}
+                    />
+                  </button>
+                );
+              })}
             </div>
 
             <div
@@ -185,22 +183,49 @@ export function WorkspaceShell({
 export function WorkspaceShellFooterLinks({
   isLight = true,
   extra,
+  accountActive = false,
+  catalogueActive = false,
 }: {
   isLight?: boolean;
   extra?: ReactNode;
+  /** True when the current page is /account */
+  accountActive?: boolean;
+  /** True when the current page is the public catalogue (/registry…) */
+  catalogueActive?: boolean;
 }) {
   const link =
     isLight
       ? "text-neutral-500 hover:text-neutral-800"
       : "text-white hover:text-white/90";
+  const activeClass = isLight ? "text-neutral-900" : "text-white";
+  const accountClass = accountActive ? activeClass : link;
+  const catalogueClass = catalogueActive ? activeClass : link;
   return (
     <>
-      <Link href="/account" className={`mb-4 block text-sm font-medium transition ${link}`}>
-        My account →
-      </Link>
-      <Link href="/registry" className={`block text-sm font-medium transition ${link}`}>
-        Public registry →
-      </Link>
+      {accountActive ? (
+        <p
+          className={`mb-4 block text-sm font-medium ${accountClass}`}
+          aria-current="page"
+        >
+          My account
+        </p>
+      ) : (
+        <Link href="/account" className={`mb-4 block text-sm font-medium transition ${link}`}>
+          My account →
+        </Link>
+      )}
+      {catalogueActive ? (
+        <p
+          className={`block text-sm font-medium ${catalogueClass}`}
+          aria-current="page"
+        >
+          Browse catalogue
+        </p>
+      ) : (
+        <Link href="/registry" className={`block text-sm font-medium transition ${link}`}>
+          Browse catalogue →
+        </Link>
+      )}
       {extra}
     </>
   );

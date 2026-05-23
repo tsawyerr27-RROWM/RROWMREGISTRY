@@ -8,7 +8,7 @@ import {
 } from "@/components/legal/LegalPageShell";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — RROWM Registry",
+  title: "Privacy Policy · RROWM Registry",
   description:
     "How RROWM handles account, ownership, value, and visibility data.",
 };
@@ -30,10 +30,10 @@ export default function PrivacyPage() {
       <section className="flex flex-col gap-4">
         <LegalH2>Who we serve</LegalH2>
         <LegalP>
-          Accounts may be associated with different roles — including artists,
-          collectors, and galleries — each with distinct permissions and profile
-          surfaces. We process the information needed to operate accounts,
-          registry records, and optional public presence you choose to enable.
+          Accounts may be associated with different roles (artists, collectors, and
+          galleries), each with distinct permissions and profile surfaces. We process the
+          information needed to operate accounts, registry records, and optional public
+          presence you choose to enable.
         </LegalP>
       </section>
 

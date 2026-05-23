@@ -4,10 +4,10 @@
 export function SectionFadeDivider() {
   return (
     <div
-      className="pointer-events-none relative z-[2] mx-auto max-w-5xl px-6 py-5 md:py-7"
+      className="pointer-events-none relative z-[2] mx-auto max-w-5xl px-6 py-3 md:py-4"
       aria-hidden
     >
-      <div className="h-px bg-gradient-to-r from-transparent via-neutral-500/[0.06] to-transparent" />
+      <div className="h-px rrowm-atmo-divider__line" />
     </div>
   );
 }

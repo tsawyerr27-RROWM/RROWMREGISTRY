@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import {
   WorkspaceShell,
   WorkspaceShellFooterLinks,
@@ -21,7 +21,25 @@ import {
 } from "@/components/Dashboard/RegisterModal";
 import { DataInsightModal } from "@/components/Insights/DataInsightModal";
 import { GalleryInstitutionalHero } from "@/components/gallery/GalleryInstitutionalHero";
+import { ArtistTierBadge } from "@/components/artist/ArtistTierBadge";
+import { consumePendingGallerySection } from "@/lib/gallery-workspace-nav";
+import { GalleryInvitationsHub } from "@/components/gallery/GalleryInvitationsHub";
+import {
+  type GalleryInviteRow,
+} from "@/components/gallery/GalleryInvitationsSection";
+import {
+  ArtworkAuthenticationInviteModal,
+  type ArtworkAuthInviteTarget,
+} from "@/components/gallery/ArtworkAuthenticationInviteModal";
+import type { ArtworkAuthenticationInviteRow } from "@/lib/artwork-authentication-invite";
+import {
+  artworkNeedsAuthenticationInvite,
+  authenticatedArtworkAuthInviteIds,
+  pendingArtworkAuthInviteByArtworkId,
+} from "@/lib/artwork-auth-invite-ui";
+import { CANONICAL_RECORD_PHRASES } from "@/lib/representation-language";
 import { GalleryVerifyAttestationModal } from "@/components/gallery/GalleryVerifyAttestationModal";
+import { INVITE_EMAIL_UPDATED_MAIL_FAILED_MESSAGE } from "@/lib/email-config";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { generateRoleInsight, getDashboardInsights } from "@/lib/insights";
 import { RrowmMiniBarChart } from "@/components/ui/RrowmMiniBarChart";
@@ -32,6 +50,32 @@ import {
   computeArtworkPriorityQueueItem,
   sortPriorityQueue,
 } from "@/lib/gallery-priority-engine";
+import {
+  getArtistTier,
+  withDisputeOverride,
+  type ArtistTier,
+} from "@/lib/artist-tier";
+import {
+  parseGalleryRepresentationSummary,
+  type GalleryRepresentationSummary,
+} from "@/lib/artwork-representation";
+import {
+  mapAmendmentRequestRow,
+  type RepresentationAmendmentListItem,
+} from "@/lib/representation-amendments";
+import { getSiteUrl } from "@/lib/site-url";
+import ModalShell from "@/components/ui/ModalShell";
+import { RepresentationAmendmentsSection } from "@/components/Studio/RepresentationAmendmentsSection";
+import { EndRepresentationModal } from "@/components/Studio/EndRepresentationModal";
+import {
+  GalleryRegistrationOutcome,
+  type GalleryRegistrationOutcomeData,
+} from "@/components/gallery/GalleryRegistrationOutcome";
+import {
+  GalleryParticipationPendingSection,
+  type ParticipationPendingWork,
+} from "@/components/gallery/GalleryParticipationPendingSection";
+import { ARTWORK_CONFIRMATION_EVENT_TYPES } from "@/lib/artwork-representation";
 
 function formatShortWhen(iso: string | null | undefined): string {
   if (!iso) return "";
@@ -47,7 +91,7 @@ function formatShortWhen(iso: string | null | undefined): string {
 
 function formatVerificationStatus(status: string | null | undefined): string {
   const s = String(status || "").toLowerCase();
-  if (s === "verified") return "Verified on registry";
+  if (s === "verified") return "Verified";
   if (!s) return "Pending";
   return s.replace(/_/g, " ");
 }
@@ -69,6 +113,7 @@ type ArtistRow = {
   full_name: string | null;
   slug: string | null;
   represented_by_gallery: boolean | null;
+  shown_on_institutional_public?: boolean | null;
 };
 
 type ArtworkRow = {
@@ -76,6 +121,9 @@ type ArtworkRow = {
   title: string | null;
   registry_id: string | null;
   artist_id: string | null;
+  catalogue_artist_name?: string | null;
+  pending_artist_email?: string | null;
+  filing_gallery_id?: string | null;
   verification_status: string | null;
   created_at: string | null;
   approved_at: string | null;
@@ -86,25 +134,24 @@ type ArtworkRow = {
   current_owner_id: string | null;
 };
 
-type InviteRow = {
-  id: string;
-  artist_email: string;
-  status: string;
-  created_at: string;
-};
-
-function siteOriginForInviteCopy(): string {
-  if (typeof window === "undefined") return "";
-  return window.location.origin;
+function formatRegisterFailure(error: unknown): string {
+  const msg = summarizeRpcError(error);
+  if (msg && msg !== "RPC error (no enumerable fields)") return msg;
+  if (error instanceof Error && error.message) return error.message;
+  return "Work could not be registered on file. Check permissions, required fields, and that institution catalogue migrations are applied in Supabase.";
 }
 
 function buildArtistInviteEmailDraft(params: {
   galleryName: string;
   artistEmail: string;
+  gallerySlug?: string | null;
 }): string {
-  const origin = siteOriginForInviteCopy() || "https://your-registry-domain";
+  const site = getSiteUrl();
   const { galleryName, artistEmail } = params;
-  const joinLink = `${origin}/signup?role=artist&email=${encodeURIComponent(artistEmail.trim().toLowerCase() || "artist@example.com")}`;
+  const slug = params.gallerySlug?.trim();
+  const galleryLine = slug
+    ? `Gallery page: ${site}/gallery/${slug}`
+    : `Gallery page: ${site}/gallery/<gallery-slug>`;
   return [
     `Subject: ${galleryName} invited you to join the RROWM Registry`,
     "",
@@ -112,12 +159,14 @@ function buildArtistInviteEmailDraft(params: {
     "",
     `${galleryName} invited you to join the RROWM Registry as a represented artist.`,
     "",
-    `To accept the invitation:`,
-    joinLink,
+    `To accept, use the personalised link from the registry email (single-use token).`,
+    `Sign up with exactly this invited address.`,
     "",
-    `Gallery page: ${origin}/institutional-studio/<gallery-slug>`,
+    `Registry signup: ${site}/signup?invite_token=<paste-from-registry-email-if-needed>`,
     "",
-    `Once you complete artist setup, your profile will be linked to the gallery automatically.`,
+    galleryLine,
+    "",
+    `After you finish artist onboarding, your invitation is confirmed and your gallery may be notified.`,
   ].join("\n");
 }
 
@@ -125,13 +174,13 @@ type GalleryRole = "admin" | "staff";
 
 export default function GalleryDashboardPage() {
   const router = useRouter();
-  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const sb = useSupabaseBrowserLazy();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [gallery, setGallery] = useState<GalleryRow | null>(null);
   const [membershipRole, setMembershipRole] = useState<GalleryRole | null>(null);
   const [artists, setArtists] = useState<ArtistRow[]>([]);
-  const [invites, setInvites] = useState<InviteRow[]>([]);
+  const [invites, setInvites] = useState<GalleryInviteRow[]>([]);
   const [artworks, setArtworks] = useState<ArtworkRow[]>([]);
   const [readinessContext, setReadinessContext] = useState<{
     ownershipByArtworkId: Record<string, number>;
@@ -179,22 +228,75 @@ export default function GalleryDashboardPage() {
   const [lastRecordedInviteEmail, setLastRecordedInviteEmail] = useState<
     string | null
   >(null);
-  const [inviteFilter, setInviteFilter] = useState<
-    "pending" | "accepted" | "declined" | "all"
-  >("pending");
-  const [invitesExpanded, setInvitesExpanded] = useState(false);
+  const [resendingInviteId, setResendingInviteId] = useState<string | null>(null);
+  const [publishingPublicInviteId, setPublishingPublicInviteId] = useState<
+    string | null
+  >(null);
+  const [invitePublishError, setInvitePublishError] = useState<string | null>(null);
+  const [disputeFlags, setDisputeFlags] = useState<{
+    byInviteId: Record<string, boolean>;
+    byArtistId: Record<string, boolean>;
+  }>({ byInviteId: {}, byArtistId: {} });
+  /** Set when POST /send-artist-invite returns 409 duplicate (list may be stale). */
+  const [inviteDuplicateFromApi, setInviteDuplicateFromApi] = useState<{
+    inviteId: string;
+  } | null>(null);
+  const [artworkAuthInvites, setArtworkAuthInvites] = useState<
+    ArtworkAuthenticationInviteRow[]
+  >([]);
+  const [resendingArtworkAuthInviteId, setResendingArtworkAuthInviteId] =
+    useState<string | null>(null);
+  const [artworkAuthInviteMessage, setArtworkAuthInviteMessage] = useState<
+    string | null
+  >(null);
+  const [artworkAuthInviteError, setArtworkAuthInviteError] = useState<
+    string | null
+  >(null);
+  const [authInviteTarget, setAuthInviteTarget] =
+    useState<ArtworkAuthInviteTarget | null>(null);
+  const [authInvitePrefillEmail, setAuthInvitePrefillEmail] = useState("");
   const artistsSectionRef = useRef<HTMLDivElement | null>(null);
   const inviteSectionRef = useRef<HTMLDivElement | null>(null);
   const verificationSectionRef = useRef<HTMLElement | null>(null);
   const [activeSection, setActiveSection] = useState<
-    "studio" | "roster" | "catalogue" | "verification"
+    | "studio"
+    | "record-depth"
+    | "roster"
+    | "invitations"
+    | "catalogue"
+    | "verification"
   >("studio");
+  const [workspaceGuideOpen, setWorkspaceGuideOpen] = useState(false);
   const [isTransitioningSection, setIsTransitioningSection] = useState(false);
-  const [lastRegistration, setLastRegistration] = useState<{
-    title: string;
-    registryId: string;
-    at: string;
+
+  useEffect(() => {
+    const pending = consumePendingGallerySection();
+    if (pending) {
+      setActiveSection(pending);
+    }
+  }, []);
+
+  const [representationSummary, setRepresentationSummary] =
+    useState<GalleryRepresentationSummary | null>(null);
+  const [representationAmendments, setRepresentationAmendments] = useState<
+    RepresentationAmendmentListItem[]
+  >([]);
+  const [amendmentBusyId, setAmendmentBusyId] = useState<string | null>(null);
+  const [endRepTarget, setEndRepTarget] = useState<{
+    id: string;
+    name: string;
   } | null>(null);
+  const [endRepBusy, setEndRepBusy] = useState(false);
+  const [historicalArtistIds, setHistoricalArtistIds] = useState<Set<string>>(
+    () => new Set()
+  );
+  const [lastRegistration, setLastRegistration] =
+    useState<GalleryRegistrationOutcomeData | null>(null);
+  const [participationPendingWorks, setParticipationPendingWorks] = useState<
+    ParticipationPendingWork[]
+  >([]);
+  const [artworkIdsAwaitingArtistAttestation, setArtworkIdsAwaitingArtistAttestation] =
+    useState<Set<string>>(() => new Set());
   const [verifyTarget, setVerifyTarget] = useState<ArtworkRow | null>(null);
 
   const [insightPack, setInsightPack] = useState<Awaited<
@@ -219,6 +321,10 @@ export default function GalleryDashboardPage() {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [registerLoading, setRegisterLoading] = useState(false);
   const [registerArtistId, setRegisterArtistId] = useState("");
+  const [registerCatalogueArtistName, setRegisterCatalogueArtistName] =
+    useState("");
+  const [registerPendingArtistEmail, setRegisterPendingArtistEmail] =
+    useState("");
   const [newArtwork, setNewArtwork] = useState<RegisterModalArtwork>({
     title: "",
     year: "",
@@ -233,7 +339,7 @@ export default function GalleryDashboardPage() {
   });
 
   const load = useCallback(async () => {
-    const { data: sessionData } = await supabase.auth.getSession();
+    const { data: sessionData } = await sb().auth.getSession();
     if (!sessionData?.session) {
       deferredRouterReplace(
         router,
@@ -244,15 +350,15 @@ export default function GalleryDashboardPage() {
     const uid = sessionData.session.user.id;
     setUserId(uid);
 
-    await supabase.auth.refreshSession();
+    await sb().auth.refreshSession();
 
-    const onboardingPath = await getOnboardingRedirectPath(supabase, uid);
+    const onboardingPath = await getOnboardingRedirectPath(sb(), uid);
     if (onboardingPath) {
       deferredRouterReplace(router, onboardingPath);
       return;
     }
 
-    const { data: actor } = await supabase
+    const { data: actor } = await sb()
       .from("actor_profiles")
       .select("role")
       .eq("user_id", uid)
@@ -270,7 +376,7 @@ export default function GalleryDashboardPage() {
       return;
     }
 
-    const { data: memRow, error: memErr } = await supabase
+    const { data: memRow, error: memErr } = await sb()
       .from("gallery_users")
       .select(
         `
@@ -298,6 +404,8 @@ export default function GalleryDashboardPage() {
       );
       setGallery(null);
       setArtworks([]);
+      setRepresentationAmendments([]);
+      setHistoricalArtistIds(new Set());
       setReadinessContext({
         ownershipByArtworkId: {},
         hasDeclaredValueByArtworkId: {},
@@ -317,6 +425,8 @@ export default function GalleryDashboardPage() {
       setGallery(null);
       setProfileError(null);
       setArtworks([]);
+      setRepresentationAmendments([]);
+      setHistoricalArtistIds(new Set());
       setReadinessContext({
         ownershipByArtworkId: {},
         hasDeclaredValueByArtworkId: {},
@@ -334,15 +444,28 @@ export default function GalleryDashboardPage() {
       website_url: g.website_url?.trim() || "",
     });
 
-    const [{ data: ar }, { data: inv }] = await Promise.all([
-      supabase
+    const [{ data: ar }, { data: inv }, { data: artAuthInv }] = await Promise.all([
+      sb()
         .from("artists")
-        .select("id, display_name, full_name, slug, represented_by_gallery")
+        .select(
+          "id, display_name, full_name, slug, represented_by_gallery, shown_on_institutional_public"
+        )
         .eq("gallery_id", g.id)
         .returns(),
-      supabase
+      sb()
         .from("gallery_artist_invites")
-        .select("id, artist_email, status, created_at")
+        .select(
+          "id, artist_email, status, created_at, visibility_status, token_expires_at, accepted_user_id, invite_token"
+        )
+        .eq("gallery_id", g.id)
+        .order("created_at", { ascending: false })
+        .returns(),
+      sb()
+        .from("artwork_authentication_invites")
+        .select(
+          `id, artwork_id, gallery_id, artist_email, artist_name, status, created_at, token_expires_at, invite_token, authenticated_at,
+          artworks ( title, registry_id, image_url, catalogue_artist_name, artist_id )`
+        )
         .eq("gallery_id", g.id)
         .order("created_at", { ascending: false })
         .returns(),
@@ -350,10 +473,138 @@ export default function GalleryDashboardPage() {
 
     const artistList: ArtistRow[] = (ar as ArtistRow[] | null) || [];
     setArtists(artistList);
-    setInvites(((inv as InviteRow[] | null) || []) satisfies InviteRow[]);
+    setInvites(((inv as GalleryInviteRow[] | null) || []) satisfies GalleryInviteRow[]);
+    setArtworkAuthInvites(
+      ((artAuthInv as ArtworkAuthenticationInviteRow[] | null) || []) as ArtworkAuthenticationInviteRow[]
+    );
+
+    const { data: summaryRaw } = await sb().rpc(
+      "get_gallery_representation_summary",
+      { p_gallery_id: g.id }
+    );
+    setRepresentationSummary(parseGalleryRepresentationSummary(summaryRaw));
+
+    let amendmentList: RepresentationAmendmentListItem[] = [];
+    try {
+      const { data: amdRaw } = await sb()
+        .from("representation_amendment_requests")
+        .select(
+          `id, artwork_id, gallery_id, requester_role, notes, proposed_changes, status, created_at, resolved_at, resolution_notes,
+          artworks ( title, registry_id, image_url, artist_id ),
+          galleries ( name )`
+        )
+        .eq("gallery_id", g.id)
+        .order("created_at", { ascending: false })
+        .limit(40);
+      amendmentList = (amdRaw || [])
+        .map((x) => mapAmendmentRequestRow(x))
+        .filter((x): x is RepresentationAmendmentListItem => x != null);
+    } catch {
+      amendmentList = [];
+    }
+    setRepresentationAmendments(amendmentList);
+
+    const artistNameById: Record<string, string> = {};
+    for (const a of artistList) {
+      artistNameById[a.id] =
+        a.display_name?.trim() || a.full_name?.trim() || "Artist";
+    }
+
+    const artistConfirmTypes = [
+      ARTWORK_CONFIRMATION_EVENT_TYPES.artistConfirmedAuthorship,
+      ARTWORK_CONFIRMATION_EVENT_TYPES.artistConfirmedRepresentation,
+      ARTWORK_CONFIRMATION_EVENT_TYPES.artistConfirmedChronology,
+    ] as string[];
+
+    try {
+      const [{ data: filedRows }, { data: confirmedRows }] = await Promise.all([
+        sb()
+          .from("artwork_confirmation_events")
+          .select(
+            "artwork_id, created_at, artworks ( id, title, registry_id, image_url, artist_id, catalogue_artist_name )"
+          )
+          .eq("gallery_id", g.id)
+          .eq("event_type", ARTWORK_CONFIRMATION_EVENT_TYPES.institutionFiled)
+          .order("created_at", { ascending: false }),
+        sb()
+          .from("artwork_confirmation_events")
+          .select("artwork_id")
+          .eq("gallery_id", g.id)
+          .in("event_type", artistConfirmTypes),
+      ]);
+
+      const confirmedIds = new Set(
+        (confirmedRows ?? []).map((r) => String((r as { artwork_id: string }).artwork_id))
+      );
+      const seenArt = new Set<string>();
+      const pending: ParticipationPendingWork[] = [];
+      for (const row of filedRows ?? []) {
+        const aid = String((row as { artwork_id?: string }).artwork_id ?? "");
+        if (!aid || confirmedIds.has(aid) || seenArt.has(aid)) continue;
+        seenArt.add(aid);
+        const artRaw = (row as { artworks?: unknown }).artworks;
+        const art = (Array.isArray(artRaw) ? artRaw[0] : artRaw) as
+          | {
+              title?: string | null;
+              registry_id?: string | null;
+              image_url?: string | null;
+              artist_id?: string | null;
+            }
+          | null
+          | undefined;
+        const artistId = art?.artist_id ? String(art.artist_id) : "";
+        pending.push({
+          artwork_id: aid,
+          registry_id: art?.registry_id ?? null,
+          title: art?.title ?? null,
+          image_url: art?.image_url ?? null,
+          artist_name: artistId ? artistNameById[artistId] ?? null : null,
+          filed_at: (row as { created_at?: string }).created_at ?? null,
+        });
+      }
+      setParticipationPendingWorks(pending);
+      setArtworkIdsAwaitingArtistAttestation(
+        new Set(pending.map((p) => p.artwork_id))
+      );
+    } catch {
+      setParticipationPendingWorks([]);
+      setArtworkIdsAwaitingArtistAttestation(new Set());
+    }
 
     const ids = artistList.map((a) => a.id).filter(Boolean);
-    if (ids.length === 0) {
+    if (ids.length > 0) {
+      const { data: endedRows } = await sb()
+        .from("artwork_representation_relationships")
+        .select("artist_id")
+        .eq("gallery_id", g.id)
+        .in("artist_id", ids)
+        .not("ended_at", "is", null);
+      setHistoricalArtistIds(
+        new Set(
+          (endedRows ?? [])
+            .map((r) => String((r as { artist_id?: string }).artist_id ?? ""))
+            .filter(Boolean)
+        )
+      );
+    } else {
+      setHistoricalArtistIds(new Set());
+    }
+    let awQuery = sb()
+      .from("artworks")
+      .select(
+        "id, title, registry_id, artist_id, catalogue_artist_name, pending_artist_email, filing_gallery_id, verification_status, created_at, approved_at, image_url, year, medium, metadata_hash, current_owner_id"
+      )
+      .order("created_at", { ascending: false });
+
+    if (g.id && ids.length > 0) {
+      awQuery = awQuery.or(
+        `filing_gallery_id.eq.${g.id},artist_id.in.(${ids.join(",")})`
+      );
+    } else if (g.id) {
+      awQuery = awQuery.eq("filing_gallery_id", g.id);
+    } else if (ids.length > 0) {
+      awQuery = awQuery.in("artist_id", ids);
+    } else {
       setArtworks([]);
       setReadinessContext({
         ownershipByArtworkId: {},
@@ -374,14 +625,7 @@ export default function GalleryDashboardPage() {
       return;
     }
 
-    const { data: aw } = await supabase
-      .from("artworks")
-      .select(
-        "id, title, registry_id, artist_id, verification_status, created_at, approved_at, image_url, year, medium, metadata_hash, current_owner_id"
-      )
-      .in("artist_id", ids)
-      .order("created_at", { ascending: false })
-      .returns();
+    const { data: aw } = await awQuery.returns();
 
     const list: ArtworkRow[] = (aw as ArtworkRow[] | null) || [];
     const artworkIds = list.map((a) => a.id).filter(Boolean);
@@ -402,26 +646,26 @@ export default function GalleryDashboardPage() {
 
     if (artworkIds.length > 0) {
       const [oeRes, veRes, verRes, certRes, listingRes] = await Promise.all([
-        supabase
+        sb()
           .from("ownership_events")
           .select("artwork_id, to_user_id, created_at")
           .in("artwork_id", artworkIds),
-        supabase
+        sb()
           .from("value_events")
           .select("artwork_id, declared_value, currency, created_at")
           .in("artwork_id", artworkIds),
-        supabase
+        sb()
           .from("verification_events")
           .select(
             "artwork_id, status, source, source_id, verification_method, verified_by_gallery_id, created_at"
           )
           .in("artwork_id", artworkIds),
-        supabase
+        sb()
           .from("certificates")
           .select("artwork_id, revoked, issued_at")
           .in("artwork_id", artworkIds),
         // Optional market context: active listings only.
-        supabase
+        sb()
           .from("market_listings")
           .select("artwork_id, status")
           .in("artwork_id", artworkIds)
@@ -541,11 +785,132 @@ export default function GalleryDashboardPage() {
       isListedByArtworkId,
     });
     setLoading(false);
-  }, [router]);
+  }, [router, sb]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  const resolveAmendment = useCallback(
+    async (
+      amendmentId: string,
+      accept: boolean,
+      resolutionNotes: string | null
+    ) => {
+      setAmendmentBusyId(amendmentId);
+      try {
+        const res = await fetch("/api/representation/amendment/resolve", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amendment_id: amendmentId,
+            accept,
+            resolution_notes: resolutionNotes,
+          }),
+        });
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) {
+          setProfileError(j?.error || "Amendment could not be resolved.");
+          return;
+        }
+        setProfileError(null);
+        setSuccessMessage(
+          accept ? "Amendment accepted on file." : "Amendment declined on file."
+        );
+        await load();
+      } catch {
+        setProfileError("Amendment could not be resolved.");
+      } finally {
+        setAmendmentBusyId(null);
+      }
+    },
+    [load]
+  );
+
+  const withdrawAmendment = useCallback(
+    async (amendmentId: string) => {
+      setAmendmentBusyId(amendmentId);
+      try {
+        const res = await fetch("/api/representation/amendment/withdraw", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amendment_id: amendmentId }),
+        });
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) {
+          setProfileError(j?.error || "Could not withdraw amendment.");
+          return;
+        }
+        setProfileError(null);
+        setSuccessMessage("Amendment withdrawn on file.");
+        await load();
+      } catch {
+        setProfileError("Could not withdraw amendment.");
+      } finally {
+        setAmendmentBusyId(null);
+      }
+    },
+    [load]
+  );
+
+  const confirmEndRepresentation = useCallback(
+    async (notes: string) => {
+      if (!endRepTarget) return;
+      setEndRepBusy(true);
+      try {
+        const res = await fetch("/api/representation/end", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            artist_id: endRepTarget.id,
+            notes: notes || null,
+          }),
+        });
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) {
+          setProfileError(j?.error || "Could not end representation.");
+          return;
+        }
+        setProfileError(null);
+        setSuccessMessage(
+          "Representation ended on file. Prior filings remain visible on the chronology."
+        );
+        setEndRepTarget(null);
+        await load();
+      } catch {
+        setProfileError("Could not end representation.");
+      } finally {
+        setEndRepBusy(false);
+      }
+    },
+    [endRepTarget, load]
+  );
+
+  const submitGalleryAmendmentRequest = useCallback(
+    async (payload: {
+      artwork_id: string;
+      notes: string;
+      proposed_changes: Record<string, string>;
+    }) => {
+      const res = await fetch("/api/representation/amendment/request", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        throw new Error(j?.error || "Request failed.");
+      }
+      setProfileError(null);
+      setSuccessMessage("Amendment request filed on the chronology.");
+      await load();
+    },
+    [load]
+  );
 
   const verifyQueue = useMemo(
     () =>
@@ -576,6 +941,21 @@ export default function GalleryDashboardPage() {
     return m;
   }, [artists]);
 
+  const artistNamesByIdRecord = useMemo(
+    () => Object.fromEntries(Array.from(artistNameById.entries())),
+    [artistNameById]
+  );
+
+  const amendmentArtworkOptions = useMemo(
+    () =>
+      artworks.map((a) => ({
+        id: a.id,
+        title: a.title,
+        registry_id: a.registry_id,
+      })),
+    [artworks]
+  );
+
   const latestActivityLine = useMemo(() => {
     if (artworks.length === 0) return null as string | null;
     const sorted = [...artworks].sort(
@@ -594,17 +974,102 @@ export default function GalleryDashboardPage() {
     [invites]
   );
 
-  const filteredInvites = useMemo(() => {
-    if (inviteFilter === "all") return invites;
-    return invites.filter((i) => i.status === inviteFilter);
-  }, [invites, inviteFilter]);
+  const hasDuplicatePendingInvite = useMemo(() => {
+    const e = inviteEmail.trim().toLowerCase();
+    if (!e) return false;
+    return invites.some(
+      (i) =>
+        String(i.status || "").toLowerCase().trim() === "pending" &&
+        String(i.artist_email || "").trim().toLowerCase() === e
+    );
+  }, [invites, inviteEmail]);
 
-  const visibleInvites = useMemo(() => {
-    if (invitesExpanded) return filteredInvites;
-    return filteredInvites.slice(0, 4);
-  }, [filteredInvites, invitesExpanded]);
+  const pendingInviteIdForTypedEmail = useMemo(() => {
+    const e = inviteEmail.trim().toLowerCase();
+    if (!e) return null;
+    const row = invites.find(
+      (i) =>
+        String(i.status || "").toLowerCase().trim() === "pending" &&
+        String(i.artist_email || "").trim().toLowerCase() === e
+    );
+    return row?.id ?? null;
+  }, [invites, inviteEmail]);
+
+  const duplicateResendInviteId =
+    pendingInviteIdForTypedEmail ?? inviteDuplicateFromApi?.inviteId ?? null;
+
+  const duplicateInviteActive =
+    hasDuplicatePendingInvite || inviteDuplicateFromApi !== null;
 
   const isAdmin = membershipRole === "admin";
+  const canManageRepresentation =
+    membershipRole === "admin" || membershipRole === "staff";
+
+  useEffect(() => {
+    if (!gallery?.id) {
+      setDisputeFlags({ byInviteId: {}, byArtistId: {} });
+      return;
+    }
+    const inviteIds = invites.map((i) => i.id).filter(Boolean);
+    const artistIds = artists.map((a) => a.id).filter(Boolean);
+    if (inviteIds.length === 0 && artistIds.length === 0) {
+      setDisputeFlags({ byInviteId: {}, byArtistId: {} });
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/gallery/dispute-flags", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            gallery_id: gallery.id,
+            invite_ids: inviteIds,
+            artist_ids: artistIds,
+          }),
+        });
+        const data = (await res.json()) as {
+          byInviteId?: Record<string, boolean>;
+          byArtistId?: Record<string, boolean>;
+        };
+        if (cancelled) return;
+        if (!res.ok) {
+          setDisputeFlags({ byInviteId: {}, byArtistId: {} });
+          return;
+        }
+        setDisputeFlags({
+          byInviteId: data.byInviteId ?? {},
+          byArtistId: data.byArtistId ?? {},
+        });
+      } catch {
+        if (!cancelled) setDisputeFlags({ byInviteId: {}, byArtistId: {} });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [gallery?.id, invites, artists]);
+
+  const rosterTierByArtistId = useMemo(() => {
+    const out: Record<string, ArtistTier> = {};
+    const acceptedInv = invites.filter(
+      (i) => String(i.status || "").toLowerCase() === "accepted"
+    );
+    for (const a of artists) {
+      const inv =
+        acceptedInv.find(
+          (i) => (i.accepted_user_id || "").trim() === a.id
+        ) ?? null;
+      const base = getArtistTier(inv, {
+        id: a.id,
+        shown_on_institutional_public: a.shown_on_institutional_public,
+      });
+      const relD = inv?.id ? disputeFlags.byInviteId[inv.id] : false;
+      const artD = disputeFlags.byArtistId[a.id];
+      out[a.id] = withDisputeOverride(base, Boolean(relD || artD));
+    }
+    return out;
+  }, [artists, invites, disputeFlags]);
 
   const registrationTrend = useMemo(
     () => insightPack?.artworkTrend.series.slice(-10) ?? [],
@@ -628,11 +1093,13 @@ export default function GalleryDashboardPage() {
 
   const representedArtistOptions = useMemo(
     () =>
-      artists.map((a) => ({
-        id: a.id,
-        label:
-          a.display_name?.trim() || a.full_name?.trim() || "Artist",
-      })),
+      artists
+        .filter((a) => a.represented_by_gallery === true)
+        .map((a) => ({
+          id: a.id,
+          label:
+            a.display_name?.trim() || a.full_name?.trim() || "Artist",
+        })),
     [artists]
   );
 
@@ -646,22 +1113,11 @@ export default function GalleryDashboardPage() {
     }, 80);
   };
 
-  const scrollToInviteSection = () => {
-    setActiveSection("roster");
-    window.setTimeout(() => {
-      inviteSectionRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-      });
-    }, 120);
-  };
-
   const openRegisterWorkspace = () => {
-    if (artists.length === 0) {
-      scrollToArtistsSection();
-      return;
-    }
-    setRegisterArtistId(artists[0]?.id || "");
+    setRegisterArtistId("");
+    setRegisterCatalogueArtistName("");
+    setRegisterPendingArtistEmail("");
+    setProfileError(null);
     setShowRegisterModal(true);
   };
 
@@ -677,12 +1133,16 @@ export default function GalleryDashboardPage() {
     setInviting(true);
     setInviteMessage(null);
     setInviteError(null);
+    setInvitePublishError(null);
     setInviteCopyDone(false);
+    setInviteDuplicateFromApi(null);
     const trimmed = inviteEmail.trim().toLowerCase();
 
     let payload: {
       ok?: boolean;
-      row?: InviteRow;
+      duplicate?: boolean;
+      invite_id?: string;
+      row?: GalleryInviteRow;
       emailSent?: boolean;
       emailDeliveryError?: string;
       error?: string;
@@ -699,54 +1159,235 @@ export default function GalleryDashboardPage() {
       });
       payload = (await res.json().catch(() => ({}))) as typeof payload;
       if (!res.ok) {
+        if (res.status === 409 && payload.duplicate) {
+          const id =
+            typeof payload.invite_id === "string" ? payload.invite_id.trim() : "";
+          if (id) {
+            setInviteDuplicateFromApi({ inviteId: id });
+            setInviteError(null);
+          } else {
+            setInviteDuplicateFromApi(null);
+            setInviteError("An invite for this address is already on file.");
+          }
+          setInviteMessage(null);
+          return;
+        }
+        setInviteDuplicateFromApi(null);
         setInviteError(
           typeof payload.error === "string" && payload.error.trim()
             ? payload.error.trim()
-            : `Request failed (${res.status}).`
+            : `The request did not complete (${res.status}).`
         );
         return;
       }
     } catch {
-      setInviteError("Network error — try again.");
+      setInviteDuplicateFromApi(null);
+      setInviteError("Network error. Try again.");
       return;
     } finally {
       setInviting(false);
     }
 
     if (payload.row) {
-      setInvites((prev) => [payload.row as InviteRow, ...prev]);
+      const r = payload.row as GalleryInviteRow & { visibility_status?: string | null };
+      const row: GalleryInviteRow = {
+        id: r.id,
+        artist_email: r.artist_email,
+        status: r.status,
+        created_at: r.created_at,
+        visibility_status: r.visibility_status ?? null,
+        token_expires_at: (r as { token_expires_at?: string | null })
+          .token_expires_at ?? null,
+        accepted_user_id:
+          (r as { accepted_user_id?: string | null }).accepted_user_id ?? null,
+        invite_token: (r as { invite_token?: string | null }).invite_token ?? null,
+      };
+      setInvites((prev) => [row, ...prev]);
+      setInviteDuplicateFromApi(null);
     }
     setInviteEmail("");
     setLastRecordedInviteEmail(trimmed);
 
     if (payload.emailDeliveryError) {
       setInviteMessage(
-        `Invite saved for ${trimmed}. ${payload.emailDeliveryError}`
+        `On file for ${trimmed}. ${payload.emailDeliveryError}`
       );
       return;
     }
     if (payload.emailSent) {
-      setInviteMessage(
-        `Invitation emailed to ${trimmed} and saved to your outreach log. You can still copy the draft below to customise a follow-up.`
-      );
+      setInviteMessage(`Invite on file. Copy sent to ${trimmed}.`);
       return;
     }
     setInviteMessage(
-      `Recorded for ${trimmed}. Outbound email is not configured on this server — copy the draft below and send from your gallery address (set RESEND_API_KEY and GALLERY_INVITE_EMAIL_FROM or CONTACT_EMAIL_FROM to enable email).`
+      `Recorded for ${trimmed}. Email not sent; copy the manual draft or adjust mail settings (RESEND_API_KEY, RESEND_FROM_* on email.rrowm.io, NEXT_PUBLIC_APP_URL / NEXT_PUBLIC_SITE_URL).`
     );
   };
 
+  const resendArtworkAuthInvite = async (inviteId: string) => {
+    if (!isAdmin) return;
+    setResendingArtworkAuthInviteId(inviteId);
+    setArtworkAuthInviteError(null);
+    setArtworkAuthInviteMessage(null);
+    try {
+      const res = await fetch("/api/artwork-authentication/resend-invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ invite_id: inviteId }),
+      });
+      const payload = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        emailSent?: boolean;
+        emailDeliveryError?: string;
+      };
+      if (!res.ok) {
+        setArtworkAuthInviteError(
+          payload.error || `Could not resend (${res.status}).`
+        );
+        return;
+      }
+      setArtworkAuthInviteMessage(
+        payload.emailSent
+          ? "Artwork authentication invitation resent."
+          : payload.emailDeliveryError ||
+              "Invitation refreshed on file; email not sent."
+      );
+      await load();
+    } catch {
+      setArtworkAuthInviteError("Network error. Try again.");
+    } finally {
+      setResendingArtworkAuthInviteId(null);
+    }
+  };
+
+  const resendArtistInvite = async (inviteId: string) => {
+    if (!isAdmin) return;
+    setResendingInviteId(inviteId);
+    setInviteError(null);
+    setInviteMessage(null);
+    setInvitePublishError(null);
+    let payload: {
+      ok?: boolean;
+      row?: GalleryInviteRow;
+      emailSent?: boolean;
+      emailDeliveryError?: string;
+      error?: string;
+    } = {};
+    try {
+      const res = await fetch("/api/gallery/resend-artist-invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invite_id: inviteId }),
+      });
+      payload = (await res.json().catch(() => ({}))) as typeof payload;
+      if (!res.ok) {
+        setInviteError(
+          typeof payload.error === "string" && payload.error.trim()
+            ? payload.error.trim()
+            : `The request did not complete (${res.status}).`
+        );
+        return;
+      }
+    } catch {
+      setInviteError("Network error. Try again.");
+      return;
+    } finally {
+      setResendingInviteId(null);
+    }
+
+    if (payload.row) {
+      const r = payload.row as GalleryInviteRow & { visibility_status?: string | null };
+      const row: GalleryInviteRow = {
+        id: r.id,
+        artist_email: r.artist_email,
+        status: r.status,
+        created_at: r.created_at,
+        visibility_status: r.visibility_status ?? null,
+        token_expires_at: (r as { token_expires_at?: string | null })
+          .token_expires_at ?? null,
+        accepted_user_id:
+          (r as { accepted_user_id?: string | null }).accepted_user_id ?? null,
+        invite_token: (r as { invite_token?: string | null }).invite_token ?? null,
+      };
+      let merged = row;
+      try {
+        const { data: tokRow } = await sb()
+          .from("gallery_artist_invites")
+          .select("invite_token")
+          .eq("id", inviteId)
+          .maybeSingle();
+        const t = (tokRow as { invite_token?: string | null } | null)?.invite_token;
+        if (t) merged = { ...row, invite_token: String(t) };
+      } catch {
+        // ignore
+      }
+      setInvites((prev) => prev.map((x) => (x.id === inviteId ? merged : x)));
+    }
+
+    setInviteDuplicateFromApi(null);
+
+    if (payload.emailDeliveryError) {
+      setInviteMessage(payload.emailDeliveryError);
+      return;
+    }
+    if (payload.emailSent) {
+      setInviteMessage(
+        "Invite resent on file. A new signup link was sent to the artist."
+      );
+    } else {
+      setInviteMessage(INVITE_EMAIL_UPDATED_MAIL_FAILED_MESSAGE);
+    }
+  };
+
+  const makeInvitePublic = async (inviteId: string) => {
+    if (membershipRole !== "admin") return;
+    setPublishingPublicInviteId(inviteId);
+    setInvitePublishError(null);
+    try {
+      const res = await fetch("/api/invite/visibility", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          invite_id: inviteId,
+          visibility_status: "public",
+        }),
+      });
+      const payload = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setInvitePublishError(
+          typeof payload.error === "string" && payload.error.trim()
+            ? payload.error.trim()
+            : `Could not publish (${res.status}).`
+        );
+        return;
+      }
+      setInvites((prev) =>
+        prev.map((x) =>
+          x.id === inviteId ? { ...x, visibility_status: "public" } : x
+        )
+      );
+      setInviteMessage(
+        "Visibility updated. The artist is now Public on your institutional page."
+      );
+    } catch {
+      setInvitePublishError("Network error. Try again.");
+    } finally {
+      setPublishingPublicInviteId(null);
+    }
+  };
+
   const inviteEmailDraft = useMemo(() => {
-    if (!gallery?.name?.trim()) return "";
+    if (!gallery?.id) return "";
     const sample =
       inviteEmail.trim() ||
       lastRecordedInviteEmail?.trim() ||
       "artist@example.com";
     return buildArtistInviteEmailDraft({
-      galleryName: gallery.name.trim(),
+      galleryName: gallery.name?.trim() || "Gallery",
       artistEmail: sample,
+      gallerySlug: gallery.slug,
     });
-  }, [gallery?.name, inviteEmail, lastRecordedInviteEmail]);
+  }, [gallery?.id, gallery?.name, gallery?.slug, inviteEmail, lastRecordedInviteEmail]);
 
   const copyInviteDraft = async () => {
     if (!inviteEmailDraft) return;
@@ -755,12 +1396,26 @@ export default function GalleryDashboardPage() {
       setInviteCopyDone(true);
       window.setTimeout(() => setInviteCopyDone(false), 2500);
     } catch {
-      setInviteError("Could not copy — select the text manually.");
+      setInviteError("Could not copy. Select the text manually.");
     }
   };
 
   const handleGalleryRegisterArtwork = async () => {
-    if (!userId || !registerArtistId) return;
+    if (!userId || !gallery?.id) return;
+    const linkedArtistId = registerArtistId.trim() || null;
+    const catalogueName =
+      linkedArtistId
+        ? ""
+        : registerCatalogueArtistName.trim();
+    if (!newArtwork.title.trim()) return;
+    if (!newArtwork.imageFile) {
+      setProfileError("Image is required to open the canonical record on file.");
+      return;
+    }
+    if (!linkedArtistId && !catalogueName) {
+      setProfileError("Artist name is required when no roster artist is linked.");
+      return;
+    }
     setRegisterLoading(true);
     let imageUrl: string | null = null;
     try {
@@ -776,12 +1431,12 @@ export default function GalleryDashboardPage() {
         const fileExt = newArtwork.imageFile.name.split(".").pop();
         const fileName = `${userId}/${crypto.randomUUID()}.${fileExt}`;
 
-        const { error: upErr } = await supabase.storage
+        const { error: upErr } = await sb().storage
           .from("artwork-images")
           .upload(fileName, newArtwork.imageFile);
         if (upErr) throw upErr;
 
-        const { data } = supabase.storage
+        const { data } = sb().storage
           .from("artwork-images")
           .getPublicUrl(fileName);
         imageUrl = data.publicUrl;
@@ -794,7 +1449,10 @@ export default function GalleryDashboardPage() {
 
       const metadataHash = await sha256Hex(
         JSON.stringify({
-          artist_id: registerArtistId,
+          gallery_id: gallery.id,
+          artist_id: linkedArtistId,
+          catalogue_artist_name: catalogueName,
+          pending_artist_email: registerPendingArtistEmail.trim() || null,
           title: newArtwork.title,
           year: newArtwork.year,
           medium: newArtwork.medium,
@@ -805,37 +1463,55 @@ export default function GalleryDashboardPage() {
         })
       );
 
-      const { data: registered, error } = await supabase.rpc(
-        "register_artwork_atomic",
-        {
-          p_artist_id: registerArtistId,
-          p_title: newArtwork.title,
-          p_year: newArtwork.year,
-          p_medium: newArtwork.medium,
-          p_dimensions: newArtwork.dimensions,
-          p_description: newArtwork.description,
-          p_image_url: imageUrl,
-          p_registry_id: registryId,
-          p_metadata_hash: metadataHash,
-        }
-      );
-      if (error) throw error;
+      const regRes = await fetch("/api/representation/register-institution-artwork", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          gallery_id: gallery.id,
+          title: newArtwork.title,
+          year: newArtwork.year || null,
+          medium: newArtwork.medium || null,
+          dimensions: newArtwork.dimensions || null,
+          description: newArtwork.description || null,
+          image_url: imageUrl,
+          registry_id: registryId,
+          metadata_hash: metadataHash,
+          catalogue_artist_name: catalogueName || null,
+          artist_id: linkedArtistId,
+          pending_artist_email: registerPendingArtistEmail.trim() || null,
+        }),
+      });
+      const regBody = (await regRes.json().catch(() => ({}))) as {
+        ok?: boolean;
+        artwork_id?: string | null;
+        artwork?: { id?: string } | null;
+        error?: string;
+      };
+      if (!regRes.ok) {
+        throw new Error(
+          regBody.error ||
+            `Registration failed (${regRes.status}). Apply Supabase migrations 20260513120000 and 20260513140000 if this persists.`
+        );
+      }
 
-      let artworkIdForValue: string | null = null;
-      if (registered && typeof registered === "object" && "id" in registered) {
-        artworkIdForValue = (registered as { id: string }).id;
-      } else {
-        const { data: latestArtworks } = await supabase
+      let artworkIdForValue: string | null =
+        regBody.artwork_id?.trim() ||
+        (regBody.artwork && typeof regBody.artwork === "object"
+          ? String(regBody.artwork.id ?? "").trim() || null
+          : null);
+
+      if (!artworkIdForValue) {
+        const { data: latestArtworks } = await sb()
           .from("artworks")
           .select("id")
-          .eq("artist_id", registerArtistId)
-          .order("created_at", { ascending: false })
+          .eq("registry_id", registryId)
           .limit(1);
         artworkIdForValue = latestArtworks?.[0]?.id ?? null;
       }
 
       if (newArtwork.declared_value && artworkIdForValue) {
-        await supabase.rpc("add_value_event", {
+        const { error: valueErr } = await sb().rpc("add_value_event", {
           p_artwork_id: artworkIdForValue,
           p_declared_value: Number(newArtwork.declared_value),
           p_currency: String(newArtwork.currency || "").toUpperCase(),
@@ -843,18 +1519,43 @@ export default function GalleryDashboardPage() {
           p_visibility_level: newArtwork.visibility_level,
           p_note: null,
         });
+        if (valueErr) {
+          console.warn(
+            "[gallery register] value event",
+            summarizeRpcError(valueErr)
+          );
+        }
       }
+
+      const institutionFilingOk = true;
+      const institutionFilingError: string | null = null;
+
+      const selectedArtist = linkedArtistId
+        ? artists.find((a) => a.id === linkedArtistId)
+        : null;
 
       setShowRegisterModal(false);
       setProfileError(null);
+      setSuccessMessage(null);
       setLastRegistration({
         title: newArtwork.title.trim() || "Work",
         registryId,
-        at: new Date().toISOString(),
+        artworkId: artworkIdForValue,
+        institutionFilingOk,
+        institutionFilingError,
+        artistName:
+          selectedArtist?.display_name?.trim() ||
+          selectedArtist?.full_name?.trim() ||
+          catalogueName ||
+          null,
+        pendingArtistEmail: registerPendingArtistEmail.trim() || null,
+        artistAccountLinked: Boolean(linkedArtistId),
+        imageUrl,
+        catalogueArtistName: catalogueName || null,
       });
-      setSuccessMessage(
-        `Registry record issued: ${registryId}. The work appears below with full traceability.`
-      );
+      setRegisterArtistId("");
+      setRegisterCatalogueArtistName("");
+      setRegisterPendingArtistEmail("");
       setNewArtwork({
         title: "",
         year: "",
@@ -869,8 +1570,9 @@ export default function GalleryDashboardPage() {
       });
       await load();
     } catch (e) {
-      console.error(e);
-      setProfileError("Could not register artwork. Check permissions and fields.");
+      const detail = formatRegisterFailure(e);
+      console.error("[gallery register]", detail);
+      setProfileError(detail);
     }
     setRegisterLoading(false);
   };
@@ -883,7 +1585,7 @@ export default function GalleryDashboardPage() {
     if (!gallery?.id || !userId) return;
     setSavingProfile(true);
     setProfileError(null);
-    const { error } = await supabase
+    const { error } = await sb()
       .from("galleries")
       .update({
         location: draft.location.trim() || null,
@@ -893,7 +1595,7 @@ export default function GalleryDashboardPage() {
       .eq("id", gallery.id);
     setSavingProfile(false);
     if (error) {
-      setProfileError(error.message || "Could not save.");
+      setProfileError(error.message || "Changes could not be filed.");
       return;
     }
     await load();
@@ -904,13 +1606,13 @@ export default function GalleryDashboardPage() {
     if (!gallery?.verified || !artworkId) return;
     setVerifyBusy(artworkId);
     setProfileError(null);
-    const { error } = await supabase.rpc("gallery_verify_artwork", {
+    const { error } = await sb().rpc("gallery_verify_artwork", {
       p_artwork_id: artworkId,
     });
     setVerifyBusy(null);
     if (error) {
       setProfileError(
-        summarizeRpcError(error) || "Verification failed. Check gallery verified status."
+        summarizeRpcError(error) || "Verification did not complete."
       );
       return;
     }
@@ -935,7 +1637,7 @@ export default function GalleryDashboardPage() {
       const insights =
         insightPack && artworkIds.length > 0
           ? insightPack
-          : await getDashboardInsights({ supabase, userId, artworkIds });
+          : await getDashboardInsights({ supabase: sb(), userId, artworkIds });
 
       if (kind === "works") {
         const { series } = insights.artworkTrend;
@@ -984,7 +1686,7 @@ export default function GalleryDashboardPage() {
         ]);
         setInsightDataNotes([
           "These bars are not additive: one work can count toward more than one category.",
-          "“Fully verified” requires a non-revoked certificate, a gallery attestation, and verified ownership — stricter than the per-row “verified” badge on each artwork.",
+          "“Fully verified” needs a non-revoked certificate, a gallery attestation, and verified ownership. That bar is stricter than the per-row “verified” badge on each artwork.",
         ]);
         return;
       }
@@ -1005,7 +1707,7 @@ export default function GalleryDashboardPage() {
         }));
       setInsightBreakdown(breakdown);
       setInsightDataNotes([
-        "Figures are the latest declared value per currency from value events — the same basis as the chart series — not a roll-up of every artwork’s current list price.",
+        "Figures are the latest declared value per currency from value events (the same basis as the chart series), not a roll-up of every artwork’s current list price.",
       ]);
     } catch {
       setInsightSubtitle("Could not load this insight. Try again.");
@@ -1018,7 +1720,9 @@ export default function GalleryDashboardPage() {
     (id: string) => {
       const allowed = new Set([
         "studio",
+        "record-depth",
         "roster",
+        "invitations",
         "catalogue",
         "verification",
       ]);
@@ -1027,13 +1731,106 @@ export default function GalleryDashboardPage() {
       setIsTransitioningSection(true);
       window.setTimeout(() => {
         setActiveSection(
-          id as "studio" | "roster" | "catalogue" | "verification"
+          id as
+            | "studio"
+            | "record-depth"
+            | "roster"
+            | "invitations"
+            | "catalogue"
+            | "verification"
         );
         setIsTransitioningSection(false);
       }, 180);
     },
     [activeSection]
   );
+
+  const goToRecordDepthSection = useCallback(
+    (scrollTargetId?: string) => {
+      selectGallerySection("record-depth");
+      if (!scrollTargetId || typeof document === "undefined") return;
+      window.setTimeout(() => {
+        document
+          .getElementById(scrollTargetId)
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 220);
+    },
+    [selectGallerySection]
+  );
+
+  const scrollToGalleryAmendments = useCallback(() => {
+    goToRecordDepthSection("gallery-representation-amendments");
+  }, [goToRecordDepthSection]);
+
+  const goToInvitationsSection = useCallback(
+    (prefillEmail?: string) => {
+      if (prefillEmail?.trim()) {
+        setInviteEmail(prefillEmail.trim().toLowerCase());
+      }
+      selectGallerySection("invitations");
+      window.setTimeout(() => {
+        inviteSectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 220);
+    },
+    [selectGallerySection]
+  );
+
+  const authenticatedAuthInviteArtworkIds = useMemo(
+    () => authenticatedArtworkAuthInviteIds(artworkAuthInvites),
+    [artworkAuthInvites]
+  );
+
+  const pendingAuthInviteByArtworkId = useMemo(
+    () => pendingArtworkAuthInviteByArtworkId(artworkAuthInvites),
+    [artworkAuthInvites]
+  );
+
+  const openArtworkAuthInviteForWork = useCallback(
+    (artworkId: string, prefillEmail?: string) => {
+      const w = artworks.find((a) => a.id === artworkId);
+      if (!w) return;
+      const email =
+        prefillEmail?.trim() ||
+        w.pending_artist_email?.trim() ||
+        pendingAuthInviteByArtworkId.get(artworkId)?.artist_email?.trim() ||
+        "";
+      setAuthInvitePrefillEmail(email);
+      setAuthInviteTarget({
+        id: w.id,
+        title: w.title,
+        registry_id: w.registry_id,
+        image_url: w.image_url,
+        catalogue_artist_name: w.catalogue_artist_name,
+        artist_id: w.artist_id,
+      });
+    },
+    [artworks, pendingAuthInviteByArtworkId]
+  );
+
+  const openArtworkAuthInviteFromRegistration = useCallback(() => {
+    if (!lastRegistration?.artworkId) return;
+    const id = lastRegistration.artworkId;
+    const w = artworks.find((a) => a.id === id);
+    if (w) {
+      openArtworkAuthInviteForWork(
+        id,
+        lastRegistration.pendingArtistEmail?.trim() || undefined
+      );
+      return;
+    }
+    setAuthInvitePrefillEmail(lastRegistration.pendingArtistEmail?.trim() || "");
+    setAuthInviteTarget({
+      id,
+      title: lastRegistration.title,
+      registry_id: lastRegistration.registryId,
+      image_url: lastRegistration.imageUrl ?? null,
+      catalogue_artist_name: lastRegistration.catalogueArtistName ?? null,
+      artist_id: null,
+    });
+  }, [artworks, lastRegistration, openArtworkAuthInviteForWork]);
 
   const openVerifyFromIntegrity = useCallback(
     (artworkId: string) => {
@@ -1066,7 +1863,7 @@ export default function GalleryDashboardPage() {
           const msg =
             typeof body?.error === "string" && body.error.trim()
               ? body.error.trim()
-              : "Could not issue certificate.";
+              : "Certificate could not be filed.";
           setProfileError(msg);
           return;
         }
@@ -1074,38 +1871,53 @@ export default function GalleryDashboardPage() {
         const created = Boolean(body?.created);
         setSuccessMessage(
           created
-            ? "Certificate issued for this work."
-            : "Certificate already exists for this work."
+            ? "Certificate filed for this work."
+            : "Certificate already on file for this work."
         );
         await load();
       } catch {
-        setProfileError("Could not issue certificate. Try again.");
+        setProfileError("Certificate could not be filed. Try again.");
       }
     },
     [load]
   );
 
   const handleSignOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    await sb().auth.signOut();
     deferredRouterPush(router, "/login");
-  }, [router]);
+  }, [router, sb]);
+
+  const participationAttention =
+    (representationSummary?.participation_pending ?? 0) > 0 ||
+    (representationSummary?.amendments_pending ?? 0) > 0;
 
   const galleryNavItems = useMemo(
     () => [
-      { id: "studio", label: "Studio" },
+      { id: "studio", label: "Overview" },
       {
-        id: "roster",
-        label: "Roster",
-        showDot: pendingInviteCount > 0,
+        id: "record-depth",
+        label: "Record depth",
+        showDot: participationAttention,
       },
-      { id: "catalogue", label: "Catalogue" },
+      { id: "roster", label: "Artists" },
+      { id: "catalogue", label: "Works" },
       {
         id: "verification",
-        label: "Verification",
+        label: "Continuity & certs",
         showDot: Boolean(gallery?.verified) && verifyQueue.length > 0,
       },
+      {
+        id: "invitations",
+        label: "Invitations",
+        showDot: pendingInviteCount > 0,
+      },
     ],
-    [pendingInviteCount, gallery?.verified, verifyQueue.length]
+    [
+      pendingInviteCount,
+      gallery?.verified,
+      verifyQueue.length,
+      participationAttention,
+    ]
   );
 
   const sidebarActivityNode = latestActivityLine ? (
@@ -1201,7 +2013,7 @@ export default function GalleryDashboardPage() {
   return (
     <>
       <WorkspaceShell
-        atmosphereClassName="ds-page-environment"
+        atmosphereClassName="ds-workspace-environment"
         navItems={galleryNavItems}
         activeId={activeSection}
         onSelect={selectGallerySection}
@@ -1225,9 +2037,29 @@ export default function GalleryDashboardPage() {
             location={identityLocation || null}
             subscriptionStatus={gallery.subscription_status}
             artworks={artworks}
+            worksCount={worksCount}
+            verifiedWorksCount={verifiedWorksCount}
+            verificationPct={verificationPct}
+            awaitingVerificationCount={awaitingVerificationCount}
+            institutionFiledCount={
+              representationSummary?.institution_filed ?? 0
+            }
+            artistConfirmedCount={representationSummary?.artist_confirmed ?? 0}
+            participationPendingCount={
+              representationSummary?.participation_pending ?? 0
+            }
+            rosterInvitesPendingCount={
+              representationSummary?.roster_invites_pending ?? 0
+            }
+            amendmentsPendingCount={
+              representationSummary?.amendments_pending ?? 0
+            }
+            onGoToSection={selectGallerySection}
             onRegister={openRegisterWorkspace}
-            onInvite={scrollToInviteSection}
+            onInvite={goToInvitationsSection}
             isAdmin={isAdmin}
+            onAboutWorkspace={() => setWorkspaceGuideOpen(true)}
+            onGoToAmendments={scrollToGalleryAmendments}
           />
         </div>
 
@@ -1239,20 +2071,22 @@ export default function GalleryDashboardPage() {
             {successMessage}{" "}
             <button
               type="button"
-              onClick={() => {
-                setSuccessMessage(null);
-                setLastRegistration(null);
-              }}
+              onClick={() => setSuccessMessage(null)}
               className="font-medium underline underline-offset-4"
             >
               Dismiss
             </button>
           </p>
         ) : null}
-        {lastRegistration && !successMessage ? (
-          <p className="mt-4 font-mono text-[10px] text-neutral-500">
-            {lastRegistration.registryId} · {formatShortWhen(lastRegistration.at)}
-          </p>
+        {lastRegistration ? (
+          <GalleryRegistrationOutcome
+            data={lastRegistration}
+            isAdmin={isAdmin}
+            onDismiss={() => setLastRegistration(null)}
+            onSendAuthenticationInvite={openArtworkAuthInviteFromRegistration}
+            onViewRecordDepth={() => goToRecordDepthSection()}
+            onViewWork={() => selectGallerySection("catalogue")}
+          />
         ) : null}
 
         <section className="mt-10" aria-label="Catalogue intelligence">
@@ -1313,7 +2147,7 @@ export default function GalleryDashboardPage() {
               <p className="mt-3 line-clamp-3 text-[13px] leading-relaxed text-neutral-700">
                 {valuePreviewLine ?? (
                   <span className="text-neutral-400">
-                    No declared values yet — capture value when registering works.
+                    No declared values yet. Capture value when registering works.
                   </span>
                 )}
               </p>
@@ -1346,7 +2180,7 @@ export default function GalleryDashboardPage() {
                       {insightPack.health.withCertificates}
                     </p>
                     <p className="mt-1 text-sm font-medium text-neutral-600">
-                      Certs
+                      Certified
                     </p>
                   </div>
                   <div>
@@ -1390,7 +2224,7 @@ export default function GalleryDashboardPage() {
                 </p>
               ) : !gallery.verified ? (
                 <p className="mt-3 text-[12px] text-neutral-500">
-                  Gallery verification pending — attestation unlocks after approval.
+                  Gallery verification pending. Attestation unlocks after approval.
                 </p>
               ) : (
                 <p className="mt-3 text-[12px] text-neutral-400">Queue clear.</p>
@@ -1430,162 +2264,60 @@ export default function GalleryDashboardPage() {
           </>
         ) : null}
 
-        {activeSection === "roster" ? (
-          <div className="space-y-10">
-            <header className="overflow-hidden rounded-[1.25rem] border border-neutral-900/[0.07] bg-gradient-to-br from-white/90 via-white/70 to-neutral-50/40 shadow-[0_1px_0_rgba(15,23,42,0.05),0_24px_48px_-28px_rgba(15,23,42,0.12)] backdrop-blur-md">
-              <div className="border-b border-neutral-900/[0.06] bg-white/40 px-6 py-6 sm:px-7">
-                <div className="flex flex-wrap items-end justify-between gap-4">
-                  <div>
-                    <h2 className="font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-[1.75rem]">
-                      Roster & presence
-                    </h2>
-                    <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-neutral-600 md:text-[15px]">
-                      Represented artists, invitations, and how your gallery appears publicly.
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center rounded-full border border-neutral-900/[0.06] bg-white/70 px-3 py-1 text-[12px] tabular-nums text-neutral-700 shadow-[0_1px_0_rgba(15,23,42,0.04)]">
-                      <span className="font-semibold text-neutral-900">{artists.length}</span>
-                      <span className="ml-1.5 text-neutral-500">
-                        {artists.length === 1 ? "artist" : "artists"}
-                      </span>
-                    </span>
-                    {pendingInviteCount > 0 ? (
-                      <span className="inline-flex items-center rounded-full border border-amber-200/80 bg-amber-50/95 px-3 py-1 text-[12px] font-medium text-amber-950/95 shadow-[0_1px_0_rgba(15,23,42,0.03)]">
-                        {pendingInviteCount} pending invite{pendingInviteCount === 1 ? "" : "s"}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center rounded-full border border-neutral-900/[0.05] bg-neutral-50/80 px-3 py-1 text-[12px] text-neutral-500">
-                        No pending invites
-                      </span>
-                    )}
-                    {isAdmin ? (
-                      <button
-                        type="button"
-                        onClick={scrollToInviteSection}
-                        className="rounded-full border border-neutral-900/[0.08] bg-neutral-950 px-3.5 py-1 text-[12px] font-semibold text-white shadow-sm transition hover:bg-neutral-800"
-                      >
-                        Record invite
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-            </header>
-
-            {isAdmin ? (
-              <section
-                className="overflow-hidden rounded-[1.25rem] border border-amber-200/65 bg-gradient-to-br from-amber-50/90 via-amber-50/70 to-white/40 shadow-[0_1px_0_rgba(15,23,42,0.05),0_18px_44px_-28px_rgba(120,53,15,0.18)] backdrop-blur-sm"
-                aria-label="Pending artist invitations"
-              >
-                <div className="border-b border-amber-200/70 bg-white/35 px-6 py-5 sm:px-7">
-                  <h3 className="text-[13px] font-semibold text-amber-950/95">
-                    Invitations
-                  </h3>
-                  <p className="mt-1 text-[12px] leading-relaxed text-amber-950/85">
-                    Saved to your outreach log. If email is configured, recording an
-                    invite also sends from the registry.
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {(
-                      [
-                        { id: "pending", label: "Pending" },
-                        { id: "accepted", label: "Accepted" },
-                        { id: "declined", label: "Declined" },
-                        { id: "all", label: "All" },
-                      ] as const
-                    ).map((t) => {
-                      const active = inviteFilter === t.id;
-                      return (
-                        <button
-                          key={t.id}
-                          type="button"
-                          onClick={() => setInviteFilter(t.id)}
-                          className={`rounded-full px-3 py-1 text-[12px] font-medium transition ${
-                            active
-                              ? "bg-amber-950/90 text-white"
-                              : "bg-white/70 text-amber-950/90 ring-1 ring-amber-200/70 hover:bg-white"
-                          }`}
-                        >
-                          {t.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div className="mt-4 flex items-center justify-between gap-3">
-                    <p className="text-[12px] text-amber-950/80">
-                      Showing{" "}
-                      <span className="font-semibold text-amber-950/95">
-                        {Math.min(visibleInvites.length, filteredInvites.length)}
-                      </span>{" "}
-                      of{" "}
-                      <span className="font-semibold text-amber-950/95">
-                        {filteredInvites.length}
-                      </span>
-                    </p>
-                    {filteredInvites.length > 4 ? (
-                      <button
-                        type="button"
-                        onClick={() => setInvitesExpanded((v) => !v)}
-                        className="rounded-full border border-amber-200/70 bg-white/70 px-3 py-1 text-[12px] font-medium text-amber-950/90 transition hover:bg-white"
-                      >
-                        {invitesExpanded ? "Show less" : "Show all"}
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-                {filteredInvites.length > 0 ? (
-                  <ul className="max-h-64 divide-y divide-amber-200/60 overflow-auto px-6 py-1 sm:px-7">
-                    {visibleInvites.map((inv) => (
-                      <li
-                        key={inv.id}
-                        className="flex flex-wrap items-center justify-between gap-2 py-3 text-[13px]"
-                      >
-                        <div className="min-w-0">
-                          <p className="truncate font-medium text-neutral-950">
-                            {inv.artist_email}
-                          </p>
-                          <p className="mt-1 text-[11px] text-neutral-600">
-                            Status:{" "}
-                            <span className="font-medium text-neutral-800">
-                              {inv.status}
-                            </span>
-                          </p>
-                        </div>
-                        <p className="tabular-nums text-[12px] text-neutral-700">
-                          {formatShortWhen(inv.created_at)}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="px-6 py-6 text-[13px] text-neutral-700 sm:px-7">
-                    <p className="font-medium text-neutral-900">
-                      No invites in this view.
-                    </p>
-                    <p className="mt-1 text-[12px] leading-relaxed text-neutral-600">
-                      Switch filters or record a new invitation.
-                    </p>
-                  </div>
-                )}
-              </section>
+        {activeSection === "record-depth" ? (
+          <div className="max-w-6xl space-y-10 pb-8">
+            <GalleryParticipationPendingSection
+              items={participationPendingWorks}
+              onGoToInvitations={goToInvitationsSection}
+              isAdmin={isAdmin}
+              onInviteWork={(artworkId) => openArtworkAuthInviteForWork(artworkId)}
+            />
+            <RepresentationAmendmentsSection
+              viewer="gallery"
+              anchorId="gallery-representation-amendments"
+              items={representationAmendments}
+              artworkOptions={amendmentArtworkOptions}
+              artistNamesById={artistNamesByIdRecord}
+              showRequestButton={
+                membershipRole === "admin" || membershipRole === "staff"
+              }
+              busyAmendmentId={amendmentBusyId}
+              onRequest={submitGalleryAmendmentRequest}
+              onResolve={resolveAmendment}
+              onWithdraw={withdrawAmendment}
+            />
+            {representationAmendments.length === 0 &&
+            (representationSummary?.participation_pending ?? 0) === 0 ? (
+              <p className="text-sm leading-relaxed text-neutral-500">
+                No attestations awaiting depth. When canonical records are on file,
+                artist authentication and amendments appear here.
+              </p>
             ) : null}
+          </div>
+        ) : null}
 
-            <section
-              ref={artistsSectionRef}
-              id="gallery-represented-artists"
-              className="scroll-mt-20 overflow-hidden rounded-[1.25rem] border border-neutral-900/[0.07] bg-gradient-to-br from-white/90 via-white/70 to-neutral-50/40 shadow-[0_1px_0_rgba(15,23,42,0.05),0_24px_48px_-28px_rgba(15,23,42,0.12)] backdrop-blur-md"
-            >
+        {activeSection === "roster" ? (
+          <section
+            ref={artistsSectionRef}
+            id="gallery-represented-artists"
+            className="scroll-mt-20 overflow-hidden rounded-[1.25rem] border border-neutral-900/[0.07] bg-gradient-to-br from-white/90 via-white/70 to-neutral-50/40 shadow-[0_1px_0_rgba(15,23,42,0.05),0_24px_48px_-28px_rgba(15,23,42,0.12)] backdrop-blur-md"
+          >
               <div className="border-b border-neutral-900/[0.06] bg-white/40 px-5 py-5 sm:px-7 sm:py-6">
                 <div className="flex flex-wrap items-end justify-between gap-4">
                   <div>
-                    <h3 className="font-serif text-xl font-normal text-neutral-950">
+                    <h2 className="font-serif text-xl font-normal text-neutral-950 md:text-2xl">
                       Artists
-                    </h3>
+                    </h2>
                     <p className="mt-1 text-sm text-neutral-500">
                       Linked to your gallery on the registry
                     </p>
                   </div>
+                  <span className="inline-flex items-center rounded-full border border-neutral-900/[0.06] bg-white/70 px-3 py-1 text-[12px] tabular-nums text-neutral-700 shadow-[0_1px_0_rgba(15,23,42,0.04)]">
+                    <span className="font-semibold text-neutral-900">{artists.length}</span>
+                    <span className="ml-1.5 text-neutral-500">
+                      {artists.length === 1 ? "artist" : "artists"}
+                    </span>
+                  </span>
                 </div>
               </div>
 
@@ -1597,73 +2329,13 @@ export default function GalleryDashboardPage() {
                       When you connect artists, they appear here with representation status and work counts.
                     </p>
                     {isAdmin ? (
-                      <div
-                        ref={inviteSectionRef}
-                        id="gallery-invite-artist"
-                        className="mx-auto mt-8 max-w-xl scroll-mt-24 text-left"
+                      <button
+                        type="button"
+                        onClick={() => goToInvitationsSection()}
+                        className="mt-8 inline-flex items-center rounded-full bg-neutral-950 px-5 py-2.5 text-[13px] font-semibold text-white shadow-md shadow-neutral-900/20 transition hover:bg-neutral-800"
                       >
-                        <div className="rounded-[1.15rem] border border-neutral-900/[0.08] bg-white/70 p-5 shadow-[0_18px_46px_-34px_rgba(15,23,42,0.18)] backdrop-blur-sm sm:p-6">
-                        <label className="text-sm font-semibold text-neutral-900">
-                          Record an invitation
-                        </label>
-                        <p className="mt-1 text-[12px] leading-relaxed text-neutral-600">
-                          Saves an entry in your outreach log. When email is configured
-                          on the server, we also send an invitation from the registry;
-                          otherwise copy the draft below and send from your gallery
-                          address.
-                        </p>
-                        <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-stretch">
-                          <input
-                            type="email"
-                            value={inviteEmail}
-                            onChange={(e) => {
-                              setInviteEmail(e.target.value);
-                              setLastRecordedInviteEmail(null);
-                            }}
-                            placeholder="artist@example.com"
-                            className="min-w-0 flex-1 rounded-xl border border-neutral-900/10 bg-white/90 px-3.5 py-3 text-[13px] outline-none ring-0 transition placeholder:text-neutral-400 focus:border-neutral-900/25 focus:ring-2 focus:ring-neutral-900/10"
-                          />
-                          <button
-                            type="button"
-                            disabled={inviting || !inviteEmail.trim()}
-                            onClick={() => void recordArtistInvite()}
-                            className="shrink-0 rounded-xl bg-neutral-950 px-5 py-3 text-[13px] font-semibold text-white shadow-md shadow-neutral-900/15 transition hover:bg-neutral-800 disabled:opacity-40"
-                          >
-                            {inviting ? "Recording…" : "Record invitation"}
-                          </button>
-                        </div>
-                        {inviteError ? (
-                          <p className="mt-3 text-[12px] text-red-800">{inviteError}</p>
-                        ) : null}
-                        {inviteMessage ? (
-                          <p className="mt-3 text-[12px] leading-relaxed text-emerald-900/90">
-                            {inviteMessage}
-                          </p>
-                        ) : null}
-                        {inviteEmailDraft ? (
-                          <div className="mt-5 overflow-hidden rounded-xl border border-neutral-900/10 bg-white/75">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <p className="px-4 pt-4 text-[12px] font-semibold text-neutral-900">
-                                Suggested email copy
-                              </p>
-                              <button
-                                type="button"
-                                onClick={() => void copyInviteDraft()}
-                                className="mr-4 mt-3 rounded-lg border border-neutral-900/15 bg-white px-3 py-1.5 text-[11px] font-semibold text-neutral-900 transition hover:bg-neutral-50"
-                              >
-                                {inviteCopyDone ? "Copied" : "Copy all"}
-                              </button>
-                            </div>
-                            <p className="px-4 pb-3 text-[11px] leading-snug text-neutral-600">
-                              Edit freely before sending. If automated email is enabled, this can be used for follow-ups.
-                            </p>
-                            <pre className="max-h-56 overflow-auto whitespace-pre-wrap break-words border-t border-neutral-900/10 bg-neutral-950/[0.03] p-4 font-mono text-[10px] leading-relaxed text-neutral-800">
-                              {inviteEmailDraft}
-                            </pre>
-                          </div>
-                        ) : null}
-                        </div>
-                      </div>
+                        Go to Invitations
+                      </button>
                     ) : (
                       <p className="mt-6 text-[13px] text-neutral-500">
                         Ask an administrator to invite artists.
@@ -1679,6 +2351,8 @@ export default function GalleryDashboardPage() {
                         const worksN = worksCountByArtistId.get(a.id) ?? 0;
                         const represented =
                           a.represented_by_gallery === true;
+                        const historical =
+                          !represented && historicalArtistIds.has(a.id);
                         const initial = name.trim().charAt(0).toUpperCase() || "?";
                         return (
                           <li key={a.id}>
@@ -1715,11 +2389,36 @@ export default function GalleryDashboardPage() {
                                   className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ${
                                     represented
                                       ? "bg-emerald-500/12 text-emerald-900"
-                                      : "bg-amber-500/12 text-amber-950/90"
+                                      : historical
+                                        ? "bg-neutral-500/12 text-neutral-700"
+                                        : "bg-amber-500/12 text-amber-950/90"
                                   }`}
                                 >
-                                  {represented ? "Represented" : "Pending"}
+                                  {represented
+                                    ? "Represented"
+                                    : historical
+                                      ? "Historical"
+                                      : "Pending"}
                                 </span>
+                                {represented && canManageRepresentation ? (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setEndRepTarget({ id: a.id, name })
+                                    }
+                                    className="rounded-lg border border-neutral-900/[0.1] bg-white/90 px-2.5 py-1 text-[10px] font-medium text-neutral-800 transition hover:bg-neutral-50"
+                                  >
+                                    End on file
+                                  </button>
+                                ) : null}
+                                <ArtistTierBadge
+                                  tier={rosterTierByArtistId[a.id] ?? "unverified"}
+                                />
+                                {rosterTierByArtistId[a.id] === "disputed" ? (
+                                  <span className="max-w-[10rem] text-[10px] leading-snug text-neutral-600">
+                                    Under review
+                                  </span>
+                                ) : null}
                                 <span className="tabular-nums text-[12px] text-neutral-500">
                                   {worksN > 0
                                     ? `${worksN} ${worksN === 1 ? "work" : "works"}`
@@ -1731,83 +2430,69 @@ export default function GalleryDashboardPage() {
                         );
                       })}
                     </ul>
-                    {isAdmin ? (
-                      <div
-                        ref={inviteSectionRef}
-                        id="gallery-invite-artist"
-                        className="mt-8 scroll-mt-24 overflow-hidden rounded-[1.25rem] border border-neutral-900/[0.07] bg-gradient-to-br from-white/85 via-white/65 to-neutral-50/40 shadow-[0_1px_0_rgba(15,23,42,0.05),0_24px_48px_-28px_rgba(15,23,42,0.12)] backdrop-blur-md"
-                      >
-                        <div className="border-b border-neutral-900/[0.06] bg-white/40 px-5 py-5 sm:px-7 sm:py-6">
-                          <p className="text-[13px] font-semibold text-neutral-950">
-                            Invite another artist
-                          </p>
-                          <p className="mt-1 text-[12px] leading-relaxed text-neutral-600">
-                            Records an outreach entry and attempts to email the artist if outbound email is configured.
-                          </p>
-                        </div>
-                        <div className="px-5 py-5 sm:px-7 sm:py-6">
-                        <div className="flex max-w-xl flex-col gap-3 sm:flex-row sm:items-stretch">
-                          <input
-                            type="email"
-                            value={inviteEmail}
-                            onChange={(e) => {
-                              setInviteEmail(e.target.value);
-                              setLastRecordedInviteEmail(null);
-                            }}
-                            placeholder="artist@example.com"
-                            className="min-w-0 flex-1 rounded-xl border border-neutral-900/10 bg-white/90 px-3.5 py-3 text-[13px] outline-none transition placeholder:text-neutral-400 focus:border-neutral-900/25 focus:ring-2 focus:ring-neutral-900/10"
-                          />
-                          <button
-                            type="button"
-                            disabled={inviting || !inviteEmail.trim()}
-                            onClick={() => void recordArtistInvite()}
-                            className="shrink-0 rounded-xl bg-neutral-950 px-5 py-3 text-[13px] font-semibold text-white shadow-md shadow-neutral-900/15 transition hover:bg-neutral-800 disabled:opacity-40"
-                          >
-                            {inviting ? "Recording…" : "Record invitation"}
-                          </button>
-                        </div>
-                        {inviteError ? (
-                          <p className="mt-3 text-[12px] text-red-800">{inviteError}</p>
-                        ) : null}
-                        {inviteMessage ? (
-                          <p className="mt-3 text-[12px] leading-relaxed text-emerald-900/90">
-                            {inviteMessage}
-                          </p>
-                        ) : null}
-                        {inviteEmailDraft ? (
-                          <div className="mt-5 overflow-hidden rounded-xl border border-neutral-900/10 bg-white/75">
-                            <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-4">
-                              <p className="text-[12px] font-semibold text-neutral-900">
-                                Suggested email copy
-                              </p>
-                              <button
-                                type="button"
-                                onClick={() => void copyInviteDraft()}
-                                className="rounded-lg border border-neutral-900/15 bg-white px-3 py-1.5 text-[11px] font-semibold text-neutral-900 transition hover:bg-neutral-50"
-                              >
-                                {inviteCopyDone ? "Copied" : "Copy all"}
-                              </button>
-                            </div>
-                            <p className="px-4 pb-3 text-[11px] leading-snug text-neutral-600">
-                              Edit freely before sending. If automated email is enabled, this can be used for follow-ups.
-                            </p>
-                            <pre className="max-h-56 overflow-auto whitespace-pre-wrap break-words border-t border-neutral-900/10 bg-neutral-950/[0.03] p-4 font-mono text-[10px] leading-relaxed text-neutral-800">
-                              {inviteEmailDraft}
-                            </pre>
-                          </div>
-                        ) : null}
-                        </div>
-                      </div>
-                    ) : null}
                   </>
                 )}
               </div>
             </section>
-          </div>
+        ) : null}
+
+        {activeSection === "invitations" ? (
+          <GalleryInvitationsHub
+            galleryName={orgName}
+            registrySiteUrl={getSiteUrl()}
+            representationInvites={invites}
+            artworkAuthInvites={artworkAuthInvites}
+            isAdmin={isAdmin}
+            inviteEmail={inviteEmail}
+            onInviteEmailChange={(v) => {
+              setInviteEmail(v);
+              setLastRecordedInviteEmail(null);
+              setInviteError(null);
+              setInviteMessage(null);
+              setInviteDuplicateFromApi(null);
+            }}
+            inviting={inviting}
+            onSendRepresentationInvite={() => void recordArtistInvite()}
+            resendingRepresentationId={resendingInviteId}
+            onResendRepresentationInvite={(id) => void resendArtistInvite(id)}
+            resendingArtworkAuthId={resendingArtworkAuthInviteId}
+            onResendArtworkAuthInvite={(id) => void resendArtworkAuthInvite(id)}
+            inviteError={inviteError}
+            inviteMessage={inviteMessage}
+            artworkInviteMessage={artworkAuthInviteMessage}
+            artworkInviteError={artworkAuthInviteError}
+            duplicateInviteActive={duplicateInviteActive}
+            duplicateResendInviteId={duplicateResendInviteId}
+            manualDraft={inviteEmailDraft}
+            manualDraftCopyDone={inviteCopyDone}
+            onCopyManualDraft={() => void copyInviteDraft()}
+            sectionRef={inviteSectionRef}
+            publishingPublicInviteId={publishingPublicInviteId}
+            onMakeInvitePublic={(id) => void makeInvitePublic(id)}
+            invitePublishError={invitePublishError}
+          />
         ) : null}
 
         {activeSection === "catalogue" ? (
           <>
+            <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <h2 className="font-serif text-xl font-normal text-neutral-950 md:text-2xl">
+                  Works
+                </h2>
+                <p className="mt-1 max-w-xl text-sm text-neutral-500">
+                  Catalogue records filed by your institution. Register a work to
+                  open the chronology and layer institution attestations.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={openRegisterWorkspace}
+                className="rounded-xl bg-neutral-950 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-neutral-800"
+              >
+                Register a work
+              </button>
+            </div>
             <PriorityQueueSection
               items={priorityQueue}
               maxVisible={8}
@@ -1887,18 +2572,39 @@ export default function GalleryDashboardPage() {
               </div>
               {artworks.length === 0 ? (
                 <p className="mt-4 text-[13px] text-neutral-500">
-                  {artists.length === 0
-                    ? "No works — add an artist first."
-                    : "No works in the catalogue yet."}
+                  No works in the institutional catalogue yet. Register a canonical
+                  record at any time — artist accounts are optional.
                 </p>
               ) : (
                 <ul className="mt-6 max-h-[min(70vh,36rem)] divide-y divide-neutral-900/[0.05] overflow-y-auto pr-1">
                   {artworks.map((w) => {
+                    const linkedName = w.artist_id
+                      ? artistNameById.get(w.artist_id)
+                      : null;
                     const artistLabel =
-                      (w.artist_id && artistNameById.get(w.artist_id)) || "—";
+                      linkedName ||
+                      (w.catalogue_artist_name?.trim() || "Artist on file");
+                    const authInviteComplete = authenticatedAuthInviteArtworkIds.has(
+                      w.id
+                    );
+                    const needsAuthInvite =
+                      isAdmin &&
+                      artworkNeedsAuthenticationInvite(
+                        w.id,
+                        artworkIdsAwaitingArtistAttestation,
+                        authenticatedAuthInviteArtworkIds
+                      );
+                    const pendingAuthInvite = pendingAuthInviteByArtworkId.get(
+                      w.id
+                    );
+                    const artistAuthLabel = authInviteComplete
+                      ? CANONICAL_RECORD_PHRASES.artistAttestationOnFile
+                      : w.artist_id
+                        ? CANONICAL_RECORD_PHRASES.artistAttestationMayDeepen
+                        : CANONICAL_RECORD_PHRASES.artistAttestationNotYetOnFile;
                     const verified =
                       String(w.verification_status || "").toLowerCase() === "verified";
-                    const statusLabel = verified ? "Verified" : "Unverified";
+                    const statusLabel = verified ? "Verified" : "On file";
                     return (
                       <li
                         key={w.id}
@@ -1930,8 +2636,11 @@ export default function GalleryDashboardPage() {
                             </p>
                           ) : null}
                           <p className="mt-0.5 text-[11px] text-neutral-500">{artistLabel}</p>
+                          <p className="mt-0.5 text-[10px] text-neutral-400">
+                            {artistAuthLabel}
+                          </p>
                         </div>
-                        <div className="shrink-0 pt-0.5 text-right">
+                        <div className="flex shrink-0 flex-col items-end gap-2 pt-0.5">
                           <span
                             className={`inline-block text-sm font-medium ${
                               verified ? "text-emerald-800/90" : "text-neutral-400"
@@ -1939,6 +2648,19 @@ export default function GalleryDashboardPage() {
                           >
                             {statusLabel}
                           </span>
+                          {needsAuthInvite && pendingAuthInvite ? (
+                            <span className="text-[10px] text-neutral-500">
+                              Invitation on file
+                            </span>
+                          ) : needsAuthInvite ? (
+                            <button
+                              type="button"
+                              onClick={() => openArtworkAuthInviteForWork(w.id)}
+                              className="rounded-lg border border-neutral-900/10 bg-white/90 px-2.5 py-1 text-[10px] font-medium text-neutral-800 transition hover:bg-neutral-50"
+                            >
+                              Invite artist to authenticate
+                            </button>
+                          ) : null}
                         </div>
                       </li>
                     );
@@ -1967,7 +2689,7 @@ export default function GalleryDashboardPage() {
               ) : (
                 <>
                   <p className="mt-3 text-[12px] leading-snug text-neutral-500">
-                    Confirm only when the record is ready — a confirmation step follows.
+                    Confirm only when the record is ready. A confirmation step follows.
                   </p>
                   <ul className="mt-5 divide-y divide-neutral-900/[0.05]">
                     {verifyQueue.map((w) => (
@@ -2000,6 +2722,27 @@ export default function GalleryDashboardPage() {
         ) : null}
       </WorkspaceShell>
 
+      <ModalShell
+        isOpen={workspaceGuideOpen}
+        onClose={() => setWorkspaceGuideOpen(false)}
+        tone="light"
+        panelClassName="max-w-lg pr-14 md:pr-16"
+      >
+        <h2 className="font-serif text-xl font-normal tracking-tight text-neutral-950 md:text-2xl">
+          About this workspace
+        </h2>
+        <p className="mt-5 text-sm leading-relaxed text-neutral-600">
+          This workspace groups your{" "}
+          <span className="font-medium text-neutral-800">registry catalogue</span>,{" "}
+          <span className="font-medium text-neutral-800">participation</span>,{" "}
+          <span className="font-medium text-neutral-800">continuity & certs</span>, and{" "}
+          <span className="font-medium text-neutral-800">Invitations</span> for optional
+          artist authentication. Register canonical records at any time with a plain-text
+          artist name; layered participation deepens over time — institution filing first,
+          then artist attestation when ready.
+        </p>
+      </ModalShell>
+
       <RegisterModal
         isOpen={showRegisterModal}
         onClose={() => setShowRegisterModal(false)}
@@ -2009,8 +2752,43 @@ export default function GalleryDashboardPage() {
         registerLoading={registerLoading}
         representedArtistOptions={representedArtistOptions}
         representedArtistId={registerArtistId}
-        onRepresentedArtistChange={setRegisterArtistId}
+        onRepresentedArtistChange={(id) => {
+          setRegisterArtistId(id);
+          if (id) {
+            const a = artists.find((x) => x.id === id);
+            setRegisterCatalogueArtistName(
+              a?.display_name?.trim() || a?.full_name?.trim() || ""
+            );
+          }
+        }}
+        catalogueArtistName={registerCatalogueArtistName}
+        onCatalogueArtistNameChange={setRegisterCatalogueArtistName}
+        pendingArtistEmail={registerPendingArtistEmail}
+        onPendingArtistEmailChange={setRegisterPendingArtistEmail}
         variant="gallery"
+      />
+
+      <ArtworkAuthenticationInviteModal
+        isOpen={authInviteTarget !== null}
+        onClose={() => {
+          setAuthInviteTarget(null);
+          setAuthInvitePrefillEmail("");
+        }}
+        artwork={authInviteTarget}
+        artistNameOnFile={
+          authInviteTarget?.catalogue_artist_name?.trim() ||
+          (authInviteTarget?.artist_id
+            ? artistNameById.get(authInviteTarget.artist_id) || "Artist"
+            : "Artist on file")
+        }
+        artistAttestationOnFile={
+          authInviteTarget
+            ? authenticatedAuthInviteArtworkIds.has(authInviteTarget.id)
+            : false
+        }
+        defaultEmail={authInvitePrefillEmail}
+        isAdmin={isAdmin}
+        onSent={() => void load()}
       />
 
       <GalleryVerifyAttestationModal
@@ -2026,13 +2804,23 @@ export default function GalleryDashboardPage() {
         open={insightOpen !== null}
         onClose={() => setInsightOpen(null)}
         title={insightTitle || "Insight"}
-        subtitle={insightLoading ? "Loading…" : insightSubtitle || null}
+        subtitle={insightSubtitle || null}
+        chartLoading={insightLoading}
         kind={insightKind}
         data={insightData}
         lines={insightLines}
         barKey="events"
         breakdown={insightBreakdown}
         dataNotes={insightDataNotes}
+      />
+
+      <EndRepresentationModal
+        open={endRepTarget != null}
+        onClose={() => !endRepBusy && setEndRepTarget(null)}
+        subjectName={endRepTarget?.name ?? "Artist"}
+        institutionName={orgName}
+        busy={endRepBusy}
+        onConfirm={confirmEndRepresentation}
       />
     </>
   );

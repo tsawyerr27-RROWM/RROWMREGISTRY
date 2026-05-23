@@ -20,6 +20,7 @@ export type AuditCheck = {
     | "certificates"
     | "registry_page"
     | "role_interactions"
+    | "representation"
     | "permissions_rls"
     | "test_mode_reset";
   /** Who initiates/depends on this behavior. */
@@ -138,6 +139,59 @@ export function createAuditChecklist(): AuditCheck[] {
       evidence: [
         { kind: "rpc", ref: "public.register_artwork_atomic(...)" },
         { kind: "route", ref: "app/institutional-studio-dashboard/page.tsx (handleGalleryRegisterArtwork)" },
+      ],
+    },
+    {
+      id: "representation.artist.confirm_institution_filing",
+      area: "representation",
+      role: "artist",
+      feature: "Artist confirms institution-filed work (layered participation)",
+      expected:
+        "Queued works show after institution filing; artist_confirm_representation_on_file appends confirmation events, updates relationship status when present; public participation layers reflect artist confirmation.",
+      actual: "",
+      status: "not_run",
+      evidence: [
+        { kind: "rpc", ref: "public.get_artist_representation_review_queue()" },
+        { kind: "rpc", ref: "public.artist_confirm_representation_on_file(uuid)" },
+        { kind: "route", ref: "app/api/representation/artist-confirm/route.ts" },
+        { kind: "route", ref: "components/Studio/ArtistRepresentationReviewSection.tsx" },
+        { kind: "sql", ref: "supabase/migrations/20260510120000_artist_representation_confirm.sql" },
+      ],
+    },
+    {
+      id: "representation.amendment.request_resolve",
+      area: "representation",
+      role: "system",
+      feature: "Representation amendment requests (artist ↔ institution)",
+      expected:
+        "Either party can request; one pending per work; counterpart accepts/declines; optional catalogue fields apply on accept; chronology events recorded; studio and gallery dashboards list and resolve.",
+      actual: "",
+      status: "not_run",
+      evidence: [
+        { kind: "rpc", ref: "public.request_representation_amendment(uuid,text,jsonb)" },
+        { kind: "rpc", ref: "public.resolve_representation_amendment(uuid,boolean,text)" },
+        { kind: "rpc", ref: "public.withdraw_representation_amendment(uuid)" },
+        { kind: "route", ref: "app/api/representation/amendment/request/route.ts" },
+        { kind: "route", ref: "app/api/representation/amendment/resolve/route.ts" },
+        { kind: "route", ref: "components/Studio/RepresentationAmendmentsSection.tsx" },
+        { kind: "sql", ref: "supabase/migrations/20260511120000_representation_amendment_requests.sql" },
+      ],
+    },
+    {
+      id: "representation.end_historical_display",
+      area: "representation",
+      role: "system",
+      feature: "End representation; historical participation remains visible",
+      expected:
+        "Artist or institution can end active representation; relationships get ended_at; chronology records representation_ended; roster shows Historical; public artist and artwork layers use historical copy.",
+      actual: "",
+      status: "not_run",
+      evidence: [
+        { kind: "rpc", ref: "public.end_gallery_artist_representation(uuid,text)" },
+        { kind: "rpc", ref: "public.get_artist_representation_state(uuid)" },
+        { kind: "route", ref: "app/api/representation/end/route.ts" },
+        { kind: "route", ref: "components/Studio/EndRepresentationModal.tsx" },
+        { kind: "sql", ref: "supabase/migrations/20260512120000_representation_end.sql" },
       ],
     },
 

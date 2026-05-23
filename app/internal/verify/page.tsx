@@ -1,6 +1,6 @@
 "use client";
 
-import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { deferredRouterPush } from "@/lib/deferred-app-router";
@@ -11,11 +11,11 @@ export default function InternalVerify() {
   const [artworks, setArtworks] = useState<any[]>([]);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const router = useRouter();
-  const supabase = getSupabaseBrowserClient();
+  const sb = useSupabaseBrowserLazy();
 
   useEffect(() => {
     const init = async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData } = await sb().auth.getSession();
 
       if (!sessionData?.session) {
         deferredRouterPush(
@@ -29,7 +29,7 @@ export default function InternalVerify() {
       setUser(currentUser);
       setAccessToken(sessionData.session.access_token ?? null);
 
-      const { data: profileData } = await supabase
+      const { data: profileData } = await sb()
         .from("artists")
         .select("*")
         .eq("id", currentUser.id)
@@ -42,7 +42,7 @@ export default function InternalVerify() {
 
       setProfile(profileData);
 
-      const { data: unverified } = await supabase
+      const { data: unverified } = await sb()
         .from("artworks")
         .select("*")
         .eq("verification_status", "unverified")
@@ -74,7 +74,7 @@ export default function InternalVerify() {
       .join("");
 
     // 2. Update artwork
-    const { error: updateError } = await supabase
+    const { error: updateError } = await sb()
       .from("artworks")
       .update({
         verification_status: "verified",
@@ -103,7 +103,7 @@ export default function InternalVerify() {
         body: JSON.stringify({
           artist_user_id: artistId,
           type: "artwork_verified",
-          message: `Artwork verified — ${title}${reg}`,
+          message: `Artwork verified: ${title}${reg}`,
           artwork_id: artwork.id,
           metadata: {
             registry_id: artwork.registry_id ?? null,
@@ -147,7 +147,7 @@ const response = await fetch("/api/issue-certificate", {
         body: JSON.stringify({
           artist_user_id: artistId,
           type: "certificate_issued",
-          message: `Certificate issued — ${title}${reg}`,
+          message: `Certificate issued: ${title}${reg}`,
           artwork_id: artwork.id,
           metadata: { registry_id: artwork.registry_id ?? null },
         }),
@@ -165,7 +165,9 @@ const response = await fetch("/api/issue-certificate", {
   if (!user || !profile) {
     return (
       <div className="ds-page-environment flex min-h-screen items-center justify-center">
-        <p className="text-sm leading-relaxed text-neutral-500">Loading...</p>
+        <p className="text-sm leading-relaxed text-neutral-500">
+          Retrieving pending attestations…
+        </p>
       </div>
     );
   }

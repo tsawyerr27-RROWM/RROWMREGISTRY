@@ -8,6 +8,7 @@ export { CTASection } from "./CTASection";
 export { Footer } from "./Footer";
 
 export { SystemFlowSection } from "./SystemFlowSection";
+export { PortfolioManagementSection } from "./PortfolioManagementSection";
 export { PortfolioWorkspaceSection } from "./PortfolioWorkspaceSection";
 export { LandingPersonaStrip } from "./LandingPersonaStrip";
 export { LandingThesisBand } from "./LandingThesisBand";

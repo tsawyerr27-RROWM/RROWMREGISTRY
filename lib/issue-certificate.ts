@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { sha256Hex } from "@/lib/hash";
 
 /**
  * Server-only: issues a `certificates` row for a verified artwork (idempotent).
@@ -39,7 +40,7 @@ export async function issueCertificateForVerifiedArtwork(
   );
 
   if (error) {
-    const msg = error.message ?? "Failed to issue certificate";
+    const msg = error.message ?? "Certificate could not be filed";
     if (String(error.code) === "PGRST202") {
       return { ok: false, error: msg, code: "missing_rpc" };
     }
@@ -64,6 +65,32 @@ export async function issueCertificateForVerifiedArtwork(
       error: "Certificate issuance succeeded but hash was missing",
       code: "db",
     };
+  }
+
+  // Best-effort: anchor certificate hash for later audit / disclosure.
+  try {
+    const { data: certRow } = await supabase
+      .from("certificates")
+      .select("id, certificate_hash, issued_at")
+      .eq("artwork_id", artworkId)
+      .order("issued_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const certId = certRow?.id ? String(certRow.id) : null;
+    const certHash = String(certRow?.certificate_hash || certificate_hash).trim();
+    if (certId && certHash) {
+      await supabase.from("record_anchors").insert({
+        record_type: "certificate",
+        record_id: certId,
+        hash: /^[0-9a-f]{64}$/i.test(certHash)
+          ? certHash
+          : sha256Hex(certHash),
+        anchored_at: new Date().toISOString(),
+      });
+    }
+  } catch {
+    // ignore anchoring failures
   }
 
   return { ok: true, created, certificate_hash };

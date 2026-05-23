@@ -18,7 +18,11 @@ export function PublicVsPrivate({ density = "default" }: PublicVsPrivateProps) {
 
   return (
     <Shell
-      className={digest ? "relative" : `relative ${narrativeLayout.sectionPadY}`}
+      className={
+        digest
+          ? "relative"
+          : `rrowm-atmo-section--cool ${narrativeLayout.gutter} ${narrativeLayout.sectionPadY}`
+      }
       {...(!digest ? { "aria-labelledby": "about-visibility-heading" } : {})}
     >
       <h2 {...(!digest ? { id: "about-visibility-heading" } : {})} className={h2Class}>
@@ -36,12 +40,12 @@ export function PublicVsPrivate({ density = "default" }: PublicVsPrivateProps) {
       <div
         className={
           digest
-            ? "mt-6 grid min-h-0 gap-0 overflow-hidden rounded-2xl border border-neutral-200/65 bg-white/55 shadow-[0_20px_60px_-50px_rgba(15,23,42,0.2)] backdrop-blur-sm lg:grid-cols-2 lg:items-stretch"
-            : "mt-12 grid min-h-0 gap-0 overflow-hidden rounded-3xl border border-neutral-200/65 bg-white/55 shadow-[0_28px_80px_-60px_rgba(15,23,42,0.22)] backdrop-blur-sm md:mt-16 lg:mt-20 lg:grid-cols-2 lg:items-stretch"
+            ? "mt-6 grid min-h-0 gap-0 overflow-hidden rounded-2xl border rrowm-atmo-panel shadow-[0_20px_60px_-50px_rgba(15,23,42,0.18)] backdrop-blur-sm lg:grid-cols-2 lg:items-stretch"
+            : "mt-12 grid min-h-0 gap-0 overflow-hidden rounded-3xl border rrowm-atmo-panel shadow-[0_28px_80px_-60px_rgba(15,23,42,0.2)] backdrop-blur-sm md:mt-16 lg:mt-20 lg:grid-cols-2 lg:items-stretch"
         }
       >
         <div
-          className={`relative z-[1] border-b border-neutral-200/60 bg-[var(--rrowm-base-soft)]/80 ${panelPad} lg:border-b-0 lg:border-r`}
+          className={`relative z-[1] border-b border-[color:var(--rrowm-atmo-rim)] rrowm-atmo-panel--muted ${panelPad} lg:border-b-0 lg:border-r`}
         >
           <div
             className="ds-record-grid pointer-events-none absolute inset-0 opacity-[0.65]"

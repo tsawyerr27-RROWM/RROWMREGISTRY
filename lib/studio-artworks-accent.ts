@@ -59,6 +59,8 @@ export function studioArtworksAccentTheme(id: StudioArtworksAccentId) {
         emptyVia: "via-emerald-50/40",
         emptyHairline: "via-emerald-400/50",
         emptyLabel: "text-emerald-700/85",
+        valueShell:
+          "border-emerald-200/75 bg-gradient-to-br from-emerald-50/75 via-white to-white ring-emerald-100/55",
         markWrap:
           "from-emerald-500/15 via-emerald-600/10 to-neutral-900/5 ring-emerald-400/25",
         markIcon: "text-emerald-700/85",
@@ -81,6 +83,8 @@ export function studioArtworksAccentTheme(id: StudioArtworksAccentId) {
         emptyVia: "via-sky-50/45",
         emptyHairline: "via-blue-400/50",
         emptyLabel: "text-blue-700/85",
+        valueShell:
+          "border-blue-200/75 bg-gradient-to-br from-sky-50/75 via-white to-white ring-blue-100/55",
         markWrap:
           "from-blue-500/15 via-blue-600/10 to-neutral-900/5 ring-blue-400/25",
         markIcon: "text-blue-700/85",
@@ -103,6 +107,8 @@ export function studioArtworksAccentTheme(id: StudioArtworksAccentId) {
         emptyVia: "via-amber-50/40",
         emptyHairline: "via-amber-400/55",
         emptyLabel: "text-amber-800/90",
+        valueShell:
+          "border-amber-200/75 bg-gradient-to-br from-amber-50/70 via-white to-white ring-amber-100/55",
         markWrap:
           "from-amber-500/18 via-amber-600/12 to-neutral-900/5 ring-amber-400/30",
         markIcon: "text-amber-800/85",
@@ -125,6 +131,8 @@ export function studioArtworksAccentTheme(id: StudioArtworksAccentId) {
         emptyVia: "via-rose-50/40",
         emptyHairline: "via-rose-400/50",
         emptyLabel: "text-rose-700/85",
+        valueShell:
+          "border-rose-200/75 bg-gradient-to-br from-rose-50/70 via-white to-white ring-rose-100/55",
         markWrap:
           "from-rose-500/15 via-rose-600/10 to-neutral-900/5 ring-rose-400/25",
         markIcon: "text-rose-700/85",
@@ -147,6 +155,8 @@ export function studioArtworksAccentTheme(id: StudioArtworksAccentId) {
         emptyVia: "via-slate-100/50",
         emptyHairline: "via-slate-400/45",
         emptyLabel: "text-slate-700/90",
+        valueShell:
+          "border-slate-200/80 bg-gradient-to-br from-slate-50/80 via-white to-white ring-slate-200/55",
         markWrap:
           "from-slate-500/15 via-slate-600/10 to-neutral-900/5 ring-slate-400/25",
         markIcon: "text-slate-700/85",
@@ -171,6 +181,8 @@ export function studioArtworksAccentTheme(id: StudioArtworksAccentId) {
         emptyVia: "via-violet-50/40",
         emptyHairline: "via-violet-400/50",
         emptyLabel: "text-violet-600/80",
+        valueShell:
+          "border-violet-200/75 bg-gradient-to-br from-violet-50/70 via-white to-white ring-violet-100/55",
         markWrap:
           "from-violet-500/15 via-violet-600/10 to-neutral-900/5 ring-violet-400/25",
         markIcon: "text-violet-700/80",

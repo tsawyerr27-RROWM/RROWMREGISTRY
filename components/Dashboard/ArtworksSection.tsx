@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { ExperienceEmptyStateButton } from "@/components/ui/ExperienceEmptyState";
+import { workspace } from "@/styles/workspace-design";
 import {
   StudioSearchRow,
   studioFilterSelectClass,
@@ -8,6 +9,7 @@ import {
   type StudioArtworksAccentId,
   studioArtworksAccentTheme,
 } from "@/lib/studio-artworks-accent";
+import { ArtworkDeclaredValueBlock } from "@/components/Studio/ArtworkDeclaredValueBlock";
 
 export type ArtworksListFilter =
   | "all"
@@ -128,7 +130,7 @@ export function ArtworksSection({
       ) : null}
 
       {!noSearchMatches && filteredArtworks.length > 0 ? (
-        <div className="grid grid-cols-1 items-stretch gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className={workspace.space.grid}>
           {filteredArtworks.map((artwork) => (
             <div
               key={artwork.id}
@@ -140,7 +142,7 @@ export function ArtworksSection({
                   onArtworkClick(artwork);
                 }
               }}
-              className={`group relative flex h-full min-h-0 cursor-pointer flex-col overflow-hidden rounded-2xl border border-neutral-200/90 border-l-[5px] ${accent.borderLeft} bg-gradient-to-br from-white via-neutral-50/80 ${accent.cardGradientTo} shadow-[0_20px_50px_-28px_rgba(0,0,0,0.1)] ring-1 ring-black/[0.04] transition-all duration-300 hover:-translate-y-0.5 hover:border-neutral-300/95 ${accent.hoverShadow} ${accent.hoverRing}`}
+              className={`${workspace.card.link} border-l-[3px] ${accent.borderLeft}`}
               onClick={() => onArtworkClick(artwork)}
             >
               <div
@@ -148,12 +150,12 @@ export function ArtworksSection({
                 aria-hidden
               />
 
-              <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-neutral-100/90">
+              <div className={workspace.card.media}>
                 {artwork.image_url ? (
                   <img
                     src={artwork.image_url}
                     alt={artwork.title}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                    className={workspace.card.mediaImg}
                   />
                 ) : (
                   <div
@@ -178,43 +180,28 @@ export function ArtworksSection({
                     </span>
                   </div>
                 )}
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/25 to-transparent" />
-                <div className="absolute left-3 top-3 flex items-center gap-2">
-                  <StudioWorkMark
-                    markWrap={accent.markWrap}
-                    markIcon={accent.markIcon}
-                  />
-                  <div>
-                    <p className="text-sm font-semibold text-white/95 drop-shadow-sm">
-                      Studio catalog
-                    </p>
-                    <p className="mt-0.5 text-[10px] text-white/80 drop-shadow-sm">
-                      Work record
-                    </p>
-                  </div>
-                </div>
               </div>
 
-              <div className="flex min-h-0 flex-1 flex-col gap-4 p-5">
-                <div>
-                  <h3 className="font-serif text-[1.2rem] font-normal leading-snug tracking-tight text-neutral-950">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onArtworkClick(artwork);
-                      }}
-                      className={`text-left ${accent.titleHover}`}
-                    >
-                      {artwork.title}
-                    </button>
-                  </h3>
-                  <p className="mt-2 text-sm leading-snug text-neutral-600">
-                    {[artwork.year, artwork.medium].filter(Boolean).join(" · ") ||
-                      "—"}
-                  </p>
-                </div>
+              <div className={workspace.card.surface}>
+                <h3 className={workspace.type.cardTitle}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onArtworkClick(artwork);
+                    }}
+                    className={`text-left ${accent.titleHover}`}
+                  >
+                    {artwork.title}
+                  </button>
+                </h3>
+                <p className={`mt-1 ${workspace.type.cardArtist}`}>
+                  {[artwork.year, artwork.medium].filter(Boolean).join(" · ") ||
+                    "—"}
+                </p>
+              </div>
 
+              <div className={workspace.card.reveal}>
                 <div className="flex flex-wrap items-center gap-2">
                   {artwork.verification_status === "verified" ? (
                     <span
@@ -231,23 +218,11 @@ export function ArtworksSection({
                   )}
                 </div>
 
-                {artwork.latest_value != null &&
-                !Number.isNaN(Number(artwork.latest_value)) ? (
-                  <div className="rounded-xl border border-neutral-200/90 bg-white/80 px-3 py-2.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)]">
-                    <p className="text-sm font-semibold text-neutral-500">
-                      Latest declared value
-                    </p>
-                    <p
-                      className="mt-1 text-lg font-semibold tabular-nums text-neutral-900"
-                      title="Latest declared amount on file."
-                    >
-                      {new Intl.NumberFormat("en-US", {
-                        style: "currency",
-                        currency: artwork.latest_currency || "USD",
-                      }).format(artwork.latest_value)}
-                    </p>
-                  </div>
-                ) : null}
+                <ArtworkDeclaredValueBlock
+                  amount={artwork.latest_value}
+                  currency={artwork.latest_currency}
+                  shellClassName={accent.valueShell}
+                />
 
                 <div className="mt-auto flex flex-shrink-0 items-center justify-between gap-3 border-t border-neutral-200/80 pt-4">
                   <div className="min-w-0">
@@ -294,14 +269,14 @@ export function ArtworksSection({
           <p
             className={`mt-8 text-sm font-semibold ${accent.emptyLabel}`}
           >
-            Studio catalog
+            Your studio
           </p>
           <h3 className="mt-3 font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-[1.65rem]">
-            No works recorded yet
+            No represented works on file yet
           </h3>
           <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-neutral-600">
-            Register your first piece to start its registry record, value
-            history, and provenance trail.
+            Register a piece to open its catalogue record and chronology. Later filings you
+            add stay on the same entry.
           </p>
           <div className="mt-10 flex justify-center">
             <ExperienceEmptyStateButton

@@ -8,8 +8,8 @@ import {
   latestOwnershipSystemStatus,
   ownershipStatusBadge,
 } from "@/lib/ownership-ledger";
-import { ProvenanceTimeline } from "@/components/Registry/ProvenanceTimeline";
-import { getProvenanceTimeline } from "@/lib/provenance-timeline";
+import { ArchivalProvenanceTimeline } from "@/components/provenance/ArchivalProvenanceTimeline";
+import { getArchivalProvenanceBundle } from "@/lib/provenance-timeline";
 import { getArtworkIdentity } from "@/lib/artwork-identity";
 import {
   formatHeldByLine,
@@ -17,6 +17,8 @@ import {
   heldByCredibilityClass,
 } from "@/lib/get-current-owner";
 import { PageNav } from "@/components/ui/PageNav";
+import { ParticipationLayersStrip } from "@/components/Registry/ParticipationLayersStrip";
+import { getArtworkParticipationLayers } from "@/lib/get-artwork-participation-layers";
 
 export const dynamic = "force-dynamic";
 
@@ -86,6 +88,8 @@ export default async function ArtworkPage({
       `
       id,
       artist_id,
+      catalogue_artist_name,
+      filing_gallery_id,
       title,
       registry_id,
       verification_status,
@@ -126,11 +130,15 @@ export default async function ArtworkPage({
     artistRow = a;
   }
 
-  const galleryFetch = artistRow?.gallery_id
+  const institutionGalleryId =
+    artistRow?.gallery_id ??
+    ((artwork as { filing_gallery_id?: string | null }).filing_gallery_id ?? null);
+
+  const galleryFetch = institutionGalleryId
     ? await supabase
         .from("galleries")
         .select("name, verified")
-        .eq("id", artistRow.gallery_id)
+        .eq("id", institutionGalleryId)
         .maybeSingle()
     : { data: null as GalleryRow | null, error: null };
 
@@ -218,7 +226,7 @@ export default async function ArtworkPage({
     // ignore
   }
 
-  const provenanceTimeline = await getProvenanceTimeline({
+  const provenanceBundle = await getArchivalProvenanceBundle({
     supabase,
     artwork: {
       id: artwork.id,
@@ -227,7 +235,10 @@ export default async function ArtworkPage({
       artist_id: artwork.artist_id,
       created_at: artwork.created_at,
     },
-    artistName: artist?.display_name || null,
+    artistName:
+      artist?.display_name ||
+      (artwork as { catalogue_artist_name?: string | null }).catalogue_artist_name ||
+      null,
   });
 
   const identity = await getArtworkIdentity({
@@ -235,24 +246,18 @@ export default async function ArtworkPage({
     artworkId: artwork.id,
   });
 
+  const participationLayers = await getArtworkParticipationLayers(supabase, {
+    artworkId: artwork.id,
+    artistId: artwork.artist_id,
+    galleryId: institutionGalleryId,
+    artworkVerified: isVerified,
+    hasLiveCertificate: Boolean(cert?.has_certificate && !cert?.revoked),
+  });
+
   return (
     <div className="min-h-screen rrowm-bg-page pt-20 text-neutral-900">
       <main className="mx-auto max-w-6xl px-6 py-12 md:py-16">
-        <PageNav
-          backHref={backHref}
-          crumbs={
-            crumbsBase
-              ? [
-                  crumbsBase,
-                  {
-                    label: "Artwork",
-                    href: `/artwork/${encodeURIComponent(artwork.registry_id)}`,
-                  },
-                  { label: artwork.registry_id },
-                ]
-              : undefined
-          }
-        />
+        <PageNav backHref={backHref} />
         {/* Hero */}
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-14 lg:items-start">
           <div className="lg:col-span-7">
@@ -285,7 +290,7 @@ export default async function ArtworkPage({
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-500">
                 {identity.context.verified_by ? (
                   <span>
-                    Verified by{" "}
+                    Institution filing by{" "}
                     <span className="font-medium text-neutral-700">
                       {identity.context.verified_by}
                     </span>
@@ -326,7 +331,12 @@ export default async function ArtworkPage({
                     {artist.display_name}
                   </Link>
                 ) : (
-                  <span>{artist?.display_name}</span>
+                  <span>
+                    {artist?.display_name ||
+                      (artwork as { catalogue_artist_name?: string | null })
+                        .catalogue_artist_name ||
+                      null}
+                  </span>
                 )}
               </div>
               {yearMedium ? (
@@ -336,22 +346,15 @@ export default async function ArtworkPage({
                 <p className="mt-2 text-sm text-neutral-500">{editionLine}</p>
               ) : null}
               <div className="mt-6">
-                {isVerified ? (
-                  <div className="space-y-2">
-                    <span className="inline-flex items-center rounded-full border border-emerald-200/80 bg-emerald-50/90 px-4 py-1.5 text-xs font-medium tracking-wide text-emerald-900">
-                      Verified on RROWM
+                <ParticipationLayersStrip layers={participationLayers} variant="light" />
+                {verifiedByGalleryName ? (
+                  <p className="mt-3 text-[11px] text-neutral-500">
+                    Institution filing attributed to{" "}
+                    <span className="font-medium text-neutral-700">
+                      {verifiedByGalleryName}
                     </span>
-                    {verifiedByGalleryName ? (
-                      <p className="text-[11px] text-neutral-600">
-                        Verified by <span className="font-medium text-neutral-900">{verifiedByGalleryName}</span>
-                      </p>
-                    ) : null}
-                  </div>
-                ) : (
-                  <span className="inline-flex items-center rounded-full border border-amber-200/90 bg-amber-50/90 px-4 py-1.5 text-xs font-medium tracking-wide text-amber-950">
-                    Registered — verification pending
-                  </span>
-                )}
+                  </p>
+                ) : null}
               </div>
             </div>
 
@@ -477,7 +480,7 @@ export default async function ArtworkPage({
                 Provenance
               </h2>
               <div className="mt-8">
-                <ProvenanceTimeline events={provenanceTimeline} />
+                <ArchivalProvenanceTimeline bundle={provenanceBundle} />
               </div>
               <p className="mt-10 text-center">
                 <Link

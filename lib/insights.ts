@@ -388,9 +388,9 @@ export function generateRoleInsight(
     if (base.includes("largely verified"))
       return "The catalogue shows a clear ownership record.";
     if (base.includes("no verification recorded"))
-      return "Some ownership records are pending verification.";
+      return "Some ownership continuity is pending on file.";
     if (base.includes("incomplete"))
-      return "Some works may need verification to complete the record.";
+      return "Some works may need continuity recorded to complete the file.";
     if (base.includes("Value has increased") || base.includes("softened"))
       return "Latest recorded values have shifted versus prior periods.";
     if (base.includes("Recorded value is steady"))
@@ -403,7 +403,7 @@ export function generateRoleInsight(
   }
   if (role === "collector") {
     if (base.includes("no verification recorded"))
-      return "Some ownership records are pending verification.";
+      return "Some ownership continuity is pending on file.";
     if (base.includes("largely verified"))
       return "Ownership records are well established.";
     if (base.includes("currency"))
@@ -412,11 +412,11 @@ export function generateRoleInsight(
   }
   // gallery
   if (base.includes("no verification recorded"))
-    return "Some ownership records are pending verification.";
+    return "Some ownership continuity is pending on file.";
   if (base.includes("largely verified"))
     return "Verification activity is steady across your studio.";
   if (base.includes("incomplete"))
-    return "Some records are still pending verification.";
+    return "Some records are still pending on file.";
   return "Registry activity is steady across your represented works.";
 }
 

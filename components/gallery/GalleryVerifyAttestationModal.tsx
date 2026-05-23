@@ -35,7 +35,8 @@ export function GalleryVerifyAttestationModal({
     <ModalShell
       isOpen={isOpen}
       onClose={onClose}
-      panelClassName="liquid-glass rrowm-modal-surface max-h-[90vh] w-full max-w-lg overflow-auto border border-black/[0.06]"
+      tone="light"
+      panelClassName="max-h-[90vh] w-full max-w-lg overflow-auto"
     >
       <div className="p-10 md:p-12" id={bodyId}>
         <h2 className="font-serif text-2xl font-normal leading-snug text-neutral-950">

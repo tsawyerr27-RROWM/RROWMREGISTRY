@@ -1,11 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 import { getOnboardingRedirectPath } from "@/lib/onboarding";
 import { PageNav } from "@/components/ui/PageNav";
+import { ArtistWorkspaceShellLayout } from "@/components/Studio/ArtistWorkspaceShellLayout";
+import { CollectorWorkspaceShellLayout } from "@/components/Studio/CollectorWorkspaceShellLayout";
+import { GalleryWorkspaceShellLayout } from "@/components/Studio/GalleryWorkspaceShellLayout";
 import { AccountPresenceHero } from "@/components/account/AccountPresenceHero";
 import {
   DEFAULT_PUBLIC_PRESENCE,
@@ -14,13 +18,20 @@ import {
   toPublicPresenceJson,
 } from "@/lib/public-presence";
 import { getCollectorOwnedArtworkIds } from "@/lib/collector-portfolio";
-import type { AccountHeroPreviewArtwork } from "@/components/account/AccountPresenceHero";
+import type {
+  AccountHeroPreviewArtwork,
+  AccountProfileSnapshot,
+} from "@/components/account/AccountPresenceHero";
 import {
   STUDIO_ARTWORKS_ACCENT_OPTIONS,
   parseStudioArtworksAccent,
   type StudioArtworksAccentId,
 } from "@/lib/studio-artworks-accent";
 import { deferredRouterReplace } from "@/lib/deferred-app-router";
+import { navigateToStudioSection } from "@/lib/studio-workspace-nav";
+import { parseArtistRepresentationState } from "@/lib/artwork-representation";
+import { REPRESENTATION_PHRASES } from "@/lib/representation-language";
+import { WorkspacePanel } from "@/components/ui/WorkspacePanel";
 
 type Role = "artist" | "collector" | "gallery";
 
@@ -95,17 +106,24 @@ function ToggleRow({
 }
 
 function AccountPanel({
+  id,
   title,
   description,
   children,
 }: {
+  id?: string;
   title: string;
   /** Optional one-line context under the title */
   description?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-neutral-900/[0.06] bg-white/45 p-6 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-sm sm:p-7">
+    <section
+      id={id}
+      className={`rounded-2xl border border-neutral-900/[0.06] bg-white/45 p-6 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-sm sm:p-7 ${
+        id ? "scroll-mt-28" : ""
+      }`}
+    >
       <h2 className="font-serif text-xl font-normal leading-snug tracking-tight text-neutral-950 md:text-2xl">
         {title}
       </h2>
@@ -126,7 +144,7 @@ function AccountSubsection({ children }: { children: React.ReactNode }) {
 
 export default function AccountPage() {
   const router = useRouter();
-  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const sb = useSupabaseBrowserLazy();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
@@ -156,9 +174,11 @@ export default function AccountPage() {
   const [collectorPreviewArtworks, setCollectorPreviewArtworks] = useState<
     AccountHeroPreviewArtwork[]
   >([]);
+  const [artistRepHistorical, setArtistRepHistorical] = useState(false);
 
   const load = useCallback(async () => {
     setError(null);
+    const supabase = sb();
     const { data: sessionData } = await supabase.auth.getSession();
     if (!sessionData?.session) {
       deferredRouterReplace(
@@ -199,6 +219,7 @@ export default function AccountPage() {
 
     setRole(r);
     setCollectorPreviewArtworks([]);
+    setArtistRepHistorical(false);
     setDisplayName(
       String((actor as { display_name?: string | null }).display_name || "").trim()
     );
@@ -231,6 +252,13 @@ export default function AccountPage() {
           (ar as { public_presence?: unknown }).public_presence
         );
       }
+
+      const { data: repRaw } = await supabase.rpc(
+        "get_artist_representation_state",
+        { p_artist_id: uid }
+      );
+      const rep = parseArtistRepresentationState(repRaw);
+      setArtistRepHistorical(rep.historical && !rep.active);
     }
 
     if (r === "collector") {
@@ -320,7 +348,7 @@ export default function AccountPage() {
 
     setPresence(nextPresence);
     setLoading(false);
-  }, [router]);
+  }, [router, sb]);
 
   useEffect(() => {
     void load();
@@ -332,6 +360,7 @@ export default function AccountPage() {
     setError(null);
     setSavedAt(null);
 
+    const supabase = sb();
     const json = toPublicPresenceJson(presence);
     let actorDisplay = displayName.trim();
     if (!actorDisplay && role === "gallery") {
@@ -424,6 +453,44 @@ export default function AccountPage() {
     return null;
   }, [role, gallerySlug, artistSlug, collectorSlug]);
 
+  const profileSnapshot = useMemo((): AccountProfileSnapshot => {
+    if (role === "artist") {
+      return {
+        bio: artistBio,
+        website: artistWebsite,
+        instagram: artistInstagram,
+      };
+    }
+    if (role === "collector") {
+      return {
+        location: collectorLocation,
+        bio: collectorBio,
+        anonymousOnPublic: collectorAnonymous,
+        ownedWorkCount: collectorPreviewArtworks.length,
+      };
+    }
+    if (role === "gallery") {
+      return {
+        location: galleryLocation,
+        website: galleryWebsite,
+        description: galleryDescription,
+      };
+    }
+    return {};
+  }, [
+    role,
+    artistBio,
+    artistWebsite,
+    artistInstagram,
+    collectorLocation,
+    collectorBio,
+    collectorAnonymous,
+    collectorPreviewArtworks.length,
+    galleryLocation,
+    galleryWebsite,
+    galleryDescription,
+  ]);
+
   if (loading) {
     return (
       <div className="ds-page-environment min-h-screen pt-28 text-center text-sm text-neutral-500">
@@ -460,16 +527,9 @@ export default function AccountPage() {
         ? "Collector studio"
         : "Institutional studio";
 
-  return (
-    <div className="ds-page-environment relative min-h-screen pb-28 pt-10 text-neutral-900 sm:pt-12">
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-neutral-900/10 to-transparent"
-        aria-hidden
-      />
-      <main className="relative mx-auto max-w-[min(100%,88rem)] px-4 sm:px-6 lg:px-8">
-        <PageNav backHref="/registry" crumbs={[{ label: "My account" }]} />
-
-        <div className="mt-6">
+  const accountBody = (
+    <main className="relative mx-auto w-full max-w-[min(100%,88rem)]">
+        <div className="mt-2">
           <AccountPresenceHero
             displayName={displayName}
             role={role}
@@ -477,11 +537,29 @@ export default function AccountPage() {
             workspaceHref={workspaceHref}
             workspaceLabel={workspaceLabel}
             presence={presence}
+            profileSnapshot={profileSnapshot}
             collectionPreviewArtworks={
               role === "collector" ? collectorPreviewArtworks : null
             }
           />
         </div>
+
+        {role === "artist" && artistRepHistorical ? (
+          <div className="mt-8" role="status">
+            <WorkspacePanel
+              title="Institution representation"
+              description={`${REPRESENTATION_PHRASES.historicalRepresentation}. ${REPRESENTATION_PHRASES.priorFilingsRemainVisible}.`}
+            >
+              <button
+                type="button"
+                onClick={() => navigateToStudioSection(router, "Records")}
+                className="inline-flex rounded-xl bg-neutral-950 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800"
+              >
+                Authenticate records in studio
+              </button>
+            </WorkspacePanel>
+          </div>
+        ) : null}
 
         <div className="mt-12 space-y-10 xl:max-w-5xl xl:mx-auto">
           {/* 1 · Account basics + what you publish (side by side on large screens) */}
@@ -570,6 +648,7 @@ export default function AccountPage() {
 
             {role === "collector" ? (
               <AccountPanel
+                id="account-profile-content"
                 title="Profile content"
                 description="Shown on your collector page when visibility is on."
               >
@@ -645,6 +724,7 @@ export default function AccountPage() {
 
           {/* 2 · All visibility in one place */}
           <AccountPanel
+            id="account-privacy"
             title="Privacy & visibility"
             description="Control whether your profile and registry details are visible to visitors."
           >
@@ -772,7 +852,43 @@ export default function AccountPage() {
             ) : null}
           </div>
         </div>
-      </main>
+    </main>
+  );
+
+  if (role === "artist" && userId) {
+    return (
+      <ArtistWorkspaceShellLayout userId={userId} accountActive>
+        {accountBody}
+      </ArtistWorkspaceShellLayout>
+    );
+  }
+
+  if (role === "collector" && userId) {
+    return (
+      <CollectorWorkspaceShellLayout userId={userId} accountActive>
+        {accountBody}
+      </CollectorWorkspaceShellLayout>
+    );
+  }
+
+  if (role === "gallery" && userId) {
+    return (
+      <GalleryWorkspaceShellLayout userId={userId} accountActive>
+        {accountBody}
+      </GalleryWorkspaceShellLayout>
+    );
+  }
+
+  return (
+    <div className="ds-page-environment relative min-h-screen pb-28 pt-10 text-neutral-900 sm:pt-12">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-neutral-900/10 to-transparent"
+        aria-hidden
+      />
+      <div className="relative mx-auto max-w-[min(100%,88rem)] px-4 sm:px-6 lg:px-8">
+        <PageNav backHref="/registry" />
+        {accountBody}
+      </div>
     </div>
   );
 }

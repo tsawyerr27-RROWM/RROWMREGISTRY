@@ -14,6 +14,7 @@ export function Footer() {
 
   return (
     <footer
+      data-rrowm-chrome-suppress-invite-signup
       className={
         isHome
           ? "border-t border-black/[0.04] pb-[max(3rem,env(safe-area-inset-bottom,0px))] pt-8 md:pb-16 md:pt-10"

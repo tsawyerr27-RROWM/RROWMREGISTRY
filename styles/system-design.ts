@@ -51,6 +51,14 @@ export const glass = {
   liquidCloseDark: "liquid-glass-close-dark",
   liquidTile: "liquid-glass-tile",
   liquidTileDark: "liquid-glass-tile-dark",
+  /** Phase 12 — rounded premium panels (workspace + modals) */
+  liquidPremium: "liquid-glass-premium",
+  liquidDarkPremium: "liquid-glass-dark-premium",
+  liquidSilver: "liquid-glass-silver",
+  liquidInsetPremium: "liquid-glass-inset-premium",
+  liquidTilePremium: "liquid-glass-tile-premium",
+  /** Extra lift on modal panels — pairs with premium/silver/dark glass */
+  modalPanel: "rrowm-modal-panel",
 } as const;
 
 /** Surface roles — semantic class names */
@@ -60,6 +68,9 @@ export const surface = {
   interactive: "rrowm-surface-interactive",
   /** Full-bleed editorial page wash */
   pageEnvironment: "ds-page-environment",
+  /** Phase 12 — premium workspace wash */
+  workspaceEnvironment: "ds-workspace-environment",
+  silverEnvironment: "ds-silver-environment",
   warmVertical: "rrowm-bg-page-warm",
   /** Solid panel — minimal chrome, no glass (see `rrowm-panel-quiet` in globals.css) */
   panelQuiet: "rrowm-panel-quiet",
@@ -130,4 +141,21 @@ export const control = {
     "inline-flex items-center justify-center rounded-full border border-black/[0.08] bg-white/90 px-7 py-3.5 text-sm font-medium text-neutral-800 transition rrowm-ds-transition hover:border-black/[0.12] hover:bg-white",
   quietLink:
     "border-b border-neutral-900/15 pb-0.5 text-sm font-medium text-neutral-900/75 transition rrowm-ds-transition hover:border-neutral-900/35 hover:text-neutral-900",
+} as const;
+
+/**
+ * Landing / About — longer tonal transitions, soft press, archival focus rings.
+ * Does not replace `control` app-wide; use only on narrative marketing surfaces.
+ */
+export const narrativeControl = {
+  primary:
+    "inline-flex items-center justify-center rounded-full bg-neutral-900 px-7 py-3.5 text-sm font-medium text-white shadow-[0_10px_32px_-24px_rgba(0,0,0,0.38)] transition-[transform,opacity,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-neutral-800/95 hover:shadow-[0_14px_44px_-28px_rgba(0,0,0,0.42)] active:scale-[0.992] active:shadow-[0_8px_26px_-22px_rgba(0,0,0,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--rrowm-base-soft)]",
+  secondary:
+    "inline-flex items-center justify-center rounded-full border border-neutral-900/[0.09] bg-white/[0.92] px-7 py-3.5 text-sm font-medium text-neutral-800 shadow-[0_1px_0_rgba(255,255,255,0.65)_inset] transition-[transform,opacity,box-shadow,background-color,border-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-neutral-900/[0.12] hover:bg-white active:scale-[0.992] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/12 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--rrowm-base-soft)]",
+  quietLink:
+    "border-b border-neutral-900/14 pb-0.5 text-sm font-medium text-neutral-900/78 transition-[border-color,color,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-neutral-900/38 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/12 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--rrowm-base-soft)] rounded-sm",
+  ctaInline:
+    "border-b border-neutral-900/18 pb-0.5 text-neutral-900 transition-[border-color,color,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-neutral-900/42 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/12 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--rrowm-base-soft)] rounded-sm",
+  ctaMuted:
+    "border-b border-transparent pb-0.5 text-neutral-600 transition-[border-color,color,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-neutral-500/30 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/10 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--rrowm-base-soft)] rounded-sm",
 } as const;

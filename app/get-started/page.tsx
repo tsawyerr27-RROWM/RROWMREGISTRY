@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { GetStartedView } from "@/components/get-started/GetStartedView";
 
 export const metadata: Metadata = {
-  title: "Get started — RROWM Registry",
+  title: "Take part · RROWM Registry",
   description:
-    "Choose artist, gallery, or collector onboarding for the RROWM registry.",
+    "Artist, institutional, or collector entry. Each path joins the same catalogue and chronology model.",
 };
 
 export default function GetStartedPage() {

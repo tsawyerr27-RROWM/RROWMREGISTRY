@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 
+import {
+  buildRrowmEmailHtml,
+  rrowmEmailInnerFromOpts,
+} from "@/lib/emails/rrowm-email-layout";
+import { sendResendEmail } from "@/lib/emails/send-email";
 import { escapeHtml } from "@/lib/html-escape";
-import { readResendApiKey } from "@/lib/resend-env";
 
 const MAX_MESSAGE = 8000;
 const MAX_NAME = 200;
@@ -54,44 +58,83 @@ export async function POST(request: Request) {
     );
   }
 
-  const to = process.env.CONTACT_EMAIL_TO;
-  const resendKey = readResendApiKey();
-  const from = process.env.CONTACT_EMAIL_FROM;
+  const to = process.env.CONTACT_EMAIL_TO?.trim();
 
-  if (resendKey && from && to) {
-    const subjectLine = subjectStr
-      ? `[RROWM] ${subjectStr}`
-      : `[RROWM] Contact from ${nameStr}`;
-    const html = `
-      <p><strong>Name:</strong> ${escapeHtml(nameStr)}</p>
-      <p><strong>Email:</strong> ${escapeHtml(emailStr)}</p>
-      ${subjectStr ? `<p><strong>Subject:</strong> ${escapeHtml(subjectStr)}</p>` : ""}
-      <p><strong>Message:</strong></p>
-      <pre style="white-space:pre-wrap;font-family:inherit;">${escapeHtml(messageStr)}</pre>
-    `;
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendKey}`,
-        "Content-Type": "application/json",
+  const subjectLine = subjectStr
+    ? `[RROWM] ${subjectStr}`
+    : `[RROWM] Contact from ${nameStr}`;
+
+  const inner = rrowmEmailInnerFromOpts({
+    preheader: "Website contact form",
+    blocks: [
+      { type: "kicker", text: "Inquiry" },
+      {
+        type: "p",
+        html: `<strong>Name</strong><br/>${escapeHtml(nameStr)}`,
       },
-      body: JSON.stringify({
-        from,
-        to: [to],
-        reply_to: emailStr,
-        subject: subjectLine,
-        html,
-      }),
+      {
+        type: "p",
+        html: `<strong>Reply address</strong><br/>${escapeHtml(emailStr)}`,
+      },
+      ...(subjectStr
+        ? [
+            {
+              type: "p" as const,
+              html: `<strong>Subject</strong><br/>${escapeHtml(subjectStr)}`,
+            },
+          ]
+        : []),
+      { type: "hr" },
+      {
+        type: "p",
+        html: `<strong>Message</strong>`,
+      },
+      {
+        type: "p",
+        html: `<span style="white-space:pre-wrap;">${escapeHtml(messageStr)}</span>`,
+      },
+    ],
+  });
+  const html = buildRrowmEmailHtml(inner, "Website contact form");
+  const text = [
+    subjectLine,
+    "",
+    `Name: ${nameStr}`,
+    `Email: ${emailStr}`,
+    subjectStr ? `Subject: ${subjectStr}` : "",
+    "",
+    messageStr,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  if (to) {
+    const sent = await sendResendEmail({
+      kind: "transactional",
+      to,
+      subject: subjectLine,
+      html,
+      text,
+      replyTo: emailStr,
     });
-    if (!resendResOk(res)) {
-      console.error("[contact] Resend error", await res.text());
-      return NextResponse.json(
-        { error: "Unable to send message. Please try again later." },
-        { status: 502 }
-      );
+    if (!sent.ok) {
+      if (sent.message.includes("RESEND_API_KEY")) {
+        console.info("[contact] Message received (email not configured)", {
+          name: nameStr,
+          email: emailStr,
+          subject: subjectStr || null,
+          messageLength: messageStr.length,
+        });
+      } else {
+        console.error("[contact] Resend error", sent.status, sent.message);
+        return NextResponse.json(
+          { error: "Unable to send message. Please try again later." },
+          { status: 502 }
+        );
+      }
     }
   } else {
-    console.info("[contact] Message received (email not configured)", {
+    console.info("[contact] Message received (CONTACT_EMAIL_TO not set)", {
       name: nameStr,
       email: emailStr,
       subject: subjectStr || null,
@@ -100,8 +143,4 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ ok: true }, { status: 200 });
-}
-
-function resendResOk(res: Response) {
-  return res.ok;
 }

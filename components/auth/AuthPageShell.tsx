@@ -5,14 +5,31 @@ type Props = {
   subtitle?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
+  /** When false, less top padding (e.g. global header hidden for invite signup). */
+  reserveHeaderOffset?: boolean;
+  /** Replace default password hint under the card; pass null to omit. */
+  cardBelow?: ReactNode | null;
 };
 
 /**
  * Shared layout for sign-in, sign-up, and password recovery — responsive, touch-friendly.
  */
-export function AuthPageShell({ title, subtitle, children, footer }: Props) {
+export function AuthPageShell({
+  title,
+  subtitle,
+  children,
+  footer,
+  reserveHeaderOffset = true,
+  cardBelow,
+}: Props) {
+  const topPad = reserveHeaderOffset
+    ? "pt-24 sm:pt-28"
+    : "pt-12 sm:pt-16 md:pt-20";
+
   return (
-    <main className="ds-page-environment flex min-h-[100dvh] flex-col items-center justify-center px-4 py-10 pt-24 sm:px-6 sm:py-14 sm:pt-28 md:px-8 md:py-16">
+    <main
+      className={`ds-page-environment flex min-h-[100dvh] flex-col items-center justify-center px-4 py-10 sm:px-6 sm:py-14 md:px-8 md:py-16 ${topPad}`}
+    >
       <div className="w-full max-w-[min(100%,26rem)] sm:max-w-md">
         <div className="rounded-2xl border border-black/[0.08] bg-white/95 p-6 shadow-[0_24px_64px_-32px_rgba(15,23,42,0.18),inset_0_1px_0_0_rgba(255,255,255,0.9)] backdrop-blur-sm sm:p-8 md:rounded-[1.25rem] md:p-9">
           <header className="border-b border-black/[0.06] pb-6 sm:pb-8">
@@ -32,9 +49,13 @@ export function AuthPageShell({ title, subtitle, children, footer }: Props) {
             </div>
           ) : null}
         </div>
-        <p className="mt-6 text-center text-[11px] leading-relaxed text-neutral-500 sm:text-xs">
-          Protected access. Use a strong password you do not reuse elsewhere.
-        </p>
+        {cardBelow === undefined ? (
+          <p className="mt-6 text-center text-[11px] leading-relaxed text-neutral-500 sm:text-xs">
+            Protected access. Use a strong password you do not reuse elsewhere.
+          </p>
+        ) : (
+          cardBelow
+        )}
       </div>
     </main>
   );

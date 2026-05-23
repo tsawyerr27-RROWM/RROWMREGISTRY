@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LegalH2, LegalP, LegalPageShell } from "@/components/legal/LegalPageShell";
 
 export const metadata: Metadata = {
-  title: "Disclaimer — RROWM Registry",
+  title: "Disclaimer · RROWM Registry",
   description:
     "Important limitations on registry records, data accuracy, and financial information.",
 };

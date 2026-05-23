@@ -65,7 +65,7 @@ export function ContactForm() {
           Message received
         </p>
         <p className="mt-4 text-[15px] leading-relaxed text-neutral-600">
-          Thank you — we will respond when we can.
+          Thank you. We will respond when we can.
         </p>
         <button
           type="button"

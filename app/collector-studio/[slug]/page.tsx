@@ -64,7 +64,7 @@ function CollectorPublicLayout({
         aria-hidden
       />
       <main className="relative mx-auto max-w-[min(100%,88rem)] px-4 sm:px-6 lg:px-8">
-        <PageNav crumbs={crumbs} />
+        <PageNav backHref="/registry" />
         {children}
       </main>
     </div>

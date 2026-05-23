@@ -1,4 +1,5 @@
 import type { ArtworkStatusFilter, RegistrySort } from "@/lib/registry-list-params";
+import { REGISTRY_FILTER_LABELS } from "@/lib/representation-language";
 
 type Props = {
   /** Form action, e.g. `/registry` */
@@ -84,8 +85,10 @@ export function RegistryListFilters({
             className={selectClass}
           >
             <option value="all">All works</option>
-            <option value="verified">Verified only</option>
-            <option value="pending">Pending only</option>
+            <option value="verified">{REGISTRY_FILTER_LABELS.verifiedOnly}</option>
+            <option value="pending">
+              {REGISTRY_FILTER_LABELS.participationPending}
+            </option>
           </select>
         </div>
       ) : null}

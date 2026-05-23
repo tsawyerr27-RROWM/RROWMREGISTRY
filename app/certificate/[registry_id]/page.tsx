@@ -8,6 +8,7 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { warnSupabaseRpc } from "@/lib/supabase-rpc-error";
 import { PageNav } from "@/components/ui/PageNav";
+import { RrowmLogo } from "@/components/brand/RrowmLogo";
 import { CertificateArtistActions } from "@/components/certificate/CertificateArtistActions";
 import { StudioCertificateAckEffect } from "@/components/Studio/StudioCertificateAckEffect";
 import * as QRCode from "qrcode";
@@ -50,21 +51,14 @@ export default async function CertificatePage({
   const referer = headersList.get("referer") || "";
   let backHref: string | undefined =
     `/registry/${encodeURIComponent(cleanId)}`;
-  let crumbsRoot: { label: string; href: string } = {
-    label: "Registry",
-    href: `/registry/${encodeURIComponent(cleanId)}`,
-  };
-
   try {
     const url = new URL(referer);
     const path = url.pathname;
     const full = `${url.pathname}${url.search || ""}`;
     if (path.startsWith("/registry")) {
       backHref = full;
-      crumbsRoot = { label: "Registry", href: full };
     } else if (path.startsWith("/verify")) {
       backHref = full;
-      crumbsRoot = { label: "Verify", href: full };
     }
   } catch {
     // Fallbacks already set.
@@ -145,15 +139,7 @@ export default async function CertificatePage({
             </Link>
           </div>
           <div className="px-10 py-10">
-            <PageNav
-              backHref={backHref}
-              crumbs={[
-                crumbsRoot,
-                { label: "Certificate", href: `/certificate/${encodeURIComponent(artwork.registry_id)}` },
-                { label: artwork.registry_id },
-              ]}
-              className="!mb-0"
-            />
+            <PageNav backHref={backHref} className="!mb-0" />
             <h1 className="mt-8 font-serif text-2xl font-medium tracking-tight text-neutral-900">
               No certificate on file
             </h1>
@@ -227,17 +213,7 @@ export default async function CertificatePage({
             <div className="m-[10px] border-0 print:m-1.5 print:flex print:min-h-0 print:flex-1 print:flex-col print:border print:border-neutral-300/50">
               <div className="flex min-h-0 flex-1 flex-col justify-between gap-0 px-8 py-12 sm:px-12 sm:py-14 md:px-16 md:py-16 print:box-border print:min-h-0 print:flex-1 print:gap-0 print:px-3 print:py-2">
               <div className="mb-8 print:hidden">
-                <PageNav
-                  backHref={backHref}
-                  crumbs={[
-                    crumbsRoot,
-                    {
-                      label: "Certificate",
-                      href: `/certificate/${encodeURIComponent(artwork.registry_id)}`,
-                    },
-                    { label: artwork.registry_id },
-                  ]}
-                />
+                <PageNav backHref={backHref} />
               </div>
 
               {isArtistOwner ? (

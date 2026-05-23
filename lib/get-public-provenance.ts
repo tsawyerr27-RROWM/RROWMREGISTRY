@@ -120,6 +120,11 @@ export type GetPublicProvenanceResult =
 export type ProvenanceViewerOptions = {
   /** Authenticated user id (auth.users), if any. */
   viewerUserId: string | null;
+  /**
+   * RLS-aware server client (e.g. `createSupabaseServerClient()`). When the service role key
+   * is not set, this is used for gallery/collector view detection; replay still uses the anon key.
+   */
+  viewerSupabase?: SupabaseClient | null;
 };
 
 export const PUBLIC_PROVENANCE_UNAVAILABLE =
@@ -175,7 +180,9 @@ async function loadArtworkIdentity(
 ): Promise<ArtworkIdentityRow | null> {
   const { data: awRow } = await client
     .from("artworks")
-    .select("id, created_at, artist_id, title, registry_id, current_owner_id")
+    .select(
+      "id, created_at, artist_id, catalogue_artist_name, title, registry_id, current_owner_id"
+    )
     .eq("registry_id", registryId)
     .maybeSingle();
 
@@ -215,6 +222,11 @@ async function loadArtworkIdentity(
         };
       }
     }
+  } else if ((awRow as { catalogue_artist_name?: string | null }).catalogue_artist_name) {
+    const cn = String(
+      (awRow as { catalogue_artist_name?: string | null }).catalogue_artist_name ?? ""
+    ).trim();
+    artistName = cn || null;
   }
 
   const createdAt = awRow.created_at != null ? String(awRow.created_at) : null;
@@ -281,9 +293,9 @@ function valueTitleForContext(
   ctx: ProvenanceViewContext
 ): string {
   const money = formatMoney(amt, cur);
-  if (ctx === "public") return `Declared value recorded — ${money}`;
+  if (ctx === "public") return `Declared value recorded: ${money}`;
   const suffix = visNote ? ` (${visNote})` : "";
-  return `Value recorded — ${money}${suffix}`;
+  return `Value recorded: ${money}${suffix}`;
 }
 
 function formatLongDate(iso: string): string {
@@ -342,26 +354,28 @@ function computeRecordIntegrity(args: {
   let narrative: string;
 
   if (!verified || missing_links || ownershipChainLength < 1) {
-    levelLabel = "Partial record";
+    levelLabel = "Opening file";
     narrative =
-      "This record is active but may not yet represent a complete provenance history.";
+      "The catalogue entry is active; the chronology may still be gathering participant and custody detail.";
   } else if (
     has_certificate &&
     has_gallery_verification &&
     ownershipChainLength >= 2 &&
     !missing_links
   ) {
-    levelLabel = "High integrity";
-    narrative = "Complete record with verified provenance and certification.";
+    levelLabel = "Layered on file";
+    narrative =
+      "Certificate, institution-linked confirmation, and custody milestones appear together in the current record. That depth does not imply legal completeness.";
   } else {
-    levelLabel = "Verified record";
-    narrative = "Verified on the registry. Some historical context may be limited.";
+    levelLabel = "Documented listing";
+    narrative =
+      "The work is listed as verified on the registry; breadth of historical context still depends on what participants have filed.";
   }
 
   const certificateRevoked = hasRevokedOnly
     ? {
-        headline: "Certificate status: Revoked",
-        body: "This certificate is no longer valid. Refer to the record history for context.",
+        headline: "Certificate no longer on file",
+        body: "A certificate was revoked; treat the filing as disputed until the chronology reflects a resolved outcome.",
       }
     : undefined;
 
@@ -464,7 +478,7 @@ function buildInternalEntries(args: {
       entries.push({
         ts,
         title: artistDisplay?.trim()
-          ? `Record established — attributed to ${artistDisplay.trim()}`
+          ? `Record established, attributed to ${artistDisplay.trim()}`
           : "Record established on the registry",
         description: "",
         occurredAtIso: new Date(createdAt).toISOString(),
@@ -732,7 +746,9 @@ function stateToDisplayLines(
         ? holders.get(oid) ?? "Private holder"
         : "Unassigned";
   const verificationLine =
-    state.verification_status === "verified" ? "Verified" : "Not verified";
+    state.verification_status === "verified"
+      ? "Listed as verified in the current record"
+      : "Not listed as verified in the current record";
   const valuesLines = Object.keys(state.value_by_currency)
     .sort()
     .map((c) => {
@@ -741,9 +757,9 @@ function stateToDisplayLines(
     });
   const live = state.certificates.filter((c) => !c.revoked);
   let certificateLine: string;
-  if (state.certificates.length === 0) certificateLine = "No certificate issued";
+  if (state.certificates.length === 0) certificateLine = "No certificate on file";
   else if (live.length > 0) certificateLine = "Active certificate on file";
-  else certificateLine = "Certificate revoked";
+  else certificateLine = "Certificate withdrawn from file";
   return { ownerLine, verificationLine, valuesLines, certificateLine };
 }
 
@@ -757,29 +773,19 @@ export async function getPublicProvenanceByRegistryId(
   const clean = registryId.trim();
   if (!clean) return { kind: "not_found" };
 
-  const admin = serviceClient();
-  if (!admin) {
-    const pub = publicAnonClient();
-    if (!pub) return { kind: "not_found" };
-    const identity = await loadArtworkIdentity(pub, clean);
-    if (!identity) return { kind: "not_found" };
-    return {
-      kind: "limited",
-      header: {
-        title: identity.title,
-        artistName: identity.artistName,
-        artistSlug: identity.artistSlug,
-        registryId: identity.registryId,
-      },
-    };
-  }
+  const privileged = serviceClient();
+  const db = privileged ?? publicAnonClient();
+  if (!db) return { kind: "not_found" };
 
-  const identityRow = await loadArtworkIdentity(admin, clean);
+  const ctxClient = privileged ?? options.viewerSupabase ?? publicAnonClient();
+  if (!ctxClient) return { kind: "not_found" };
+
+  const identityRow = await loadArtworkIdentity(db, clean);
   if (!identityRow) return { kind: "not_found" };
 
   const viewerUserId = options.viewerUserId ?? null;
   const viewContext = await resolveViewContext(
-    admin,
+    ctxClient,
     viewerUserId,
     identityRow.artistGalleryId,
     identityRow.currentOwnerId
@@ -793,10 +799,20 @@ export async function getPublicProvenanceByRegistryId(
   const artistSlug = identityRow.artistSlug;
   const createdAt = identityRow.createdAt;
 
-  const replay = await getArtworkReplayData(admin, artworkId, {
+  const replay = await getArtworkReplayData(db, artworkId, {
     valueVisibility: viewContext === "public" ? "public_surface" : "all",
   });
-  if (!replay.ok) return { kind: "not_found" };
+  if (!replay.ok) {
+    return {
+      kind: "limited",
+      header: {
+        title: identityRow.title,
+        artistName: identityRow.artistName,
+        artistSlug: identityRow.artistSlug,
+        registryId: identityRow.registryId,
+      },
+    };
+  }
 
   const userIds: string[] = [];
   for (const e of replay.data.events) {
@@ -820,14 +836,14 @@ export async function getPublicProvenanceByRegistryId(
   if (state.current_owner_id) userIds.push(state.current_owner_id);
 
   const holders = await holderLabelMap(
-    admin,
+    db,
     userIds,
     replay.data.meta.artist_id,
     artistName,
     { viewerUserId, viewContext }
   );
 
-  const galleries = await galleryNameMap(admin, replay.data.events);
+  const galleries = await galleryNameMap(db, replay.data.events);
 
   const recordedEventCount = replay.data.events.length;
   const provenanceActivityEmpty = recordedEventCount === 0;

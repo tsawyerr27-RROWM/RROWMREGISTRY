@@ -11,7 +11,7 @@ type Props = {
 };
 
 const PROFESSIONAL_FEATURES = [
-  "Manage a roster of artists within the registry",
+  "Represented artist roster on the registry",
   "Register and maintain verified works",
   "Issue and support verification records and certificates",
   "Operate a public institutional studio presence on the registry",
@@ -42,11 +42,11 @@ export function GalleryPricingModal({ isOpen, onClose }: Props) {
     <ModalShell
       isOpen={isOpen}
       onClose={onClose}
-      panelClassName="liquid-glass rrowm-modal-surface w-full max-w-3xl max-h-[min(92vh,44rem)] overflow-y-auto p-8 pb-10 sm:p-10 md:max-w-4xl"
-      overlayClassName="liquid-glass-backdrop backdrop-blur-xl ds-z-modal-backdrop fixed inset-0 flex items-center justify-center p-4 sm:p-6 md:p-8"
+      tone="light"
+      panelClassName="rrowm-atmo-section--blend w-full max-w-3xl max-h-[min(92vh,44rem)] overflow-y-auto p-8 pb-10 sm:p-10 md:max-w-4xl"
     >
       <div className="pr-2 md:pr-4">
-        <p className="text-sm font-medium text-violet-600/90">
+        <p className="text-sm font-medium text-neutral-700">
           Institutional studio · Paid access
         </p>
         <h2
@@ -61,10 +61,10 @@ export function GalleryPricingModal({ isOpen, onClose }: Props) {
           ready.
         </p>
 
-        <div className="mt-10 grid gap-8 border-t border-black/[0.06] pt-10 md:grid-cols-2 md:gap-10">
+        <div className="mt-10 grid gap-8 border-t border-[color:var(--rrowm-atmo-rim)] pt-10 md:grid-cols-2 md:gap-10">
           <section
             aria-labelledby="tier-professional"
-            className="flex flex-col rounded-2xl border border-violet-200/80 bg-white/70 p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)]"
+            className="rrowm-atmo-panel flex flex-col rounded-2xl border p-6 shadow-[0_18px_48px_-36px_rgba(15,23,42,0.14)]"
           >
             <h3
               id="tier-professional"
@@ -82,7 +82,7 @@ export function GalleryPricingModal({ isOpen, onClose }: Props) {
               {PROFESSIONAL_FEATURES.map((line) => (
                 <li key={line} className="flex gap-2.5">
                   <span
-                    className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-violet-500/70"
+                    className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-neutral-500/55"
                     aria-hidden
                   />
                   <span>{line}</span>
@@ -103,7 +103,7 @@ export function GalleryPricingModal({ isOpen, onClose }: Props) {
 
           <section
             aria-labelledby="tier-enterprise"
-            className="flex flex-col rounded-2xl border border-dashed border-neutral-300/90 bg-neutral-50/50 p-6"
+            className="rrowm-atmo-panel--muted flex flex-col rounded-2xl border border-dashed p-6"
           >
             <h3
               id="tier-enterprise"
@@ -131,7 +131,7 @@ export function GalleryPricingModal({ isOpen, onClose }: Props) {
             <Link
               href="/contact"
               onClick={onClose}
-              className="mt-4 inline-flex w-full items-center justify-center rounded-xl border border-black/[0.1] bg-white/80 px-4 py-3 text-center text-sm font-medium text-neutral-800 transition hover:border-black/[0.18] hover:bg-white"
+              className="mt-4 inline-flex w-full items-center justify-center rounded-xl border border-[color:var(--rrowm-atmo-rim)] bg-[color-mix(in_srgb,var(--rrowm-atmo-panel)_88%,transparent)] px-4 py-3 text-center text-sm font-medium text-neutral-800 transition hover:bg-[color-mix(in_srgb,var(--rrowm-atmo-panel-raise)_90%,transparent)]"
             >
               Contact the registry
             </Link>

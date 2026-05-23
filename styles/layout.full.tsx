@@ -1,14 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Raleway } from "next/font/google";
 import "./globals.css";
-import { Suspense } from "react";
-
 import EnvironmentLayer from "@/components/EnvironmentLayer";
 import Header from "@/components/Header";
 import { Footer } from "@/components/LandingPage/Footer";
 import { CookieBanner } from "@/components/CookieBanner";
 import { LocalePreferencesProvider } from "@/components/providers/LocalePreferencesProvider";
-import NavigationHistory from "@/components/navigation/NavigationHistory";
 
 const raleway = Raleway({
   subsets: ["latin"],
@@ -34,10 +31,6 @@ export default function RootLayout({
       <body
         className={`${raleway.variable} font-sans antialiased min-h-[100dvh] overflow-x-clip`}
       >
-        <Suspense fallback={null}>
-          <NavigationHistory />
-        </Suspense>
-
         {/* Global Environment Background */}
         <EnvironmentLayer />
 

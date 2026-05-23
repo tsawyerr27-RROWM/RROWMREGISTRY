@@ -2,6 +2,7 @@
  * Server: load artwork + event timeline for Visual Replay Debugger (admin/service role).
  */
 
+import { createHash } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ArtworkMeta, GalleryAuthority, TimelineEvent } from "./artwork-replay-engine";
 import {
@@ -23,6 +24,28 @@ function isPublicSurfaceValueVisibility(visibility: string | null | undefined): 
     visibility === "public" ||
     visibility === "certificate"
   );
+}
+
+/** When RLS blocks direct `certificates` reads (e.g. anon key), RPC + synth row preserves replay shape. */
+function syntheticCertificateRowForPublicRead(
+  artworkId: string,
+  createdAtIso: string | null,
+  revoked: boolean
+) {
+  const base =
+    createdAtIso && !Number.isNaN(new Date(createdAtIso).getTime())
+      ? createdAtIso
+      : new Date().toISOString();
+  const h = createHash("sha256").update(`rrowm:synth-cert:${artworkId}`).digest();
+  const hex = Buffer.from(h.subarray(0, 16)).toString("hex");
+  const id = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(12, 15)}-8${hex.slice(15, 18)}-${hex.slice(18, 30)}`;
+  return {
+    id,
+    issued_at: base,
+    created_at: base,
+    revoked,
+    certificate_snapshot: null as unknown,
+  };
 }
 
 export type GetArtworkReplayDataOptions = {
@@ -193,14 +216,49 @@ export async function getArtworkReplayData(
     .select("id, issued_at, created_at, revoked, certificate_snapshot")
     .eq("artwork_id", artworkId);
 
-  if (ceErr) return { ok: false, error: ceErr.message };
+  let ceSorted: Array<{
+    id: string;
+    issued_at: unknown;
+    created_at: unknown;
+    revoked: boolean;
+    certificate_snapshot: unknown;
+  }>;
 
-  const ceSorted = [...(ceRaw ?? [])].sort((a, b) => {
-    const ta = new Date((a.issued_at ?? a.created_at) as string).getTime();
-    const tb = new Date((b.issued_at ?? b.created_at) as string).getTime();
-    if (ta !== tb) return ta - tb;
-    return String(a.id).localeCompare(String(b.id));
-  });
+  if (ceErr) {
+    const { data: certRpc, error: rpcErr } = await admin.rpc(
+      "get_certificate_public_status_single",
+      { p_artwork_id: artworkId }
+    );
+    if (rpcErr) {
+      ceSorted = [];
+    } else {
+      const row = Array.isArray(certRpc) ? certRpc[0] : certRpc;
+      const hasCert =
+        row &&
+        typeof row === "object" &&
+        "has_certificate" in row &&
+        (row as { has_certificate?: boolean }).has_certificate === true;
+      if (hasCert) {
+        const revoked = (row as { revoked?: boolean }).revoked === true;
+        ceSorted = [
+          syntheticCertificateRowForPublicRead(
+            artworkId,
+            aw.created_at != null ? String(aw.created_at) : null,
+            revoked
+          ),
+        ];
+      } else {
+        ceSorted = [];
+      }
+    }
+  } else {
+    ceSorted = [...(ceRaw ?? [])].sort((a, b) => {
+      const ta = new Date((a.issued_at ?? a.created_at) as string).getTime();
+      const tb = new Date((b.issued_at ?? b.created_at) as string).getTime();
+      if (ta !== tb) return ta - tb;
+      return String(a.id).localeCompare(String(b.id));
+    });
+  }
 
   const certRevokedById = new Map<string, boolean>();
   const events: TimelineEvent[] = [];
@@ -429,23 +487,25 @@ export async function getArtworkReplayData(
     warnings.push("Verification depends on mutable external state (galleries.verified)");
   }
 
-  const { data: snapDup } = await admin
-    .from("certificates")
-    .select("certificate_snapshot, revoked")
-    .eq("artwork_id", artworkId);
+  if (!ceErr) {
+    const { data: snapDup } = await admin
+      .from("certificates")
+      .select("certificate_snapshot, revoked")
+      .eq("artwork_id", artworkId);
 
-  const snapKeyCount = new Map<string, number>();
-  for (const r of snapDup ?? []) {
-    if (r.revoked === true) continue;
-    const k = JSON.stringify(r.certificate_snapshot);
-    snapKeyCount.set(k, (snapKeyCount.get(k) ?? 0) + 1);
-  }
-  for (const [, n] of snapKeyCount) {
-    if (n > 1) {
-      mismatches.push(
-        "certificates: multiple live rows share identical certificate_snapshot"
-      );
-      break;
+    const snapKeyCount = new Map<string, number>();
+    for (const r of snapDup ?? []) {
+      if (r.revoked === true) continue;
+      const k = JSON.stringify(r.certificate_snapshot);
+      snapKeyCount.set(k, (snapKeyCount.get(k) ?? 0) + 1);
+    }
+    for (const [, n] of snapKeyCount) {
+      if (n > 1) {
+        mismatches.push(
+          "certificates: multiple live rows share identical certificate_snapshot"
+        );
+        break;
+      }
     }
   }
 

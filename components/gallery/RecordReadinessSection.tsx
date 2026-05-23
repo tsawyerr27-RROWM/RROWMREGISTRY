@@ -68,7 +68,7 @@ export function RecordReadinessSection({
         Record readiness
       </h2>
       <p className="mt-1 text-[13px] leading-relaxed text-neutral-500">
-        Operational checks on catalogue records — not analytics.
+        Operational checks on catalogue records, not analytics.
       </p>
 
       <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-[13px] tabular-nums text-neutral-700">

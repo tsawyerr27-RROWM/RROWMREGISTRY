@@ -39,10 +39,15 @@ type RegisterModalProps = {
   onArtworkChange: (artwork: RegisterModalArtwork) => void;
   onRegister: () => void;
   registerLoading: boolean;
-  /** When set (e.g. gallery registering for a represented artist), show picker and require selection */
+  /** Gallery: optional link to an existing roster artist account */
   representedArtistOptions?: { id: string; label: string }[];
   representedArtistId?: string;
   onRepresentedArtistChange?: (id: string) => void;
+  /** Gallery: plain-text artist identity (required when no roster link) */
+  catalogueArtistName?: string;
+  onCatalogueArtistNameChange?: (name: string) => void;
+  pendingArtistEmail?: string;
+  onPendingArtistEmailChange?: (email: string) => void;
   /** Gallery dashboard: calmer copy and hierarchy, less “form product” */
   variant?: "default" | "gallery";
 };
@@ -57,24 +62,33 @@ export function RegisterModal({
   representedArtistOptions,
   representedArtistId,
   onRepresentedArtistChange,
+  catalogueArtistName = "",
+  onCatalogueArtistNameChange,
+  pendingArtistEmail = "",
+  onPendingArtistEmailChange,
   variant = "default",
 }: RegisterModalProps) {
-  const needsArtist =
-    Array.isArray(representedArtistOptions) &&
-    representedArtistOptions.length > 0;
-  const artistOk =
-    !needsArtist ||
+  const isGallery = variant === "gallery";
+  const rosterOptions =
+    isGallery && Array.isArray(representedArtistOptions)
+      ? representedArtistOptions
+      : [];
+  const hasRosterLink =
     Boolean(
       representedArtistId &&
-        representedArtistOptions!.some((o) => o.id === representedArtistId)
+        rosterOptions.some((o) => o.id === representedArtistId)
     );
+  const catalogueNameOk =
+    !isGallery || hasRosterLink || Boolean(catalogueArtistName?.trim());
+  const galleryMediaOk = !isGallery || Boolean(newArtwork.imageFile);
+  const artistOk = isGallery ? catalogueNameOk && galleryMediaOk : true;
 
   return (
     <ModalShell
       isOpen={isOpen}
       onClose={onClose}
-      panelClassName="liquid-glass rrowm-modal-surface max-h-[90vh] w-full max-w-2xl overflow-auto"
-      closeClassName="liquid-glass-close absolute right-5 top-5 z-10 rounded-xl px-4 py-2 text-xs font-medium text-neutral-600 transition duration-200 ease-out hover:bg-white/75 hover:text-neutral-900 md:right-6 md:top-6"
+      tone="light"
+      panelClassName="max-h-[90vh] w-full max-w-2xl overflow-auto"
     >
       <div className="p-10 md:p-12">
         {variant === "gallery" ? (
@@ -83,9 +97,10 @@ export function RegisterModal({
               Register a work
             </h2>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-neutral-600">
-              A new registry identifier will be issued. Core fields define the
-              record; you can refine provenance details later within the same
-              system.
+              Issues a registry identifier and opens the canonical artwork record —
+              the same documentary object an artist would file. Your institution
+              attestation layers onto the chronology; the artist may later authenticate
+              authorship and deepen detail. Not an approval or upload queue.
             </p>
           </>
         ) : (
@@ -95,22 +110,55 @@ export function RegisterModal({
         )}
 
         <div className={`space-y-6 ${variant === "gallery" ? "mt-10" : "mt-8"}`}>
-          {needsArtist ? (
-            <div>
-              <label className={labelClass}>Represented artist *</label>
-              <select
-                value={representedArtistId || ""}
-                onChange={(e) => onRepresentedArtistChange?.(e.target.value)}
-                className={selectClass}
-              >
-                <option value="">Select artist</option>
-                {representedArtistOptions!.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {isGallery ? (
+            <>
+              <div>
+                <label className={labelClass}>
+                  Artist name{hasRosterLink ? "" : " *"}
+                </label>
+                <input
+                  type="text"
+                  value={catalogueArtistName}
+                  onChange={(e) => onCatalogueArtistNameChange?.(e.target.value)}
+                  className={fieldClass}
+                  placeholder="As credited on the work"
+                  disabled={hasRosterLink}
+                />
+                <p className="mt-2 text-[12px] leading-relaxed text-neutral-500">
+                  Plain text is sufficient. An artist account is not required to open
+                  the canonical record.
+                </p>
+              </div>
+              <div>
+                <label className={labelClass}>Artist email (optional)</label>
+                <input
+                  type="email"
+                  value={pendingArtistEmail}
+                  onChange={(e) => onPendingArtistEmailChange?.(e.target.value)}
+                  className={fieldClass}
+                  placeholder="For a later authenticate & deepen invitation"
+                />
+              </div>
+              {rosterOptions.length > 0 ? (
+                <div>
+                  <label className={labelClass}>
+                    Link to roster artist (optional)
+                  </label>
+                  <select
+                    value={representedArtistId || ""}
+                    onChange={(e) => onRepresentedArtistChange?.(e.target.value)}
+                    className={selectClass}
+                  >
+                    <option value="">No account link — name on file only</option>
+                    {rosterOptions.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
+            </>
           ) : null}
           <div>
             <label className={labelClass}>Title *</label>
@@ -204,7 +252,9 @@ export function RegisterModal({
           </div>
 
           <div>
-            <label className={labelClass}>Image</label>
+            <label className={labelClass}>
+              Image{isGallery ? " *" : ""}
+            </label>
             <input
               type="file"
               accept="image/*"
@@ -281,7 +331,7 @@ export function RegisterModal({
             {registerLoading
               ? "Recording…"
               : variant === "gallery"
-                ? "Issue registry record"
+                ? "Issue canonical record"
                 : "Register artwork"}
           </button>
           <button type="button" onClick={onClose} className={btnSecondary}>

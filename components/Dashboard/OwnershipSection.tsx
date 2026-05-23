@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { resolveArtworkOwnerId } from "@/lib/resolve-artwork-owner-id";
 import { ExperienceEmptyStateButton } from "@/components/ui/ExperienceEmptyState";
+import { WorkspaceRecordCard } from "@/components/Studio/WorkspaceRecordCard";
 import {
   StudioSearchRow,
   studioFilterSelectClass,
 } from "@/components/Dashboard/studioListPrimitives";
+import { workspace } from "@/styles/workspace-design";
 
 type LatestOwner = {
   transfer_type?: string | null;
@@ -84,7 +86,7 @@ function TransferDots({ count }: { count: number }) {
   const n = Math.max(0, Math.min(count, 6));
   if (n <= 0) {
     return (
-      <span className="text-xs text-white/40">No transfers yet</span>
+      <span className="text-xs text-neutral-400">No transfers yet</span>
     );
   }
   return (
@@ -94,17 +96,17 @@ function TransferDots({ count }: { count: number }) {
     >
       {Array.from({ length: n }).map((_, i) => (
         <span key={i} className="flex items-center">
-          <span className="h-2 w-2 rounded-full bg-gradient-to-br from-white/50 to-white/25 shadow-sm ring-1 ring-white/20" />
+          <span className="h-2 w-2 rounded-full bg-gradient-to-br from-neutral-400/70 to-neutral-300/50 shadow-sm ring-1 ring-neutral-200/80" />
           {i < n - 1 ? (
             <span
-              className="mx-0.5 h-px w-2.5 bg-gradient-to-r from-white/30 to-white/10"
+              className="mx-0.5 h-px w-2.5 bg-gradient-to-r from-neutral-300/80 to-neutral-200/40"
               aria-hidden
             />
           ) : null}
         </span>
       ))}
       {count > n ? (
-        <span className="text-[11px] font-medium tabular-nums text-white/45">
+        <span className="text-[11px] font-medium tabular-nums text-neutral-400">
           +{count - n}
         </span>
       ) : null}
@@ -153,7 +155,7 @@ export function OwnershipSection({
                       | "owned_by_you"
                   )
                 }
-                className={studioFilterSelectClass("dark")}
+                className={studioFilterSelectClass("light")}
               >
                 <option value="all">{`All records (${filterCounts.all})`}</option>
                 <option value="needs_transfer">{`Needs transfer (${filterCounts.needs_transfer})`}</option>
@@ -166,13 +168,13 @@ export function OwnershipSection({
       ) : null}
 
       {noMatches ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.05] px-8 py-12 text-center text-sm text-white/75 backdrop-blur-sm">
+        <div className="rounded-2xl border border-neutral-200/90 bg-white/80 px-8 py-12 text-center text-sm text-neutral-600 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)]">
           No ownership records match your search or filter.
         </div>
       ) : null}
 
       {!noMatches && filteredArtworks.length > 0 ? (
-        <div className="grid grid-cols-1 items-stretch gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className={workspace.space.grid}>
           {filteredArtworks.map((artwork, idx) => {
             const artworkIdRaw = (artwork as { id?: unknown }).id;
             const artworkId =
@@ -219,116 +221,64 @@ export function OwnershipSection({
             const youHold = holderIsYou(artwork, userId);
             const holder = currentHolderLabel(artwork, userId);
 
-            const accent =
-              hasSaleSignal
-                ? "border-l-amber-400 bg-gradient-to-br from-amber-500/[0.12] via-white/[0.03] to-transparent shadow-[0_0_0_1px_rgba(251,191,36,0.2)]"
-                : youHold && !hasSaleSignal
-                  ? "border-l-emerald-400/90 bg-gradient-to-br from-emerald-500/[0.08] via-white/[0.02] to-transparent shadow-[0_0_0_1px_rgba(52,211,153,0.12)]"
-                  : "border-l-white/20 bg-white/[0.04] shadow-[0_0_0_1px_rgba(255,255,255,0.06)]";
+            const accentBorder = hasSaleSignal
+              ? "border-l-amber-500/70"
+              : youHold && !hasSaleSignal
+                ? "border-l-emerald-500/60"
+                : "border-l-neutral-300";
 
             return (
-              <div
+              <WorkspaceRecordCard
                 key={artworkId}
-                role="button"
-                tabIndex={0}
+                title={title}
+                subtitle={`${year} · ${medium}`}
+                imageUrl={imageUrl}
+                accentBorderClass={accentBorder}
+                onClick={() => onArtworkClick(artwork)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
                     onArtworkClick(artwork);
                   }
                 }}
-                className={`group relative flex h-full min-h-0 cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/[0.07] border-l-[5px] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-white/[0.12] hover:shadow-[0_20px_50px_-24px_rgba(0,0,0,0.65)] ${accent}`}
-                onClick={() => onArtworkClick(artwork)}
-                title="Open ownership ledger"
-              >
-                {hasSaleSignal ? (
-                  <div className="absolute right-3 top-3 z-10 max-w-[11rem] rounded-lg border border-amber-300/35 bg-amber-950/50 px-2.5 py-1.5 text-sm font-semibold leading-tight text-amber-100/95 backdrop-blur-sm">
-                    Sale logged — finish transfer
-                  </div>
-                ) : null}
-
-                <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-gradient-to-br from-white/[0.07] to-white/[0.02]">
-                  {imageUrl ? (
-                    <img
-                      src={imageUrl}
-                      alt={title}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-                    />
-                  ) : (
-                    <div
-                      className="flex h-full w-full items-center justify-center bg-[radial-gradient(ellipse_at_30%_20%,rgba(255,255,255,0.08),transparent_50%)]"
-                      aria-hidden
-                    >
-                      <svg
-                        className="h-14 w-14 text-white/15"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={0.8}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                    </div>
-                  )}
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/55 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <div className="mb-2 flex flex-wrap gap-1.5">
+                reveal={
+                  <>
+                    {hasSaleSignal ? (
+                      <p className="mb-3 rounded-lg border border-amber-200/90 bg-amber-50 px-2.5 py-2 text-xs font-semibold text-amber-900">
+                        Sale logged: finish transfer
+                      </p>
+                    ) : null}
+                    <div className="mb-3 flex flex-wrap gap-1.5">
                       {(artwork as { verification_status?: string })
                         .verification_status === "verified" ? (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-green-500/25 px-2 py-0.5 text-sm font-semibold text-green-100 ring-1 ring-green-400/30">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 ring-1 ring-emerald-200/80">
                           Verified
                         </span>
                       ) : null}
                       {sold ? (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/20 px-2 py-0.5 text-sm font-semibold text-rose-100/95 ring-1 ring-rose-400/25">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-800 ring-1 ring-rose-200/80">
                           Last event · Sale
                         </span>
                       ) : null}
                       {youHold ? (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/20 px-2 py-0.5 text-sm font-semibold text-emerald-100 ring-1 ring-emerald-400/25">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 ring-1 ring-emerald-200/80">
                           In your custody
                         </span>
                       ) : null}
                     </div>
-                    <h3 className="font-serif text-lg font-normal leading-snug text-white drop-shadow-sm">
-                      {registryId ? (
-                        <Link
-                          href={`/artwork/${encodeURIComponent(registryId)}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="hover:underline decoration-white/35 underline-offset-2"
-                        >
-                          {title}
-                        </Link>
-                      ) : (
-                        title
-                      )}
-                    </h3>
-                    <p className="mt-1 text-xs text-white/70">
-                      {year} · {medium}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex min-h-0 flex-1 flex-col gap-4 p-5">
-                  <div className="rounded-xl bg-black/25 p-3.5 ring-1 ring-white/[0.08]">
-                    <p className="text-sm font-semibold text-white/40">
-                      Current holder
-                    </p>
-                    <p className="mt-2 text-[15px] font-medium leading-snug text-white">
-                      {holder}
-                    </p>
-                  </div>
-
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-white/40">
+                    <div className="rounded-xl border border-neutral-200/90 bg-white/80 p-3.5">
+                      <p className="text-xs font-semibold text-neutral-500">
+                        Current holder
+                      </p>
+                      <p className="mt-2 text-sm font-medium leading-snug text-neutral-900">
+                        {holder}
+                      </p>
+                    </div>
+                    <div className="mt-4">
+                      <p className="text-xs font-semibold text-neutral-500">
                         Chain depth
                       </p>
-                      <p className="mt-1.5 text-xs text-white/55">
+                      <p className="mt-1 text-xs text-neutral-500">
                         {transferCount} transfer
                         {transferCount === 1 ? "" : "s"} on record
                       </p>
@@ -336,38 +286,37 @@ export function OwnershipSection({
                         <TransferDots count={transferCount} />
                       </div>
                     </div>
-                  </div>
-
-                  <div className="mt-auto flex items-center justify-between gap-2 border-t border-white/[0.08] pt-4">
-                    <div className="min-w-0">
-                      {registryId ? (
-                        <span className="inline-block max-w-full truncate rounded-lg bg-white/[0.06] px-2.5 py-1.5 font-mono text-[10px] leading-tight text-white/70 ring-1 ring-white/10">
-                          {registryId}
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-white/35">
-                          No registry ID
-                        </span>
-                      )}
+                    <div className="mt-4 flex items-center justify-between gap-2 border-t border-neutral-200/80 pt-4">
+                      <div className="min-w-0">
+                        {registryId ? (
+                          <span className="inline-block max-w-full truncate rounded-lg bg-neutral-100/90 px-2.5 py-1.5 font-mono text-[10px] leading-tight text-neutral-800 ring-1 ring-neutral-200/90">
+                            {registryId}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-neutral-400">
+                            No registry ID
+                          </span>
+                        )}
+                      </div>
+                      <span className="shrink-0 rounded-xl bg-neutral-900 px-3 py-2 text-[11px] font-semibold text-white">
+                        Ledger →
+                      </span>
                     </div>
-                    <span className="shrink-0 rounded-xl bg-white/[0.1] px-3 py-2 text-[11px] font-semibold text-white ring-1 ring-white/15 transition group-hover:bg-white/[0.14]">
-                      Ledger →
-                    </span>
-                  </div>
-                </div>
-              </div>
+                  </>
+                }
+              />
             );
           })}
         </div>
       ) : isTrulyEmpty ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-10 text-center md:p-14">
-          <p className="text-xs text-white/55">
+        <div className="rounded-2xl border border-neutral-200/90 bg-white/80 p-10 text-center shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)] md:p-14">
+          <p className="text-xs text-neutral-500">
             Ownership
           </p>
-          <h3 className="mt-4 font-serif text-2xl font-normal tracking-tight text-white">
+          <h3 className="mt-4 font-serif text-2xl font-normal tracking-tight text-neutral-950">
             No ownership activity yet
           </h3>
-          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/70">
+          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-neutral-600">
             When transfers or claims are recorded, each work appears here with
             holder, chain depth, and sale signals.
           </p>

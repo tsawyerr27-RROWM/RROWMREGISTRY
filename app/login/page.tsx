@@ -3,7 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getSupabaseBrowserClient, setRememberMe } from "@/lib/supabase";
+import { setRememberMe } from "@/lib/supabase";
+import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
+import { acceptPendingGalleryInvite } from "@/lib/accept-gallery-invite-client";
 import { deferredRouterReplace } from "@/lib/deferred-app-router";
 import { getOnboardingRedirectPath, homePathForRole } from "@/lib/onboarding";
 import { AuthPageShell } from "@/components/auth/AuthPageShell";
@@ -18,6 +20,7 @@ type View = "signin" | "forgot";
 
 export default function LoginPage() {
   const router = useRouter();
+  const sb = useSupabaseBrowserLazy();
   const [view, setView] = useState<View>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -42,7 +45,7 @@ export default function LoginPage() {
     }
     setSubmitting(true);
     setRememberMe(rememberMe);
-    const supabase = getSupabaseBrowserClient();
+    const supabase = sb();
     const { error } = await supabase.auth.signInWithPassword({
       email: cleanEmail,
       password,
@@ -61,6 +64,11 @@ export default function LoginPage() {
     if (!user) {
       deferredRouterReplace(router, "/studio");
       return;
+    }
+
+    const inviteResult = await acceptPendingGalleryInvite();
+    if (!inviteResult.ok && inviteResult.error) {
+      console.warn("[login] invite accept", inviteResult.error);
     }
 
     const needOnboarding = await getOnboardingRedirectPath(supabase, user.id);
@@ -87,7 +95,7 @@ export default function LoginPage() {
       return;
     }
     setSubmitting(true);
-    const supabase = getSupabaseBrowserClient();
+    const supabase = sb();
     const origin =
       typeof window !== "undefined" ? window.location.origin : "";
     const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {

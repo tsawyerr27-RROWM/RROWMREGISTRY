@@ -170,12 +170,7 @@ export default async function PublicGalleryPage({
         aria-hidden
       />
       <main className="relative mx-auto max-w-[min(100%,88rem)] px-4 sm:px-6 lg:px-8">
-        <PageNav
-          crumbs={[
-            { label: "Registry", href: "/registry" },
-            { label: displayName },
-          ]}
-        />
+        <PageNav backHref="/registry" />
 
         <GalleryPublicHero
           name={displayName}

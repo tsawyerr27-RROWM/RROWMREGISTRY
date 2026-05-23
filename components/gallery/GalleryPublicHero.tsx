@@ -11,6 +11,8 @@ export type GalleryPublicHeroProps = {
     works: number;
     verifiedWorks: number;
   };
+  /** Observational endurance copy — documentary, not promotional. */
+  enduranceNote?: string | null;
 };
 
 /**
@@ -23,6 +25,7 @@ export function GalleryPublicHero({
   description,
   websiteHref,
   stats,
+  enduranceNote,
 }: GalleryPublicHeroProps) {
   return (
     <section className="relative mt-6 overflow-hidden rounded-[1.25rem] border border-white/10 bg-gradient-to-br from-neutral-950 via-[#131820] to-neutral-900 shadow-[0_32px_64px_-24px_rgba(0,0,0,0.42),inset_0_1px_0_0_rgba(255,255,255,0.06)]">
@@ -35,15 +38,18 @@ export function GalleryPublicHero({
         aria-hidden
       />
       <div className="relative px-6 py-12 sm:px-10 sm:py-14 lg:px-14 lg:py-16">
-        <div className="flex flex-wrap items-center gap-2">
+        <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-white/40">
+          Institutional continuity · public catalogue
+        </p>
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           <span
             className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
               verified
-                ? "bg-emerald-500/20 text-emerald-200"
+                ? "border border-white/15 bg-white/[0.08] text-white/85"
                 : "bg-white/10 text-white/55"
             }`}
           >
-            {verified ? "Verified institution" : "Registry member"}
+            {verified ? "Institution-linked on file" : "Registry participant"}
           </span>
         </div>
 
@@ -59,24 +65,30 @@ export function GalleryPublicHero({
           <span className="inline-flex items-center rounded-full border border-white/12 bg-white/[0.06] px-3.5 py-1.5 text-[13px] tabular-nums text-white/90 backdrop-blur-sm">
             <span className="font-semibold text-white">{stats.artists}</span>
             <span className="ml-1.5 text-white/50">
-              {stats.artists === 1 ? "artist" : "artists"}
+              {stats.artists === 1 ? "represented participant" : "represented participants"}
             </span>
           </span>
           <span className="inline-flex items-center rounded-full border border-white/12 bg-white/[0.06] px-3.5 py-1.5 text-[13px] tabular-nums text-white/90 backdrop-blur-sm">
             <span className="font-semibold text-white">{stats.works}</span>
             <span className="ml-1.5 text-white/50">
-              {stats.works === 1 ? "work" : "works"} in catalogue
+              {stats.works === 1 ? "work" : "works"} on file
             </span>
           </span>
           {stats.verifiedWorks > 0 ? (
-            <span className="inline-flex items-center rounded-full border border-emerald-400/25 bg-emerald-500/15 px-3.5 py-1.5 text-[13px] tabular-nums text-emerald-100/95 backdrop-blur-sm">
-              <span className="font-semibold">{stats.verifiedWorks}</span>
-              <span className="ml-1.5 font-normal text-emerald-200/80">
-                verified on registry
+            <span className="inline-flex items-center rounded-full border border-white/12 bg-white/[0.05] px-3.5 py-1.5 text-[13px] tabular-nums text-white/80 backdrop-blur-sm">
+              <span className="font-semibold text-white/90">{stats.verifiedWorks}</span>
+              <span className="ml-1.5 font-normal text-white/45">
+                with verified listing in the current record
               </span>
             </span>
           ) : null}
         </div>
+
+        {enduranceNote ? (
+          <p className="mt-6 max-w-2xl text-[12px] leading-relaxed text-white/45">
+            {enduranceNote}
+          </p>
+        ) : null}
 
         {description ? (
           <p className="mt-10 max-w-2xl text-[15px] leading-[1.75] text-white/65">{description}</p>

@@ -19,6 +19,8 @@
   --rrowm-base-soft: #ffffff;
   --rrowm-base-mid: #f4f8fb;
   --rrowm-base-deep: #eef3f7;
+  --rrowm-parchment: #faf6ee;
+  --rrowm-parchment-mid: #f0e8dc;
   /* Unified motion — subtle fade + small translation only */
   --rrowm-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --rrowm-duration: 220ms;
@@ -44,6 +46,18 @@
   --ds-z-floating: 50;
   --ds-z-modal-backdrop: 100;
   --ds-z-modal: 110;
+
+  /* Narrative atmospheric pigments — mineral / dusk / parchment (section backgrounds) */
+  --rrowm-atmo-mineral-mist: #d4e0f0;
+  --rrowm-atmo-ash-slab: #dde6f2;
+  --rrowm-atmo-fog-veil: #d8e2ee;
+  --rrowm-atmo-dusk-wash: #e4dfea;
+  --rrowm-atmo-dusk-deep: #d6d0de;
+  --rrowm-atmo-smoke-plum: rgba(72, 64, 82, 0.14);
+  --rrowm-atmo-oat-glow: rgba(252, 238, 214, 0.78);
+  --rrowm-atmo-slate-glow: rgba(210, 222, 238, 0.62);
+  --rrowm-atmo-amber-veil: rgba(248, 228, 196, 0.42);
+  --rrowm-atmo-plum-veil: rgba(214, 204, 228, 0.38);
 }
 
 /* Depth stack — plain classes; do not use Tailwind arbitrary z-index with these CSS variables. */
@@ -60,36 +74,392 @@
   z-index: var(--ds-z-modal);
 }
 
+/* Artist invite signup — global marketing nav/footer hidden via SignupClient */
+html[data-rrowm-invite-signup="1"] [data-rrowm-chrome-suppress-invite-signup] {
+  display: none !important;
+}
+
 /* Page field — glossy white gradient (specular + depth, borderless) */
 .ds-page-environment {
   background-color: var(--rrowm-base-soft);
   background-image:
     radial-gradient(ellipse 120% 80% at 50% -15%, rgba(255, 255, 255, 1), transparent 55%),
-    radial-gradient(ellipse 55% 42% at 100% 0%, rgba(224, 242, 254, 0.45), transparent 50%),
-    radial-gradient(ellipse 45% 35% at 0% 100%, rgba(239, 246, 255, 0.5), transparent 48%),
+    radial-gradient(ellipse 62% 48% at 100% 0%, rgba(196, 214, 238, 0.58), transparent 54%),
+    radial-gradient(ellipse 52% 42% at 0% 100%, rgba(252, 234, 208, 0.65), transparent 52%),
+    radial-gradient(ellipse 80% 55% at 50% 100%, rgba(252, 244, 228, 0.48), transparent 58%),
     linear-gradient(
       168deg,
       #ffffff 0%,
-      var(--rrowm-base) 38%,
-      var(--rrowm-base-mid) 72%,
-      var(--rrowm-base-deep) 100%
+      var(--rrowm-base) 32%,
+      color-mix(in srgb, var(--rrowm-base-mid) 78%, var(--rrowm-parchment-mid) 22%) 68%,
+      color-mix(in srgb, var(--rrowm-base-deep) 82%, var(--rrowm-atmo-dusk-deep) 18%) 100%
     );
 }
 
-/* Marketing — chromatic depth under narrative spine (pair with AmbientNarrativeField) */
+/** Phase 12 — premium workspace field (quieter than marketing wash) */
+.ds-workspace-environment {
+  background-color: var(--rrowm-base-soft);
+  background-image:
+    radial-gradient(ellipse 100% 70% at 50% -12%, rgba(255, 255, 255, 0.98), transparent 58%),
+    radial-gradient(ellipse 48% 40% at 100% 20%, rgba(226, 232, 240, 0.35), transparent 52%),
+    radial-gradient(ellipse 42% 38% at 0% 80%, rgba(248, 244, 236, 0.28), transparent 50%),
+    linear-gradient(
+      175deg,
+      #ffffff 0%,
+      var(--rrowm-base) 45%,
+      color-mix(in srgb, var(--rrowm-base-mid) 88%, #eef1f4 12%) 100%
+    );
+}
+
+/** Phase 12 — silver continuity (certificates, ownership, provenance handoffs) */
+.ds-silver-environment {
+  background-color: #f6f7f9;
+  background-image:
+    radial-gradient(ellipse 90% 65% at 50% -8%, rgba(255, 255, 255, 0.95), transparent 55%),
+    radial-gradient(ellipse 55% 45% at 12% 88%, rgba(214, 220, 228, 0.4), transparent 52%),
+    radial-gradient(ellipse 50% 42% at 92% 72%, rgba(232, 228, 238, 0.32), transparent 50%),
+    linear-gradient(
+      168deg,
+      #fafbfc 0%,
+      #f2f4f7 38%,
+      #e8ebf0 100%
+    );
+}
+
+/* Landing / About — editorial shell marker (tonal tokens + motion live in child layers) */
+.rrowm-narrative-page {
+  text-rendering: optimizeLegibility;
+  /* Dividers between sections inherit a neutral hairline when not inside an atmo block */
+  --rrowm-atmo-hairline: rgba(100, 100, 108, 0.09);
+}
+
+/**
+ * Atmospheric section surfaces — environmental temperature, not UI color blocks.
+ * Each modifier sets --rrowm-atmo-* for panels/rims on descendants (cards inherit material).
+ * ::before adds a soft flowing colour wash for depth (content stays above via z-index).
+ */
+@keyframes atmo-section-flow {
+  0% {
+    transform: translate3d(-1.2%, 0.4%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(1.4%, -0.6%, 0) scale(1.018);
+  }
+  100% {
+    transform: translate3d(-0.6%, 0.8%, 0) scale(1.008);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rrowm-atmo-section--warm::before,
+  .rrowm-atmo-section--cool::before,
+  .rrowm-atmo-section--mist::before,
+  .rrowm-atmo-section--dusk::before,
+  .rrowm-atmo-section--blend::before,
+  .rrowm-atmo-section--reflective::before {
+    animation: none;
+  }
+}
+
+.rrowm-atmo-section--warm,
+.rrowm-atmo-section--cool,
+.rrowm-atmo-section--mist,
+.rrowm-atmo-section--dusk,
+.rrowm-atmo-section--blend,
+.rrowm-atmo-section--reflective {
+  overflow: hidden;
+}
+
+.rrowm-atmo-section--warm::before,
+.rrowm-atmo-section--cool::before,
+.rrowm-atmo-section--mist::before,
+.rrowm-atmo-section--dusk::before,
+.rrowm-atmo-section--blend::before,
+.rrowm-atmo-section--reflective::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  will-change: transform;
+  animation: atmo-section-flow 32s var(--rrowm-ease-out) infinite alternate;
+}
+
+.rrowm-atmo-section--warm {
+  position: relative;
+  isolation: isolate;
+  --rrowm-atmo-panel: color-mix(in srgb, var(--rrowm-base-soft) 52%, var(--rrowm-parchment) 48%);
+  --rrowm-atmo-panel-muted: color-mix(in srgb, var(--rrowm-base-soft) 42%, var(--rrowm-parchment-mid) 58%);
+  --rrowm-atmo-panel-raise: color-mix(in srgb, var(--rrowm-base-soft) 36%, var(--rrowm-parchment) 64%);
+  --rrowm-atmo-rim: rgba(68, 64, 60, 0.11);
+  --rrowm-atmo-hairline: rgba(87, 83, 78, 0.16);
+
+  border-bottom: 1px solid color-mix(in srgb, var(--rrowm-atmo-rim) 72%, transparent);
+  background-color: color-mix(in srgb, var(--rrowm-parchment) 30%, var(--rrowm-base-soft) 70%);
+  background-image:
+    radial-gradient(ellipse 110% 82% at 50% 100%, color-mix(in srgb, var(--rrowm-parchment-mid) 55%, transparent), transparent 62%),
+    radial-gradient(ellipse 68% 58% at 0% 8%, rgba(255, 248, 235, 0.62), transparent 58%),
+    radial-gradient(ellipse 55% 48% at 100% 35%, rgba(250, 242, 228, 0.38), transparent 56%),
+    linear-gradient(
+      178deg,
+      color-mix(in srgb, var(--rrowm-base-soft) 82%, var(--rrowm-parchment) 18%) 0%,
+      color-mix(in srgb, var(--rrowm-base) 72%, var(--rrowm-parchment-mid) 28%) 100%
+    );
+}
+
+.rrowm-atmo-section--warm::before {
+  background:
+    radial-gradient(ellipse 120% 90% at 18% -8%, var(--rrowm-atmo-oat-glow), transparent 54%),
+    radial-gradient(ellipse 95% 75% at 92% 92%, rgba(245, 226, 198, 0.52), transparent 52%),
+    radial-gradient(ellipse 70% 58% at 55% 42%, var(--rrowm-atmo-amber-veil), transparent 56%);
+  opacity: 0.92;
+  animation-duration: 34s;
+}
+
+.rrowm-atmo-section--cool {
+  position: relative;
+  isolation: isolate;
+  --rrowm-atmo-panel: color-mix(in srgb, var(--rrowm-base-soft) 58%, var(--rrowm-atmo-mineral-mist) 42%);
+  --rrowm-atmo-panel-muted: color-mix(in srgb, var(--rrowm-base-soft) 48%, var(--rrowm-atmo-ash-slab) 52%);
+  --rrowm-atmo-panel-raise: color-mix(in srgb, var(--rrowm-base-soft) 40%, var(--rrowm-atmo-mineral-mist) 60%);
+  --rrowm-atmo-rim: rgba(71, 85, 105, 0.11);
+  --rrowm-atmo-hairline: rgba(100, 116, 139, 0.15);
+
+  border-bottom: 1px solid color-mix(in srgb, var(--rrowm-atmo-rim) 68%, transparent);
+  background-color: color-mix(in srgb, var(--rrowm-atmo-ash-slab) 36%, var(--rrowm-base-soft) 64%);
+  background-image:
+    radial-gradient(ellipse 95% 62% at 100% 0%, color-mix(in srgb, var(--rrowm-atmo-mineral-mist) 52%, transparent), transparent 58%),
+    radial-gradient(ellipse 78% 58% at 0% 100%, rgba(210, 222, 238, 0.55), transparent 56%),
+    radial-gradient(ellipse 60% 50% at 50% 45%, rgba(228, 236, 248, 0.32), transparent 58%),
+    linear-gradient(182deg, var(--rrowm-base-soft) 0%, color-mix(in srgb, var(--rrowm-base) 68%, var(--rrowm-atmo-fog-veil) 32%) 100%);
+}
+
+.rrowm-atmo-section--cool::before {
+  background:
+    radial-gradient(ellipse 115% 85% at 88% 5%, var(--rrowm-atmo-slate-glow), transparent 52%),
+    radial-gradient(ellipse 90% 70% at 6% 88%, rgba(226, 234, 246, 0.48), transparent 54%),
+    radial-gradient(ellipse 68% 55% at 42% 28%, rgba(238, 228, 248, 0.22), transparent 54%);
+  opacity: 0.86;
+  animation-duration: 38s;
+  animation-direction: alternate-reverse;
+}
+
+.rrowm-atmo-section--mist {
+  position: relative;
+  isolation: isolate;
+  --rrowm-atmo-panel: color-mix(in srgb, var(--rrowm-base-soft) 62%, var(--rrowm-atmo-fog-veil) 38%);
+  --rrowm-atmo-panel-muted: color-mix(in srgb, var(--rrowm-base-soft) 52%, var(--rrowm-atmo-ash-slab) 48%);
+  --rrowm-atmo-rim: rgba(80, 90, 110, 0.1);
+  --rrowm-atmo-hairline: rgba(100, 116, 139, 0.13);
+
+  border-top: 1px solid color-mix(in srgb, var(--rrowm-atmo-rim) 62%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--rrowm-atmo-rim) 62%, transparent);
+  background-color: color-mix(in srgb, var(--rrowm-atmo-fog-veil) 32%, var(--rrowm-base-soft) 68%);
+  background-image:
+    radial-gradient(ellipse 130% 88% at 50% 50%, color-mix(in srgb, var(--rrowm-atmo-ash-slab) 42%, transparent), transparent 66%),
+    linear-gradient(180deg, color-mix(in srgb, var(--rrowm-base-soft) 75%, var(--rrowm-atmo-fog-veil) 25%) 0%, color-mix(in srgb, var(--rrowm-base-mid) 70%, var(--rrowm-parchment-mid) 30%) 100%);
+}
+
+.rrowm-atmo-section--mist::before {
+  background:
+    radial-gradient(ellipse 100% 80% at 50% 50%, rgba(228, 236, 248, 0.55), transparent 58%),
+    radial-gradient(ellipse 78% 62% at 18% 72%, rgba(248, 240, 226, 0.28), transparent 54%);
+  opacity: 0.8;
+  animation-duration: 40s;
+}
+
+.rrowm-atmo-section--dusk {
+  position: relative;
+  isolation: isolate;
+  --rrowm-atmo-panel: color-mix(in srgb, var(--rrowm-base-soft) 54%, var(--rrowm-atmo-dusk-wash) 46%);
+  --rrowm-atmo-panel-muted: color-mix(in srgb, var(--rrowm-base-soft) 44%, var(--rrowm-atmo-dusk-deep) 56%);
+  --rrowm-atmo-panel-raise: color-mix(in srgb, var(--rrowm-base-soft) 38%, var(--rrowm-atmo-dusk-wash) 62%);
+  --rrowm-atmo-rim: rgba(75, 72, 88, 0.1);
+  --rrowm-atmo-hairline: rgba(91, 86, 108, 0.14);
+
+  border-top: 1px solid color-mix(in srgb, var(--rrowm-atmo-rim) 65%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--rrowm-atmo-rim) 65%, transparent);
+  background-color: color-mix(in srgb, var(--rrowm-atmo-dusk-wash) 24%, var(--rrowm-base-soft) 76%);
+  background-image:
+    radial-gradient(ellipse 88% 62% at 90% 18%, var(--rrowm-atmo-smoke-plum), transparent 56%),
+    radial-gradient(ellipse 78% 55% at 8% 88%, color-mix(in srgb, var(--rrowm-parchment-mid) 38%, transparent), transparent 58%),
+    radial-gradient(ellipse 65% 48% at 42% 40%, rgba(230, 224, 238, 0.35), transparent 55%),
+    linear-gradient(175deg, var(--rrowm-base-soft) 0%, color-mix(in srgb, var(--rrowm-base-mid) 62%, var(--rrowm-atmo-dusk-deep) 38%) 100%);
+}
+
+.rrowm-atmo-section--dusk::before {
+  background:
+    radial-gradient(ellipse 105% 80% at 78% 12%, var(--rrowm-atmo-plum-veil), transparent 52%),
+    radial-gradient(ellipse 90% 72% at 12% 95%, rgba(250, 238, 218, 0.55), transparent 54%),
+    radial-gradient(ellipse 72% 58% at 48% 38%, rgba(232, 224, 242, 0.32), transparent 56%);
+  opacity: 0.9;
+  animation-duration: 36s;
+  animation-direction: alternate-reverse;
+}
+
+.rrowm-atmo-section--blend {
+  position: relative;
+  isolation: isolate;
+  --rrowm-atmo-panel: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--rrowm-base-soft) 58%, var(--rrowm-parchment) 42%) 82%,
+    var(--rrowm-atmo-fog-veil) 18%
+  );
+  --rrowm-atmo-panel-muted: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--rrowm-base-soft) 50%, var(--rrowm-parchment-mid) 50%) 80%,
+    var(--rrowm-atmo-ash-slab) 20%
+  );
+  --rrowm-atmo-rim: rgba(70, 74, 82, 0.1);
+  --rrowm-atmo-hairline: rgba(90, 95, 105, 0.14);
+
+  border-top: 1px solid color-mix(in srgb, var(--rrowm-atmo-rim) 58%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--rrowm-atmo-rim) 58%, transparent);
+  background-color: color-mix(in srgb, var(--rrowm-parchment) 18%, var(--rrowm-base-soft) 82%);
+  background-image:
+    radial-gradient(ellipse 78% 52% at 18% 0%, rgba(228, 220, 242, 0.48), transparent 54%),
+    radial-gradient(ellipse 72% 58% at 88% 100%, rgba(248, 242, 228, 0.62), transparent 56%),
+    radial-gradient(ellipse 55% 45% at 50% 55%, rgba(236, 240, 248, 0.28), transparent 58%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--rrowm-base-soft) 78%, var(--rrowm-atmo-mineral-mist) 22%) 0%,
+      color-mix(in srgb, var(--rrowm-base) 72%, var(--rrowm-parchment-mid) 28%) 100%
+    );
+}
+
+.rrowm-atmo-section--blend::before {
+  background:
+    radial-gradient(ellipse 110% 85% at 0% 50%, rgba(210, 224, 242, 0.42), transparent 52%),
+    radial-gradient(ellipse 100% 78% at 100% 60%, rgba(254, 244, 228, 0.58), transparent 54%),
+    radial-gradient(ellipse 75% 62% at 50% 18%, rgba(228, 216, 238, 0.28), transparent 56%);
+  opacity: 0.86;
+  animation-duration: 42s;
+}
+
+/** About digest + principles — dusk warmth absorbed into paper */
+.rrowm-atmo-section--reflective {
+  position: relative;
+  isolation: isolate;
+  --rrowm-atmo-panel: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--rrowm-base-soft) 54%, var(--rrowm-atmo-dusk-wash) 46%) 82%,
+    var(--rrowm-parchment) 18%
+  );
+  --rrowm-atmo-panel-muted: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--rrowm-base-soft) 44%, var(--rrowm-atmo-dusk-deep) 56%) 78%,
+    var(--rrowm-parchment-mid) 22%
+  );
+  --rrowm-atmo-panel-raise: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--rrowm-base-soft) 42%, var(--rrowm-parchment) 58%) 72%,
+    var(--rrowm-atmo-dusk-wash) 28%
+  );
+  --rrowm-atmo-rim: rgba(78, 74, 90, 0.11);
+  --rrowm-atmo-hairline: rgba(95, 90, 110, 0.13);
+
+  border-color: color-mix(in srgb, var(--rrowm-atmo-rim) 75%, transparent);
+  background-color: color-mix(in srgb, var(--rrowm-atmo-dusk-wash) 22%, var(--rrowm-base-soft) 78%);
+  background-image:
+    radial-gradient(ellipse 92% 68% at 10% 6%, rgba(238, 232, 248, 0.62), transparent 56%),
+    radial-gradient(ellipse 82% 62% at 94% 94%, rgba(252, 246, 236, 0.58), transparent 58%),
+    linear-gradient(
+      168deg,
+      color-mix(in srgb, var(--rrowm-base-soft) 78%, var(--rrowm-parchment) 22%) 0%,
+      color-mix(in srgb, var(--rrowm-base-mid) 58%, var(--rrowm-atmo-dusk-deep) 42%) 100%
+    );
+}
+
+.rrowm-atmo-section--reflective::before {
+  background:
+    radial-gradient(ellipse 115% 88% at 22% 0%, rgba(244, 236, 252, 0.62), transparent 54%),
+    radial-gradient(ellipse 95% 75% at 85% 100%, rgba(252, 244, 230, 0.56), transparent 52%),
+    radial-gradient(ellipse 68% 54% at 62% 48%, var(--rrowm-atmo-amber-veil), transparent 55%);
+  opacity: 0.9;
+  animation-duration: 44s;
+  animation-direction: alternate-reverse;
+}
+
+/* Keep section content above flowing ::before washes */
+.rrowm-atmo-section--warm > *,
+.rrowm-atmo-section--cool > *,
+.rrowm-atmo-section--mist > *,
+.rrowm-atmo-section--dusk > *,
+.rrowm-atmo-section--blend > *,
+.rrowm-atmo-section--reflective > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Out-of-flow decor — overrides > * so large ambient layers do not reserve layout space */
+.rrowm-atmo-section--warm > .rrowm-atmo-section__hairline,
+.rrowm-atmo-section--cool > .rrowm-atmo-section__hairline,
+.rrowm-atmo-section--mist > .rrowm-atmo-section__hairline,
+.rrowm-atmo-section--dusk > .rrowm-atmo-section__hairline,
+.rrowm-atmo-section--blend > .rrowm-atmo-section__hairline,
+.rrowm-atmo-section--reflective > .rrowm-atmo-section__hairline,
+.rrowm-atmo-section--warm > .rrowm-atmo-section__ambient,
+.rrowm-atmo-section--cool > .rrowm-atmo-section__ambient,
+.rrowm-atmo-section--mist > .rrowm-atmo-section__ambient,
+.rrowm-atmo-section--dusk > .rrowm-atmo-section__ambient,
+.rrowm-atmo-section--blend > .rrowm-atmo-section__ambient,
+.rrowm-atmo-section--reflective > .rrowm-atmo-section__ambient {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Hairline inside atmospheric sections — reads edge temperature from parent */
+.rrowm-atmo-section__hairline {
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--rrowm-atmo-hairline) 100%, transparent),
+    transparent
+  );
+}
+
+.rrowm-atmo-divider__line {
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--rrowm-atmo-hairline, rgba(100, 100, 108, 0.1)) 100%, transparent),
+    transparent
+  );
+}
+
+/** Nested panels/cards — inherit section --rrowm-atmo-* tokens from ancestor */
+.rrowm-atmo-panel {
+  border-color: color-mix(in srgb, var(--rrowm-atmo-rim) 100%, transparent);
+  background-color: color-mix(in srgb, var(--rrowm-atmo-panel) 82%, transparent);
+}
+
+.rrowm-atmo-panel--muted {
+  border-color: color-mix(in srgb, var(--rrowm-atmo-rim) 100%, transparent);
+  background-color: color-mix(in srgb, var(--rrowm-atmo-panel-muted) 78%, transparent);
+}
+
+.rrowm-atmo-panel--raise {
+  border-color: color-mix(in srgb, var(--rrowm-atmo-rim) 100%, transparent);
+  background-color: color-mix(in srgb, var(--rrowm-atmo-panel-raise, var(--rrowm-atmo-panel)) 76%, transparent);
+}
+
+/* Marketing — chromatic depth (muted: lower chroma reads archival, not launch-page) */
 .ds-narrative-chrome {
   pointer-events: none;
   position: absolute;
   inset: 0;
   z-index: 0;
   background-image:
-    radial-gradient(ellipse 52% 42% at 8% 18%, rgba(124, 58, 237, 0.075), transparent 58%),
-    radial-gradient(ellipse 48% 44% at 96% 6%, rgba(14, 165, 233, 0.08), transparent 54%),
-    radial-gradient(ellipse 42% 48% at 4% 92%, rgba(245, 158, 11, 0.05), transparent 52%),
-    radial-gradient(ellipse 55% 40% at 88% 94%, rgba(217, 70, 239, 0.045), transparent 55%),
-    radial-gradient(ellipse 72% 58% at 48% 52%, rgba(99, 102, 241, 0.035), transparent 62%),
-    radial-gradient(ellipse 50% 45% at 72% 22%, rgba(16, 185, 129, 0.03), transparent 50%);
-  opacity: 0.9;
+    radial-gradient(ellipse 58% 48% at 6% 16%, rgba(124, 92, 168, 0.072), transparent 56%),
+    radial-gradient(ellipse 52% 46% at 98% 4%, rgba(72, 128, 178, 0.078), transparent 52%),
+    radial-gradient(ellipse 48% 50% at 2% 94%, rgba(232, 168, 72, 0.068), transparent 50%),
+    radial-gradient(ellipse 58% 44% at 90% 96%, rgba(168, 108, 188, 0.052), transparent 54%),
+    radial-gradient(ellipse 78% 62% at 48% 50%, rgba(118, 112, 168, 0.04), transparent 60%),
+    radial-gradient(ellipse 54% 48% at 74% 20%, rgba(196, 148, 98, 0.042), transparent 48%),
+    radial-gradient(ellipse 70% 55% at 20% 78%, rgba(252, 232, 202, 0.15), transparent 52%);
+  opacity: 0.96;
 }
 
 /* Paper grain — replaces “ledger ticks” for a calmer, institutional substrate */
@@ -105,11 +475,24 @@
 
 .ds-narrative-depth {
   background:
-    radial-gradient(ellipse 100% 48% at 50% -8%, rgba(255, 255, 255, 0.7), transparent 52%),
-    radial-gradient(ellipse 85% 55% at 100% 45%, rgba(224, 231, 255, 0.28), transparent 46%),
-    radial-gradient(ellipse 70% 50% at 0% 60%, rgba(237, 233, 254, 0.2), transparent 48%);
+    radial-gradient(ellipse 100% 48% at 50% -8%, rgba(255, 255, 255, 0.72), transparent 54%),
+    radial-gradient(ellipse 90% 58% at 100% 42%, rgba(192, 210, 234, 0.42), transparent 50%),
+    radial-gradient(ellipse 75% 55% at 0% 58%, rgba(252, 232, 206, 0.45), transparent 50%),
+    radial-gradient(ellipse 68% 48% at 50% 100%, rgba(252, 242, 226, 0.38), transparent 54%),
+    radial-gradient(ellipse 55% 42% at 30% 35%, rgba(224, 212, 238, 0.22), transparent 52%);
   mix-blend-mode: soft-light;
-  opacity: 0.55;
+  opacity: 0.7;
+}
+
+/* Warm floor + cool read — sits above depth, under aurora */
+.ds-narrative-parchment {
+  background:
+    radial-gradient(ellipse 98% 68% at 50% 100%, rgba(252, 238, 214, 0.74), transparent 60%),
+    radial-gradient(ellipse 58% 44% at 6% 20%, rgba(238, 244, 250, 0.48), transparent 54%),
+    radial-gradient(ellipse 52% 40% at 94% 16%, rgba(206, 222, 242, 0.42), transparent 52%),
+    radial-gradient(ellipse 45% 38% at 50% 0%, rgba(255, 250, 240, 0.4), transparent 50%);
+  mix-blend-mode: multiply;
+  opacity: 0.52;
 }
 
 @keyframes narrative-pulse {
@@ -128,8 +511,8 @@
     filter: blur(0px);
   }
   50% {
-    transform: translate3d(0, -1.5%, 0) scale(1.03);
-    filter: blur(0.25px);
+    transform: translate3d(0, -0.7%, 0) scale(1.006);
+    filter: blur(0.1px);
   }
   100% {
     transform: translate3d(0, 0, 0) scale(1);
@@ -139,14 +522,22 @@
 
 .ds-institutional-aurora {
   background-image:
-    radial-gradient(ellipse 42% 36% at 8% 18%, rgba(124, 58, 237, 0.11), transparent 60%),
-    radial-gradient(ellipse 46% 40% at 92% 10%, rgba(14, 165, 233, 0.12), transparent 58%),
-    radial-gradient(ellipse 40% 42% at 6% 92%, rgba(245, 158, 11, 0.085), transparent 62%),
-    radial-gradient(ellipse 52% 46% at 86% 90%, rgba(217, 70, 239, 0.075), transparent 62%),
-    radial-gradient(ellipse 68% 58% at 50% 48%, rgba(99, 102, 241, 0.045), transparent 68%);
+    radial-gradient(ellipse 46% 40% at 6% 16%, rgba(124, 92, 168, 0.11), transparent 58%),
+    radial-gradient(ellipse 50% 44% at 94% 8%, rgba(72, 138, 188, 0.12), transparent 56%),
+    radial-gradient(ellipse 44% 46% at 4% 94%, rgba(232, 168, 72, 0.095), transparent 60%),
+    radial-gradient(ellipse 56% 50% at 88% 92%, rgba(168, 108, 188, 0.07), transparent 60%),
+    radial-gradient(ellipse 72% 62% at 50% 46%, rgba(118, 112, 168, 0.048), transparent 66%),
+    radial-gradient(ellipse 48% 42% at 72% 24%, rgba(252, 224, 188, 0.12), transparent 54%);
   mix-blend-mode: multiply;
-  opacity: 0.55;
-  animation: institutional-drift 18s var(--ds-ease-cinematic) infinite;
+  opacity: 0.62;
+  animation: institutional-drift 22s var(--ds-ease-cinematic) infinite;
+}
+
+@media (max-width: 767px) {
+  .ds-institutional-aurora {
+    animation-duration: 30s;
+    opacity: 0.5;
+  }
 }
 
 .ds-narrative-pulse {
@@ -162,37 +553,42 @@
     animation: none;
     opacity: 0.3;
   }
+
+  .ds-institutional-aurora {
+    animation: none;
+    opacity: 0.42;
+  }
 }
 
 /* Landing / about — slow pigment-field drift (GPU: transform + opacity only) */
 @keyframes hero-pigment-drift-a {
   0% {
     transform: translate(-6%, 4%) scale(1);
-    opacity: 0.38;
+    opacity: 0.48;
   }
   100% {
     transform: translate(5%, -3%) scale(1.08);
-    opacity: 0.52;
+    opacity: 0.64;
   }
 }
 @keyframes hero-pigment-drift-b {
   0% {
     transform: translate(8%, -8%) scale(1.05);
-    opacity: 0.28;
+    opacity: 0.36;
   }
   100% {
     transform: translate(-4%, 6%) scale(0.95);
-    opacity: 0.4;
+    opacity: 0.52;
   }
 }
 @keyframes hero-pigment-drift-c {
   0% {
     transform: translate(-2%, -10%) scale(0.92);
-    opacity: 0.22;
+    opacity: 0.28;
   }
   100% {
     transform: translate(3%, 4%) scale(1.06);
-    opacity: 0.34;
+    opacity: 0.44;
   }
 }
 
@@ -218,8 +614,8 @@
   top: 8%;
   background: radial-gradient(
     circle at 40% 40%,
-    rgba(139, 92, 246, 0.35),
-    rgba(59, 130, 246, 0.12) 55%,
+    rgba(148, 108, 198, 0.44),
+    rgba(196, 148, 108, 0.18) 55%,
     transparent 70%
   );
   animation: hero-pigment-drift-a 26s var(--rrowm-ease-out) infinite alternate;
@@ -232,8 +628,8 @@
   bottom: 0%;
   background: radial-gradient(
     circle at 50% 50%,
-    rgba(14, 165, 233, 0.22),
-    rgba(99, 102, 241, 0.1) 50%,
+    rgba(108, 148, 188, 0.3),
+    rgba(148, 128, 188, 0.16) 50%,
     transparent 68%
   );
   animation: hero-pigment-drift-b 32s var(--rrowm-ease-out) infinite alternate;
@@ -246,8 +642,8 @@
   top: 38%;
   background: radial-gradient(
     circle at 50% 50%,
-    rgba(16, 185, 129, 0.14),
-    rgba(244, 114, 182, 0.06) 45%,
+    rgba(168, 148, 108, 0.2),
+    rgba(212, 148, 168, 0.1) 45%,
     transparent 65%
   );
   animation: hero-pigment-drift-c 20s var(--rrowm-ease-out) infinite alternate;
@@ -264,21 +660,21 @@
 @keyframes hero-pigment-drift-d {
   0% {
     transform: translate(4%, 6%) scale(1);
-    opacity: 0.3;
+    opacity: 0.38;
   }
   100% {
     transform: translate(-6%, -5%) scale(1.12);
-    opacity: 0.48;
+    opacity: 0.58;
   }
 }
 @keyframes hero-pigment-drift-e {
   0% {
     transform: translate(-10%, 4%) scale(0.92);
-    opacity: 0.2;
+    opacity: 0.26;
   }
   100% {
     transform: translate(7%, 9%) scale(1.08);
-    opacity: 0.38;
+    opacity: 0.46;
   }
 }
 
@@ -289,8 +685,8 @@
   bottom: 14%;
   background: radial-gradient(
     circle at 42% 42%,
-    rgba(251, 191, 36, 0.48),
-    rgba(245, 158, 11, 0.18) 52%,
+    rgba(251, 191, 36, 0.52),
+    rgba(245, 158, 11, 0.22) 52%,
     transparent 70%
   );
   animation: hero-pigment-drift-d 24s var(--rrowm-ease-out) infinite alternate;
@@ -304,8 +700,8 @@
   top: 6%;
   background: radial-gradient(
     circle at 50% 50%,
-    rgba(244, 114, 182, 0.28),
-    rgba(217, 70, 239, 0.14) 48%,
+    rgba(244, 114, 182, 0.34),
+    rgba(217, 70, 239, 0.18) 48%,
     transparent 68%
   );
   animation: hero-pigment-drift-e 21s var(--rrowm-ease-out) infinite alternate-reverse;
@@ -319,7 +715,7 @@
   .hero-pigment-blob--d,
   .hero-pigment-blob--e {
     animation: none;
-    opacity: 0.3;
+    opacity: 0.38;
   }
 }
 
@@ -461,12 +857,19 @@
     rgba(248, 250, 252, 0.78) 100%
   );
   box-shadow:
-    0 3px 12px -4px rgba(15, 23, 42, 0.08),
-    0 40px 96px -36px rgba(15, 23, 42, 0.18),
+    0 0 0 1px rgba(255, 255, 255, 0.5),
+    0 3px 12px -4px rgba(15, 23, 42, 0.1),
+    0 24px 64px -28px rgba(15, 23, 42, 0.2),
+    0 48px 110px -40px rgba(15, 23, 42, 0.14),
     inset 0 1px 0 0 rgba(255, 255, 255, 1),
     inset 0 -28px 48px -32px rgba(148, 163, 184, 0.11);
   backdrop-filter: blur(24px) saturate(1.18);
   -webkit-backdrop-filter: blur(24px) saturate(1.18);
+}
+
+.liquid-glass.rrowm-modal-panel {
+  border-radius: 1.25rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
 }
 
 /** Dark glass — slate / certificate / ownership ledger */
@@ -520,11 +923,11 @@
   -webkit-backdrop-filter: blur(10px) saturate(1.06);
 }
 
-/** Modal / dialog scrim — blur content behind overlay (must stay above page chrome) */
+/** Modal / dialog scrim — blur + dim page so panels read clearly above */
 .liquid-glass-backdrop {
-  background-color: rgba(6, 8, 12, 0.34);
-  backdrop-filter: blur(12px) saturate(1.04);
-  -webkit-backdrop-filter: blur(12px) saturate(1.04);
+  background-color: rgba(8, 10, 16, 0.44);
+  backdrop-filter: blur(18px) saturate(1.05);
+  -webkit-backdrop-filter: blur(18px) saturate(1.05);
 }
 
 .liquid-glass-close {
@@ -576,6 +979,109 @@
   -webkit-backdrop-filter: blur(12px) saturate(1.06);
 }
 
+/** Phase 12 — premium workspace glass (soft radius, restrained blur) */
+.liquid-glass-premium {
+  border-radius: 1.25rem;
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  background: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(255, 255, 255, 0.82) 48%,
+    rgba(248, 250, 252, 0.92) 100%
+  );
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.65),
+    0 2px 6px -2px rgba(15, 23, 42, 0.1),
+    0 16px 40px -12px rgba(15, 23, 42, 0.16),
+    0 40px 96px -28px rgba(15, 23, 42, 0.22),
+    0 64px 140px -48px rgba(15, 23, 42, 0.14),
+    inset 0 1px 0 0 rgba(255, 255, 255, 1),
+    inset 0 -24px 48px -32px rgba(148, 163, 184, 0.1);
+  backdrop-filter: blur(22px) saturate(1.14);
+  -webkit-backdrop-filter: blur(22px) saturate(1.14);
+}
+
+.liquid-glass-dark-premium {
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(
+    155deg,
+    rgba(45, 52, 64, 0.92) 0%,
+    rgba(24, 28, 36, 0.94) 100%
+  );
+  box-shadow:
+    0 32px 80px -32px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(18px) saturate(1.08);
+  -webkit-backdrop-filter: blur(18px) saturate(1.08);
+}
+
+.liquid-glass-silver {
+  border-radius: 1.25rem;
+  border: 1px solid rgba(100, 110, 128, 0.18);
+  background: linear-gradient(
+    158deg,
+    rgba(255, 255, 255, 0.97) 0%,
+    rgba(236, 240, 246, 0.86) 45%,
+    rgba(224, 228, 236, 0.9) 100%
+  );
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.7),
+    0 2px 8px -3px rgba(70, 80, 100, 0.12),
+    0 18px 44px -14px rgba(60, 72, 92, 0.18),
+    0 40px 96px -32px rgba(55, 65, 85, 0.2),
+    0 60px 130px -48px rgba(50, 58, 75, 0.12),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.98),
+    inset 0 -22px 44px -30px rgba(130, 142, 160, 0.1);
+  backdrop-filter: blur(24px) saturate(1.12);
+  -webkit-backdrop-filter: blur(24px) saturate(1.12);
+}
+
+.liquid-glass-inset-premium {
+  border-radius: 0.75rem;
+  border: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(248, 250, 252, 0.65) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+    inset 0 -6px 16px -12px rgba(100, 110, 125, 0.08);
+  backdrop-filter: blur(8px) saturate(1.04);
+  -webkit-backdrop-filter: blur(8px) saturate(1.04);
+}
+
+.liquid-glass-tile-premium {
+  border-radius: 1rem;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  background: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(252, 253, 255, 0.92) 100%
+  );
+  box-shadow: 0 20px 56px -36px rgba(15, 23, 42, 0.1);
+  backdrop-filter: blur(10px) saturate(1.05);
+  -webkit-backdrop-filter: blur(10px) saturate(1.05);
+}
+
+.liquid-glass-close-silver {
+  border-radius: 0.75rem;
+  border: none;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow:
+    0 8px 24px -12px rgba(80, 90, 110, 0.12),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(14px) saturate(1.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+}
+
+.ws-modal-backdrop-silver {
+  background-color: rgba(72, 78, 88, 0.28);
+  backdrop-filter: blur(14px) saturate(1.05);
+  -webkit-backdrop-filter: blur(14px) saturate(1.05);
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -606,6 +1112,10 @@ body {
 h1, h2, h3 {
   letter-spacing: -0.02em;
   line-height: 1.12;
+}
+
+.font-serif {
+  font-family: var(--font-serif), "Cormorant Garamond", Georgia, "Times New Roman", serif;
 }
 
 /* —— Editorial surfaces: calm, frosted, institutional —— */
@@ -654,6 +1164,15 @@ h1, h2, h3 {
     var(--rrowm-base) 52%,
     var(--rrowm-base-deep) 100%
   );
+}
+
+/** Phase 12 — certificates / ownership studio sections + continuity pages */
+.rrowm-grad-continuity {
+  background-color: #f4f5f8;
+  background-image:
+    radial-gradient(ellipse 85% 60% at 50% 0%, rgba(255, 255, 255, 0.92), transparent 58%),
+    radial-gradient(ellipse 60% 50% at 100% 100%, rgba(210, 218, 230, 0.35), transparent 55%),
+    linear-gradient(180deg, #fafbfc 0%, #eceff4 100%);
 }
 
 .rrowm-surface {
@@ -720,7 +1239,7 @@ h1, h2, h3 {
 @keyframes rrowm-modal-in {
   from {
     opacity: 0;
-    transform: scale(0.992) translateY(6px);
+    transform: scale(0.988) translateY(10px);
   }
   to {
     opacity: 1;
@@ -730,6 +1249,7 @@ h1, h2, h3 {
 
 .rrowm-modal-surface {
   animation: rrowm-modal-in var(--ds-duration-modal) var(--rrowm-ease-out) forwards;
+  will-change: transform, opacity;
 }
 
 @keyframes fadeIn {
