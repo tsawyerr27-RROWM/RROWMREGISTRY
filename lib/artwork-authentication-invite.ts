@@ -67,6 +67,10 @@ export const ARTWORK_AUTH_INVITE_COPY = {
   artworkSectionDesc: `Continuity history for specific canonical records. ${CANONICAL_RECORD_PHRASES.notApprovalWorkflow}`,
 } as const;
 
+export type ArtworkAuthenticationAcceptMode =
+  | "invite_token"
+  | "studio_confirm";
+
 export type ArtworkAuthenticationInvitePreview = {
   valid: boolean;
   expired: boolean;
@@ -83,4 +87,8 @@ export type ArtworkAuthenticationInvitePreview = {
   personalMessage: string | null;
   maskedRecipientEmail: string;
   requiresAuth: boolean;
+  /** How the client should complete authentication */
+  acceptMode?: ArtworkAuthenticationAcceptMode;
+  /** Present when acceptMode is invite_token and invite is pending */
+  inviteToken?: string | null;
 };

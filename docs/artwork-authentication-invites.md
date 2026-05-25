@@ -19,7 +19,8 @@ Invitations are continuity participation requests — not approval workflows, on
 2. From **Works**, **Invite artist to authenticate** opens `ArtworkAuthenticationInviteModal`.
 3. `POST /api/artwork-authentication/send-invite` records invite + sends email.
 4. Artist opens `/authenticate-record?token=…` — artwork visible immediately.
-5. Signed-in artist: `accept_artwork_authentication_invite` links account + layers attestations.
+5. Sign-in or sign-up preserves the link via `?next=` and session storage, then returns after onboarding when needed.
+6. Signed-in artist: `accept_artwork_authentication_invite` links account + layers attestations.
 6. Optional: **Contribute authorship** via existing chronology contribution API.
 
 ## Public participation layers

@@ -88,7 +88,7 @@ export async function POST(req: Request) {
   const token = generateInviteToken();
   const expiresAt = inviteExpiryDate().toISOString();
 
-  const { data: row, error: upErr } = await supabase
+  const { data: row, error: upErr } = await service
     .from("artwork_authentication_invites")
     .update({
       invite_token: token,

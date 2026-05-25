@@ -7,12 +7,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
-import {
-  getOnboardingRedirectPath,
-  homePathForRole,
-} from "@/lib/onboarding";
+import { homePathForRole } from "@/lib/onboarding";
 import { acceptPendingGalleryInvite } from "@/lib/accept-gallery-invite-client";
+import { persistArtworkAuthInviteFromReturnPath } from "@/lib/accept-artwork-auth-invite-client";
+import { sanitizeAuthReturnPath } from "@/lib/auth-return-path";
 import { deferredRouterReplace } from "@/lib/deferred-app-router";
+import { resolvePostAuthRedirectPath } from "@/lib/post-auth-redirect";
 
 const allowedRoles = ["artist", "gallery", "collector"] as const;
 type Role = (typeof allowedRoles)[number];
@@ -58,6 +58,8 @@ export default function CompleteSignupPage() {
     const run = async () => {
       const supabase = sb();
       const params = new URLSearchParams(window.location.search);
+      const nextParam = sanitizeAuthReturnPath(params.get("next"));
+      if (nextParam) persistArtworkAuthInviteFromReturnPath(nextParam);
       let roleParam: string | null = params.get("role");
       if (!isRole(roleParam) && typeof window !== "undefined") {
         try {
@@ -140,22 +142,15 @@ export default function CompleteSignupPage() {
           }
         }
 
-        const need = await getOnboardingRedirectPath(supabase, user.id);
         try {
           window.sessionStorage.removeItem("rrowm_pending_signup_role");
         } catch {
           /* ignore */
         }
-        if (!need) {
-          const { data: a } = await supabase
-            .from("actor_profiles")
-            .select("role")
-            .eq("user_id", user.id)
-            .maybeSingle();
-          deferredRouterReplace(router, homePathForRole(a?.role) || "/studio");
-        } else {
-          deferredRouterReplace(router, "/onboarding");
-        }
+        const dest = await resolvePostAuthRedirectPath(supabase, user.id, {
+          explicitNext: nextParam,
+        });
+        deferredRouterReplace(router, dest);
         return;
       }
 
@@ -179,7 +174,10 @@ export default function CompleteSignupPage() {
       } catch {
         /* ignore */
       }
-      deferredRouterReplace(router, "/onboarding");
+      const dest = await resolvePostAuthRedirectPath(supabase, user.id, {
+        explicitNext: nextParam,
+      });
+      deferredRouterReplace(router, dest);
     };
 
     void run();

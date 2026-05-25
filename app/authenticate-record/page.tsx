@@ -4,11 +4,13 @@ import { AuthenticateArtworkRecordClient } from "@/components/gallery/Authentica
 
 export default function AuthenticateRecordPage() {
   return (
-    <div className="min-h-[100dvh] rrowm-bg-page pt-20 text-neutral-900">
-      <main className="mx-auto max-w-lg px-5 py-14 md:py-20">
+    <div className="min-h-[100dvh] rrowm-bg-page text-neutral-900">
+      <main className="mx-auto max-w-2xl px-5 py-10 md:py-16">
         <Suspense
           fallback={
-            <p className="text-center text-sm text-neutral-500">Loading…</p>
+            <p className="text-center text-sm text-neutral-500" role="status">
+              Loading record review…
+            </p>
           }
         >
           <AuthenticateArtworkRecordClient />

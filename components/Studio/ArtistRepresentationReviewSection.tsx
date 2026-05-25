@@ -22,6 +22,7 @@ type Props = {
   busyArtworkId: string | null;
   onConfirm: (artworkId: string) => void | Promise<void>;
   onContribute?: (item: ArtistRepresentationReviewItem) => void;
+  onReview?: (item: ArtistRepresentationReviewItem) => void;
 };
 
 function formatFiledWhen(iso: string | null): string {
@@ -50,6 +51,7 @@ export function ArtistRecordDeepeningSection({
   busyArtworkId,
   onConfirm,
   onContribute,
+  onReview,
 }: Props) {
   if (items.length === 0) return null;
 
@@ -89,6 +91,7 @@ export function ArtistRecordDeepeningSection({
           const publicHref = reg
             ? `/artwork/${encodeURIComponent(reg)}`
             : null;
+          const reviewHref = `/authenticate-record?artwork_id=${encodeURIComponent(row.artwork_id)}`;
 
           return (
             <li
@@ -128,12 +131,28 @@ export function ArtistRecordDeepeningSection({
                 </div>
               </div>
               <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
+                {typeof onReview === "function" ? (
+                  <button
+                    type="button"
+                    onClick={() => onReview(row)}
+                    className="rounded-xl bg-neutral-950 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-neutral-800"
+                  >
+                    Review & authenticate
+                  </button>
+                ) : (
+                  <Link
+                    href={reviewHref}
+                    className="rounded-xl bg-neutral-950 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-neutral-800"
+                  >
+                    Review & authenticate
+                  </Link>
+                )}
                 {publicHref ? (
                   <Link
                     href={publicHref}
                     className="rounded-xl border border-neutral-900/[0.08] bg-white/90 px-4 py-2.5 text-xs font-medium text-neutral-800 transition hover:bg-neutral-50"
                   >
-                    Review record
+                    Public record
                   </Link>
                 ) : null}
                 {onContribute ? (

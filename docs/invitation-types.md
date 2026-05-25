@@ -43,3 +43,4 @@ RROWM maintains **two invitation channels**. They are not interchangeable.
 2. `20260513140000_fix_register_institution_artwork_atomic.sql`
 3. `20260513150000_fix_artworks_default_owner_trigger.sql`
 4. `20260514120000_artwork_authentication_invites.sql`
+5. `20260515120000_artwork_auth_invites_rls_insert.sql`

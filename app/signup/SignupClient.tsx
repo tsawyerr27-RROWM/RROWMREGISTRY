@@ -4,6 +4,8 @@ import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
+import { persistArtworkAuthInviteFromReturnPath } from "@/lib/accept-artwork-auth-invite-client";
+import { sanitizeAuthReturnPath } from "@/lib/auth-return-path";
 import { deferredRouterReplace } from "@/lib/deferred-app-router";
 import { AuthPageShell } from "@/components/auth/AuthPageShell";
 import {
@@ -20,13 +22,20 @@ function normalizeRole(raw: string | null): SignupRole {
   return "collector";
 }
 
-/** Mirrors GET /api/invite/preview JSON (kept local to avoid bundling route modules). */
+type InviteArtworkPreview = {
+  title: string;
+  registryId: string;
+  imageUrl: string | null;
+  artistName: string;
+};
+
 type InvitePreviewPayload = {
   valid: boolean;
   expired: boolean;
   used: boolean;
   galleryName: string;
   maskedEmail: string;
+  artworks?: InviteArtworkPreview[];
 };
 
 const authInputDisabledClass =
@@ -73,11 +82,19 @@ export function SignupClient() {
     () => String(searchParams.get("invite_token") || "").trim(),
     [searchParams]
   );
+  const nextParam = useMemo(
+    () => sanitizeAuthReturnPath(searchParams.get("next")),
+    [searchParams]
+  );
+  const isArtworkAuthFlow = Boolean(
+    nextParam?.includes("/authenticate-record")
+  );
   const isInviteFlow = Boolean(inviteTokenParam);
+  const [showForm, setShowForm] = useState(false);
 
   useLayoutEffect(() => {
     if (typeof document === "undefined") return;
-    if (!inviteTokenParam) {
+    if (!inviteTokenParam || !showForm) {
       document.documentElement.removeAttribute("data-rrowm-invite-signup");
       return;
     }
@@ -85,13 +102,16 @@ export function SignupClient() {
     return () => {
       document.documentElement.removeAttribute("data-rrowm-invite-signup");
     };
-  }, [inviteTokenParam]);
+  }, [inviteTokenParam, showForm]);
 
   const role = useMemo(() => {
-    if (inviteTokenParam) return "artist" as const;
+    if (inviteTokenParam || isArtworkAuthFlow) return "artist" as const;
     return normalizeRole(searchParams.get("role"));
-  }, [inviteTokenParam, searchParams]);
+  }, [inviteTokenParam, isArtworkAuthFlow, searchParams]);
 
+  useEffect(() => {
+    if (nextParam) persistArtworkAuthInviteFromReturnPath(nextParam);
+  }, [nextParam]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -99,9 +119,8 @@ export function SignupClient() {
   const [infoMsg, setInfoMsg] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const [invitePreview, setInvitePreview] = useState<InvitePreviewPayload | null>(
-    null
-  );
+  const [invitePreview, setInvitePreview] =
+    useState<InvitePreviewPayload | null>(null);
   const [invitePreviewLoading, setInvitePreviewLoading] = useState(false);
   const [invitePreviewFetchErr, setInvitePreviewFetchErr] = useState(false);
 
@@ -136,20 +155,25 @@ export function SignupClient() {
     const q = new URLSearchParams();
     q.set("role", role);
     if (inviteTokenParam) q.set("invite_token", inviteTokenParam);
+    if (nextParam) q.set("next", nextParam);
     return q;
-  }, [role, inviteTokenParam]);
+  }, [role, inviteTokenParam, nextParam]);
 
   const signupCompleteRedirectQs = useMemo(() => {
     const q = new URLSearchParams();
     q.set("role", role);
     if (inviteTokenParam) q.set("invite_token", inviteTokenParam);
+    if (nextParam) q.set("next", nextParam);
     return q;
-  }, [role, inviteTokenParam]);
+  }, [role, inviteTokenParam, nextParam]);
 
   const loginHref = useMemo(() => {
-    if (!inviteTokenParam) return "/login";
-    return `/login?invite_token=${encodeURIComponent(inviteTokenParam)}`;
-  }, [inviteTokenParam]);
+    const q = new URLSearchParams();
+    if (inviteTokenParam) q.set("invite_token", inviteTokenParam);
+    if (nextParam) q.set("next", nextParam);
+    const qs = q.toString();
+    return qs ? `/login?${qs}` : "/login";
+  }, [inviteTokenParam, nextParam]);
 
   useEffect(() => {
     if (!inviteTokenParam) {
@@ -181,6 +205,7 @@ export function SignupClient() {
           used: Boolean(j.used),
           galleryName: String(j.galleryName || "").trim() || "Gallery",
           maskedEmail: String(j.maskedEmail || "").trim() || "",
+          artworks: Array.isArray(j.artworks) ? j.artworks : [],
         });
       } catch {
         if (cancelled) return;
@@ -263,7 +288,7 @@ export function SignupClient() {
       }
       deferredRouterReplace(
         router,
-        `/signup/complete?${completeQs.toString()}`,
+        `/signup/complete?${completeQs.toString()}`
       );
       return;
     }
@@ -275,10 +300,11 @@ export function SignupClient() {
     }
 
     setInfoMsg(
-      "Check your email to confirm your address, then return here in this browser to finish setup.",
+      "Check your email to confirm your address, then return here in this browser to finish setup."
     );
   };
 
+  /* ── Invite flow ── */
   if (isInviteFlow) {
     const shellCommon = {
       reserveHeaderOffset: false,
@@ -297,84 +323,188 @@ export function SignupClient() {
             </p>
           }
         >
-          <p className="text-center text-[14px] text-neutral-500" role="status">
+          <p
+            className="text-center text-[14px] text-neutral-500"
+            role="status"
+          >
             One moment.
           </p>
         </AuthPageShell>
       );
     }
 
-    if (inviteSurface === "fetch_error") {
+    if (
+      inviteSurface === "fetch_error" ||
+      inviteSurface === "expired" ||
+      inviteSurface === "used" ||
+      inviteSurface === "invalid"
+    ) {
+      const titles: Record<string, string> = {
+        fetch_error: "This invitation could not be verified",
+        expired: "This invitation has expired",
+        used: "This invitation has already been used",
+        invalid: "This invitation is not valid",
+      };
       return (
         <AuthPageShell
           {...shellCommon}
-          title="This invitation could not be verified. Please try again."
-          subtitle={null}
+          title={titles[inviteSurface] || "Invitation"}
+          subtitle={
+            <p className="text-[14px] leading-relaxed text-neutral-600 sm:text-[15px]">
+              {inviteSurface === "used"
+                ? "If you already have an account, sign in below. Otherwise create a new account to get started."
+                : "You can still join the registry and manage your records. Create an account or sign in if you already have one."}
+            </p>
+          }
         >
-          {null}
-        </AuthPageShell>
-      );
-    }
-
-    if (inviteSurface === "expired") {
-      return (
-        <AuthPageShell
-          {...shellCommon}
-          title="This invitation has expired. Please request a new invitation."
-          subtitle={null}
-        >
-          {null}
-        </AuthPageShell>
-      );
-    }
-
-    if (inviteSurface === "used") {
-      return (
-        <AuthPageShell
-          {...shellCommon}
-          title="This invitation has already been used."
-          subtitle={null}
-        >
-          {null}
-        </AuthPageShell>
-      );
-    }
-
-    if (inviteSurface === "invalid") {
-      return (
-        <AuthPageShell
-          {...shellCommon}
-          title="This invitation is not valid."
-          subtitle={null}
-        >
-          {null}
+          <div className="flex flex-col gap-4">
+            <Link
+              href="/signup"
+              className={authPrimaryButtonClass + " text-center"}
+            >
+              Create account
+            </Link>
+            <Link
+              href="/login"
+              className="rounded-xl border border-neutral-900/12 bg-white px-6 py-3 text-center text-sm font-medium text-neutral-800"
+            >
+              Sign in
+            </Link>
+          </div>
         </AuthPageShell>
       );
     }
 
     const gName = invitePreview?.galleryName?.trim() || "Gallery";
     const masked = invitePreview?.maskedEmail?.trim();
+    const artworks = invitePreview?.artworks ?? [];
 
+    /* Step 1: Record preview — show before signup form */
+    if (!showForm) {
+      return (
+        <main className="ds-page-environment flex min-h-[100dvh] flex-col items-center px-4 pb-10 pt-12 sm:px-6 sm:pt-16 md:px-8 md:pt-20">
+          <div className="w-full max-w-xl">
+            {/* Header */}
+            <div className="rounded-2xl border border-black/[0.08] bg-white/95 p-6 shadow-[0_24px_64px_-32px_rgba(15,23,42,0.18)] backdrop-blur-sm sm:p-8">
+              <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500">
+                Canonical records · Invitation
+              </p>
+              <h1 className="mt-3 font-serif text-[1.65rem] font-normal leading-tight tracking-tight text-neutral-950 sm:text-3xl">
+                Records associated with your practice
+              </h1>
+              <p className="mt-3 text-[14px] leading-relaxed text-neutral-600 sm:text-[15px]">
+                <span className="font-medium text-neutral-800">{gName}</span>{" "}
+                participates in chronology for works associated with your
+                practice. Canonical records may already exist on file within the
+                registry.
+              </p>
+            </div>
+
+            {/* Artwork previews */}
+            {artworks.length > 0 ? (
+              <div className="mt-6 space-y-4">
+                {artworks.map((art, i) => (
+                  <div
+                    key={`${art.registryId || i}`}
+                    className="overflow-hidden rounded-2xl border border-neutral-900/[0.06] bg-white/60 shadow-[0_12px_40px_-24px_rgba(15,23,42,0.12)] backdrop-blur-sm"
+                  >
+                    {art.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={art.imageUrl}
+                        alt=""
+                        className="aspect-[16/9] w-full object-cover"
+                      />
+                    ) : null}
+                    <div className="px-5 py-4">
+                      <p className="font-serif text-lg font-normal tracking-tight text-neutral-950">
+                        {art.title}
+                      </p>
+                      {art.registryId ? (
+                        <p className="mt-1 font-mono text-[10px] tracking-wide text-neutral-400">
+                          {art.registryId}
+                        </p>
+                      ) : null}
+                      <p className="mt-2 text-sm text-neutral-500">
+                        {art.artistName}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-6 rounded-2xl border border-neutral-900/[0.06] bg-white/60 px-6 py-8 text-center shadow-sm backdrop-blur-sm">
+                <p className="text-sm text-neutral-600">
+                  Records filed by {gName} will appear in your studio once you
+                  join. You can review, authenticate authorship, and deepen each
+                  record.
+                </p>
+              </div>
+            )}
+
+            {/* Join / Sign in CTAs */}
+            <div className="mt-6 rounded-2xl border border-black/[0.08] bg-white/95 p-6 shadow-[0_24px_64px_-32px_rgba(15,23,42,0.18)] backdrop-blur-sm sm:p-8">
+              <p className="text-sm leading-relaxed text-neutral-700">
+                {masked ? (
+                  <>
+                    Join the registry as{" "}
+                    <span className="font-medium text-neutral-900">
+                      {masked}
+                    </span>{" "}
+                    to authenticate authorship, add continuity, and deepen
+                    records on file.
+                  </>
+                ) : (
+                  <>
+                    Join the registry to authenticate authorship, add
+                    continuity, and deepen records on file.
+                  </>
+                )}
+              </p>
+              <p className="mt-2 text-[12px] text-neutral-500">
+                Layered attestations only — not ownership adjudication or
+                institution approval.
+              </p>
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() => setShowForm(true)}
+                  className={authPrimaryButtonClass + " flex-1 text-center"}
+                >
+                  Join to authenticate
+                </button>
+                <Link
+                  href={loginHref}
+                  className="flex-1 rounded-xl border border-neutral-900/12 bg-white px-6 py-3 text-center text-sm font-medium text-neutral-800"
+                >
+                  Sign in
+                </Link>
+              </div>
+            </div>
+
+            {/* Trust footer */}
+            <div className="mt-8 text-center">
+              <InviteTrustFooter />
+            </div>
+          </div>
+        </main>
+      );
+    }
+
+    /* Step 2: Signup form (after clicking "Join to authenticate") */
     return (
       <AuthPageShell
         {...shellCommon}
-        title="Authenticate records on file"
+        title="Create artist profile"
         subtitle={
           <p className="text-[14px] leading-relaxed text-neutral-600 sm:text-[15px]">
-            <span className="font-medium text-neutral-800">{gName}</span> participates
-            in chronology for works associated with your practice. Canonical records may
-            already exist — join to authenticate authorship and deepen the documentary
-            record.
+            <span className="font-medium text-neutral-800">{gName}</span> has
+            invited you to authenticate records on file. After you create your
+            profile, you&apos;ll review and deepen each record.
           </p>
         }
       >
         <div className="space-y-8">
-          <p className="text-[13px] leading-relaxed text-neutral-600 sm:text-sm">
-            You&apos;ll confirm your email, finish a short profile, then review canonical
-            records, authenticate authorship, and add artist-authored detail. One registry
-            identity; layers deepen over time.
-          </p>
-
           <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
             {masked ? (
               <p className="text-[13px] leading-relaxed text-neutral-600 sm:text-sm">
@@ -447,20 +577,34 @@ export function SignupClient() {
               {submitting ? "Creating profile…" : "Create profile"}
             </button>
           </form>
+          <button
+            type="button"
+            onClick={() => setShowForm(false)}
+            className="block w-full text-center text-[13px] text-neutral-500 underline decoration-neutral-300 underline-offset-4"
+          >
+            Back to record preview
+          </button>
         </div>
       </AuthPageShell>
     );
   }
 
+  /* ── Standard (non-invite) signup ── */
   return (
     <AuthPageShell
-      title="Join the registry"
+      title={isArtworkAuthFlow ? "Create artist account" : "Join the registry"}
       subtitle={
         <>
+          {isArtworkAuthFlow ? (
+            <span className="block pb-2 text-neutral-600">
+              After setup you will return to review and authenticate the artwork
+              record on file.
+            </span>
+          ) : null}
           You&apos;re signing up as{" "}
-          <span className="font-medium text-neutral-900">{roleLabel}</span>
-          . Your studio holds represented works, chronology actions, and the current record
-          together. Already registered?{" "}
+          <span className="font-medium text-neutral-900">{roleLabel}</span>.
+          Your studio holds represented works, chronology actions, and the
+          current record together. Already registered?{" "}
           <Link
             href={loginHref}
             className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-[0.2em] hover:decoration-neutral-500"

@@ -2234,6 +2234,11 @@ return (
               busyArtworkId={representationConfirmBusyId}
               onConfirm={confirmRepresentationOnFile}
               onContribute={(item) => setAuthorshipContributionTarget(item)}
+              onReview={(item) => {
+                router.push(
+                  `/authenticate-record?artwork_id=${encodeURIComponent(item.artwork_id)}`
+                );
+              }}
             />
 
             {repStateActive ? (
@@ -2306,6 +2311,7 @@ return (
             studioArtworksAccent={parseStudioArtworksAccent(
               profile?.studio_artworks_accent
             )}
+            representingInstitutionName={repGalleryName}
           />
         )}
 

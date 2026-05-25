@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
+import { issueCertificateForVerifiedArtwork } from "@/lib/issue-certificate";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 
 export const runtime = "nodejs";
@@ -53,6 +55,23 @@ export async function POST(req: Request) {
       { error: msg || "Could not record confirmation." },
       { status }
     );
+  }
+
+  try {
+    const service = createSupabaseServiceClient();
+    await service
+      .from("artworks")
+      .update({ verification_status: "verified" })
+      .eq("id", artworkId)
+      .neq("verification_status", "verified");
+  } catch {
+    /* DB trigger handles certificate */
+  }
+
+  try {
+    await issueCertificateForVerifiedArtwork(artworkId);
+  } catch {
+    /* best-effort */
   }
 
   return NextResponse.json({ ok: true });

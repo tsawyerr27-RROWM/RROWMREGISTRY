@@ -74,15 +74,15 @@ export function WorkspaceShell({
                       if (item.id === activeId) return;
                       onSelect(item.id);
                     }}
-                    className={`${workspace.nav.item} ${
+                    className={`${workspace.nav.item} rounded-xl px-3 py-2 -mx-3 ${
                       active
                         ? isLight
-                          ? workspace.type.navItemActive
-                          : "text-sm font-medium text-white"
+                          ? `${workspace.type.navItemActive} bg-gradient-to-r from-neutral-950/[0.08] via-[#151a24]/[0.06] to-transparent ring-1 ring-neutral-900/[0.06]`
+                          : "text-sm font-medium text-white bg-white/[0.08]"
                         : isLight
-                          ? workspace.type.navItemIdle
-                          : "text-sm font-medium text-white/60 hover:text-white"
-                    }`}
+                          ? `${workspace.type.navItemIdle} hover:bg-neutral-900/[0.03]`
+                          : "text-sm font-medium text-white/60 hover:text-white hover:bg-white/[0.04]"
+                    } transition-[background-color,color] duration-300`}
                   >
                     <span className={workspace.nav.label}>
                       <span>{item.label}</span>
@@ -152,14 +152,14 @@ export function WorkspaceShell({
                 key={item.id}
                 type="button"
                 onClick={() => onSelect(item.id)}
-                className={`shrink-0 border-b-2 pb-3 text-sm font-medium transition ${
+                className={`shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition-[background-color,color] duration-200 ${
                   activeId === item.id
                     ? isLight
-                      ? "border-neutral-900 text-neutral-950"
-                      : "border-white text-white"
+                      ? "bg-neutral-950/[0.08] text-neutral-950 ring-1 ring-neutral-900/[0.06]"
+                      : "bg-white/[0.1] text-white"
                     : isLight
-                      ? "border-transparent text-neutral-500 hover:text-neutral-800"
-                      : "border-transparent text-white/55 hover:text-white/90"
+                      ? "text-neutral-500 hover:bg-neutral-900/[0.03] hover:text-neutral-800"
+                      : "text-white/55 hover:bg-white/[0.04] hover:text-white/90"
                 }`}
               >
                 <span className="flex items-center gap-2">

@@ -1,20 +1,48 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { ArchivalAuthorshipContributionModal } from "@/components/Studio/ArchivalAuthorshipContributionModal";
+import { ArtworkRecordReviewView } from "@/components/artist/ArtworkRecordReviewView";
+import {
+  persistArtworkAuthInviteToken,
+  readPendingArtworkAuthInviteToken,
+} from "@/lib/accept-artwork-auth-invite-client";
 import type { ArtworkAuthenticationInvitePreview } from "@/lib/artwork-authentication-invite";
-import { CANONICAL_RECORD_PHRASES } from "@/lib/representation-language";
+
+function formatAcceptError(message: string): string {
+  const m = message.trim();
+  if (!m) return "Could not authenticate authorship on file.";
+  if (m.toLowerCase().includes("different email")) {
+    return "This invitation was sent to a different email address. Sign in with the address that received the invitation, or ask the institution to resend to your current address.";
+  }
+  if (m.toLowerCase().includes("not authorized")) {
+    return "Your account does not match the artist named on this record. Sign in with the invited email, or contact the institution if your registry name differs.";
+  }
+  return m;
+}
+
+function buildReturnPath(token: string, artworkId: string): string {
+  if (token) {
+    return `/authenticate-record?token=${encodeURIComponent(token)}`;
+  }
+  if (artworkId) {
+    return `/authenticate-record?artwork_id=${encodeURIComponent(artworkId)}`;
+  }
+  return "/authenticate-record";
+}
 
 export function AuthenticateArtworkRecordClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = String(searchParams.get("token") || "").trim();
-  const [preview, setPreview] = useState<ArtworkAuthenticationInvitePreview | null>(
-    null
+  const [token, setToken] = useState("");
+  const artworkId = useMemo(
+    () => String(searchParams.get("artwork_id") || "").trim(),
+    [searchParams]
   );
+
+  const [preview, setPreview] =
+    useState<ArtworkAuthenticationInvitePreview | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -23,53 +51,100 @@ export function AuthenticateArtworkRecordClient() {
   const [contributeBusy, setContributeBusy] = useState(false);
 
   useEffect(() => {
-    if (!token) {
-      setLoading(false);
-      setErr("Missing invitation link.");
+    const fromUrl = String(searchParams.get("token") || "").trim();
+    if (fromUrl.length >= 32) {
+      setToken(fromUrl);
+      persistArtworkAuthInviteToken(fromUrl);
       return;
     }
-    let cancel = false;
-    void (async () => {
-      try {
-        const res = await fetch(
-          `/api/artwork-authentication/preview?token=${encodeURIComponent(token)}`
-        );
-        const j = (await res.json().catch(() => null)) as
-          | (ArtworkAuthenticationInvitePreview & { valid?: boolean })
-          | null;
-        if (cancel) return;
-        if (!j || typeof j.valid !== "boolean") {
-          setErr("Could not load this continuity invitation.");
-          return;
-        }
-        setPreview(j);
-      } catch {
-        if (!cancel) setErr("Could not load this continuity invitation.");
-      } finally {
-        if (!cancel) setLoading(false);
+    const stored = readPendingArtworkAuthInviteToken();
+    if (stored) setToken(stored);
+  }, [searchParams]);
+
+  const loadPreview = useCallback(async () => {
+    if (!token && !artworkId) {
+      setPreview(null);
+      setErr(
+        "Missing review link. Open this page from your invitation email or artist studio."
+      );
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setErr(null);
+    try {
+      const q = new URLSearchParams();
+      if (token) q.set("token", token);
+      else if (artworkId) q.set("artwork_id", artworkId);
+      const res = await fetch(
+        `/api/artwork-authentication/review?${q.toString()}`,
+        { credentials: "include" }
+      );
+      const j = (await res.json().catch(() => null)) as
+        | (ArtworkAuthenticationInvitePreview & { valid?: boolean })
+        | null;
+      if (!j || typeof j.valid !== "boolean") {
+        setPreview(null);
+        setErr("Could not load this record review. Please try the link again.");
+        return;
       }
-    })();
-    return () => {
-      cancel = true;
-    };
-  }, [token]);
+      setPreview(j);
+    } catch {
+      setPreview(null);
+      setErr("Could not load this record review. Please try the link again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [token, artworkId]);
+
+  useEffect(() => {
+    void loadPreview();
+  }, [loadPreview]);
+
+  const returnPath = buildReturnPath(token, artworkId);
+  const loginHref = `/login?next=${encodeURIComponent(returnPath)}`;
+  const signupHref = `/signup?next=${encodeURIComponent(returnPath)}`;
 
   const accept = async () => {
+    if (!preview) return;
     setBusy(true);
     setErr(null);
     try {
-      const res = await fetch("/api/artwork-authentication/accept", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      });
-      const j = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) {
-        setErr(j.error || "Could not authenticate authorship on file.");
-        return;
+      if (preview.acceptMode === "invite_token" && preview.inviteToken) {
+        const res = await fetch("/api/artwork-authentication/accept", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: preview.inviteToken }),
+        });
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) {
+          setErr(
+            formatAcceptError(
+              j.error || "Could not authenticate authorship on file."
+            )
+          );
+          return;
+        }
+      } else {
+        const res = await fetch("/api/representation/artist-confirm", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ artwork_id: preview.artworkId }),
+        });
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) {
+          setErr(
+            formatAcceptError(
+              j.error || "Could not authenticate authorship on file."
+            )
+          );
+          return;
+        }
       }
       setDone(true);
+      void loadPreview();
     } catch {
       setErr("Network error. Try again.");
     } finally {
@@ -77,218 +152,90 @@ export function AuthenticateArtworkRecordClient() {
     }
   };
 
-  const loginHref = `/login?next=${encodeURIComponent(`/authenticate-record?token=${encodeURIComponent(token)}`)}`;
-  const signupHref = `/signup?next=${encodeURIComponent(`/authenticate-record?token=${encodeURIComponent(token)}`)}`;
-
   if (loading) {
     return (
-      <p className="text-center text-sm text-neutral-500">
-        Opening continuity invitation…
+      <p className="text-center text-sm text-neutral-500" role="status">
+        Loading record review…
       </p>
     );
   }
 
-  if (err && !preview) {
+  if (!preview) {
     return (
-      <div className="rounded-2xl border border-neutral-200 bg-white px-6 py-8 text-sm text-neutral-800">
-        {err}
-      </div>
-    );
-  }
-
-  if (preview?.expired) {
-    return (
-      <div className="rounded-2xl border border-neutral-200 bg-neutral-50/80 px-6 py-8 text-sm leading-relaxed text-neutral-700">
-        This continuity invitation has expired. The institution may send a new
-        invitation linked to this artwork record.
-      </div>
-    );
-  }
-
-  if (preview?.completed || done) {
-    const reg = preview?.registryId?.trim();
-    return (
-      <>
-        <div className="rounded-2xl border border-emerald-900/15 bg-emerald-50/50 px-6 py-8">
-          <p className="font-serif text-xl text-neutral-950">
-            Authorship authenticated on file
+      <div className="space-y-6">
+        <div className="rounded-2xl border border-neutral-200 bg-white px-6 py-8 text-sm text-neutral-800">
+          <p>{err || "Could not load this record review."}</p>
+          <p className="mt-3 text-[13px] text-neutral-500">
+            The invitation link may have expired or the record may have moved.
+            If you received an email invitation, try the link again or contact
+            the institution.
           </p>
-          <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-            {CANONICAL_RECORD_PHRASES.artistAttestationOnFile}. You may deepen the
-            chronology with an archival authorship contribution.
+        </div>
+        <div className="rounded-2xl border border-neutral-900/[0.06] bg-white/55 p-6 shadow-sm backdrop-blur-md space-y-4">
+          <p className="text-sm leading-relaxed text-neutral-800">
+            If you are an artist looking to join the registry and manage your
+            records, you can create an account or sign in.
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            {reg ? (
-              <Link
-                href={`/artwork/${encodeURIComponent(reg)}`}
-                className="rounded-xl bg-neutral-950 px-5 py-2.5 text-sm font-semibold text-white"
-              >
-                View public record
-              </Link>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => setContributeOpen(true)}
+          <div className="flex flex-wrap gap-3">
+            <a
+              href="/signup"
+              className="rounded-xl bg-neutral-950 px-5 py-2.5 text-sm font-semibold text-white"
+            >
+              Join the registry
+            </a>
+            <a
+              href="/login"
               className="rounded-xl border border-neutral-900/12 bg-white px-5 py-2.5 text-sm font-medium text-neutral-800"
             >
-              Contribute authorship
-            </button>
-            <Link
-              href="/studio"
-              className="rounded-xl px-5 py-2.5 text-sm text-neutral-600 underline"
-            >
-              Artist studio
-            </Link>
+              Sign in
+            </a>
           </div>
         </div>
-        <ArchivalAuthorshipContributionModal
-          isOpen={contributeOpen}
-          onClose={() => setContributeOpen(false)}
-          artworkTitle={preview?.artworkTitle || ""}
-          registryId={preview?.registryId}
-          institutionName={preview?.galleryName}
-          busy={contributeBusy}
-          onSubmit={async (payload) => {
-            if (!preview?.artworkId) return;
-            setContributeBusy(true);
-            try {
-              const res = await fetch(
-                "/api/representation/artist-contribute-authorship",
-                {
-                  method: "POST",
-                  credentials: "include",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    artwork_id: preview.artworkId,
-                    ...payload,
-                  }),
-                }
-              );
-              const j = (await res.json().catch(() => ({}))) as { error?: string };
-              if (!res.ok) {
-                setErr(j.error || "Could not file contribution.");
-                return;
-              }
-              setContributeOpen(false);
-              if (reg) router.push(`/artwork/${encodeURIComponent(reg)}`);
-            } finally {
-              setContributeBusy(false);
-            }
-          }}
-        />
-      </>
-    );
-  }
-
-  if (!preview?.valid) {
-    return (
-      <div className="rounded-2xl border border-neutral-200 bg-white px-6 py-8 text-sm text-neutral-700">
-        This invitation is not available.
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      <header>
-        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500">
-          Canonical record · Continuity invitation
-        </p>
-        <h1 className="mt-3 font-serif text-3xl font-normal tracking-tight text-neutral-950">
-          {preview.artworkTitle}
-        </h1>
-        {preview.registryId ? (
-          <p className="mt-2 font-mono text-xs text-neutral-500">
-            {preview.registryId}
-          </p>
-        ) : null}
-        <p className="mt-4 text-sm leading-relaxed text-neutral-600">
-          An artwork associated with your practice is already on file. You are
-          invited to review, authenticate authorship, and deepen the historical
-          record — not to approve an institution upload.
-        </p>
-      </header>
-
-      {preview.imageUrl ? (
-        <div className="overflow-hidden rounded-2xl border border-neutral-900/[0.08] shadow-[0_20px_48px_-28px_rgba(15,23,42,0.2)]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={preview.imageUrl}
-            alt=""
-            className="aspect-[4/3] w-full object-cover"
-          />
-        </div>
-      ) : null}
-
-      <div className="rounded-xl border border-neutral-900/[0.06] bg-neutral-50/80 px-5 py-4 text-sm text-neutral-700">
-        <p>
-          <span className="font-medium text-neutral-900">Artist on file:</span>{" "}
-          {preview.artistNameOnFile}
-        </p>
-        <p className="mt-1">
-          <span className="font-medium text-neutral-900">Institution:</span>{" "}
-          {preview.galleryName}
-        </p>
-        <ul className="mt-3 space-y-1 text-[12px] text-neutral-500">
-          <li>
-            {preview.institutionOnFile
-              ? CANONICAL_RECORD_PHRASES.institutionAttestationOnFile
-              : "Institution continuity on file"}
-          </li>
-          <li>
-            {preview.artistAttestationOnFile
-              ? CANONICAL_RECORD_PHRASES.artistAttestationOnFile
-              : CANONICAL_RECORD_PHRASES.artistAttestationNotYetOnFile}
-          </li>
-        </ul>
-        {preview.personalMessage ? (
-          <p className="mt-4 border-t border-neutral-900/[0.06] pt-4 text-[13px] italic text-neutral-600">
-            {preview.personalMessage}
-          </p>
-        ) : null}
-      </div>
-
-      {preview.requiresAuth ? (
-        <div className="space-y-3 rounded-xl border border-amber-900/15 bg-amber-50/40 px-5 py-4">
-          <p className="text-sm text-neutral-800">
-            Sign in as <span className="font-medium">{preview.maskedRecipientEmail}</span>{" "}
-            to authenticate authorship on this record.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href={loginHref}
-              className="rounded-xl bg-neutral-950 px-5 py-2.5 text-sm font-semibold text-white"
-            >
-              Sign in
-            </Link>
-            <Link
-              href={signupHref}
-              className="rounded-xl border border-neutral-900/12 bg-white px-5 py-2.5 text-sm font-medium text-neutral-800"
-            >
-              Create account
-            </Link>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void accept()}
-            className="w-full rounded-xl bg-neutral-950 px-6 py-3.5 text-sm font-semibold text-white transition enabled:hover:bg-neutral-800 disabled:opacity-50"
-          >
-            {busy ? "Recording…" : "Authenticate authorship on file"}
-          </button>
-          <p className="text-center text-[12px] text-neutral-500">
-            {CANONICAL_RECORD_PHRASES.notApprovalWorkflow}
-          </p>
-        </div>
-      )}
-      {err ? (
-        <p className="text-sm text-red-800" role="alert">
-          {err}
-        </p>
-      ) : null}
-    </div>
+    <ArtworkRecordReviewView
+      preview={preview}
+      done={done}
+      busy={busy}
+      err={err}
+      contributeOpen={contributeOpen}
+      contributeBusy={contributeBusy}
+      loginHref={loginHref}
+      signupHref={signupHref}
+      onAccept={accept}
+      onOpenContribute={() => setContributeOpen(true)}
+      onCloseContribute={() => setContributeOpen(false)}
+      onContribute={async (payload) => {
+        if (!preview.artworkId) return;
+        setContributeBusy(true);
+        try {
+          const res = await fetch(
+            "/api/representation/artist-contribute-authorship",
+            {
+              method: "POST",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                artwork_id: preview.artworkId,
+                ...payload,
+              }),
+            }
+          );
+          const j = (await res.json().catch(() => ({}))) as { error?: string };
+          if (!res.ok) {
+            setErr(j.error || "Could not file contribution.");
+            return;
+          }
+          setContributeOpen(false);
+          const reg = preview.registryId?.trim();
+          if (reg) router.push(`/artwork/${encodeURIComponent(reg)}`);
+        } finally {
+          setContributeBusy(false);
+        }
+      }}
+    />
   );
 }

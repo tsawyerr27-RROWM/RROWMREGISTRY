@@ -1,11 +1,18 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
+const ADMIN_ROUTE_PREFIXES = ["/admin", "/internal"];
+
+function isAdminRoute(pathname: string): boolean {
+  return ADMIN_ROUTE_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
+}
+
 /**
- * Supabase SSR session refresh.
+ * Supabase SSR session refresh + admin route gate.
  *
- * Without this, client-side login (stored in browser) may not be visible to
- * server components like /certificate/[registry_id], causing redirect loops.
+ * Every request refreshes auth cookies so server components see the session.
+ * Admin/internal routes additionally require authentication — unauthenticated
+ * visitors are redirected to /login.
  */
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
@@ -27,8 +34,17 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  // Touch auth to refresh cookies if needed.
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (isAdminRoute(request.nextUrl.pathname)) {
+    if (!user) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("next", request.nextUrl.pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
 
   return response;
 }
@@ -38,4 +54,3 @@ export const config = {
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
-

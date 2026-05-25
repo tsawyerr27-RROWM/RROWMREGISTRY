@@ -87,7 +87,7 @@ export async function POST(req: Request) {
     .eq("id", galleryId)
     .maybeSingle();
 
-  const { data: pendingDup } = await supabase
+  const { data: pendingDup } = await service
     .from("artwork_authentication_invites")
     .select("id")
     .eq("artwork_id", artworkId)
@@ -109,7 +109,7 @@ export async function POST(req: Request) {
   const token = generateInviteToken();
   const expiresAt = inviteExpiryDate().toISOString();
 
-  const { data: row, error: insErr } = await supabase
+  const { data: row, error: insErr } = await service
     .from("artwork_authentication_invites")
     .insert({
       artwork_id: artworkId,

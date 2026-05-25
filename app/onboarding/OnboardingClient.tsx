@@ -13,6 +13,7 @@ import {
   homePathForRole,
 } from "@/lib/onboarding";
 import { acceptPendingGalleryInvite } from "@/lib/accept-gallery-invite-client";
+import { resolveArtworkAuthenticationReturnPath } from "@/lib/accept-artwork-auth-invite-client";
 import { deferredRouterReplace } from "@/lib/deferred-app-router";
 
 type Step = "loading" | "role" | "artist" | "collector" | "gallery";
@@ -140,7 +141,11 @@ export function OnboardingClient() {
           .select("role")
           .eq("user_id", uid)
           .maybeSingle();
-        deferredRouterReplace(router, homePathForRole(actor?.role) || "/studio");
+        const artworkReturn = resolveArtworkAuthenticationReturnPath();
+        deferredRouterReplace(
+          router,
+          artworkReturn || homePathForRole(actor?.role) || "/studio"
+        );
         return;
       }
 
@@ -201,7 +206,8 @@ export function OnboardingClient() {
     } catch {
       /* non-fatal: gallery notification retries can be handled later */
     }
-    deferredRouterReplace(router, "/studio");
+    const artworkReturn = resolveArtworkAuthenticationReturnPath();
+    deferredRouterReplace(router, artworkReturn || "/studio");
   };
 
   const submitCollector = async (e: React.FormEvent) => {

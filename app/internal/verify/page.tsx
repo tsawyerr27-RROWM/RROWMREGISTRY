@@ -1,15 +1,33 @@
 "use client";
 
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { deferredRouterPush } from "@/lib/deferred-app-router";
+import Link from "next/link";
+import Image from "next/image";
+
+type PendingArtwork = {
+  id: string;
+  title: string | null;
+  registry_id: string | null;
+  image_url: string | null;
+  catalogue_artist_name: string | null;
+  medium: string | null;
+  dimensions: string | null;
+  year_created: string | null;
+  created_at: string;
+  artist_id: string | null;
+  filing_gallery_id: string | null;
+  verification_status: string;
+};
 
 export default function InternalVerify() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
-  const [artworks, setArtworks] = useState<any[]>([]);
+  const [artworks, setArtworks] = useState<PendingArtwork[]>([]);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [approving, setApproving] = useState<string | null>(null);
   const router = useRouter();
   const sb = useSupabaseBrowserLazy();
 
@@ -44,176 +62,289 @@ export default function InternalVerify() {
 
       const { data: unverified } = await sb()
         .from("artworks")
-        .select("*")
-        .eq("verification_status", "unverified")
+        .select(
+          "id, title, registry_id, image_url, catalogue_artist_name, medium, dimensions, year_created, created_at, artist_id, filing_gallery_id, verification_status"
+        )
+        .in("verification_status", ["unverified", "pending"])
         .order("created_at", { ascending: false });
 
-      setArtworks(unverified || []);
+      setArtworks((unverified as PendingArtwork[]) || []);
     };
 
     init();
-  }, [router]);
+  }, [router, sb]);
 
-  const approveArtwork = async (artwork: any) => {
-    if (!user) return;
+  const approveArtwork = useCallback(
+    async (artwork: PendingArtwork) => {
+      if (!user || approving) return;
+      setApproving(artwork.id);
 
-    // 1. Generate verification hash
-    const canonicalString = [
-      artwork.title,
-      artwork.artist_id,
-      artwork.registry_id,
-      artwork.created_at,
-    ].join("|");
+      try {
+        const canonicalString = [
+          artwork.title,
+          artwork.artist_id,
+          artwork.registry_id,
+          artwork.created_at,
+        ].join("|");
 
-    const encoder = new TextEncoder();
-    const data = encoder.encode(canonicalString);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
+        const encoder = new TextEncoder();
+        const data = encoder.encode(canonicalString);
+        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
 
-    // 2. Update artwork
-    const { error: updateError } = await sb()
-      .from("artworks")
-      .update({
-        verification_status: "verified",
-        approved_by: user.id,
-        approved_at: new Date().toISOString(),
-        verification_hash: hashHex,
-      })
-      .eq("id", artwork.id);
-
-    if (updateError) {
-      alert(updateError.message);
-      return;
-    }
-
-    const artistId = artwork.artist_id as string | null | undefined;
-    if (artistId) {
-      const title = artwork.title ?? "Artwork";
-      const reg = artwork.registry_id ? ` (${artwork.registry_id})` : "";
-      const logRes = await fetch("/api/admin/log-artist-activity", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
-        body: JSON.stringify({
-          artist_user_id: artistId,
-          type: "artwork_verified",
-          message: `Artwork verified: ${title}${reg}`,
-          artwork_id: artwork.id,
-          metadata: {
-            registry_id: artwork.registry_id ?? null,
+        const { error: updateError } = await sb()
+          .from("artworks")
+          .update({
+            verification_status: "verified",
             approved_by: user.id,
-          },
-        }),
-      });
-      if (!logRes.ok) {
-        const errBody = await logRes.json().catch(() => ({}));
-        console.error("log artist activity failed:", logRes.status, errBody);
+            approved_at: new Date().toISOString(),
+            verification_hash: hashHex,
+          })
+          .eq("id", artwork.id);
+
+        if (updateError) {
+          alert(updateError.message);
+          return;
+        }
+
+        const artistId = artwork.artist_id;
+        if (artistId) {
+          const title = artwork.title ?? "Artwork";
+          const reg = artwork.registry_id ? ` (${artwork.registry_id})` : "";
+          await fetch("/api/admin/log-artist-activity", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              ...(accessToken
+                ? { Authorization: `Bearer ${accessToken}` }
+                : {}),
+            },
+            body: JSON.stringify({
+              artist_user_id: artistId,
+              type: "artwork_verified",
+              message: `Artwork verified: ${title}${reg}`,
+              artwork_id: artwork.id,
+              metadata: {
+                registry_id: artwork.registry_id ?? null,
+                approved_by: user.id,
+              },
+            }),
+          }).catch(() => {});
+        }
+
+        const response = await fetch("/api/issue-certificate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ artwork_id: artwork.id }),
+        });
+        let certificateCreated = false;
+        if (response.ok) {
+          const body = await response.json().catch(() => ({}));
+          certificateCreated = Boolean(body.created);
+        }
+
+        if (certificateCreated && artistId) {
+          const title = artwork.title ?? "Artwork";
+          const reg = artwork.registry_id ? ` (${artwork.registry_id})` : "";
+          await fetch("/api/admin/log-artist-activity", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              ...(accessToken
+                ? { Authorization: `Bearer ${accessToken}` }
+                : {}),
+            },
+            body: JSON.stringify({
+              artist_user_id: artistId,
+              type: "certificate_issued",
+              message: `Certificate issued: ${title}${reg}`,
+              artwork_id: artwork.id,
+              metadata: { registry_id: artwork.registry_id ?? null },
+            }),
+          }).catch(() => {});
+        }
+
+        setArtworks((prev) => prev.filter((a) => a.id !== artwork.id));
+      } finally {
+        setApproving(null);
       }
-    }
-
-    // Certificate row is created by DB trigger when status becomes verified; this
-    // call is idempotent backup (e.g. legacy DB without trigger).
-const response = await fetch("/api/issue-certificate", {
-  method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ artwork_id: artwork.id }),
-    });
-    let certificateCreated = false;
-    if (response.ok) {
-      const body = await response.json().catch(() => ({}));
-      certificateCreated = Boolean(body.created);
-    } else {
-      const errBody = await response.json().catch(() => ({}));
-      console.error("issue-certificate backup failed:", response.status, errBody);
-      // Certificate may already exist from DB trigger; verification is still valid.
-    }
-
-    if (certificateCreated && artistId) {
-      const title = artwork.title ?? "Artwork";
-      const reg = artwork.registry_id ? ` (${artwork.registry_id})` : "";
-      const certLog = await fetch("/api/admin/log-artist-activity", {
-        method: "POST",
-        credentials: "include",
-  headers: {
-    "Content-Type": "application/json",
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
-        body: JSON.stringify({
-          artist_user_id: artistId,
-          type: "certificate_issued",
-          message: `Certificate issued: ${title}${reg}`,
-          artwork_id: artwork.id,
-          metadata: { registry_id: artwork.registry_id ?? null },
-        }),
-      });
-      if (!certLog.ok) {
-        const errBody = await certLog.json().catch(() => ({}));
-        console.error("log certificate activity failed:", certLog.status, errBody);
-      }
-    }
-
-    // Remove from UI
-    setArtworks((prev) => prev.filter((a) => a.id !== artwork.id));
-  };
+    },
+    [user, accessToken, approving, sb]
+  );
 
   if (!user || !profile) {
     return (
-      <div className="ds-page-environment flex min-h-screen items-center justify-center">
-        <p className="text-sm leading-relaxed text-neutral-500">
+      <div className="ds-page-environment flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-black to-slate-900">
+        <p className="text-sm text-white/50">
           Retrieving pending attestations…
         </p>
       </div>
     );
   }
 
-  if (!profile.is_admin) {
-    return null;
-  }
+  if (!profile.is_admin) return null;
 
   return (
-    <div className="ds-page-environment min-h-screen p-8 py-24">
-      <div className="mx-auto max-w-4xl space-y-14">
-        <div>
-          <p className="text-xs font-medium text-neutral-500">
-            Admin
-          </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-neutral-900">
-        Pending Verifications
-      </h1>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-black to-slate-900 text-white">
+      <div className="mx-auto max-w-5xl px-6 py-16">
+        <header className="mb-12 flex items-center justify-between">
+          <div>
+            <Link
+              href="/admin"
+              className="text-sm text-white/50 underline-offset-4 hover:text-white/70 hover:underline"
+            >
+              &larr; Admin Console
+            </Link>
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
+              Pending verifications
+            </h1>
+            {artworks.length > 0 && (
+              <p className="mt-2 text-sm text-white/50">
+                {artworks.length} artwork{artworks.length !== 1 ? "s" : ""}{" "}
+                awaiting review
+              </p>
+            )}
+          </div>
+          <Link
+            href="/studio"
+            className="text-sm text-white/70 underline-offset-4 hover:text-white hover:underline"
+          >
+            Back to studio
+          </Link>
+        </header>
 
-      {artworks.length === 0 && (
-          <p className="text-sm leading-relaxed text-neutral-500">
-            No pending works.
-          </p>
-      )}
+        {artworks.length === 0 && (
+          <div className="liquid-glass-tile-dark flex flex-col items-center justify-center p-16 text-center">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/20">
+              <svg
+                width="20"
+                height="20"
+                fill="none"
+                viewBox="0 0 24 24"
+                className="text-emerald-400"
+              >
+                <path
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M20 6 9 17l-5-5"
+                />
+              </svg>
+            </div>
+            <p className="text-sm text-white/70">
+              All artworks have been verified. No pending works.
+            </p>
+          </div>
+        )}
 
-        <div className="space-y-8">
-        {artworks.map((artwork) => (
+        <div className="space-y-6">
+          {artworks.map((artwork) => (
             <div
               key={artwork.id}
-              className="rrowm-surface rrowm-surface-interactive p-8 md:p-10"
+              className="liquid-glass-tile-dark overflow-hidden"
             >
-              <p className="text-xl font-medium text-neutral-900">
-              {artwork.title}
-            </p>
-              <p className="mt-2 text-sm text-neutral-500">
-              {artwork.registry_id || "Pending Registry ID"}
-            </p>
-            <button
-              onClick={() => approveArtwork(artwork)}
-                className="mt-6 rounded-xl bg-neutral-950 px-5 py-2.5 text-sm font-medium text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)] transition duration-200 ease-out hover:-translate-y-px hover:bg-neutral-900"
-            >
-              Approve
-            </button>
-          </div>
-        ))}
+              <div className="flex gap-6 p-6 md:p-8">
+                {/* Thumbnail */}
+                <div className="relative h-28 w-28 flex-shrink-0 overflow-hidden rounded-lg bg-white/5 md:h-36 md:w-36">
+                  {artwork.image_url ? (
+                    <Image
+                      src={artwork.image_url}
+                      alt={artwork.title ?? "Artwork"}
+                      fill
+                      className="object-cover"
+                      sizes="144px"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <svg
+                        width="32"
+                        height="32"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        className="text-white/20"
+                      >
+                        <rect
+                          x="3"
+                          y="3"
+                          width="18"
+                          height="18"
+                          rx="2"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                        />
+                        <circle
+                          cx="8.5"
+                          cy="8.5"
+                          r="1.5"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                        />
+                        <path
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="m3 16 5-5 4 4 3-3 6 6"
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+
+                {/* Details */}
+                <div className="flex min-w-0 flex-1 flex-col justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold leading-tight text-white md:text-xl">
+                      {artwork.title || "Untitled"}
+                    </h2>
+                    {artwork.catalogue_artist_name && (
+                      <p className="mt-1 text-sm text-white/60">
+                        {artwork.catalogue_artist_name}
+                      </p>
+                    )}
+                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/40">
+                      {artwork.registry_id && (
+                        <span className="font-mono">
+                          {artwork.registry_id}
+                        </span>
+                      )}
+                      {artwork.medium && <span>{artwork.medium}</span>}
+                      {artwork.year_created && (
+                        <span>{artwork.year_created}</span>
+                      )}
+                      {artwork.dimensions && <span>{artwork.dimensions}</span>}
+                    </div>
+                    <p className="mt-2 text-xs text-white/30">
+                      Registered{" "}
+                      {new Date(artwork.created_at).toLocaleDateString(
+                        "en-GB",
+                        { day: "numeric", month: "short", year: "numeric" }
+                      )}
+                    </p>
+                  </div>
+
+                  <div className="mt-4 flex items-center gap-3">
+                    <button
+                      onClick={() => approveArtwork(artwork)}
+                      disabled={approving === artwork.id}
+                      className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15)] transition duration-200 ease-out hover:-translate-y-px hover:bg-emerald-500 disabled:pointer-events-none disabled:opacity-50"
+                    >
+                      {approving === artwork.id ? "Verifying…" : "Verify"}
+                    </button>
+                    <span className="rounded-full bg-amber-500/20 px-3 py-1 text-xs font-medium text-amber-300">
+                      {artwork.verification_status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

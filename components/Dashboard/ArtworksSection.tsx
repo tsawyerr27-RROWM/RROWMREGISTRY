@@ -31,6 +31,8 @@ type ArtworksSectionProps = {
   onAddValueEventClick: (artwork: any) => void;
   /** Accent for left rail + hairline (from account → `artists.studio_artworks_accent`) */
   studioArtworksAccent?: StudioArtworksAccentId;
+  /** Gallery name for represented works — shows info tooltip on price */
+  representingInstitutionName?: string | null;
 };
 
 function StudioWorkMark({
@@ -80,6 +82,7 @@ export function ArtworksSection({
   onArtworkClick,
   onAddValueEventClick,
   studioArtworksAccent = "violet",
+  representingInstitutionName,
 }: ArtworksSectionProps) {
   const accent = useMemo(
     () => studioArtworksAccentTheme(studioArtworksAccent),
@@ -222,6 +225,11 @@ export function ArtworksSection({
                   amount={artwork.latest_value}
                   currency={artwork.latest_currency}
                   shellClassName={accent.valueShell}
+                  managedByInstitution={
+                    artwork.filing_gallery_id && representingInstitutionName
+                      ? representingInstitutionName
+                      : null
+                  }
                 />
 
                 <div className="mt-auto flex flex-shrink-0 items-center justify-between gap-3 border-t border-neutral-200/80 pt-4">
