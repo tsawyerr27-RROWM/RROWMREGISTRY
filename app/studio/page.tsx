@@ -1,5 +1,7 @@
 "use client";
 
+import { WelcomeModal } from "@/components/ui/IntroModal";
+import { artistIntroSteps } from "@/components/ui/intro-content";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 import {
@@ -1895,6 +1897,7 @@ const ledgerInsetFieldClass = `${workspace.modal.field} mt-2`;
 
 return (
   <>
+    <WelcomeModal role="artist" steps={artistIntroSteps} />
     {toast && (
       <div className="fixed right-6 top-24 z-50 pointer-events-none">
         <div

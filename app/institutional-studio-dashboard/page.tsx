@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { WelcomeModal } from "@/components/ui/IntroModal";
+import { galleryIntroSteps } from "@/components/ui/intro-content";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import {
   WorkspaceShell,
@@ -2012,6 +2014,7 @@ export default function GalleryDashboardPage() {
 
   return (
     <>
+      <WelcomeModal role="gallery" steps={galleryIntroSteps} />
       <WorkspaceShell
         atmosphereClassName="ds-workspace-environment"
         navItems={galleryNavItems}

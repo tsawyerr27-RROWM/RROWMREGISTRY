@@ -15,6 +15,12 @@ import {
 import { acceptPendingGalleryInvite } from "@/lib/accept-gallery-invite-client";
 import { resolveArtworkAuthenticationReturnPath } from "@/lib/accept-artwork-auth-invite-client";
 import { deferredRouterReplace } from "@/lib/deferred-app-router";
+import { AuthPageShell } from "@/components/auth/AuthPageShell";
+import {
+  authInputClass,
+  authLabelClass,
+  authPrimaryButtonClass,
+} from "@/components/auth/AuthFieldStyles";
 
 type Step = "loading" | "role" | "artist" | "collector" | "gallery";
 
@@ -28,13 +34,14 @@ function slugBaseFromName(name: string) {
   return s || "gallery";
 }
 
-/** Optional URLs: avoid input type="url" (browser blocks submit without a scheme). */
 function normalizeOptionalWebsite(raw: string): string | null {
   const t = raw.trim();
   if (!t) return null;
   if (/^https?:\/\//i.test(t)) return t;
   return `https://${t}`;
 }
+
+const textareaClass = `${authInputClass} resize-none leading-relaxed`;
 
 export function OnboardingClient() {
   const router = useRouter();
@@ -175,6 +182,11 @@ export function OnboardingClient() {
     setStep(r);
   };
 
+  const goBackToRole = async () => {
+    setError(null);
+    setStep("role");
+  };
+
   const submitArtist = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -204,8 +216,11 @@ export function OnboardingClient() {
         credentials: "include",
       });
     } catch {
-      /* non-fatal: gallery notification retries can be handled later */
+      /* non-fatal */
     }
+    try {
+      sessionStorage.setItem("rrowm_show_welcome", "artist");
+    } catch { /* ignore */ }
     const artworkReturn = resolveArtworkAuthenticationReturnPath();
     deferredRouterReplace(router, artworkReturn || "/studio");
   };
@@ -228,6 +243,9 @@ export function OnboardingClient() {
       setError(summarizeRpcError(rpcErr) || "Could not save profile.");
       return;
     }
+    try {
+      sessionStorage.setItem("rrowm_show_welcome", "collector");
+    } catch { /* ignore */ }
     deferredRouterReplace(router, "/collector-studio");
   };
 
@@ -259,52 +277,62 @@ export function OnboardingClient() {
       setError(msg || "Could not create gallery.");
       return;
     }
+    try {
+      sessionStorage.setItem("rrowm_show_welcome", "gallery");
+    } catch { /* ignore */ }
     deferredRouterReplace(router, "/institutional-studio-dashboard");
   };
 
   if (step === "loading") {
     return (
-      <div className="ds-page-environment min-h-screen pt-24 text-center text-sm text-neutral-500">
-        Loading…
+      <div className="ds-page-environment flex min-h-[100dvh] items-center justify-center">
+        <p className="text-sm text-neutral-500">Loading…</p>
       </div>
     );
   }
 
-  const shell = (inner: React.ReactNode) => (
-    <div className="ds-page-environment min-h-screen pb-28 pt-20 text-neutral-900">
-      <main className="mx-auto max-w-lg px-6 md:px-10">{inner}</main>
-    </div>
-  );
-
   if (step === "role") {
-    return shell(
-      <>
-        <header className="border-b border-black/[0.05] pb-12">
-          <h1 className="font-serif text-3xl font-normal tracking-tight text-neutral-950 md:text-[2rem]">
-            How you take part
-          </h1>
-          <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-            Pick the role that matches your filings. The next screen asks for basics.
-            Depth accrues later in the studio.
-          </p>
-        </header>
-        <div className="mt-12 divide-y divide-black/[0.08]">
+    return (
+      <AuthPageShell
+        title="How you take part"
+        subtitle="Choose the role that best describes how you participate. You can refine details on the next screen."
+        cardBelow={null}
+      >
+        <div className="divide-y divide-black/[0.06]">
           {(
             [
               {
                 id: "artist" as const,
                 title: "Artist",
-                line: "Represented works and public catalogue presence",
+                line: "Catalogue your represented works and build a verified public presence.",
+                icon: (
+                  <svg width="20" height="20" fill="none" viewBox="0 0 24 24" className="text-violet-500">
+                    <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M12 2a4.5 4.5 0 0 0-4.5 4.5c0 2 1.5 3.5 3 5l1.5 2 1.5-2c1.5-1.5 3-3 3-5A4.5 4.5 0 0 0 12 2Z" />
+                    <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" d="M5 21c1-3 3.5-5 7-5s6 2 7 5" />
+                  </svg>
+                ),
               },
               {
                 id: "collector" as const,
                 title: "Collector",
-                line: "Custody and holdings on file when you participate",
+                line: "Record custody and provenance for works in your collection.",
+                icon: (
+                  <svg width="20" height="20" fill="none" viewBox="0 0 24 24" className="text-amber-500">
+                    <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.5" />
+                    <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" d="M3 9h18M9 9v12" />
+                  </svg>
+                ),
               },
               {
                 id: "gallery" as const,
-                title: "Gallery",
-                line: "Institutional association for represented artists",
+                title: "Gallery / Institution",
+                line: "File works on behalf of represented artists and manage your roster.",
+                icon: (
+                  <svg width="20" height="20" fill="none" viewBox="0 0 24 24" className="text-emerald-500">
+                    <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M3 21h18M5 21V7l7-4 7 4v14" />
+                    <path stroke="currentColor" strokeWidth="1.5" d="M9 21v-6h6v6" />
+                  </svg>
+                ),
               },
             ] as const
           ).map((opt) => (
@@ -313,10 +341,28 @@ export function OnboardingClient() {
               type="button"
               disabled={busy}
               onClick={() => void pickRole(opt.id)}
-              className="flex w-full flex-col items-start py-7 text-left transition hover:opacity-70 disabled:opacity-50 first:pt-0"
+              className="group flex w-full items-start gap-4 py-5 text-left transition first:pt-0 last:pb-0 hover:opacity-80 disabled:opacity-50"
             >
-              <span className="font-medium text-neutral-900">{opt.title}</span>
-              <span className="mt-1 text-sm text-neutral-500">{opt.line}</span>
+              <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neutral-100/80">
+                {opt.icon}
+              </span>
+              <div className="min-w-0">
+                <span className="text-[15px] font-semibold text-neutral-900">
+                  {opt.title}
+                </span>
+                <span className="mt-1 block text-sm leading-relaxed text-neutral-500">
+                  {opt.line}
+                </span>
+              </div>
+              <svg
+                width="16"
+                height="16"
+                fill="none"
+                viewBox="0 0 24 24"
+                className="mt-2 shrink-0 text-neutral-300 transition group-hover:text-neutral-500 group-hover:translate-x-0.5"
+              >
+                <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="m9 6 6 6-6 6" />
+              </svg>
             </button>
           ))}
         </div>
@@ -325,61 +371,63 @@ export function OnboardingClient() {
             {error}
           </p>
         ) : null}
-        <p className="mt-10 text-center text-xs text-neutral-500">
-          <Link href="/login" className="underline decoration-neutral-300 underline-offset-4">
-            Sign out
-          </Link>
-        </p>
-      </>
+      </AuthPageShell>
     );
   }
 
+  const backButton = (
+    <button
+      type="button"
+      onClick={() => void goBackToRole()}
+      className="mb-2 flex items-center gap-1.5 text-[13px] font-medium text-neutral-500 transition hover:text-neutral-800"
+    >
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24">
+        <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="m15 18-6-6 6-6" />
+      </svg>
+      Change role
+    </button>
+  );
+
   if (step === "artist") {
-    return shell(
-      <>
-        <header className="border-b border-black/[0.05] pb-12">
-          <h1 className="font-serif text-3xl font-normal tracking-tight text-neutral-950">
-            Your name on the catalogue
-          </h1>
-          <p className="mt-3 text-sm text-neutral-600">
-            This is how you read on public records and in the studio. Detail accrues as
-            you register represented works.
-          </p>
-        </header>
-        <form onSubmit={(e) => void submitArtist(e)} className="mt-10 space-y-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-500">
-              Full name
-            </label>
+    return (
+      <AuthPageShell
+        title="Your name on the catalogue"
+        subtitle="This is how you appear on public records and in your studio. You can add more detail later."
+        cardBelow={null}
+      >
+        {backButton}
+        <form onSubmit={(e) => void submitArtist(e)} className="space-y-5">
+          <div>
+            <label className={authLabelClass}>Full name</label>
             <input
               value={artistFull}
               onChange={(e) => setArtistFull(e.target.value)}
-              className="w-full border border-black/[0.08] bg-white px-4 py-3.5 text-[15px] text-neutral-900 transition focus:border-neutral-950 focus:outline-none"
+              className={authInputClass}
               placeholder="Legal or professional name"
               autoComplete="name"
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-500">
-              Display name <span className="text-red-800">*</span>
+          <div>
+            <label className={authLabelClass}>
+              Display name <span className="text-red-700">*</span>
             </label>
             <input
               value={artistDisplay}
               onChange={(e) => setArtistDisplay(e.target.value)}
               required
-              className="w-full border border-black/[0.08] bg-white px-4 py-3.5 text-[15px] text-neutral-900 transition focus:border-neutral-950 focus:outline-none"
+              className={authInputClass}
               placeholder="How you appear on the registry"
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-500">
+          <div>
+            <label className={authLabelClass}>
               Bio <span className="font-normal text-neutral-400">(optional)</span>
             </label>
             <textarea
               value={artistBio}
               onChange={(e) => setArtistBio(e.target.value)}
               rows={3}
-              className="w-full resize-none border border-black/[0.08] bg-white px-4 py-3.5 text-[15px] text-neutral-900 transition focus:border-neutral-950 focus:outline-none"
+              className={textareaClass}
               placeholder="A short line about your practice"
             />
           </div>
@@ -388,53 +436,43 @@ export function OnboardingClient() {
               {error}
             </p>
           ) : null}
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full rounded-xl bg-neutral-950 py-3.5 text-sm font-medium text-white shadow-sm transition duration-200 ease-out hover:-translate-y-px hover:bg-neutral-900 disabled:opacity-50 disabled:hover:translate-y-0"
-          >
+          <button type="submit" disabled={busy} className={authPrimaryButtonClass}>
             {busy ? "Saving…" : "Continue to studio"}
           </button>
         </form>
-      </>
+      </AuthPageShell>
     );
   }
 
   if (step === "collector") {
-    return shell(
-      <>
-        <header className="border-b border-black/[0.05] pb-12">
-          <h1 className="font-serif text-3xl font-normal tracking-tight text-neutral-950">
-            How you appear when custody is on file
-          </h1>
-          <p className="mt-3 text-sm text-neutral-600">
-            A simple public-facing name for the current record. No feed, no social layer.
-          </p>
-        </header>
-        <form
-          onSubmit={(e) => void submitCollector(e)}
-          className="mt-10 space-y-6"
-        >
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-500">
-              Display name <span className="text-red-800">*</span>
+    return (
+      <AuthPageShell
+        title="How you appear on records"
+        subtitle="A simple public-facing name for custody records. No feed, no social layer."
+        cardBelow={null}
+      >
+        {backButton}
+        <form onSubmit={(e) => void submitCollector(e)} className="space-y-5">
+          <div>
+            <label className={authLabelClass}>
+              Display name <span className="text-red-700">*</span>
             </label>
             <input
               value={collectorDisplay}
               onChange={(e) => setCollectorDisplay(e.target.value)}
               required
-              className="w-full border border-black/[0.08] bg-white px-4 py-3.5 text-[15px] text-neutral-900 transition focus:border-neutral-950 focus:outline-none"
+              className={authInputClass}
               placeholder="Your name or how you collect"
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-500">
+          <div>
+            <label className={authLabelClass}>
               Location <span className="font-normal text-neutral-400">(optional)</span>
             </label>
             <input
               value={collectorLocation}
               onChange={(e) => setCollectorLocation(e.target.value)}
-              className="w-full border border-black/[0.08] bg-white px-4 py-3.5 text-[15px] text-neutral-900 transition focus:border-neutral-950 focus:outline-none"
+              className={authInputClass}
               placeholder="City, country"
             />
           </div>
@@ -443,63 +481,53 @@ export function OnboardingClient() {
               {error}
             </p>
           ) : null}
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full rounded-xl bg-neutral-950 py-3.5 text-sm font-medium text-white shadow-sm transition duration-200 ease-out hover:-translate-y-px hover:bg-neutral-900 disabled:opacity-50 disabled:hover:translate-y-0"
-          >
+          <button type="submit" disabled={busy} className={authPrimaryButtonClass}>
             {busy ? "Saving…" : "Continue to collection"}
           </button>
         </form>
-      </>
+      </AuthPageShell>
     );
   }
 
   if (step === "gallery") {
-    return shell(
-      <>
-        <header className="border-b border-black/[0.05] pb-12">
-          <h1 className="font-serif text-3xl font-normal tracking-tight text-neutral-950">
-            Name your institution on the catalogue
-          </h1>
-          <p className="mt-3 text-sm text-neutral-600">
-            This is the label artists and the public see next to institutional
-            association. Participant confirmations stay on the chronology.
-          </p>
-        </header>
-        <form onSubmit={(e) => void submitGallery(e)} className="mt-10 space-y-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-500">
-              Gallery name <span className="text-red-800">*</span>
+    return (
+      <AuthPageShell
+        title="Name your institution"
+        subtitle="This is the label artists and the public see next to institutional association."
+        cardBelow={null}
+      >
+        {backButton}
+        <form onSubmit={(e) => void submitGallery(e)} className="space-y-5">
+          <div>
+            <label className={authLabelClass}>
+              Gallery name <span className="text-red-700">*</span>
             </label>
             <input
               value={galleryName}
               onChange={(e) => setGalleryName(e.target.value)}
               required
-              className="w-full border border-black/[0.08] bg-white px-4 py-3.5 text-[15px] text-neutral-900 transition focus:border-neutral-950 focus:outline-none"
+              className={authInputClass}
               placeholder="e.g. Riverside Contemporary"
             />
           </div>
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-neutral-500">
-              Public URL slug
-            </p>
-            <p className="border border-dashed border-black/[0.12] bg-neutral-50/80 px-4 py-3 font-mono text-sm text-neutral-700">
+          <div>
+            <p className={authLabelClass}>Public URL</p>
+            <p className="rounded-xl border border-dashed border-black/[0.1] bg-neutral-50/80 px-4 py-3 font-mono text-sm text-neutral-600">
               /institutional-studio/{gallerySlugPreview || "…"}
             </p>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-500">
+          <div>
+            <label className={authLabelClass}>
               Location <span className="font-normal text-neutral-400">(optional)</span>
             </label>
             <input
               value={galleryLocation}
               onChange={(e) => setGalleryLocation(e.target.value)}
-              className="w-full border border-black/[0.08] bg-white px-4 py-3.5 text-[15px] text-neutral-900 transition focus:border-neutral-950 focus:outline-none"
+              className={authInputClass}
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-500">
+          <div>
+            <label className={authLabelClass}>
               Website <span className="font-normal text-neutral-400">(optional)</span>
             </label>
             <input
@@ -508,8 +536,8 @@ export function OnboardingClient() {
               autoComplete="url"
               value={galleryWebsite}
               onChange={(e) => setGalleryWebsite(e.target.value)}
-              className="w-full border border-black/[0.08] bg-white px-4 py-3.5 text-[15px] text-neutral-900 transition focus:border-neutral-950 focus:outline-none"
-              placeholder="https://your-gallery.com or your-gallery.com"
+              className={authInputClass}
+              placeholder="https://your-gallery.com"
             />
           </div>
           {error ? (
@@ -517,15 +545,11 @@ export function OnboardingClient() {
               {error}
             </p>
           ) : null}
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full rounded-xl bg-neutral-950 py-3.5 text-sm font-medium text-white shadow-sm transition duration-200 ease-out hover:-translate-y-px hover:bg-neutral-900 disabled:opacity-50 disabled:hover:translate-y-0"
-          >
+          <button type="submit" disabled={busy} className={authPrimaryButtonClass}>
             {busy ? "Saving…" : "Continue to institutional studio"}
           </button>
         </form>
-      </>
+      </AuthPageShell>
     );
   }
 

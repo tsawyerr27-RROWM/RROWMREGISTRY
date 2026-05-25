@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { WelcomeModal } from "@/components/ui/IntroModal";
+import { collectorIntroSteps } from "@/components/ui/intro-content";
 import {
   deferredRouterPush,
   deferredRouterReplace,
@@ -472,6 +474,8 @@ export default function CollectorStudioPage() {
   );
 
   return (
+    <>
+    <WelcomeModal role="collector" steps={collectorIntroSteps} />
     <WorkspaceShell
       atmosphereClassName="ds-page-environment"
       navItems={collectorNavItems}
@@ -709,5 +713,6 @@ export default function CollectorStudioPage() {
         </section>
       ) : null}
     </WorkspaceShell>
+    </>
   );
 }

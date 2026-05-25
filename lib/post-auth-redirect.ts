@@ -15,10 +15,6 @@ export async function resolvePostAuthRedirectPath(
   userId: string,
   options?: { explicitNext?: string | null }
 ): Promise<string> {
-  if (options?.explicitNext) {
-    resolveArtworkAuthenticationReturnPath(options.explicitNext);
-  }
-
   const needOnboarding = await getOnboardingRedirectPath(supabase, userId);
   if (needOnboarding) return needOnboarding;
 
