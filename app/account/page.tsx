@@ -175,6 +175,7 @@ export default function AccountPage() {
     AccountHeroPreviewArtwork[]
   >([]);
   const [artistRepHistorical, setArtistRepHistorical] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const load = useCallback(async () => {
     setError(null);
@@ -220,12 +221,23 @@ export default function AccountPage() {
     setRole(r);
     setCollectorPreviewArtworks([]);
     setArtistRepHistorical(false);
+    setIsAdmin(false);
     setDisplayName(
       String((actor as { display_name?: string | null }).display_name || "").trim()
     );
     let nextPresence = parsePublicPresence(
       (actor as { public_presence?: unknown }).public_presence
     );
+
+    try {
+      const res = await fetch("/api/admin/check", { credentials: "include" });
+      if (res.ok) {
+        const body = await res.json();
+        if (body?.isAdmin) setIsAdmin(true);
+      }
+    } catch {
+      /* non-critical */
+    }
 
     if (r === "artist") {
       const { data: ar } = await supabase
@@ -851,6 +863,56 @@ export default function AccountPage() {
               </p>
             ) : null}
           </div>
+
+          {isAdmin ? (
+            <AccountPanel
+              id="account-admin"
+              title="Administration"
+              description="Registry administration tools. Access is restricted to authorised accounts."
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Link
+                  href="/internal/verify"
+                  className="group flex items-start gap-4 rounded-xl border border-neutral-900/[0.06] bg-white/50 p-5 transition hover:border-neutral-900/10 hover:bg-white/70"
+                >
+                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                      <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" />
+                      <path stroke="currentColor" strokeWidth="2" d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z" />
+                    </svg>
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[15px] font-medium text-neutral-900 group-hover:text-neutral-950">
+                      Verify artworks
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed text-neutral-500">
+                      Review and approve pending artwork registrations.
+                    </p>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/internal/replay-debugger"
+                  className="group flex items-start gap-4 rounded-xl border border-neutral-900/[0.06] bg-white/50 p-5 transition hover:border-neutral-900/10 hover:bg-white/70"
+                >
+                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
+                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                      <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" />
+                      <path stroke="currentColor" strokeWidth="2" d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z" />
+                    </svg>
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[15px] font-medium text-neutral-900 group-hover:text-neutral-950">
+                      Replay debugger
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed text-neutral-500">
+                      Step through ownership, value, and certification events.
+                    </p>
+                  </div>
+                </Link>
+              </div>
+            </AccountPanel>
+          ) : null}
         </div>
     </main>
   );

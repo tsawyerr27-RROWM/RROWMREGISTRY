@@ -112,14 +112,12 @@ export async function requireAdminApi(
     userEmail = String(data.user.email || "").toLowerCase();
   }
 
-  const allowlist = adminEmailAllowlist();
-  if (allowlist && !allowlist.has(userEmail)) {
-    return { ok: false, status: 403, error: "Forbidden" };
-  }
-
   const service = createClient(url, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+
+  const allowlist = adminEmailAllowlist();
+  const emailAllowed = allowlist ? allowlist.has(userEmail) : false;
 
   const { data: profile } = await service
     .from("artists")
@@ -127,7 +125,9 @@ export async function requireAdminApi(
     .eq("id", userId)
     .maybeSingle();
 
-  if (!profile?.is_admin) {
+  const dbAdmin = Boolean(profile?.is_admin);
+
+  if (!emailAllowed && !dbAdmin) {
     return { ok: false, status: 403, error: "Forbidden" };
   }
 

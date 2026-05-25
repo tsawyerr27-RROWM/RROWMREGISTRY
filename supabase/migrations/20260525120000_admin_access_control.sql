@@ -45,9 +45,10 @@ begin
   limit 1;
 
   if v_uid is not null then
-    update public.artists
-    set is_admin = true
-    where id = v_uid;
+    -- Ensure an artists row exists (user may have signed up as gallery/collector)
+    insert into public.artists (id, is_admin)
+    values (v_uid, true)
+    on conflict (id) do update set is_admin = true;
 
     -- Ensure actor_profiles exists for this user
     insert into public.actor_profiles (user_id, role)
