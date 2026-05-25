@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { issueCertificateForVerifiedArtwork } from "@/lib/issue-certificate";
+import { logActivityEvent } from "@/lib/log-activity";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
@@ -72,6 +73,25 @@ export async function POST(req: Request) {
     await issueCertificateForVerifiedArtwork(artworkId);
   } catch {
     /* best-effort */
+  }
+
+  {
+    const service = createSupabaseServiceClient();
+    const { data: art } = await service
+      .from("artworks")
+      .select("title, registry_id")
+      .eq("id", artworkId)
+      .maybeSingle();
+    const title = String(art?.title || "").trim() || "Artwork";
+    const reg = art?.registry_id ? ` (${art.registry_id})` : "";
+
+    await logActivityEvent({
+      userId: user.id,
+      type: "representation_confirmed",
+      message: `Confirmed representation: ${title}${reg}`,
+      artworkId,
+      metadata: { registry_id: art?.registry_id ?? null },
+    });
   }
 
   return NextResponse.json({ ok: true });

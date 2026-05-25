@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { issueCertificateForVerifiedArtwork } from "@/lib/issue-certificate";
+import { logActivityEvent } from "@/lib/log-activity";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
@@ -68,6 +69,25 @@ export async function POST(req: Request) {
     } catch {
       /* best-effort — DB trigger is the primary path */
     }
+  }
+
+  if (artworkId && !o.already_authenticated) {
+    const service = createSupabaseServiceClient();
+    const { data: art } = await service
+      .from("artworks")
+      .select("title, registry_id")
+      .eq("id", artworkId)
+      .maybeSingle();
+    const title = String(art?.title || "").trim() || "Artwork";
+    const reg = art?.registry_id ? ` (${art.registry_id})` : "";
+
+    await logActivityEvent({
+      userId: user.id,
+      type: "artwork_authenticated",
+      message: `Authenticated authorship: ${title}${reg}`,
+      artworkId,
+      metadata: { registry_id: art?.registry_id ?? null },
+    });
   }
 
   return NextResponse.json({

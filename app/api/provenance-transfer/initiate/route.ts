@@ -9,6 +9,7 @@ import {
   sendResendEmail,
 } from "@/lib/emails/send-email";
 import { generateInviteToken, inviteExpiryDate } from "@/lib/invite-token";
+import { logActivityEvent } from "@/lib/log-activity";
 import { isProvenanceTransferType } from "@/lib/provenance-transfer";
 import { getSiteUrl } from "@/lib/site-url";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
@@ -210,6 +211,19 @@ export async function POST(req: Request) {
       hint
     );
   }
+
+  await logActivityEvent({
+    userId: user.id,
+    type: "provenance_transfer_initiated",
+    message: `Continuity transfer initiated: ${title}${registryId ? ` (${registryId})` : ""} → ${recipientEmail}`,
+    artworkId,
+    metadata: {
+      registry_id: registryId || null,
+      transfer_type: transferType,
+      recipient_email: recipientEmail,
+      transfer_id: transferId,
+    },
+  });
 
   return NextResponse.json({
     ok: true,

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { issueCertificateForVerifiedArtwork } from "@/lib/issue-certificate";
+import { logActivityEvent } from "@/lib/log-activity";
 import {
   buildProvenanceContinuationNotes,
   isProvenanceTransferType,
@@ -157,6 +158,42 @@ export async function POST(req: Request) {
     await issueCertificateForVerifiedArtwork(artworkId);
   } catch {
     /* best-effort */
+  }
+
+  {
+    const { data: art } = await service
+      .from("artworks")
+      .select("title, registry_id")
+      .eq("id", artworkId)
+      .maybeSingle();
+    const title = String(art?.title || "").trim() || "Artwork";
+    const reg = art?.registry_id ? ` (${art.registry_id})` : "";
+
+    await logActivityEvent({
+      userId: user.id,
+      type: "provenance_transfer_accepted",
+      message: `Accepted continuity transfer: ${title}${reg}`,
+      artworkId,
+      metadata: {
+        registry_id: art?.registry_id ?? null,
+        transfer_id: String(tr.id),
+        ownership_event_id: oeId,
+      },
+    });
+
+    if (fromUserId) {
+      await logActivityEvent({
+        userId: fromUserId,
+        type: "provenance_transfer_completed",
+        message: `Continuity transfer completed: ${title}${reg}`,
+        artworkId,
+        metadata: {
+          registry_id: art?.registry_id ?? null,
+          transfer_id: String(tr.id),
+          accepted_by: user.id,
+        },
+      });
+    }
   }
 
   return NextResponse.json({

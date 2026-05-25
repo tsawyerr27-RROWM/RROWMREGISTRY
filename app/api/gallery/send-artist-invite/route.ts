@@ -7,6 +7,7 @@ import {
   sendResendEmail,
 } from "@/lib/emails/send-email";
 import { generateInviteToken, inviteExpiryDate } from "@/lib/invite-token";
+import { logActivityEvent } from "@/lib/log-activity";
 import { getArtistTier } from "@/lib/artist-tier";
 import { getSiteUrl } from "@/lib/site-url";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
@@ -215,6 +216,18 @@ export async function POST(req: Request) {
       );
     }
   }
+
+  await logActivityEvent({
+    userId: user.id,
+    type: "gallery_invite_sent",
+    message: `Representation invitation sent to ${emailStr}`,
+    metadata: {
+      gallery_id: gid,
+      gallery_name: galleryName,
+      artist_email: emailStr,
+      invite_id: row.id,
+    },
+  });
 
   return NextResponse.json(
     {

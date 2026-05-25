@@ -8,6 +8,7 @@ import {
 } from "@/lib/emails/send-email";
 import { buildArtworkAuthenticationInviteUrl } from "@/lib/artwork-authentication-invite";
 import { generateInviteToken, inviteExpiryDate } from "@/lib/invite-token";
+import { logActivityEvent } from "@/lib/log-activity";
 import { getSiteUrl } from "@/lib/site-url";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
@@ -171,6 +172,19 @@ export async function POST(req: Request) {
     replyTo,
   });
   if (sent.ok) emailSent = true;
+
+  await logActivityEvent({
+    userId: user.id,
+    type: "artwork_auth_invite_sent",
+    message: `Authentication invitation sent for ${artworkTitle}${registryId ? ` (${registryId})` : ""} to ${emailStr}`,
+    artworkId,
+    metadata: {
+      gallery_id: galleryId,
+      gallery_name: galleryName,
+      artist_email: emailStr,
+      registry_id: registryId || null,
+    },
+  });
 
   return NextResponse.json({
     ok: true,
