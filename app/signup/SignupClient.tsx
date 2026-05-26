@@ -254,7 +254,8 @@ export function SignupClient() {
     setSubmitting(true);
     const origin =
       typeof window !== "undefined" ? window.location.origin : "";
-    const emailRedirectTo = `${origin}/signup/complete?${signupCompleteRedirectQs.toString()}`;
+    const completePath = `/signup/complete?${signupCompleteRedirectQs.toString()}`;
+    const emailRedirectTo = `${origin}/auth/callback?next=${encodeURIComponent(completePath)}`;
 
     if (inviteTokenParam && typeof window !== "undefined") {
       try {
@@ -273,9 +274,9 @@ export function SignupClient() {
         data: { role },
       },
     });
-    setSubmitting(false);
 
     if (error) {
+      setSubmitting(false);
       setErr(error.message);
       return;
     }
@@ -283,21 +284,29 @@ export function SignupClient() {
     if (data.session) {
       try {
         window.sessionStorage.setItem("rrowm_pending_signup_role", role);
-      } catch {
-        /* ignore */
+      } catch { /* ignore */ }
+
+      const { error: roleErr } = await supabase.rpc("set_onboarding_role", {
+        p_payload: { p_role: role, p_display_name: "" },
+      });
+      setSubmitting(false);
+      if (roleErr) {
+        console.warn("[signup] set_onboarding_role", roleErr.message);
       }
-      deferredRouterReplace(
-        router,
-        `/signup/complete?${completeQs.toString()}`
-      );
+      if (role === "artist") {
+        const { acceptPendingGalleryInvite } = await import(
+          "@/lib/accept-gallery-invite-client"
+        );
+        await acceptPendingGalleryInvite().catch(() => {});
+      }
+      deferredRouterReplace(router, "/onboarding");
       return;
     }
 
+    setSubmitting(false);
     try {
       window.sessionStorage.setItem("rrowm_pending_signup_role", role);
-    } catch {
-      /* ignore */
-    }
+    } catch { /* ignore */ }
 
     setInfoMsg(
       "Check your email to confirm your address, then return here in this browser to finish setup."

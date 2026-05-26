@@ -121,7 +121,7 @@ export function LoginClient() {
     const origin =
       typeof window !== "undefined" ? window.location.origin : "";
     const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
-      redirectTo: `${origin}/reset-password`,
+      redirectTo: `${origin}/auth/callback?next=${encodeURIComponent("/reset-password")}`,
     });
     setSubmitting(false);
     if (error) {
