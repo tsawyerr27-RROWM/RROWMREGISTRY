@@ -62,12 +62,12 @@ export function TestDataControls() {
         }
         if (j.email && j.password) {
           setMessage(
-            `Created ${j.role}: ${j.email} — password (once): ${j.password}`
+            `Created ${j.role}: ${j.email}, password (once): ${j.password}`
           );
         } else if (path.endsWith("/reset")) {
           const extra =
             j.authErrors?.length && j.authErrors.length > 0
-              ? ` — notes: ${j.authErrors.join("; ")}`
+              ? ` (notes: ${j.authErrors.join("; ")})`
               : "";
           setMessage(
             `Reset: ${j.deletedPublicTestUsers ?? 0} test profiles cleared, ${j.deletedAuthUsers ?? 0} auth users removed.${extra}`
@@ -92,7 +92,7 @@ export function TestDataControls() {
         Test mode
       </p>
       <p className="mt-2 text-sm text-amber-950/90">
-        Test Data Controls — synthetic accounts only. Not shown to non-admins.
+        Test Data Controls: synthetic accounts only. Not shown to non-admins.
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
         <button

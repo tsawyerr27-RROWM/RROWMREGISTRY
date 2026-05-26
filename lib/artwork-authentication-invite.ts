@@ -62,7 +62,7 @@ export const ARTWORK_AUTH_INVITE_COPY = {
   ctaSend: "Send continuity invitation",
   representationSectionTitle: "Representation invitations",
   representationSectionDesc:
-    "Invite artists to join under your institution generally — separate from artwork-specific authentication.",
+    "Invite artists to join under your institution generally, separate from artwork-specific authentication.",
   artworkSectionTitle: "Artwork authentication invitations",
   artworkSectionDesc: `Continuity history for specific canonical records. ${CANONICAL_RECORD_PHRASES.notApprovalWorkflow}`,
 } as const;

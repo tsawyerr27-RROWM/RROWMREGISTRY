@@ -49,7 +49,7 @@ export function GalleryRecordDepthSection({
       id="gallery-record-depth"
       eyebrow="Record depth"
       title="Attestations may deepen"
-      description={`Each work below is a ${CANONICAL_RECORD_PHRASES.canonicalRecordOnFile.toLowerCase()} with your institution's continuity layer. ${CANONICAL_RECORD_PHRASES.artistAttestationMayDeepen} when the artist authenticates authorship — the record is complete; layers accumulate.`}
+      description={`Each work below is a ${CANONICAL_RECORD_PHRASES.canonicalRecordOnFile.toLowerCase()} with your institution's continuity layer. ${CANONICAL_RECORD_PHRASES.artistAttestationMayDeepen} when the artist authenticates authorship. The record is complete; layers accumulate.`}
       badge={
         <span className={workspace.card.pill}>
           {items.length} {items.length === 1 ? "record" : "records"}

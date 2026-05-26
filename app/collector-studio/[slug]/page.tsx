@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
-import { PageNav } from "@/components/ui/PageNav";
 import {
   getCollectorOwnedArtworkIds,
   sortPortfolioRows,
@@ -23,6 +22,7 @@ import {
   certificateStatusMapToCollectorRecord,
   fetchCertificatePublicStatusByArtworkIds,
 } from "@/lib/fetch-certificate-public-status-map";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 export const dynamic = "force-dynamic";
 
@@ -51,10 +51,8 @@ type ArtworkReadRow = {
 };
 
 function CollectorPublicLayout({
-  crumbs,
   children,
 }: {
-  crumbs: { label: string; href?: string }[];
   children: ReactNode;
 }) {
   return (
@@ -64,7 +62,6 @@ function CollectorPublicLayout({
         aria-hidden
       />
       <main className="relative mx-auto max-w-[min(100%,88rem)] px-4 sm:px-6 lg:px-8">
-        <PageNav backHref="/registry" />
         {children}
       </main>
     </div>
@@ -168,11 +165,6 @@ export default async function CollectorProfilePage({
     </div>
   ) : null;
 
-  const defaultCrumbs = [
-    { label: "Registry", href: "/registry" as const },
-    { label: publicTitle },
-  ];
-
   const hero = (
     <CollectorPublicHero
       publicTitle={publicTitle}
@@ -186,7 +178,7 @@ export default async function CollectorProfilePage({
   const ownedIds = await getCollectorOwnedArtworkIds(supabase, profile.user_id);
   if (ownedIds.length === 0) {
     return (
-      <CollectorPublicLayout crumbs={defaultCrumbs}>
+      <CollectorPublicLayout>
         {hero}
         <EmptyWorksPanel
           title="No works on the registry yet"
@@ -238,7 +230,7 @@ export default async function CollectorProfilePage({
 
   if (!isOwner && visible.length === 0) {
     return (
-      <CollectorPublicLayout crumbs={defaultCrumbs}>
+      <CollectorPublicLayout>
         {hero}
         <EmptyWorksPanel
           title="Nothing visible yet"
@@ -251,27 +243,16 @@ export default async function CollectorProfilePage({
   const cards = sortPortfolioRows(isOwner ? list : visible, "activity");
 
   return (
-    <CollectorPublicLayout
-      crumbs={[
-        { label: "Registry", href: "/registry" },
-        ...(isOwner
-          ? [{ label: "Collection", href: "/collector-studio" }]
-          : []),
-        { label: publicTitle },
-      ]}
-    >
+    <CollectorPublicLayout>
       {hero}
 
       <section className="mt-16 border-t border-neutral-900/[0.06] pt-14 md:mt-20 md:pt-16">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
+            <InfoTooltip text="Works where this collector holds verified ownership on the RROWM registry." />
             <h2 className="font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-[1.75rem]">
               Registered works
             </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-neutral-500">
-              Works where this collector holds verified ownership on the RROWM
-              registry.
-            </p>
           </div>
           <p className="text-sm tabular-nums text-neutral-500">
             {cards.length} {cards.length === 1 ? "work" : "works"}

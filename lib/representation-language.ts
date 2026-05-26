@@ -33,7 +33,7 @@ export const CANONICAL_RECORD_PHRASES = {
   registerIssuesRecord:
     "Issues a registry identifier and opens the canonical record",
   notApprovalWorkflow:
-    "Layered attestations only — not ownership adjudication or institution approval",
+    "Layered attestations only, not ownership adjudication or institution approval",
   artworkAuthInviteSubject: (title: string) =>
     `Authenticate artwork record on file · ${title.trim() || "Work"}`,
   artworkAuthInviteLanding:

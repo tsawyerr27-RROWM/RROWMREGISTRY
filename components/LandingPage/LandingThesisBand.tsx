@@ -1,6 +1,7 @@
 "use client";
 
 import { narrativeLayout } from "@/styles/narrative-layout";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 /**
  * Context chapter — Quant-inspired “the world has changed / the system lags” rhythm,
@@ -20,17 +21,13 @@ export function LandingThesisBand() {
       <div className={`${narrativeLayout.gutter} py-16 md:py-24`}>
         <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
           <div className="lg:col-span-7">
+            <InfoTooltip text="Artists, institutions, and collectors can each leave filings on the same chronology. The public catalogue shows what is on file; deeper material stays behind sign-in where it belongs." />
             <h2
               id="landing-context-heading"
               className="max-w-[min(100%,46rem)] font-serif text-[clamp(1.6rem,2.8vw,2.35rem)] font-normal leading-[1.16] tracking-tight text-neutral-950"
             >
               Continuity belongs with the work, not scattered across files
             </h2>
-            <p className="mt-8 max-w-[40rem] text-base leading-[1.86] text-neutral-600 md:text-lg md:leading-[1.8]">
-              Artists, institutions, and collectors can each leave filings on the same
-              chronology. The public catalogue shows what is on file; deeper material
-              stays behind sign-in where it belongs.
-            </p>
           </div>
 
           <div className="lg:col-span-5 lg:pt-1">

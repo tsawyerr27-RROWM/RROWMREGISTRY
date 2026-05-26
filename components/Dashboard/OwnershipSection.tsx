@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { resolveArtworkOwnerId } from "@/lib/resolve-artwork-owner-id";
 import { ExperienceEmptyStateButton } from "@/components/ui/ExperienceEmptyState";
 import { WorkspaceRecordCard } from "@/components/Studio/WorkspaceRecordCard";
@@ -197,13 +198,13 @@ export function OwnershipSection({
                 ? yearRaw
                 : yearRaw != null
                   ? String(yearRaw)
-                  : "—";
+                  : "–";
             const medium =
               typeof mediumRaw === "string"
                 ? mediumRaw
                 : mediumRaw != null
                   ? String(mediumRaw)
-                  : "—";
+                  : "–";
             const imageUrlRaw = (artwork as { image_url?: unknown }).image_url;
             const imageUrl =
               typeof imageUrlRaw === "string" && imageUrlRaw
@@ -313,13 +314,10 @@ export function OwnershipSection({
           <p className="text-xs text-neutral-500">
             Ownership
           </p>
+          <InfoTooltip text="When transfers or claims are recorded, each work appears here with holder, chain depth, and sale signals." />
           <h3 className="mt-4 font-serif text-2xl font-normal tracking-tight text-neutral-950">
             No ownership activity yet
           </h3>
-          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-neutral-600">
-            When transfers or claims are recorded, each work appears here with
-            holder, chain depth, and sale signals.
-          </p>
           <div className="mt-10 flex justify-center">
             <ExperienceEmptyStateButton
               label="Register artwork"

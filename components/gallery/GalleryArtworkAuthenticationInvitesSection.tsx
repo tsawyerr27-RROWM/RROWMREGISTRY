@@ -4,6 +4,7 @@ import type { RefObject } from "react";
 import { useState } from "react";
 
 import { Badge } from "@/components/ui/Badge";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import {
   type ArtworkAuthenticationInviteRow,
   artworkAuthenticationInviteStatusLabel,
@@ -23,13 +24,13 @@ type Props = {
 };
 
 function formatSent(iso: string | null | undefined): string {
-  if (!iso) return "—";
+  if (!iso) return "–";
   try {
     return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(
       new Date(iso)
     );
   } catch {
-    return "—";
+    return "–";
   }
 }
 
@@ -54,12 +55,10 @@ export function GalleryArtworkAuthenticationInvitesSection({
       aria-label={ARTWORK_AUTH_INVITE_COPY.artworkSectionTitle}
       className={workspace.panel.shell}
     >
+      <InfoTooltip text={ARTWORK_AUTH_INVITE_COPY.artworkSectionDesc} />
       <h2 className="font-serif text-lg font-normal text-neutral-950 md:text-xl">
         {ARTWORK_AUTH_INVITE_COPY.artworkSectionTitle}
       </h2>
-      <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-neutral-600">
-        {ARTWORK_AUTH_INVITE_COPY.artworkSectionDesc}
-      </p>
 
       {error ? (
         <p className="mt-4 text-sm text-red-800" role="alert">

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 type Props = {
   artworks: any[];
@@ -87,13 +88,9 @@ export function ArtworksHeroPreview({
 
     const inner = (
       <>
-        <p
-          className={`mb-3 text-center text-[10px] font-medium uppercase tracking-[0.14em] ${
-            isDark ? "text-white/40" : "text-neutral-400"
-          }`}
-        >
-          Highlighted on file
-        </p>
+        <span className={`mb-3 flex justify-center`}>
+          <InfoTooltip text="Featured artwork from your records on file." theme={isDark ? "dark" : undefined} />
+        </span>
         <div className="overflow-hidden rounded-2xl border border-white/20 bg-black/20 shadow-[0_20px_48px_-24px_rgba(0,0,0,0.55)] ring-1 ring-white/15 transition duration-300 group-hover:border-white/35 group-hover:shadow-[0_24px_56px_-20px_rgba(0,0,0,0.5)]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

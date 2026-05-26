@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import {
   deferredRouterRefresh,
   deferredRouterReplace,
 } from "@/lib/deferred-app-router";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
-import { PageNav } from "@/components/ui/PageNav";
 import { OwnershipVerificationControls } from "@/components/Registry/OwnershipVerificationControls";
 import { StudioSaleTransferModal } from "@/components/Studio/StudioSaleTransferModal";
 import {
@@ -216,9 +216,6 @@ export function StudioArtworkClient({ registryId }: Props) {
     return (
       <div className="min-h-screen rrowm-bg-page pt-24 text-center">
         <p className="text-neutral-600">Record not found.</p>
-        <Link href="/collector-studio" className="mt-4 inline-block text-sm underline">
-          Back to collection
-        </Link>
       </div>
     );
   }
@@ -242,7 +239,6 @@ export function StudioArtworkClient({ registryId }: Props) {
       ) : null}
 
       <main className="mx-auto max-w-4xl px-5 md:px-8">
-        <PageNav backHref="/collector-studio" />
 
         {!isOwner ? (
           <div className="rounded-2xl border border-amber-200/80 bg-amber-50/90 px-5 py-4 text-sm text-amber-950">
@@ -395,6 +391,7 @@ export function StudioArtworkClient({ registryId }: Props) {
         </section>
 
         <section className="mt-12 space-y-4">
+          <InfoTooltip text="Transaction infrastructure expanding soon" />
           <h2 className="font-serif text-xl font-normal text-neutral-950">
             Value history
           </h2>
@@ -428,9 +425,6 @@ export function StudioArtworkClient({ registryId }: Props) {
               ))}
             </ul>
           )}
-          <p className="text-xs leading-relaxed text-neutral-500">
-            Transaction infrastructure expanding soon
-          </p>
         </section>
       </main>
 

@@ -60,7 +60,7 @@ export function ArtistRecordDeepeningSection({
       id="artist-record-deepening"
       eyebrow="Canonical records"
       title="Authenticate & deepen"
-      description={`${CANONICAL_RECORD_PHRASES.inviteRecordExists}. ${CANONICAL_RECORD_PHRASES.recordDeepensOverTime}. You contribute attestations — the work is not provisional and you are not approving an institution upload.`}
+      description={`${CANONICAL_RECORD_PHRASES.inviteRecordExists}. ${CANONICAL_RECORD_PHRASES.recordDeepensOverTime}. You contribute attestations. The work is not provisional and you are not approving an institution upload.`}
       badge={
         <span className={workspace.card.pill}>
           {items.length} {items.length === 1 ? "record" : "records"} to deepen

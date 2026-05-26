@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { ArtistTierBadge } from "@/components/artist/ArtistTierBadge";
 import type { ArtistTier } from "@/lib/artist-tier";
 
@@ -48,16 +49,13 @@ export function GalleryPublicSections({
         <section className="mt-16 lg:mt-20" aria-labelledby="gallery-roster-heading">
           <div className="flex flex-wrap items-end justify-between gap-4 border-b border-neutral-900/[0.08] pb-6">
             <div>
+              <InfoTooltip text="Artists with an institution-linked association on file. Presence follows representation and chronology participation, not promotion." />
               <h2
                 id="gallery-roster-heading"
                 className="font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-3xl"
               >
                 Represented participants
               </h2>
-              <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-neutral-600">
-                Artists with an institution-linked association on file—presence follows
-                representation and chronology participation, not promotion.
-              </p>
             </div>
             {artists.length > 0 ? (
               <span className="tabular-nums text-sm text-neutral-400">
@@ -125,16 +123,13 @@ export function GalleryPublicSections({
       <section className="mt-16 lg:mt-24" aria-labelledby="gallery-catalogue-heading">
         <div className="flex flex-wrap items-end justify-between gap-4 border-b border-neutral-900/[0.08] pb-6">
           <div>
+            <InfoTooltip text="Works attributed to represented participants. Each record carries its own chronology and current catalogue listing. Continuity deepens as filings accrue." />
             <h2
               id="gallery-catalogue-heading"
               className="font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-3xl"
             >
               Represented works
             </h2>
-            <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-neutral-600">
-              Works attributed to represented participants. Each record carries its own
-              chronology and current catalogue listing—continuity deepens as filings accrue.
-            </p>
           </div>
           {artworks.length > 0 ? (
             <div className="text-right">

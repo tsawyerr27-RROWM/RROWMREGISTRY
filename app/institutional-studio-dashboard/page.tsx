@@ -23,6 +23,7 @@ import {
 } from "@/components/Dashboard/RegisterModal";
 import { DataInsightModal } from "@/components/Insights/DataInsightModal";
 import { GalleryInstitutionalHero } from "@/components/gallery/GalleryInstitutionalHero";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { ArtistTierBadge } from "@/components/artist/ArtistTierBadge";
 import { consumePendingGallerySection } from "@/lib/gallery-workspace-nav";
 import { GalleryInvitationsHub } from "@/components/gallery/GalleryInvitationsHub";
@@ -2308,12 +2309,10 @@ export default function GalleryDashboardPage() {
               <div className="border-b border-neutral-900/[0.06] bg-white/40 px-5 py-5 sm:px-7 sm:py-6">
                 <div className="flex flex-wrap items-end justify-between gap-4">
                   <div>
+                    <InfoTooltip text="Linked to your gallery on the registry" />
                     <h2 className="font-serif text-xl font-normal text-neutral-950 md:text-2xl">
                       Artists
                     </h2>
-                    <p className="mt-1 text-sm text-neutral-500">
-                      Linked to your gallery on the registry
-                    </p>
                   </div>
                   <span className="inline-flex items-center rounded-full border border-neutral-900/[0.06] bg-white/70 px-3 py-1 text-[12px] tabular-nums text-neutral-700 shadow-[0_1px_0_rgba(15,23,42,0.04)]">
                     <span className="font-semibold text-neutral-900">{artists.length}</span>
@@ -2425,7 +2424,7 @@ export default function GalleryDashboardPage() {
                                 <span className="tabular-nums text-[12px] text-neutral-500">
                                   {worksN > 0
                                     ? `${worksN} ${worksN === 1 ? "work" : "works"}`
-                                    : "—"}
+                                    : "–"}
                                 </span>
                               </div>
                             </div>
@@ -2480,13 +2479,10 @@ export default function GalleryDashboardPage() {
           <>
             <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
               <div>
+                <InfoTooltip text="Catalogue records filed by your institution. Register a work to open the chronology and layer institution attestations." />
                 <h2 className="font-serif text-xl font-normal text-neutral-950 md:text-2xl">
                   Works
                 </h2>
-                <p className="mt-1 max-w-xl text-sm text-neutral-500">
-                  Catalogue records filed by your institution. Register a work to
-                  open the chronology and layer institution attestations.
-                </p>
               </div>
               <button
                 type="button"
@@ -2576,7 +2572,7 @@ export default function GalleryDashboardPage() {
               {artworks.length === 0 ? (
                 <p className="mt-4 text-[13px] text-neutral-500">
                   No works in the institutional catalogue yet. Register a canonical
-                  record at any time — artist accounts are optional.
+                  record at any time. Artist accounts are optional.
                 </p>
               ) : (
                 <ul className="mt-6 max-h-[min(70vh,36rem)] divide-y divide-neutral-900/[0.05] overflow-y-auto pr-1">
@@ -2680,6 +2676,7 @@ export default function GalleryDashboardPage() {
               id="gallery-verification-queue"
               className="scroll-mt-24 rounded-2xl border border-neutral-900/[0.05] bg-white/35 p-6 backdrop-blur-sm sm:p-7"
             >
+              <InfoTooltip text="Confirm only when the record is ready. A confirmation step follows." />
               <h2 className="font-serif text-lg font-normal text-neutral-950 md:text-xl">
                 Verification
               </h2>
@@ -2691,9 +2688,6 @@ export default function GalleryDashboardPage() {
                 <p className="mt-4 text-[13px] text-neutral-400">Nothing awaiting verification.</p>
               ) : (
                 <>
-                  <p className="mt-3 text-[12px] leading-snug text-neutral-500">
-                    Confirm only when the record is ready. A confirmation step follows.
-                  </p>
                   <ul className="mt-5 divide-y divide-neutral-900/[0.05]">
                     {verifyQueue.map((w) => (
                       <li
@@ -2741,7 +2735,7 @@ export default function GalleryDashboardPage() {
           <span className="font-medium text-neutral-800">continuity & certs</span>, and{" "}
           <span className="font-medium text-neutral-800">Invitations</span> for optional
           artist authentication. Register canonical records at any time with a plain-text
-          artist name; layered participation deepens over time — institution filing first,
+          artist name; layered participation deepens over time: institution filing first,
           then artist attestation when ready.
         </p>
       </ModalShell>

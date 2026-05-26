@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import {
   aggregateReadinessCounts,
   computeRecordReadiness,
@@ -64,12 +65,10 @@ export function RecordReadinessSection({
 
   return (
     <section className="mb-8 rounded-2xl border border-neutral-900/[0.06] bg-white/50 p-6 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-sm sm:p-7">
+      <InfoTooltip text="Operational checks on catalogue records, not analytics." />
       <h2 className="font-serif text-lg font-normal text-neutral-950 md:text-xl">
         Record readiness
       </h2>
-      <p className="mt-1 text-[13px] leading-relaxed text-neutral-500">
-        Operational checks on catalogue records, not analytics.
-      </p>
 
       <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-[13px] tabular-nums text-neutral-700">
         <span>

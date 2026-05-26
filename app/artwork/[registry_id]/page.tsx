@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { headers } from "next/headers";
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { warnSupabaseRpc } from "@/lib/supabase-rpc-error";
@@ -16,7 +15,6 @@ import {
   getCurrentOwner,
   heldByCredibilityClass,
 } from "@/lib/get-current-owner";
-import { PageNav } from "@/components/ui/PageNav";
 import { ParticipationLayersStrip } from "@/components/Registry/ParticipationLayersStrip";
 import { getArtworkParticipationLayers } from "@/lib/get-artwork-participation-layers";
 
@@ -53,32 +51,6 @@ export default async function ArtworkPage({
 }) {
   const { registry_id } = await params;
   const cleanId = registry_id.trim();
-
-  const headersList = await headers();
-  const referer = headersList.get("referer") || "";
-  let backHref: string | undefined;
-  let crumbsBase: { label: string; href: string } | null = null;
-
-  try {
-    const url = new URL(referer);
-    const path = url.pathname;
-    if (path.startsWith("/registry")) {
-      backHref = `${url.pathname}${url.search || ""}`;
-      crumbsBase = { label: "Registry", href: backHref };
-    } else {
-      backHref = `/registry/${encodeURIComponent(cleanId)}`;
-      crumbsBase = {
-        label: "Registry",
-        href: `/registry/${encodeURIComponent(cleanId)}`,
-      };
-    }
-  } catch {
-    backHref = `/registry/${encodeURIComponent(cleanId)}`;
-    crumbsBase = {
-      label: "Registry",
-      href: `/registry/${encodeURIComponent(cleanId)}`,
-    };
-  }
 
   const supabase = await createSupabaseServerClient();
 
@@ -256,8 +228,7 @@ export default async function ArtworkPage({
 
   return (
     <div className="min-h-screen rrowm-bg-page pt-20 text-neutral-900">
-      <main className="mx-auto max-w-6xl px-6 py-12 md:py-16">
-        <PageNav backHref={backHref} />
+      <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 md:py-16 lg:px-8">
         {/* Hero */}
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-14 lg:items-start">
           <div className="lg:col-span-7">

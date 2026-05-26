@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { ArtworksHeroPreview } from "@/components/Dashboard/ArtworksHeroPreview";
 import {
   CompletenessMeter,
@@ -98,9 +99,7 @@ export function GalleryInstitutionalHero({
       <div className="relative grid gap-10 px-6 py-12 lg:grid-cols-12 lg:gap-8 lg:px-10 lg:py-14 xl:px-14">
         <div className="flex flex-col justify-between lg:col-span-7">
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-white/45">
-              Institutional stewardship workspace
-            </p>
+            <InfoTooltip text="Your institution's stewardship workspace. Manage continuity, representation, and catalogue records." theme="dark" />
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <span
                 className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
@@ -120,11 +119,6 @@ export function GalleryInstitutionalHero({
             <h1 className="mt-5 font-serif text-[2rem] font-normal leading-[1.05] tracking-tight text-white md:text-[2.75rem] lg:text-[3rem]">
               {orgName}
             </h1>
-            {description ? (
-              <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-white/70">{description}</p>
-            ) : (
-              <p className="mt-4 text-[15px] text-white/40">Add a statement under Presence.</p>
-            )}
             {location ? (
               <p className="mt-3 text-sm text-white/50">{location}</p>
             ) : null}
@@ -228,7 +222,7 @@ export function GalleryInstitutionalHero({
                       className="mt-2 w-full rounded-md border border-violet-400/35 bg-violet-500/20 px-3 py-2 text-left text-[11px] font-medium text-violet-100 transition hover:bg-violet-500/30"
                     >
                       {amendmentsPendingCount} open amendment
-                      {amendmentsPendingCount === 1 ? "" : "s"} — respond on file
+                      {amendmentsPendingCount === 1 ? "" : "s"}: respond on file
                     </button>
                   ) : (
                     <p className="mt-2 text-[11px] text-violet-200/90">

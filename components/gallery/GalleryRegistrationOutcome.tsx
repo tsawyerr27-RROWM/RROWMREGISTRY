@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { CANONICAL_RECORD_PHRASES } from "@/lib/representation-language";
 import { workspace } from "@/styles/workspace-design";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 export type GalleryRegistrationOutcomeData = {
   title: string;
@@ -50,48 +51,23 @@ export function GalleryRegistrationOutcome({
       role="status"
       aria-live="polite"
     >
-      <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500">
-        {CANONICAL_RECORD_PHRASES.canonicalRecordOnFile}
-      </p>
+      <InfoTooltip text="This canonical record is now on file within the registry. Artist attestation may deepen when the artist authenticates authorship." />
       <h2 className="mt-2 font-serif text-xl font-normal text-neutral-950 md:text-2xl">
         {data.title}
       </h2>
       <p className={`mt-2 ${workspace.type.registryId}`}>{data.registryId}</p>
 
-      {data.institutionFilingOk ? (
-        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-neutral-600">
-          {CANONICAL_RECORD_PHRASES.registerIssuesRecord}. Your institution
-          attestation is on file.{" "}
-          {data.artistAccountLinked
-            ? CANONICAL_RECORD_PHRASES.artistAttestationMayDeepen
-            : CANONICAL_RECORD_PHRASES.artistAttestationNotYetOnFile}
-          {data.artistName
-            ? ` — ${data.artistName} may authenticate authorship when ready.`
-            : " — the artist named on file may authenticate authorship when ready."}
-        </p>
-      ) : (
-        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-amber-900/90">
-          The canonical record was issued, but your institution attestation layer did
-          not complete
-          {data.institutionFilingError
-            ? `: ${data.institutionFilingError}`
-            : "."}{" "}
-          Open the work in Works or contact support if this persists — the record
-          itself remains on file.
-        </p>
-      )}
-
       <ol className="mt-6 space-y-2 text-sm text-neutral-600">
         <li className="flex gap-2">
           <span className="font-medium text-neutral-800">1.</span>
-          <span>{CANONICAL_RECORD_PHRASES.canonicalRecordOnFile} — public page live.</span>
+          <span>{CANONICAL_RECORD_PHRASES.canonicalRecordOnFile}. Public page live.</span>
         </li>
         <li className="flex gap-2">
           <span className="font-medium text-neutral-800">2.</span>
           <span>
             {data.institutionFilingOk
               ? CANONICAL_RECORD_PHRASES.institutionAttestationOnFile
-              : "Institution attestation — add when roster link is on file."}
+              : "Institution attestation: add when roster link is on file."}
           </span>
         </li>
         <li className="flex gap-2">

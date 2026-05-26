@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 import { getOnboardingRedirectPath } from "@/lib/onboarding";
-import { PageNav } from "@/components/ui/PageNav";
 import { ArtistWorkspaceShellLayout } from "@/components/Studio/ArtistWorkspaceShellLayout";
 import { CollectorWorkspaceShellLayout } from "@/components/Studio/CollectorWorkspaceShellLayout";
 import { GalleryWorkspaceShellLayout } from "@/components/Studio/GalleryWorkspaceShellLayout";
@@ -596,7 +595,7 @@ export default function AccountPage() {
                     Email
                   </label>
                   <p className="mt-3 rounded-2xl border border-neutral-900/[0.06] bg-black/[0.03] px-4 py-3.5 text-[15px] text-neutral-600">
-                    {email || "—"}
+                    {email || "–"}
                   </p>
                   <p className="mt-2 text-xs text-neutral-500">
                     Managed through your sign-in provider.
@@ -801,7 +800,7 @@ export default function AccountPage() {
           {role === "artist" ? (
             <AccountPanel
               title="Artworks appearance"
-              description="Only affects your Studio — not public pages. Accent on the Artworks grid cards."
+              description="Only affects your Studio, not public pages. Accent on the Artworks grid cards."
             >
               <div
                 className="flex flex-wrap gap-3"
@@ -948,7 +947,6 @@ export default function AccountPage() {
         aria-hidden
       />
       <div className="relative mx-auto max-w-[min(100%,88rem)] px-4 sm:px-6 lg:px-8">
-        <PageNav backHref="/registry" />
         {accountBody}
       </div>
     </div>

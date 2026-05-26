@@ -1,4 +1,5 @@
 import { narrativeLayout } from "@/styles/narrative-layout";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 type SystemPropertiesProps = {
   density?: "default" | "digest";
@@ -61,10 +62,11 @@ export function SystemProperties({ density = "default" }: SystemPropertiesProps)
               key={item.title}
               className={
                 digest
-                  ? "grid gap-3 py-5 md:grid-cols-[minmax(0,11rem)_minmax(0,1fr)] md:gap-8 md:py-6"
-                  : "grid gap-5 py-10 md:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] md:gap-12 md:py-12"
+                  ? "py-5 md:py-6"
+                  : "py-10 md:py-12"
               }
             >
+              <InfoTooltip text={item.body} />
               <h3
                 className={
                   digest
@@ -74,15 +76,6 @@ export function SystemProperties({ density = "default" }: SystemPropertiesProps)
               >
                 {item.title}
               </h3>
-              <p
-                className={
-                  digest
-                    ? "max-w-2xl text-[13px] leading-[1.75] text-neutral-600 md:text-sm md:leading-[1.78]"
-                    : "max-w-2xl text-sm leading-[1.78] text-neutral-600 md:text-base md:leading-[1.8]"
-                }
-              >
-                {item.body}
-              </p>
             </li>
           ))}
         </ul>

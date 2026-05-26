@@ -6,6 +6,7 @@ import Link from "next/link";
 import { AmbientNarrativeField } from "@/components/LandingPage/AmbientNarrativeField";
 import { GalleryPricingModal } from "./GalleryPricingModal";
 import { IconArtist, IconCollector, IconGallery } from "./role-icons";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 /** Stroke/fill use `currentColor` on the SVG — restrained neutral tints only. */
 const ICON_TINT: Record<"artist" | "gallery" | "collector", string> = {
@@ -73,13 +74,10 @@ export function GetStartedView() {
 
       <main className="relative z-10 mx-auto w-full max-w-[min(100%,72rem)]">
         <header className="max-w-2xl">
+          <InfoTooltip text="Each path opens the right studio (artist, institutional, or collector). Underneath: one chronology per work, on file." />
           <h1 className="font-serif text-[2rem] font-normal leading-[1.1] tracking-tight text-neutral-950 md:text-[2.35rem] md:leading-[1.08]">
             Choose how you take part
           </h1>
-          <p className="mt-5 text-base leading-relaxed text-neutral-600 md:text-lg md:leading-relaxed">
-            Each path opens the right studio (artist, institutional, or collector).
-            Underneath: one chronology per work, on file.
-          </p>
           <p className="mt-5 text-sm leading-relaxed text-neutral-500">
             Already have an account?{" "}
             <Link
@@ -138,13 +136,10 @@ export function GetStartedView() {
 
         <section className="rrowm-atmo-section--blend relative mt-16 overflow-hidden rounded-[1.5rem] md:mt-20">
           <div className="relative z-10 max-w-2xl px-6 py-10 md:px-8 md:py-12">
+            <InfoTooltip text="Verified listings and chronology offer a shared surface for inquiry, not a marketplace pitch." />
             <h2 className="font-serif text-xl font-normal text-neutral-950">
               On the catalogue
             </h2>
-            <p className="mt-4 text-sm leading-[1.75] text-neutral-600 md:text-[15px]">
-              Verified listings and chronology offer a shared surface for inquiry, not a
-              marketplace pitch.
-            </p>
           </div>
         </section>
       </main>

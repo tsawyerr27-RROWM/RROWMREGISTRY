@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import ModalShell from "@/components/ui/ModalShell";
 import {
   CANONICAL_RECORD_PHRASES,
@@ -41,24 +42,10 @@ export function EndRepresentationModal({
   return (
     <ModalShell isOpen={open} onClose={handleClose} tone="silver">
       <div className="max-w-md">
+        <InfoTooltip text={<>Ends active representation between the parties. {CANONICAL_RECORD_PHRASES.priorContributionsRemainVisible}. {CANONICAL_RECORD_PHRASES.historicalInstitutionLayer}. The canonical artwork record remains.</>} />
         <h3 className="font-serif text-xl font-normal text-neutral-950">
           End representation on file
         </h3>
-        <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-          This ends active representation between{" "}
-          <span className="font-medium text-neutral-900">{subjectName}</span>
-          {institutionName ? (
-            <>
-              {" "}
-              and <span className="font-medium text-neutral-900">{institutionName}</span>
-            </>
-          ) : null}
-          . {CANONICAL_RECORD_PHRASES.priorContributionsRemainVisible.toLowerCase()}.
-        </p>
-        <p className="mt-2 text-xs leading-relaxed text-neutral-500">
-          {CANONICAL_RECORD_PHRASES.historicalInstitutionLayer} — the canonical artwork
-          record remains.
-        </p>
         <label className="mt-5 block">
           <span className={workspace.type.label}>Note (optional)</span>
           <textarea

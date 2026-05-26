@@ -47,7 +47,7 @@ export function buildArtworkAuthenticationInvitationEmail(
       { type: "hr" },
       {
         type: "p",
-        html: `You are invited to review, authenticate authorship, and deepen the documentary record — ${escapeHtml(CANONICAL_RECORD_PHRASES.recordDeepensOverTime.toLowerCase())}. This is not an approval request or onboarding task for the institution.`,
+        html: `You are invited to review, authenticate authorship, and deepen the documentary record. ${escapeHtml(CANONICAL_RECORD_PHRASES.recordDeepensOverTime)}. This is not an approval request or onboarding task for the institution.`,
       },
       ...(note
         ? [

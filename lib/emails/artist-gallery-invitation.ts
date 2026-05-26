@@ -33,7 +33,7 @@ export function buildArtistInvitationEmail(p: ArtistInvitationEmailParams): {
       { type: "kicker", text: "Canonical record · Participant attestation" },
       {
         type: "p",
-        html: `<strong>${g}</strong> participates in chronology on file for works associated with your practice. ${escapeHtml(CANONICAL_RECORD_PHRASES.inviteRecordExists)}. You are invited to authenticate authorship and deepen the documentary record — not to approve an institution upload.`,
+        html: `<strong>${g}</strong> participates in chronology on file for works associated with your practice. ${escapeHtml(CANONICAL_RECORD_PHRASES.inviteRecordExists)}. You are invited to authenticate authorship and deepen the documentary record, not to approve an institution upload.`,
       },
       { type: "hr" },
       {

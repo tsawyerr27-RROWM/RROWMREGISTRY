@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
@@ -35,7 +34,7 @@ export default function ReplayDebuggerPage() {
 
   if (!ready) {
     return (
-      <div className="mx-auto max-w-lg px-6 py-24 text-center text-sm text-black/60">
+      <div className="mx-auto max-w-lg px-4 py-24 text-center text-sm text-black/60 sm:px-6">
         Checking access…
       </div>
     );
@@ -43,14 +42,6 @@ export default function ReplayDebuggerPage() {
 
   return (
     <div>
-      <div className="border-b border-black/10 bg-white px-6 py-3">
-        <Link
-          href="/admin"
-          className="text-xs text-black/50 hover:text-black"
-        >
-          ← Admin
-        </Link>
-      </div>
       <ReplayDebuggerClient />
     </div>
   );

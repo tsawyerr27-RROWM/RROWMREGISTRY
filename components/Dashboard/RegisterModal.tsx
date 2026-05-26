@@ -1,3 +1,4 @@
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import ModalShell from "@/components/ui/ModalShell";
 import { CurrencyCombobox } from "@/components/ui/CurrencyCombobox";
 
@@ -93,15 +94,10 @@ export function RegisterModal({
       <div className="p-10 md:p-12">
         {variant === "gallery" ? (
           <>
+            <InfoTooltip text="Issues a registry identifier and opens the canonical artwork record, the same documentary object an artist would file. Your institution attestation layers onto the chronology; the artist may later authenticate authorship and deepen detail. Not an approval or upload queue." />
             <h2 className="font-serif text-2xl font-normal leading-tight tracking-tight text-neutral-950 md:text-[1.65rem]">
               Register a work
             </h2>
-            <p className="mt-4 max-w-xl text-sm leading-relaxed text-neutral-600">
-              Issues a registry identifier and opens the canonical artwork record —
-              the same documentary object an artist would file. Your institution
-              attestation layers onto the chronology; the artist may later authenticate
-              authorship and deepen detail. Not an approval or upload queue.
-            </p>
           </>
         ) : (
           <h2 className="font-serif text-2xl font-normal leading-tight tracking-tight text-neutral-950 md:text-[1.65rem]">
@@ -149,7 +145,7 @@ export function RegisterModal({
                     onChange={(e) => onRepresentedArtistChange?.(e.target.value)}
                     className={selectClass}
                   >
-                    <option value="">No account link — name on file only</option>
+                    <option value="">No account link, name on file only</option>
                     {rosterOptions.map((o) => (
                       <option key={o.id} value={o.id}>
                         {o.label}

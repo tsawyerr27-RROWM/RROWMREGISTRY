@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { deferredRouterReplace } from "@/lib/deferred-app-router";
@@ -74,14 +73,7 @@ export default function ResetPasswordPage() {
       <AuthPageShell
         title="Link expired or invalid"
         subtitle="Open the reset link from your most recent email, or request a new one from the sign-in page."
-        footer={
-          <Link
-            href="/login"
-            className="text-[13px] font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-[0.2em] hover:decoration-neutral-500 sm:text-sm"
-          >
-            Back to sign in
-          </Link>
-        }
+        footer={null}
       >
         <p className="text-[14px] leading-relaxed text-neutral-600 sm:text-[15px]">
           For your security, password reset links expire after a short time. If you
@@ -162,14 +154,6 @@ export default function ResetPasswordPage() {
         >
           {submitting ? "Saving…" : "Save password"}
         </button>
-        <p className="text-center">
-          <Link
-            href="/login"
-            className="text-[13px] font-medium text-neutral-700 underline decoration-neutral-300 underline-offset-[0.2em] hover:text-neutral-950 sm:text-sm"
-          >
-            Cancel and return to sign in
-          </Link>
-        </p>
       </form>
     </AuthPageShell>
   );

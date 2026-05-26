@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { useState } from "react";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 import {
   NARRATIVE_REVEAL_DURATION_S,
@@ -82,17 +83,13 @@ export function SystemFlowSection() {
           viewport={{ once: true, margin: "-8% 0px", amount: 0.3 }}
           transition={{ duration: reduce ? 0 : NARRATIVE_REVEAL_DURATION_S, ease }}
         >
+          <InfoTooltip text="Whether you make art, show it, or live with it, the idea is simple: stop losing the paper trail. The public side stays readable; the private side stays yours." />
           <h2
             id="landing-system-flow-heading"
             className="max-w-[min(100%,40rem)] font-serif text-[clamp(1.65rem,2.9vw,2.45rem)] font-normal leading-[1.14] tracking-tight text-neutral-950"
           >
             One thread for the work, from first listing to what comes next
           </h2>
-          <p className="mt-6 max-w-[38rem] text-base leading-[1.84] text-neutral-600 md:text-[17px] md:leading-[1.8]">
-            Whether you make art, show it, or live with it, the idea is simple: stop
-            losing the paper trail. The public side stays readable; the private side
-            stays yours.
-          </p>
         </motion.div>
 
         <div className="relative mt-12 md:mt-14">

@@ -64,8 +64,8 @@ export const artistIntroSteps: IntroStep[] = [
     title: "Register and verify",
     body: (
       <p>
-        Each work you register receives a unique registry ID. Once verified — either
-        by you or through an institutional filing — a cryptographic certificate is
+        Each work you register receives a unique registry ID. Once verified, either
+        by you or through an institutional filing, a cryptographic certificate is
         generated and attached to the record permanently.
       </p>
     ),
@@ -110,8 +110,8 @@ export const collectorIntroSteps: IntroStep[] = [
     title: "Ownership and transfers",
     body: (
       <p>
-        When a work is transferred to you — by an artist, gallery, or another
-        collector — you confirm receipt here. Accepting a transfer extends the
+        When a work is transferred to you (by an artist, gallery, or another
+        collector) you confirm receipt here. Accepting a transfer extends the
         provenance chain and generates a certificate to the work&apos;s owner.
       </p>
     ),
@@ -158,7 +158,7 @@ export const galleryIntroSteps: IntroStep[] = [
     body: (
       <p>
         Send representation invitations to artists you work with. Once they join,
-        you can also send per-artwork authentication requests — when an artist
+        you can also send per-artwork authentication requests. When an artist
         verifies, a certificate is issued automatically.
       </p>
     ),

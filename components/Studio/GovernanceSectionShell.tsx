@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { workspace } from "@/styles/workspace-design";
 
 type Props = {
@@ -33,13 +34,10 @@ export function GovernanceSectionShell({
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500">
-            {eyebrow}
-          </p>
+          <InfoTooltip text={description} />
           <h2 className="mt-2 font-serif text-xl font-normal text-neutral-950 md:text-2xl">
             {title}
           </h2>
-          <p className={`${workspace.panel.description} mt-2`}>{description}</p>
         </div>
         {(badge || actions) ? (
           <div className="flex shrink-0 flex-wrap items-center gap-2">

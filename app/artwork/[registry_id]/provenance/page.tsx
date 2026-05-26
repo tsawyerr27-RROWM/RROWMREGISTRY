@@ -6,8 +6,8 @@ import {
 } from "@/lib/get-public-provenance";
 import { ProvenanceTimeline } from "@/components/provenance/ProvenanceTimeline";
 import { ProvenanceGalleryVerify } from "@/components/provenance/ProvenanceGalleryVerify";
-import { PageNav } from "@/components/ui/PageNav";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 export const dynamic = "force-dynamic";
 
@@ -32,8 +32,6 @@ export default async function ArtworkProvenancePage({
     return (
       <div className="min-h-screen rrowm-bg-page pt-20 text-neutral-900">
         <main className="mx-auto max-w-3xl px-6 py-12 md:py-20">
-          <PageNav backHref={artworkHref} />
-
           <header className="mt-10 border-b border-black/[0.06] pb-12">
             <h1 className="font-serif text-3xl font-normal leading-tight tracking-tight text-neutral-950 md:text-4xl">
               {header.title ?? "Untitled work"}
@@ -103,8 +101,6 @@ export default async function ArtworkProvenancePage({
   return (
     <div className="min-h-screen rrowm-bg-page pt-20 text-neutral-900">
       <main className="mx-auto max-w-3xl px-6 py-12 md:py-20">
-        <PageNav backHref={artworkHref} />
-
         <header className="mt-10 border-b border-black/[0.06] pb-12">
           <h1 className="font-serif text-3xl font-normal leading-tight tracking-tight text-neutral-950 md:text-4xl">
             {header.title ?? "Untitled work"}
@@ -146,13 +142,10 @@ export default async function ArtworkProvenancePage({
 
         {gallerySurface?.canMarkVerified ? (
           <section className="mt-10 border-t border-black/[0.06] pt-10">
+            <InfoTooltip text="Record a gallery attestation for this work when you are ready to confirm the registry record." />
             <h2 className="font-serif text-lg font-normal text-neutral-950">
               Verification
             </h2>
-            <p className="mt-4 max-w-xl text-sm text-neutral-600">
-              Record a gallery attestation for this work when you are ready to confirm the registry
-              record.
-            </p>
             <ProvenanceGalleryVerify
               artworkId={artworkId}
               artworkTitle={header.title ?? ""}

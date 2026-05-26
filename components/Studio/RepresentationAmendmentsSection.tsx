@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import ModalShell from "@/components/ui/ModalShell";
 import { GovernanceSectionShell } from "@/components/Studio/GovernanceSectionShell";
 import { REPRESENTATION_PHRASES } from "@/lib/representation-language";
@@ -173,7 +174,7 @@ export function RepresentationAmendmentsSection({
         id={anchorId}
         eyebrow="Representation amendments"
         title="Chronicle updates"
-        description="Proposed catalogue refinements stay tentative until the counterpart accepts them on file. Prior attestations remain visible — accumulative chronology, not replacement."
+        description="Proposed catalogue refinements stay tentative until the counterpart accepts them on file. Prior attestations remain visible: accumulative chronology, not replacement."
         badge={
           pendingForViewer.length > 0 ? (
             <span className={workspace.card.pill}>
@@ -342,10 +343,6 @@ export function RepresentationAmendmentsSection({
           <h3 className="font-serif text-xl font-normal text-neutral-950">
             New amendment request
           </h3>
-          <p className="mt-2 text-sm leading-relaxed text-neutral-600">
-            Describe what should change. Optional catalogue fields apply only if the
-            counterpart accepts — they merge into the record on file.
-          </p>
           {requestErr ? (
             <p className="mt-3 text-sm text-red-800" role="alert">
               {requestErr}
@@ -375,9 +372,9 @@ export function RepresentationAmendmentsSection({
               className={workspace.modal.field}
             />
           </label>
-          <p className="mt-5 text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-500">
-            Optional proposed catalogue fields
-          </p>
+          <div className="mt-5">
+            <InfoTooltip text="Describe what should change. Optional catalogue fields apply only if the counterpart accepts. They merge into the record on file." />
+          </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <input
               placeholder="Title"

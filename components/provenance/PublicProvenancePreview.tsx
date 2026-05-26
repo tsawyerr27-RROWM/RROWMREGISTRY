@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ArchivalProvenanceBundle } from "@/lib/provenance-timeline";
 import { chronologyTemporalRecallLines } from "@/lib/archival-temporal";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 function formatPreviewDate(iso: string): string {
   const d = new Date(iso);
@@ -34,15 +35,6 @@ export function PublicProvenancePreview({
 
   return (
     <div className="space-y-6">
-      {(continuityIndicators.length > 0 ||
-        tail.length > 0 ||
-        temporalRecall.length > 0) && (
-        <p className="max-w-xl text-[12px] leading-relaxed text-neutral-500">
-          Each work keeps one catalogue row. What follows is the latest stretch of its
-          chronology on file, not the whole file.
-        </p>
-      )}
-
       {continuityIndicators.length > 0 ? (
         <ul className="space-y-2 border-l border-neutral-200 pl-4">
           {continuityIndicators.map((line) => (
@@ -69,9 +61,7 @@ export function PublicProvenancePreview({
 
       {tail.length > 0 ? (
         <div className="space-y-3">
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500">
-            Latest milestones (preview)
-          </p>
+          <InfoTooltip text="Each work keeps one catalogue row. What follows is the latest stretch of its chronology on file." />
           <ol className="list-none space-y-3 p-0">
             {tail.map((ev) => (
               <li

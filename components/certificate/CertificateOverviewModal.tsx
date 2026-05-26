@@ -231,7 +231,7 @@ export function CertificateOverviewModal({ registryId, onClose }: Props) {
             ) : (
               <>
                 <h2 className="mt-8 font-serif text-2xl font-normal leading-tight tracking-tight text-neutral-950 md:text-3xl">
-                  {title || "—"}
+                  {title || "–"}
                 </h2>
                 {artistName ? (
                   <p className="mt-3 text-base text-neutral-600">{artistName}</p>
@@ -275,7 +275,7 @@ export function CertificateOverviewModal({ registryId, onClose }: Props) {
                       Verification
                     </span>
                     <p className="mt-1 capitalize text-neutral-900">
-                      {verificationStatus || "—"}
+                      {verificationStatus || "–"}
                     </p>
                   </div>
                   <div>
@@ -285,7 +285,7 @@ export function CertificateOverviewModal({ registryId, onClose }: Props) {
                     <p className="mt-1 text-neutral-900">
                       {createdAt
                         ? new Date(createdAt).toLocaleDateString()
-                        : "—"}
+                        : "–"}
                     </p>
                   </div>
                   {isVerified && isRevoked && certificate?.revoked_reason ? (

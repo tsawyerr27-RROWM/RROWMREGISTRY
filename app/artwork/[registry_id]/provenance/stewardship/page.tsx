@@ -4,7 +4,6 @@ import {
   getPublicProvenanceByRegistryId,
   PUBLIC_PROVENANCE_UNAVAILABLE,
 } from "@/lib/get-public-provenance";
-import { PageNav } from "@/components/ui/PageNav";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { RecordDisputeForm } from "@/components/disputes/RecordDisputeForm";
 import { ProvenanceGalleryVerify } from "@/components/provenance/ProvenanceGalleryVerify";
@@ -12,6 +11,7 @@ import { getArtworkDisputeFormContext } from "@/lib/artwork-dispute-context";
 import { getArchivalProvenanceBundle } from "@/lib/provenance-timeline";
 import { stewardshipContinuityNotesFromBundle } from "@/lib/registry-continuity";
 import { maskArtistInviteEmail } from "@/lib/mask-email";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +40,6 @@ export default async function ProvenanceStewardshipPage({
     return (
       <div className="min-h-screen rrowm-bg-page pt-20 text-neutral-900">
         <main className="mx-auto max-w-3xl px-6 py-12 md:py-20">
-          <PageNav backHref={provenanceHref} />
           <h1 className="mt-10 font-serif text-2xl font-normal text-neutral-950">
             Stewardship actions
           </h1>
@@ -123,16 +122,11 @@ export default async function ProvenanceStewardshipPage({
   return (
     <div className="min-h-screen rrowm-bg-page pt-20 text-neutral-900">
       <main className="mx-auto max-w-3xl px-6 py-12 md:py-20">
-        <PageNav backHref={provenanceHref} />
-
         <header className="mt-10 border-b border-neutral-200/80 pb-10">
+          <InfoTooltip text="Forms and attestations for registry governance, separate from the public chronology." />
           <h1 className="font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-3xl">
             Stewardship & verification actions
           </h1>
-          <p className="mt-4 max-w-xl text-sm leading-relaxed text-neutral-600">
-            Forms and attestations for registry governance, separate from the public
-            chronology.
-          </p>
           <p className="mt-6 font-mono text-xs text-neutral-500">{header.registryId}</p>
           <nav className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-sm">
             <Link
@@ -194,13 +188,10 @@ export default async function ProvenanceStewardshipPage({
 
         {gallerySurface?.canMarkVerified ? (
           <section className="mt-12 border-t border-neutral-200/80 pt-10">
+            <InfoTooltip text="Record a gallery attestation for this work when you are ready to confirm the registry record." />
             <h2 className="font-serif text-lg font-normal text-neutral-950">
               Gallery verification
             </h2>
-            <p className="mt-4 max-w-xl text-sm text-neutral-600">
-              Record a gallery attestation for this work when you are ready to confirm the
-              registry record.
-            </p>
             <div className="mt-6">
               <ProvenanceGalleryVerify
                 artworkId={artworkId}
@@ -216,13 +207,10 @@ export default async function ProvenanceStewardshipPage({
           className="mt-12 border-t border-neutral-200/80 pt-10"
           aria-label="Formal review"
         >
+          <InfoTooltip text="Sensitive evidence stays in the dispute workflow after submission, not on the public chronology." />
           <h2 className="font-serif text-lg font-normal text-neutral-950">
             Formal review · raise a challenge
           </h2>
-          <p className="mt-4 max-w-xl text-[13px] leading-relaxed text-neutral-600">
-            Sensitive evidence stays in the dispute workflow after submission, not on the
-            public chronology.
-          </p>
           {disputeCtx && artworkRow ? (
             <div className="mt-8 space-y-8">
               {!disputeCtx.ownershipDisputed && disputeCtx.latestOwnershipEventId ? (

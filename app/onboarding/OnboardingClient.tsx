@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import {
@@ -180,11 +179,6 @@ export function OnboardingClient() {
       return;
     }
     setStep(r);
-  };
-
-  const goBackToRole = async () => {
-    setError(null);
-    setStep("role");
   };
 
   const submitArtist = async (e: React.FormEvent) => {
@@ -375,19 +369,6 @@ export function OnboardingClient() {
     );
   }
 
-  const backButton = (
-    <button
-      type="button"
-      onClick={() => void goBackToRole()}
-      className="mb-2 flex items-center gap-1.5 text-[13px] font-medium text-neutral-500 transition hover:text-neutral-800"
-    >
-      <svg width="14" height="14" fill="none" viewBox="0 0 24 24">
-        <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="m15 18-6-6 6-6" />
-      </svg>
-      Change role
-    </button>
-  );
-
   if (step === "artist") {
     return (
       <AuthPageShell
@@ -395,7 +376,6 @@ export function OnboardingClient() {
         subtitle="This is how you appear on public records and in your studio. You can add more detail later."
         cardBelow={null}
       >
-        {backButton}
         <form onSubmit={(e) => void submitArtist(e)} className="space-y-5">
           <div>
             <label className={authLabelClass}>Full name</label>
@@ -451,7 +431,6 @@ export function OnboardingClient() {
         subtitle="A simple public-facing name for custody records. No feed, no social layer."
         cardBelow={null}
       >
-        {backButton}
         <form onSubmit={(e) => void submitCollector(e)} className="space-y-5">
           <div>
             <label className={authLabelClass}>
@@ -496,7 +475,6 @@ export function OnboardingClient() {
         subtitle="This is the label artists and the public see next to institutional association."
         cardBelow={null}
       >
-        {backButton}
         <form onSubmit={(e) => void submitGallery(e)} className="space-y-5">
           <div>
             <label className={authLabelClass}>

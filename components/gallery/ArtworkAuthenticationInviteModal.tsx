@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import ModalShell from "@/components/ui/ModalShell";
 import { ARTWORK_AUTH_INVITE_COPY } from "@/lib/artwork-authentication-invite";
 import { CANONICAL_RECORD_PHRASES } from "@/lib/representation-language";
@@ -122,15 +123,10 @@ export function ArtworkAuthenticationInviteModal({
       panelClassName="max-h-[90vh] w-full max-w-xl overflow-auto"
     >
       <div className="p-8 md:p-10">
-        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500">
-          Artwork record · Continuity invitation
-        </p>
+        <InfoTooltip text={ARTWORK_AUTH_INVITE_COPY.modalLead} />
         <h2 className="mt-2 font-serif text-2xl font-normal tracking-tight text-neutral-950">
           {ARTWORK_AUTH_INVITE_COPY.modalTitle}
         </h2>
-        <p className="mt-4 text-sm leading-relaxed text-neutral-600">
-          {ARTWORK_AUTH_INVITE_COPY.modalLead}
-        </p>
 
         <div className="mt-6 flex gap-4 rounded-xl border border-neutral-900/[0.06] bg-neutral-50/80 p-4">
           <div className="h-20 w-16 shrink-0 overflow-hidden rounded-lg bg-neutral-200/80 ring-1 ring-neutral-900/[0.06]">
@@ -191,7 +187,7 @@ export function ArtworkAuthenticationInviteModal({
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className={`${fieldClass} resize-none`}
-              placeholder="A brief continuity note — archival tone, not an approval request."
+              placeholder="A brief continuity note. Archival tone, not an approval request."
               disabled={!isAdmin || busy}
             />
           </div>

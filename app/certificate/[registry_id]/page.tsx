@@ -3,11 +3,9 @@
  * Future: support `?token=` (or similar) for QR / controlled deep links; validate server-side before rendering.
  */
 import { notFound, redirect } from "next/navigation";
-import { headers } from "next/headers";
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { warnSupabaseRpc } from "@/lib/supabase-rpc-error";
-import { PageNav } from "@/components/ui/PageNav";
 import { RrowmLogo } from "@/components/brand/RrowmLogo";
 import { CertificateArtistActions } from "@/components/certificate/CertificateArtistActions";
 import { StudioCertificateAckEffect } from "@/components/Studio/StudioCertificateAckEffect";
@@ -46,23 +44,6 @@ export default async function CertificatePage({
 
   const { registry_id } = await params;
   const cleanId = registry_id.trim();
-
-  const headersList = await headers();
-  const referer = headersList.get("referer") || "";
-  let backHref: string | undefined =
-    `/registry/${encodeURIComponent(cleanId)}`;
-  try {
-    const url = new URL(referer);
-    const path = url.pathname;
-    const full = `${url.pathname}${url.search || ""}`;
-    if (path.startsWith("/registry")) {
-      backHref = full;
-    } else if (path.startsWith("/verify")) {
-      backHref = full;
-    }
-  } catch {
-    // Fallbacks already set.
-  }
 
   const nextPath = `/certificate/${encodeURIComponent(cleanId)}`;
   if (!user) {
@@ -139,7 +120,6 @@ export default async function CertificatePage({
             </Link>
           </div>
           <div className="px-10 py-10">
-            <PageNav backHref={backHref} className="!mb-0" />
             <h1 className="mt-8 font-serif text-2xl font-medium tracking-tight text-neutral-900">
               No certificate on file
             </h1>
@@ -177,7 +157,7 @@ export default async function CertificatePage({
     "mt-3 rounded-md border border-neutral-200/90 bg-white/90 px-3.5 py-3 font-mono text-[10px] leading-relaxed tracking-[0.06em] text-neutral-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] print:mt-2 print:px-2.5 print:py-2 print:text-[9px] print:leading-snug";
 
   return (
-    <div className="ds-page-environment relative flex min-h-screen items-center justify-center px-4 py-16 pt-24 md:px-8 print:box-border print:bg-white print:px-4 print:py-3">
+    <div className="ds-page-environment relative flex min-h-screen items-center justify-center px-4 pb-16 pt-24 sm:px-6 lg:px-8 print:box-border print:bg-white print:px-4 print:py-3">
       <StudioCertificateAckEffect registryId={artwork.registry_id} />
       {/* Matches A4 (210×297mm) with 10mm margins so the 190mm-wide box aligns to the printable width. */}
       <style
@@ -212,10 +192,6 @@ export default async function CertificatePage({
           <div className="rounded-none border-0 bg-white shadow-[0_36px_88px_-36px_rgba(15,23,42,0.12)] print:flex print:h-full print:min-h-0 print:flex-1 print:flex-col print:rounded-sm print:border print:border-neutral-300/70 print:shadow-none">
             <div className="m-[10px] border-0 print:m-1.5 print:flex print:min-h-0 print:flex-1 print:flex-col print:border print:border-neutral-300/50">
               <div className="flex min-h-0 flex-1 flex-col justify-between gap-0 px-8 py-12 sm:px-12 sm:py-14 md:px-16 md:py-16 print:box-border print:min-h-0 print:flex-1 print:gap-0 print:px-3 print:py-2">
-              <div className="mb-8 print:hidden">
-                <PageNav backHref={backHref} />
-              </div>
-
               {isArtistOwner ? (
                 <CertificateArtistActions registryId={artwork.registry_id} />
               ) : null}

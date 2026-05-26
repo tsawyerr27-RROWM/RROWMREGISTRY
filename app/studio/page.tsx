@@ -2,6 +2,7 @@
 
 import { WelcomeModal } from "@/components/ui/IntroModal";
 import { artistIntroSteps } from "@/components/ui/intro-content";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 import {
@@ -2129,7 +2130,7 @@ return (
                       value={
                         averageGrowth !== null
                           ? `${averageGrowth > 0 ? "↑" : averageGrowth < 0 ? "↓" : ""} ${averageGrowth}%`
-                          : "—"
+                          : "–"
                       }
                       hint="Mean % change where initial and latest share a currency."
                       compact
@@ -2181,7 +2182,7 @@ return (
                   value={
                     avgHoldDurationDays
                       ? Math.round(avgHoldDurationDays)
-                      : "—"
+                      : "–"
                   }
                   compact
                 />
@@ -2199,7 +2200,7 @@ return (
                   value={
                     mostTransferredArtwork
                       ? `${mostTransferredArtwork.title} · ${mostTransferredArtwork.ownership_transfer_count || 0}`
-                      : "—"
+                      : "–"
                   }
                   hint="Highest transfer count."
                   compact
@@ -2209,7 +2210,7 @@ return (
                   value={
                     longestHeldArtwork
                       ? `${longestHeldArtwork.artwork.title} · ${Math.round(longestHeldArtwork.duration / (1000 * 60 * 60 * 24))}d`
-                      : "—"
+                      : "–"
                   }
                   hint="Longest span between first and latest transfer."
                   compact
@@ -2219,7 +2220,7 @@ return (
                   value={
                     fastestAppreciatingArtwork
                       ? `${fastestAppreciatingArtwork.growth}%`
-                      : "—"
+                      : "–"
                   }
                   hint="Largest % gain from initial to latest (same currency)."
                   compact
@@ -3233,14 +3234,12 @@ function DashboardSection({
   return (
     <section className="space-y-6">
       <div className="border-b border-black/[0.06] pb-4">
+        {subtitle ? (
+          <InfoTooltip text={subtitle} />
+        ) : null}
         <h3 className="text-sm font-semibold text-neutral-500">
           {title}
         </h3>
-        {subtitle ? (
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-neutral-600">
-            {subtitle}
-          </p>
-        ) : null}
       </div>
       {children}
     </section>

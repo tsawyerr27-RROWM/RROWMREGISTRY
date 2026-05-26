@@ -14,7 +14,7 @@ import {
 } from "@/lib/artwork-replay-engine";
 
 function shortId(id: string | null | undefined): string {
-  if (!id) return "—";
+  if (!id) return "–";
   const s = String(id);
   if (s.length <= 12) return s;
   return `${s.slice(0, 8)}…${s.slice(-4)}`;
@@ -74,8 +74,8 @@ function diffReplayState(a: ReplayState, b: ReplayState): {
   for (const c of currencies) {
     const x = a.value_by_currency[c];
     const y = b.value_by_currency[c];
-    const xs = x === undefined ? "—" : String(x);
-    const ys = y === undefined ? "—" : String(y);
+    const xs = x === undefined ? "–" : String(x);
+    const ys = y === undefined ? "–" : String(y);
     if (xs !== ys) values.push({ currency: c, from: xs, to: ys });
   }
 
@@ -88,7 +88,7 @@ function diffReplayState(a: ReplayState, b: ReplayState): {
     .sort()
     .join(", ");
   const certs: [string, string] | null =
-    as === bs ? null : [as || "—", bs || "—"];
+    as === bs ? null : [as || "–", bs || "–"];
 
   return { owner, verification, values, certs };
 }
@@ -171,7 +171,7 @@ export default function ReplayDebuggerClient() {
           <p className="mt-4 max-w-xl text-sm leading-relaxed text-black/60">
             Reconstruct provenance from events only. Replay state does not read{" "}
             <code className="text-xs text-black/50">current_owner_id</code> or{" "}
-            <code className="text-xs text-black/50">verification_status</code> as inputs—those columns are
+            <code className="text-xs text-black/50">verification_status</code> as inputs. Those columns are
             shown separately as DB cache for comparison.
           </p>
         </header>
@@ -370,13 +370,13 @@ function ReplayPanel({
     <div className="flex flex-col gap-0 border border-black/10 bg-white">
       {permMode && permOutcomeDiffers ? (
         <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-950">
-          Ordering ambiguity detected — this record is not deterministic under alternate legal orderings
+          Ordering ambiguity detected. This record is not deterministic under alternate legal orderings
           of simultaneous events.
         </div>
       ) : null}
       {!permMode && payload.validation.ordering_ambiguous ? (
         <div className="border-b border-black/10 bg-black/[0.03] px-4 py-2 text-[11px] text-black/55">
-          Validator flagged possible ordering sensitivity — enable permutation mode to preview.
+          Validator flagged possible ordering sensitivity. Enable permutation mode to preview.
         </div>
       ) : null}
 
@@ -453,7 +453,7 @@ function ReplayPanel({
           <dl className="mt-6 space-y-4 text-sm">
             <div>
               <dt className="text-sm text-black/40">Registry</dt>
-              <dd className="mt-1 font-medium">{payload.artwork.registry_id ?? "—"}</dd>
+              <dd className="mt-1 font-medium">{payload.artwork.registry_id ?? "–"}</dd>
             </div>
             <div>
               <dt className="text-sm text-black/40">Artist</dt>
@@ -462,7 +462,7 @@ function ReplayPanel({
             <div>
               <dt className="text-sm text-black/40">Created</dt>
               <dd className="mt-1 font-mono text-xs text-black/70">
-                {payload.artwork.created_at ?? "—"}
+                {payload.artwork.created_at ?? "–"}
               </dd>
             </div>
             <div className="border-t border-black/10 pt-4">
@@ -477,7 +477,7 @@ function ReplayPanel({
               <dt className="text-sm text-black/40">Values</dt>
               <dd className="mt-1 space-y-1 font-mono text-xs">
                 {Object.keys(stateAfter.value_by_currency).length === 0 ? (
-                  <span className="text-black/45">—</span>
+                  <span className="text-black/45">–</span>
                 ) : (
                   Object.entries(stateAfter.value_by_currency).map(([k, v]) => (
                     <div key={k}>
@@ -491,7 +491,7 @@ function ReplayPanel({
               <dt className="text-sm text-black/40">Certificates</dt>
               <dd className="mt-1 space-y-1 font-mono text-xs">
                 {stateAfter.certificates.length === 0 ? (
-                  <span className="text-black/45">—</span>
+                  <span className="text-black/45">–</span>
                 ) : (
                   stateAfter.certificates.map((c) => (
                     <div key={c.id}>
@@ -560,7 +560,7 @@ function ReplayPanel({
             </p>
             <p className="mt-2 font-mono text-[11px] leading-relaxed text-black/50">
               owner {shortId(payload.artwork.db_cache.current_owner_id)} ·{" "}
-              {payload.artwork.db_cache.verification_status ?? "—"}
+              {payload.artwork.db_cache.verification_status ?? "–"}
             </p>
             {payload.validation.mismatches.length ? (
               <ul className="mt-2 list-inside list-disc text-[11px] text-red-700/90">
@@ -596,7 +596,7 @@ function ReplayPanel({
                         : "font-mono text-red-700"
                     }
                   >
-                    {snapCompare.snap_owner || "—"}
+                    {snapCompare.snap_owner || "–"}
                   </span>
                 </p>
               ) : null}

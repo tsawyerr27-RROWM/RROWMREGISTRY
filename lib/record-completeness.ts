@@ -68,7 +68,7 @@ export function recordCompletenessLabel(level: RecordCompletenessLevel): string 
 export function recordCompletenessDescription(level: RecordCompletenessLevel): string {
   switch (level) {
     case "high":
-      return "Several kinds of filing sit together—stewardship, custody sequence, and documents—so the chronology reads with more historical depth.";
+      return "Several kinds of filing sit together (stewardship, custody sequence, and documents) so the chronology reads with more historical depth.";
     case "moderate":
       return "Core facts are on file; further participant confirmations or custody milestones may still arrive.";
     default:

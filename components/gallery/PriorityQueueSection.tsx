@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import type { PriorityQueueItem, PriorityLevel } from "@/lib/gallery-priority-engine";
 
 type Props = {
@@ -38,13 +39,10 @@ export function PriorityQueueSection({
 
   return (
     <section className="mb-8 rounded-2xl border border-neutral-900/[0.06] bg-white/50 p-6 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-sm sm:p-7">
+      <InfoTooltip text="Ordered operational guidance based on integrity, verification, value signals, market context, and recency." />
       <h2 className="font-serif text-lg font-normal text-neutral-950 md:text-xl">
         Priority queue
       </h2>
-      <p className="mt-1 text-[13px] leading-relaxed text-neutral-500">
-        Ordered operational guidance based on integrity, verification, value signals, market
-        context, and recency.
-      </p>
 
       <ul className="mt-6 divide-y divide-neutral-900/[0.06] border-t border-neutral-900/[0.06] pt-4">
         {visible.map((item) => (

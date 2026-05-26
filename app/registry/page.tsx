@@ -11,6 +11,7 @@ import { RegistryListPagination } from "@/components/Registry/RegistryListPagina
 import { RegistryListFilters } from "@/components/Registry/RegistryListFilters";
 import { RegistryExplorerHero } from "@/components/Registry/RegistryExplorerHero";
 import Link from "next/link";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 export const dynamic = "force-dynamic";
 
@@ -84,7 +85,7 @@ export default async function RegistryExplorer({
           trustNote={
             <>
               Only verified works appear in this index. Certificate documents are
-              not exposed on the public grid—sign in to view a full certificate
+              not exposed on the public grid. Sign in to view a full certificate
               where available.
             </>
           }
@@ -127,13 +128,10 @@ export default async function RegistryExplorer({
             <section className="mt-14 border-t border-neutral-900/[0.06] pt-14 md:mt-16 md:pt-16">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
+                  <InfoTooltip text="Each entry links to the immutable registry record for this artwork." />
                   <h2 className="font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-[1.75rem]">
                     Verified records
                   </h2>
-                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-neutral-500">
-                    Each entry links to the immutable registry record for this
-                    artwork.
-                  </p>
                 </div>
                 <p className="text-sm text-neutral-600">
                   Page {page}
@@ -183,7 +181,7 @@ export default async function RegistryExplorer({
                             </Link>
                           ) : (
                             <p className="mt-2 text-sm text-neutral-600">
-                              {artist?.display_name ?? "—"}
+                              {artist?.display_name ?? "–"}
                             </p>
                           )}
                           <p className="mt-1 text-xs text-neutral-400">

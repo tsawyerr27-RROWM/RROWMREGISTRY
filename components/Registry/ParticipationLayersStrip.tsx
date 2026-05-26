@@ -1,5 +1,6 @@
 import type { ParticipationLayer } from "@/lib/get-artwork-participation-layers";
 import { CANONICAL_RECORD_PHRASES } from "@/lib/representation-language";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 type Props = {
   layers: ParticipationLayer[];
@@ -53,20 +54,7 @@ export function ParticipationLayersStrip({
       } ${className}`}
       aria-label="Documentary layers on file"
     >
-      <p
-        className={`text-[11px] font-medium uppercase tracking-[0.14em] ${
-          variant === "dark" ? "text-white/45" : "text-neutral-500"
-        }`}
-      >
-        {CANONICAL_RECORD_PHRASES.canonicalRecordOnFile}
-      </p>
-      <p
-        className={`mt-1 text-[12px] leading-relaxed ${
-          variant === "dark" ? "text-white/50" : "text-neutral-600"
-        }`}
-      >
-        {CANONICAL_RECORD_PHRASES.recordDeepensOverTime}
-      </p>
+      <InfoTooltip text={CANONICAL_RECORD_PHRASES.recordDeepensOverTime} theme={variant === "dark" ? "dark" : "light"} />
       <ul className="mt-3 flex flex-wrap gap-1.5">
         {layers.map((layer) => (
           <li key={layer.id}>

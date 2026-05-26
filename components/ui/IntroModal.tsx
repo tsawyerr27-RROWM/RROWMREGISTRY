@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, type ReactNode } from "react";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 type IntroStep = {
   title: string;
@@ -93,9 +94,7 @@ export function IntroModal({
 
         {/* Welcome title (shown on first step only) */}
         {welcomeTitle && isFirst ? (
-          <p className="mb-1 text-xs font-medium uppercase tracking-[0.12em] text-neutral-400">
-            {welcomeTitle}
-          </p>
+          <InfoTooltip text={welcomeTitle} className="mb-1" />
         ) : null}
 
         {/* Icon */}

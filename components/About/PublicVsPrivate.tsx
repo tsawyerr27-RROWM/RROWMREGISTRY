@@ -1,4 +1,5 @@
 import { narrativeLayout } from "@/styles/narrative-layout";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 type PublicVsPrivateProps = {
   density?: "default" | "digest";
@@ -52,6 +53,7 @@ export function PublicVsPrivate({ density = "default" }: PublicVsPrivateProps) {
             aria-hidden
           />
           <div className="relative max-w-xl">
+            <InfoTooltip text="Searchable entries show what the public layer includes: typically identifiers, record status, and what has been opted into visibility. This is the open verification surface." />
             <h3
               className={
                 digest
@@ -61,17 +63,6 @@ export function PublicVsPrivate({ density = "default" }: PublicVsPrivateProps) {
             >
               Public registry
             </h3>
-            <p
-              className={
-                digest
-                  ? "mt-4 text-[13px] leading-[1.78] text-neutral-700 md:text-sm"
-                  : "mt-6 text-base leading-[1.85] text-neutral-700 md:text-[1.05rem]"
-              }
-            >
-              Searchable entries show what the public layer includes: typically
-              identifiers, record status, and what has been opted into
-              visibility. This is the open verification surface.
-            </p>
           </div>
         </div>
 
@@ -87,36 +78,16 @@ export function PublicVsPrivate({ density = "default" }: PublicVsPrivateProps) {
           >
             <div className={stackGap}>
               <div>
+                <InfoTooltip text="Full certificates and sensitive documentation are available through authenticated access. Viewing is tied to login and permissions, not to anonymous browsing." />
                 <h3 className="text-sm font-medium text-neutral-100 md:text-[15px]">
                   Certificates and account access
                 </h3>
-                <p
-                  className={
-                    digest
-                      ? "mt-3 text-[13px] leading-[1.78] text-neutral-400 md:text-sm"
-                      : "mt-5 text-sm leading-[1.8] text-neutral-400 md:text-base md:leading-[1.78]"
-                  }
-                >
-                  Full certificates and sensitive documentation are available
-                  through authenticated access. Viewing is tied to login and
-                  permissions, not to anonymous browsing.
-                </p>
               </div>
               <div>
+                <InfoTooltip text="Current ownership and personal details are not exposed by default. The system separates what proves the record from what protects people involved in a transaction." />
                 <h3 className="text-sm font-medium text-neutral-100 md:text-[15px]">
                   Ownership and privacy
                 </h3>
-                <p
-                  className={
-                    digest
-                      ? "mt-3 text-[13px] leading-[1.78] text-neutral-400 md:text-sm"
-                      : "mt-5 text-sm leading-[1.8] text-neutral-400 md:text-base md:leading-[1.78]"
-                  }
-                >
-                  Current ownership and personal details are not exposed by
-                  default. The system separates what proves the record from what
-                  protects people involved in a transaction.
-                </p>
               </div>
             </div>
           </div>

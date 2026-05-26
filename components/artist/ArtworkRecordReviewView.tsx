@@ -7,6 +7,7 @@ import { ArchivalAuthorshipContributionModal } from "@/components/Studio/Archiva
 import type { ArtworkAuthenticationInvitePreview } from "@/lib/artwork-authentication-invite";
 import { CANONICAL_RECORD_PHRASES } from "@/lib/representation-language";
 import { workspace } from "@/styles/workspace-design";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 type Props = {
   preview: ArtworkAuthenticationInvitePreview;
@@ -271,9 +272,7 @@ function ArtworkRecordCard({
   return (
     <>
       <header className={workspace.panel.shell}>
-        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500">
-          Canonical record · Review
-        </p>
+        <InfoTooltip text="An artwork associated with your practice is on file within the registry. Review the record, then authenticate authorship to add to the continuity." />
         <h1 className="mt-3 font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-3xl">
           {preview.artworkTitle || "Work on file"}
         </h1>
@@ -282,11 +281,6 @@ function ArtworkRecordCard({
             {preview.registryId}
           </p>
         ) : null}
-        <p className="mt-4 text-sm leading-relaxed text-neutral-600">
-          {preview.requiresAuth
-            ? "An artwork associated with your practice is already on file within the registry. Review the record below."
-            : "This artwork record is already on file. Review what the institution filed, then authenticate authorship and add to the continuity."}
-        </p>
       </header>
 
       {preview.imageUrl ? (

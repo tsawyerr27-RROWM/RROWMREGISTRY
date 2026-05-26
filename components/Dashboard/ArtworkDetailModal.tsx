@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import ModalShell from "@/components/ui/ModalShell";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { formatValueEventLabel } from "@/lib/format-registry-labels";
@@ -76,7 +77,7 @@ export function ArtworkDetailModal({
                 </h2>
                 <p className="mt-4 text-base text-neutral-600">
                   {[artwork.year, artwork.medium].filter(Boolean).join(" · ") ||
-                    "—"}
+                    "–"}
                 </p>
                 {artwork.dimensions ? (
                   <p className="mt-2 text-sm text-neutral-500">
@@ -99,23 +100,18 @@ export function ArtworkDetailModal({
             <div className="rounded-2xl border border-neutral-200/90 bg-gradient-to-b from-neutral-50/95 via-white to-neutral-50/50 p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)] md:p-8">
               <div className="mb-6 flex items-end justify-between gap-4 border-b border-neutral-200/80 pb-5">
                 <div>
+                  <InfoTooltip text="Declared value events for this work." />
                   <p className="text-sm font-semibold text-neutral-500">
                     Value history
-                  </p>
-                  <p className="mt-1 text-sm text-neutral-600">
-                    Declared value events for this work.
                   </p>
                 </div>
               </div>
 
               {valueHistory.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-neutral-300/90 bg-white/60 px-5 py-8 text-center">
+                  <InfoTooltip text="Record a value event to show how declared value changes over time." />
                   <p className="text-sm font-medium text-neutral-900">
                     No value history yet
-                  </p>
-                  <p className="mt-2 text-sm leading-relaxed text-neutral-600">
-                    Record a value event to show how declared value changes over
-                    time.
                   </p>
                 </div>
               ) : (
@@ -154,11 +150,11 @@ export function ArtworkDetailModal({
                                     String(event.currency).toUpperCase()
                                   )
                                 ) : (
-                                  "—"
+                                  "–"
                                 )}
                               </p>
                               <span className="rounded-2xl bg-neutral-100 px-2.5 py-1 text-sm font-medium text-neutral-500">
-                                {event.visibility_level || "—"}
+                                {event.visibility_level || "–"}
                               </span>
                             </div>
                             {event.note ? (

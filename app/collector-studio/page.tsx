@@ -14,7 +14,6 @@ import {
   WorkspaceShell,
   WorkspaceShellFooterLinks,
 } from "@/components/Studio/WorkspaceShell";
-import { PageNav } from "@/components/ui/PageNav";
 import {
   getCollectorOwnedArtworkIds,
   sortPortfolioRows,
@@ -409,21 +408,21 @@ export default function CollectorStudioPage() {
     for (const x of studioAttention.unverifiedOwnership) {
       items.push({
         key: `uv-${x.registryId}`,
-        text: `Ownership verification pending — ${x.title}`,
+        text: `Ownership verification pending: ${x.title}`,
         href: `/collector-studio/artwork/${encodeURIComponent(x.registryId)}`,
       });
     }
     for (const x of studioAttention.unresolvedSales) {
       items.push({
         key: `sale-${x.registryId}`,
-        text: `Transfer to resolve — ${x.title}`,
+        text: `Transfer to resolve: ${x.title}`,
         href: `/collector-studio/artwork/${encodeURIComponent(x.registryId)}`,
       });
     }
     for (const x of studioAttention.claimed) {
       items.push({
         key: `claim-${x.registryId}`,
-        text: `Ownership claim in progress — ${x.title}`,
+        text: `Ownership claim in progress: ${x.title}`,
         href: `/collector-studio/artwork/${encodeURIComponent(x.registryId)}`,
       });
     }
@@ -500,8 +499,6 @@ export default function CollectorStudioPage() {
     >
       {activeSection === "workspace" ? (
         <>
-          <PageNav backHref="/registry" />
-
           {testModeEnabled() ? (
             <div className="mt-6 rounded-xl border border-neutral-900/[0.06] bg-white/35 px-4 py-6 sm:px-6">
               <TestDataControls />
@@ -638,7 +635,7 @@ export default function CollectorStudioPage() {
           ) : (
             <ul className="mt-12 space-y-0 divide-y divide-neutral-900/10">
               {sorted.map((r) => {
-                const reg = r.registry_id?.trim() || "—";
+                const reg = r.registry_id?.trim() || "–";
                 const title = (r.title || "").trim() || "Untitled";
                 const artist =
                   r.artist_id && artistNames[r.artist_id]

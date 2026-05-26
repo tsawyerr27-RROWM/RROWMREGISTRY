@@ -6,6 +6,7 @@ import { useCallback, useState } from "react";
 import {
   narrativeLayout,
 } from "@/styles/narrative-layout";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -272,17 +273,13 @@ export function PortfolioManagementSection() {
       <div className={`${narrativeLayout.gutter} relative ${narrativeLayout.sectionPadYTight}`}>
         <div className="grid gap-10 lg:grid-cols-12 lg:items-start lg:gap-12">
           <div className="lg:col-span-5">
+            <InfoTooltip text="One registry identity runs through an artist studio, a gallery desk, and a collector workspace. Each view follows how that participant files on the chronology." />
             <h2
               id="landing-portfolio-mgmt-heading"
               className="max-w-[min(100%,28rem)] font-serif text-[clamp(1.6rem,2.8vw,2.35rem)] font-normal leading-[1.16] tracking-tight text-neutral-950"
             >
               Portfolio management across every role
             </h2>
-            <p className="mt-5 max-w-[26rem] text-base leading-[1.82] text-neutral-600 md:text-[17px] md:leading-[1.78]">
-              One registry identity runs through an artist studio, a gallery desk, and a
-              collector workspace. Each view follows how that participant files on the
-              chronology.
-            </p>
 
             <motion.div
               className="mt-7 flex flex-wrap gap-2.5"

@@ -10,6 +10,7 @@ import {
   chronologyContinuationKindLabel,
   type ProvenanceTransferType,
 } from "@/lib/provenance-transfer";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 const inputClass =
   "mt-1.5 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-[15px] text-neutral-900 outline-none focus:border-neutral-400";
@@ -189,17 +190,11 @@ export function ContinueProvenanceFlow() {
   return (
     <div className="space-y-8">
       <header className="border-b border-neutral-200 pb-8">
-        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500">
-          Chronology continuation
-        </p>
+        <InfoTooltip text="Invite the next recorded custodian so the historical record of this work can advance. Deliberate, on file, participant-confirmed." />
         <p className="mt-2 font-mono text-[11px] text-neutral-400">{regs}</p>
         <h1 className="mt-4 font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-3xl">
           Continue the chronology
         </h1>
-        <p className="mt-4 text-[15px] leading-relaxed text-neutral-600">
-          Invite the next recorded custodian so the historical record of this work can
-          advance: deliberate, on file, participant-confirmed.
-        </p>
         <p className="mt-3 text-[15px] font-medium text-neutral-900">{title}</p>
       </header>
 

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { ExperienceEmptyStateButton } from "@/components/ui/ExperienceEmptyState";
 import { workspace } from "@/styles/workspace-design";
 import {
@@ -200,7 +201,7 @@ export function ArtworksSection({
                 </h3>
                 <p className={`mt-1 ${workspace.type.cardArtist}`}>
                   {[artwork.year, artwork.medium].filter(Boolean).join(" · ") ||
-                    "—"}
+                    "–"}
                 </p>
               </div>
 
@@ -279,13 +280,10 @@ export function ArtworksSection({
           >
             Your studio
           </p>
+          <InfoTooltip text="Register a piece to open its catalogue record and chronology. Later filings you add stay on the same entry." />
           <h3 className="mt-3 font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-[1.65rem]">
             No represented works on file yet
           </h3>
-          <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-neutral-600">
-            Register a piece to open its catalogue record and chronology. Later filings you
-            add stay on the same entry.
-          </p>
           <div className="mt-10 flex justify-center">
             <ExperienceEmptyStateButton
               label="Register artwork"

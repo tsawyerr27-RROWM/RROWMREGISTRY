@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArtworksHeroPreview } from "@/components/Dashboard/ArtworksHeroPreview";
 import type { PublicPresence } from "@/lib/public-presence";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 export type AccountHeroPreviewArtwork = {
   id: string;
@@ -218,7 +219,7 @@ function ArtistNarrativeTile({
         </p>
       ) : (
         <p className="text-[11px] leading-relaxed text-white/40">
-          No biography yet — add one to shape how collectors read your practice.
+          No biography yet. Add one to shape how collectors read your practice.
         </p>
       )}
       <div className="flex flex-wrap gap-1.5">
@@ -326,7 +327,7 @@ function CollectorPrivacyTile({
           <p className="text-[11px] text-white/55">
             {presence.profile
               ? "A public collector page exists."
-              : "No public profile — fully private."}
+              : "No public profile. Fully private."}
           </p>
           <span
             className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
@@ -548,13 +549,10 @@ export function AccountPresenceHero({
                     : "Gallery"}
               </span>
             </div>
+            <InfoTooltip text="Your public presence on the registry is deliberate. These controls shape what visitors see, not your internal records or workspace activity." theme="dark" />
             <h1 className="mt-5 font-serif text-[2rem] font-normal leading-[1.05] tracking-tight text-white md:text-[2.65rem] lg:text-[2.85rem]">
               {headline}
             </h1>
-            <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-white/70">
-              Your public presence on the registry is deliberate. These controls shape what visitors
-              see, not your internal records or workspace activity.
-            </p>
           </div>
 
           <div className="mt-10 space-y-5 lg:mt-12">

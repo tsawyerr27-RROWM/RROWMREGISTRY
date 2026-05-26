@@ -1,12 +1,10 @@
 import { notFound } from "next/navigation";
-import { headers } from "next/headers";
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { warnSupabaseRpc } from "@/lib/supabase-rpc-error";
 import { ShareRecordButton } from "@/components/Registry/ShareRecordButton";
 import { PublicClaimOwnership } from "@/components/Registry/PublicClaimOwnership";
 import { RegistryTechnicalDetails } from "@/components/Registry/RegistryTechnicalDetails";
-import { PageNav } from "@/components/ui/PageNav";
 import { ArchivalProvenanceTimeline } from "@/components/provenance/ArchivalProvenanceTimeline";
 import { getArchivalProvenanceBundle } from "@/lib/provenance-timeline";
 import { getProvenanceInsights } from "@/lib/provenance-insights";
@@ -24,6 +22,7 @@ import {
   heldByCredibilityClass,
 } from "@/lib/get-current-owner";
 import { RegistryCertificateOverviewButton } from "@/components/certificate/RegistryCertificateOverviewButton";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 export const dynamic = "force-dynamic";
 
@@ -84,26 +83,6 @@ export default async function PublicRegistryPage({
 }) {
   const { registry_id } = await params;
   const cleanId = registry_id.trim();
-
-  const headersList = await headers();
-  const referer = headersList.get("referer") || "";
-  let backHref: string | undefined = "/registry";
-  let crumbsRoot: { label: string; href: string } = {
-    label: "Registry index",
-    href: "/registry",
-  };
-
-  try {
-    const url = new URL(referer);
-    const path = url.pathname;
-    const full = `${url.pathname}${url.search || ""}`;
-    if (path.startsWith("/registry")) {
-      backHref = full;
-      crumbsRoot = { label: "Registry index", href: full };
-    }
-  } catch {
-    // Fallbacks already set.
-  }
 
   const supabase = await createSupabaseServerClient();
 
@@ -281,12 +260,11 @@ export default async function PublicRegistryPage({
 
 return (
     <div className="ds-page-environment min-h-screen pt-20 text-neutral-900">
-      <main className="relative mx-auto max-w-6xl px-5 py-14 md:px-8 md:py-20">
+      <main className="relative mx-auto max-w-6xl px-4 py-14 sm:px-6 md:py-20 lg:px-8">
         <div
           className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[min(52vh,28rem)] bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(16,185,129,0.07),transparent_58%),radial-gradient(ellipse_55%_45%_at_100%_0%,rgba(14,165,233,0.06),transparent_50%)]"
           aria-hidden
         />
-        <PageNav backHref={backHref} />
         {/* Trust bar — compact status strip */}
         <div
           className={`mb-8 rounded-lg border px-3.5 py-2 shadow-sm md:px-4 md:py-2.5 ${trustBarToneClass}`}
@@ -384,7 +362,7 @@ return (
               </p>
               <p className="mt-2 text-sm text-neutral-500">
                 {[artwork.year, artwork.medium].filter(Boolean).join(" · ") ||
-                  "—"}
+                  "–"}
           </p>
         </div>
             {(() => {
@@ -438,19 +416,19 @@ return (
                 <div className="flex justify-between gap-6 py-4 first:pt-0">
                   <dt className="text-neutral-500">Medium</dt>
                   <dd className="max-w-[60%] text-right text-neutral-900">
-                    {artwork.medium || "—"}
+                    {artwork.medium || "–"}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-6 py-4">
                   <dt className="text-neutral-500">Dimensions</dt>
                   <dd className="max-w-[60%] text-right text-neutral-900">
-                    {artwork.dimensions || "—"}
+                    {artwork.dimensions || "–"}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-6 py-4">
                   <dt className="text-neutral-500">Year</dt>
                   <dd className="text-right text-neutral-900">
-                    {artwork.year || "—"}
+                    {artwork.year || "–"}
                   </dd>
                 </div>
                 {editionLine ? (
@@ -469,12 +447,10 @@ return (
               />
               <div className="relative">
                 <div className="flex flex-col gap-3 border-b border-black/[0.06] pb-6">
+                  <InfoTooltip text="A unified timeline of creation, verification, certification, ownership, and recorded values." />
                   <h2 className="font-serif text-2xl font-normal tracking-tight text-neutral-950">
                     Provenance
                   </h2>
-                  <p className="max-w-2xl text-sm leading-relaxed text-neutral-600">
-                    A unified timeline of creation, verification, certification, ownership, and recorded values.
-                  </p>
                 </div>
                 {provenanceInsights.length > 0 ? (
                   <div className="mt-8">
@@ -509,7 +485,7 @@ return (
               <div className="mt-6 space-y-3 text-sm">
                 {!hasCertificate ? (
                   <p className="font-medium text-neutral-900">
-                    — Certificate not recorded
+                    Certificate not recorded
                   </p>
                 ) : certRevoked ? (
                   <div className="space-y-2">

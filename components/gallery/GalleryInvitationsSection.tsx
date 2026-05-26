@@ -4,6 +4,7 @@ import type { RefObject } from "react";
 import { useMemo, useState } from "react";
 
 import type { BadgeTone } from "@/components/ui/Badge";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { inviteVisibilityStudioLabel } from "@/lib/representation-language";
 import { Badge } from "@/components/ui/Badge";
 import { workspace } from "@/styles/workspace-design";
@@ -75,13 +76,13 @@ function inviteSignupUrl(registrySiteUrl: string, token: string | null | undefin
 }
 
 function formatSentDate(iso: string | null | undefined): string {
-  if (!iso) return "—";
+  if (!iso) return "–";
   try {
     return new Intl.DateTimeFormat(undefined, {
       dateStyle: "medium",
     }).format(new Date(iso));
   } catch {
-    return "—";
+    return "–";
   }
 }
 
@@ -163,25 +164,19 @@ export function GalleryInvitationsSection({
     >
       {hidePageHeader ? null : (
         <header className={`max-w-2xl ${workspace.panel.shell} !p-6 md:!p-8`}>
+          <InfoTooltip text="Invite artists to authenticate records associated with their practice. The canonical artwork record exists independently; invitations deepen participant attestations, not gallery approval workflows." />
           <h1 className={workspace.panel.title}>Invitations</h1>
-          <p className={workspace.panel.description}>
-            Invite artists to authenticate records associated with their practice. The
-            canonical artwork record exists independently; invitations deepen participant
-            attestations — not gallery approval workflows.
-          </p>
         </header>
       )}
 
       {sectionEyebrow ? (
         <div className="max-w-2xl">
+          {sectionDescription ? (
+            <InfoTooltip text={sectionDescription} />
+          ) : null}
           <h2 className="font-serif text-lg font-normal text-neutral-950">
             {sectionEyebrow}
           </h2>
-          {sectionDescription ? (
-            <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
-              {sectionDescription}
-            </p>
-          ) : null}
         </div>
       ) : null}
 
@@ -378,7 +373,7 @@ export function GalleryInvitationsSection({
                           </button>
                         ) : null}
                         {!canCopyLink && !canResend && !canPublish ? (
-                          <span className="text-[13px] text-neutral-400">—</span>
+                          <span className="text-[13px] text-neutral-400">–</span>
                         ) : null}
                       </div>
                     </td>

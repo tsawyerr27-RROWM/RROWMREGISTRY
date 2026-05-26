@@ -3,7 +3,6 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { fetchArtistArtworkList } from "@/lib/fetch-artist-artwork-list";
 import { redirectIfPageOutOfRange } from "@/lib/redirect-registry-page";
-import { PageNav } from "@/components/ui/PageNav";
 import {
   parseListParams,
   REGISTRY_PAGE_SIZE,
@@ -22,6 +21,7 @@ import {
   representationStatusPublicLabel,
 } from "@/lib/representation-language";
 import type { ParticipationLayer } from "@/lib/get-artwork-participation-layers";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 export const dynamic = "force-dynamic";
 
@@ -132,8 +132,7 @@ export default async function ArtistPage({
 
   return (
     <div className="min-h-screen rrowm-bg-page-warm pt-20 text-neutral-900">
-      <main className="mx-auto max-w-6xl px-6 py-12 md:py-16">
-        <PageNav backHref="/registry" />
+      <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 md:py-16 lg:px-8">
         {/* Hero */}
         <section className="max-w-3xl">
           <h1 className="font-serif text-4xl font-normal leading-[1.08] tracking-tight text-neutral-950 md:text-5xl lg:text-[3.25rem]">
@@ -204,13 +203,10 @@ export default async function ArtistPage({
         <section className="mt-20 md:mt-24">
           <div className="flex flex-col gap-4 border-b border-black/[0.06] pb-8 md:flex-row md:items-end md:justify-between">
             <div>
+              <InfoTooltip text="Open a piece for the curated view; use the registry link for the continuity record on file." />
               <h2 className="font-serif text-3xl font-normal tracking-tight text-neutral-950 md:text-4xl">
                 Registered works
               </h2>
-              <p className="mt-3 max-w-xl text-sm leading-relaxed text-neutral-600">
-                Open a piece for the curated view; use the registry link for the
-                continuity record on file.
-              </p>
             </div>
             {total > 0 ? (
               <p className="text-xs text-neutral-500">
@@ -344,7 +340,7 @@ export default async function ArtistPage({
         <section className="mx-auto mt-20 max-w-2xl rounded-3xl border border-black/[0.06] bg-white/70 px-8 py-10 text-center shadow-sm md:mt-24 md:px-12">
           <p className="text-base leading-relaxed text-neutral-700">
             Discover works on the artwork pages, then confirm details on the
-            public registry—the continuity layer for each record on file.
+            public registry, the continuity layer for each record on file.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link

@@ -27,6 +27,7 @@ import {
 } from "@/styles/narrative-layout";
 import { AboutDigestTabs } from "@/components/About/AboutDigestTabs";
 import { AboutPrinciplesChapter } from "@/components/About/AboutPrinciplesChapter";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 const gutter = narrativeLayout.gutter;
 
@@ -98,26 +99,11 @@ export default function AboutPage() {
                 className="lg:col-span-8 lg:col-start-1"
                 style={{ y: introY, opacity: introOpacity }}
               >
+                <InfoTooltip text="The registry is a shared layer for how artworks are identified, documented, and checked over time, with clear rules for what is visible, what requires access, and what stays private." />
                 <h1 className="max-w-[min(100%,46rem)] font-serif text-[clamp(2.05rem,5.4vw,3.45rem)] font-normal leading-[1.06] tracking-tight text-neutral-950 lg:max-w-[min(100%,50rem)]">
                   A system for recording authorship, provenance, and
                   verification
                 </h1>
-                <p className="mt-8 max-w-xl text-sm leading-[1.82] text-neutral-600 md:max-w-2xl md:text-base md:leading-[1.78]">
-                  The registry is a shared layer for how artworks are
-                  identified, documented, and checked over time, with clear
-                  rules for what is visible, what requires access, and what
-                  stays private.
-                </p>
-                <div className="mt-10 h-px max-w-md bg-gradient-to-r from-neutral-300/70 via-neutral-200/40 to-transparent md:mt-12" aria-hidden />
-                <Link
-                  href="/"
-                  className="group mt-8 inline-flex items-center text-sm font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-[0.35em] transition duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:decoration-neutral-500 hover:text-neutral-950 md:mt-10"
-                >
-                  <span className="mr-1.5 opacity-70 transition-opacity duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:opacity-100">
-                    ←
-                  </span>
-                  Back to home
-                </Link>
               </motion.header>
 
               <div

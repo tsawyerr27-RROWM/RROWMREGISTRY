@@ -1,4 +1,5 @@
 import { formatCurrency } from "@/lib/formatCurrency";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 type Props = {
   amount: number | null | undefined;
@@ -95,20 +96,6 @@ export function ArtworkDeclaredValueBlock({
 
 function ManagedByTooltip({ name }: { name: string }) {
   return (
-    <span className="group relative inline-flex cursor-help" aria-label={`Fee managed by ${name}`}>
-      <svg
-        className="h-3.5 w-3.5 text-neutral-400 transition-colors group-hover:text-neutral-600"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={1.8}
-      >
-        <circle cx="12" cy="12" r="10" />
-        <path strokeLinecap="round" d="M12 16v-4M12 8h.01" />
-      </svg>
-      <span className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-neutral-200/90 bg-white px-3 py-2 text-[11px] leading-snug text-neutral-700 opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
-        Represented work — fee managed by {name}
-      </span>
-    </span>
+    <InfoTooltip text={`Represented work, fee managed by ${name}`} />
   );
 }

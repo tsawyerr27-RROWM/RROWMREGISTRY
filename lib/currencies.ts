@@ -30,6 +30,6 @@ export const CURRENCY_CODES = CURRENCIES.map((c) => c.code);
 export function currencyLabel(code: string) {
   const c = CURRENCIES.find((x) => x.code === code);
   if (!c) return code;
-  return `${c.symbol} ${c.code} — ${c.name}`;
+  return `${c.symbol} ${c.code} · ${c.name}`;
 }
 

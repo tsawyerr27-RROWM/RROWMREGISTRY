@@ -192,12 +192,6 @@ export default function CompleteSignupPage() {
           </p>
           <div className="flex flex-col gap-4 sm:flex-row sm:gap-8">
             <Link
-              href="/get-started"
-              className="text-sm font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-4 hover:opacity-70"
-            >
-              Back to Get started
-            </Link>
-            <Link
               href="/login"
               className="text-sm text-neutral-500 underline decoration-neutral-300 underline-offset-4 hover:text-neutral-800"
             >

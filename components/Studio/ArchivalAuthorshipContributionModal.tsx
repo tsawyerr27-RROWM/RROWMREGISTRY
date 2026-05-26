@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import ModalShell from "@/components/ui/ModalShell";
 import { CANONICAL_RECORD_PHRASES } from "@/lib/representation-language";
 
@@ -55,17 +56,10 @@ export function ArchivalAuthorshipContributionModal({
       panelClassName="max-h-[90vh] w-full max-w-xl overflow-auto"
     >
       <div className="p-8 md:p-10">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
-          Archival authorship contribution
-        </p>
+        <InfoTooltip text={<>Archival authorship contribution. {CANONICAL_RECORD_PHRASES.recordDeepensOverTime}. Your words are filed as participant attestation on the chronology. They do not replace institution filings or rewrite the canonical record.</>} />
         <h2 className="mt-2 font-serif text-2xl font-normal tracking-tight text-neutral-950">
           Deepen the record
         </h2>
-        <p className="mt-4 text-sm leading-relaxed text-neutral-600">
-          {CANONICAL_RECORD_PHRASES.recordDeepensOverTime}. Your words are filed as
-          participant attestation on the chronology — they do not replace institution
-          filings or rewrite the canonical record.
-        </p>
 
         <div className="mt-6 rounded-xl border border-neutral-900/[0.06] bg-neutral-50/80 px-4 py-3">
           <p className="text-sm font-medium text-neutral-900">
@@ -89,7 +83,7 @@ export function ArchivalAuthorshipContributionModal({
               value={authorshipStatement}
               onChange={(e) => setAuthorshipStatement(e.target.value)}
               className={fieldClass}
-              placeholder="How you understand authorship for this work — practice, intent, or documentary context…"
+              placeholder="How you understand authorship for this work: practice, intent, or documentary context…"
             />
           </div>
           <div>

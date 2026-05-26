@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { PROVENANCE_REGISTRY_DISCLAIMER } from "@/lib/provenance-transfer";
 import type { ProvenanceContinuationPreview } from "@/lib/provenance-transfer";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 export function AcceptProvenanceClient() {
   const router = useRouter();
@@ -145,14 +146,9 @@ export function AcceptProvenanceClient() {
   if (done) {
     return (
       <div className="space-y-4 rounded-xl border border-neutral-200/90 bg-white px-6 py-8 text-center shadow-[0_20px_50px_-40px_rgba(15,23,42,0.12)]">
-        <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-500">
-          On file
-        </p>
+        <InfoTooltip text="A new custodial chapter is now part of the historical record." />
         <p className="font-serif text-xl font-normal text-neutral-950 md:text-2xl">
           The chronology has been continued.
-        </p>
-        <p className="text-[15px] leading-relaxed text-neutral-700">
-          A new custodial chapter is now part of the historical record.
         </p>
         <p className="text-[13px] text-neutral-500">
           Returning to the published record…
@@ -164,20 +160,13 @@ export function AcceptProvenanceClient() {
   return (
     <div className="space-y-8">
       <div className="rounded-xl border border-neutral-200/90 bg-white px-5 py-6 shadow-[0_12px_40px_-32px_rgba(15,23,42,0.1)]">
-        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500">
-          Chronology continuation
-        </p>
+        <InfoTooltip text="You have been identified as the next recorded custodian of this work. This invitation continues the historical record." />
         <p className="mt-2 font-mono text-[11px] text-neutral-400">
           {preview.registryId}
         </p>
         <h1 className="mt-4 font-serif text-2xl font-normal tracking-tight text-neutral-950">
           {preview.artworkTitle}
         </h1>
-        <p className="mt-4 text-[14px] leading-relaxed text-neutral-700">
-          You have been identified as the next recorded custodian of this work. This
-          invitation continues the historical record associated with it—not title,
-          marketplace sale, or legal adjudication.
-        </p>
 
         <ol className="mt-8 list-none space-y-3 border-t border-neutral-100 pt-6 text-[13px] leading-relaxed text-neutral-600">
           <li className="flex gap-3">

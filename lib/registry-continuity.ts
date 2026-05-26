@@ -130,7 +130,7 @@ export function stewardshipContinuityNotesFromBundle(
   const notes: string[] = [];
   if (bundle.continuityIndicators.length > 0) {
     notes.push(
-      "The chronology gains depth as durable milestones are filed—this is historical continuity, not a running feed."
+      "The chronology gains depth as durable milestones are filed. This is historical continuity, not a running feed."
     );
   }
   return notes.slice(0, 1);

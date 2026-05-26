@@ -1,3 +1,4 @@
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { ExperienceEmptyStateButton } from "@/components/ui/ExperienceEmptyState";
 import { WorkspaceRecordCard } from "@/components/Studio/WorkspaceRecordCard";
 import {
@@ -98,7 +99,7 @@ export function CertificatesSection({
               title={artwork.title}
               subtitle={
                 [artwork.year, artwork.medium].filter(Boolean).join(" · ") ||
-                "—"
+                "–"
               }
               imageUrl={artwork.image_url}
               imagePlaceholder="Registry record"
@@ -167,13 +168,10 @@ export function CertificatesSection({
           <p className="mt-8 text-sm font-semibold text-emerald-800/80">
             Registry certificates
           </p>
+          <InfoTooltip text="When a work is verified, its certificate appears here as a permanent record you can open and share." />
           <h3 className="mt-3 font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-[1.65rem]">
             No verified certificates yet
           </h3>
-          <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-neutral-600">
-            When a work is verified, its certificate appears here as a permanent
-            record you can open and share.
-          </p>
           <div className="mt-10 flex justify-center">
             <ExperienceEmptyStateButton
               label="Register artwork"

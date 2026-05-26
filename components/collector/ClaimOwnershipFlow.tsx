@@ -10,6 +10,7 @@ import {
   acquisitionTypeLabel,
   type OwnershipAcquisitionType,
 } from "@/lib/collector-ownership-claim";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 type ArtworkPick = {
   id: string;
@@ -226,16 +227,10 @@ export function ClaimOwnershipFlow() {
             register as a collector to continue.
           </p>
         ) : null}
-        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500">
-          Collector
-        </p>
+        <InfoTooltip text="You are declaring your position in relation to a registered work. This will be recorded as part of the provenance history." />
         <h1 className="mt-2 font-serif text-2xl font-normal tracking-tight text-neutral-950 sm:text-3xl">
           Declare ownership
         </h1>
-        <p className="mt-3 text-[15px] leading-relaxed text-neutral-600">
-          You are declaring your position in relation to a registered work. This
-          will be recorded as part of the provenance history.
-        </p>
       </header>
 
       <div className="mt-10 space-y-10">

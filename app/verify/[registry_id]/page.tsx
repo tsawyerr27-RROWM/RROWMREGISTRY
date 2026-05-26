@@ -1,9 +1,7 @@
 import { notFound } from "next/navigation";
-import { headers } from "next/headers";
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { warnSupabaseRpc } from "@/lib/supabase-rpc-error";
-import { PageNav } from "@/components/ui/PageNav";
 import { recordVerificationPendingLabel } from "@/lib/representation-language";
 
 export const dynamic = "force-dynamic";
@@ -16,30 +14,6 @@ export default async function VerifyPage({
   const supabase = await createSupabaseServerClient();
   const { registry_id } = await params;
   const cleanId = registry_id.trim();
-
-  const headersList = await headers();
-  const referer = headersList.get("referer") || "";
-  let backHref: string | undefined =
-    `/registry/${encodeURIComponent(cleanId)}`;
-  let crumbsRoot: { label: string; href: string } = {
-    label: "Registry",
-    href: `/registry/${encodeURIComponent(cleanId)}`,
-  };
-
-  try {
-    const url = new URL(referer);
-    const path = url.pathname;
-    const full = `${url.pathname}${url.search || ""}`;
-    if (path.startsWith("/registry")) {
-      backHref = full;
-      crumbsRoot = { label: "Registry", href: full };
-    } else if (path.startsWith("/certificate")) {
-      backHref = full;
-      crumbsRoot = { label: "Certificate", href: full };
-    }
-  } catch {
-    // Fallbacks already set.
-  }
 
   const { data: artwork, error: artworkError } = await supabase
   .from("artworks")
@@ -85,9 +59,6 @@ export default async function VerifyPage({
 
   return (
     <div className="ds-page-environment relative flex min-h-screen items-center justify-center px-6 py-24 pt-28">
-      <div className="absolute left-0 right-0 top-24 mx-auto max-w-4xl px-6">
-        <PageNav backHref={backHref} className="mb-6" />
-      </div>
       {isRevoked && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="rotate-[-20deg] text-[120px] font-bold tracking-widest text-red-600 opacity-10">

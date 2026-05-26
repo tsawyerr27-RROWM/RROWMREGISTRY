@@ -13,6 +13,7 @@ import {
   authLabelClass,
   authPrimaryButtonClass,
 } from "@/components/auth/AuthFieldStyles";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 const allowedRoles = ["artist", "gallery", "collector"] as const;
 type SignupRole = (typeof allowedRoles)[number];
@@ -395,18 +396,10 @@ export function SignupClient() {
           <div className="w-full max-w-xl">
             {/* Header */}
             <div className="rounded-2xl border border-black/[0.08] bg-white/95 p-6 shadow-[0_24px_64px_-32px_rgba(15,23,42,0.18)] backdrop-blur-sm sm:p-8">
-              <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500">
-                Canonical records · Invitation
-              </p>
+              <InfoTooltip text="Works associated with your practice are on file. Review the records, then join to authenticate authorship and contribute to the continuity." />
               <h1 className="mt-3 font-serif text-[1.65rem] font-normal leading-tight tracking-tight text-neutral-950 sm:text-3xl">
                 Records associated with your practice
               </h1>
-              <p className="mt-3 text-[14px] leading-relaxed text-neutral-600 sm:text-[15px]">
-                <span className="font-medium text-neutral-800">{gName}</span>{" "}
-                participates in chronology for works associated with your
-                practice. Canonical records may already exist on file within the
-                registry.
-              </p>
             </div>
 
             {/* Artwork previews */}
@@ -471,7 +464,7 @@ export function SignupClient() {
                 )}
               </p>
               <p className="mt-2 text-[12px] text-neutral-500">
-                Layered attestations only — not ownership adjudication or
+                Layered attestations only, not ownership adjudication or
                 institution approval.
               </p>
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
@@ -586,13 +579,6 @@ export function SignupClient() {
               {submitting ? "Creating profile…" : "Create profile"}
             </button>
           </form>
-          <button
-            type="button"
-            onClick={() => setShowForm(false)}
-            className="block w-full text-center text-[13px] text-neutral-500 underline decoration-neutral-300 underline-offset-4"
-          >
-            Back to record preview
-          </button>
         </div>
       </AuthPageShell>
     );

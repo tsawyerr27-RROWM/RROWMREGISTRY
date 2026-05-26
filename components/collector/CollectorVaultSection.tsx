@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 import {
   COLLECTOR_VAULT_CATEGORIES,
@@ -193,12 +194,10 @@ export function CollectorVaultSection({
 
   return (
     <div className="rounded-2xl border border-neutral-200/90 bg-white/80 px-6 py-8 shadow-[0_1px_2px_rgba(0,0,0,0.04)] md:px-8 md:py-9">
-      <h2 className="font-serif text-xl font-normal tracking-tight text-neutral-950">
+      <InfoTooltip text={COLLECTOR_VAULT_FRAME} />
+      <h2 className="mt-2 font-serif text-xl font-normal tracking-tight text-neutral-950">
         Private registry materials
       </h2>
-      <p className="mt-3 max-w-2xl text-sm leading-relaxed text-neutral-600">
-        {COLLECTOR_VAULT_FRAME}
-      </p>
 
       {!isLoggedIn ? (
         <p className="mt-6 text-sm text-neutral-700">
@@ -233,9 +232,7 @@ export function CollectorVaultSection({
             <div className="mt-8 space-y-10">
               {grouped.map(([label, rows]) => (
                 <section key={label}>
-                  <h3 className="text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-500">
-                    {label}
-                  </h3>
+                  <InfoTooltip text={label} />
                   <ul className="mt-4 space-y-4">
                     {rows.map((row) => (
                       <li

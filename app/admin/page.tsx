@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { deferredRouterReplace } from "@/lib/deferred-app-router";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -48,20 +49,14 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-black to-slate-900 text-white">
-      <div className="mx-auto max-w-5xl px-6 py-16">
+      <div className="mx-auto max-w-5xl px-4 pb-16 pt-24 sm:px-6 lg:px-8">
         <header className="mb-12 flex items-center justify-between">
           <div>
-            <p className="text-sm text-white/50">RROWM Registry</p>
+            <InfoTooltip text="Registry administration console. Manage verifications, system health, and moderation tools." theme="dark" />
             <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
               Admin Console
             </h1>
           </div>
-          <Link
-            href="/studio"
-            className="text-sm text-white/70 underline-offset-4 hover:text-white hover:underline"
-          >
-            Back to studio
-          </Link>
         </header>
 
         <div className="grid gap-8 md:grid-cols-2">
@@ -69,12 +64,8 @@ export default function AdminPage() {
             href="/internal/verify"
             className="liquid-glass-tile-dark block space-y-3 p-6 transition-opacity hover:opacity-95"
           >
-            <p className="text-xs text-white/50">Verification</p>
+            <InfoTooltip text="Review and verify pending artwork registrations. Verified works receive certificates and are published on the public registry." theme="dark" />
             <h2 className="text-xl font-semibold">Verify artworks</h2>
-            <p className="text-sm text-white/70">
-              Review and verify pending artwork registrations. Verified works
-              receive certificates and are published on the public registry.
-            </p>
             {pendingCount != null && pendingCount > 0 ? (
               <span className="inline-flex items-center gap-2 rounded-full bg-amber-500/20 px-3 py-1 text-xs font-medium text-amber-300">
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
@@ -93,27 +84,19 @@ export default function AdminPage() {
             <h2 className="text-xl font-semibold">Visual replay debugger</h2>
             <p className="text-sm text-white/70">
               Step through ownership, value, verification, and certificate
-              events with replayed state only — same logic as the audit
+              events with replayed state only, same logic as the audit
               validator.
             </p>
           </Link>
 
           <div className="liquid-glass-tile-dark space-y-3 p-6">
-            <p className="text-xs text-white/50">Registry</p>
+            <InfoTooltip text="High-level controls and health checks for the registry infrastructure." theme="dark" />
             <h2 className="text-xl font-semibold">System overview</h2>
-            <p className="text-sm text-white/70">
-              High-level controls and health checks for the registry
-              infrastructure.
-            </p>
           </div>
 
           <div className="liquid-glass-tile-dark space-y-3 p-6">
-            <p className="text-xs text-white/50">Coming soon</p>
+            <InfoTooltip text="Manage ownership claims, review activity, and moderate content as the admin surface evolves." theme="dark" />
             <h2 className="text-xl font-semibold">Moderation &amp; tools</h2>
-            <p className="text-sm text-white/70">
-              Manage ownership claims, review activity, and moderate content as
-              the admin surface evolves.
-            </p>
           </div>
         </div>
       </div>

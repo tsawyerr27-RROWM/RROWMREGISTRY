@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 type EvidenceType = "document" | "image" | "certificate" | "external_link";
 
@@ -44,7 +45,7 @@ function formatDisputeStatus(raw: string) {
     case "rejected":
       return "Rejected";
     default:
-      return raw || "—";
+      return raw || "–";
   }
 }
 
@@ -236,12 +237,9 @@ export function DisputeEvidenceSection({ disputeId }: { disputeId: string }) {
 
       {dispute ? (
         <section className="rounded-2xl border border-neutral-900/[0.06] bg-white/45 p-6 backdrop-blur-sm">
+          <InfoTooltip text="Private challenge on your registry record. Status updates when staff complete review; evidence is append-only." />
           <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
             Dispute
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-neutral-600">
-            Private challenge on your registry record. Status updates when staff complete
-            review; evidence is append-only.
           </p>
           <div className="mt-4 space-y-2 text-sm text-neutral-800">
             <p>
@@ -276,12 +274,10 @@ export function DisputeEvidenceSection({ disputeId }: { disputeId: string }) {
       <section className="rounded-2xl border border-neutral-900/[0.06] bg-white/45 p-6 backdrop-blur-sm">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
+            <InfoTooltip text="Evidence is private. Links to files use signed URLs and expire." />
             <h2 className="font-serif text-xl font-normal tracking-tight text-neutral-950">
               Evidence
             </h2>
-            <p className="mt-2 text-sm leading-relaxed text-neutral-600">
-              Evidence is private. Links to files use signed URLs and expire.
-            </p>
             {evidenceNotice ? (
               <p className="mt-2 text-sm font-medium text-neutral-800" role="status">
                 {evidenceNotice}

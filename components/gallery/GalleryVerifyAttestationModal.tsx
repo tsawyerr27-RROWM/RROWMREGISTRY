@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import ModalShell from "@/components/ui/ModalShell";
 
 type Props = {
@@ -39,17 +40,10 @@ export function GalleryVerifyAttestationModal({
       panelClassName="max-h-[90vh] w-full max-w-lg overflow-auto"
     >
       <div className="p-10 md:p-12" id={bodyId}>
+        <InfoTooltip text="You are about to mark this work as verified on behalf of your institution. This action is recorded and may be relied upon in the registry and certificate pipeline." />
         <h2 className="font-serif text-2xl font-normal leading-snug text-neutral-950">
           Mark this work verified?
         </h2>
-        <p className="mt-4 text-sm leading-relaxed text-neutral-600">
-          You are about to mark{" "}
-          <span className="font-medium text-neutral-800">
-            {(artworkTitle || "").trim() || "this work"}
-          </span>{" "}
-          as verified on behalf of your institution. This action is recorded and may be relied
-          upon in the registry and certificate pipeline.
-        </p>
         {registryId ? (
           <p className="mt-4 font-mono text-[11px] text-neutral-500">{registryId}</p>
         ) : null}

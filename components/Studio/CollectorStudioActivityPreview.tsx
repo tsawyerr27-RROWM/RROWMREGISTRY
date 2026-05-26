@@ -106,7 +106,7 @@ export function CollectorStudioActivityPreview({
         merged.push({
           id: `v-${r.id}`,
           created_at: String(r.created_at || ""),
-          label: priVe.has(rawId) ? "Sale — transfer pending" : "Value recorded",
+          label: priVe.has(rawId) ? "Sale: transfer pending" : "Value recorded",
           detail: `${title} · ${vt}`,
           href: reg ? `/collector-studio/artwork/${encodeURIComponent(reg)}` : undefined,
           pinned: priVe.has(rawId),

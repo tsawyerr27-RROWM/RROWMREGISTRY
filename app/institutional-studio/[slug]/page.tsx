@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { warnSupabaseRpc } from "@/lib/supabase-rpc-error";
-import { PageNav } from "@/components/ui/PageNav";
 import { parsePublicPresence } from "@/lib/public-presence";
 import { GalleryPublicHero } from "@/components/gallery/GalleryPublicHero";
 import { GalleryPublicSections } from "@/components/gallery/GalleryPublicSections";
@@ -170,8 +169,6 @@ export default async function PublicGalleryPage({
         aria-hidden
       />
       <main className="relative mx-auto max-w-[min(100%,88rem)] px-4 sm:px-6 lg:px-8">
-        <PageNav backHref="/registry" />
-
         <GalleryPublicHero
           name={displayName}
           verified={gallery.verified}

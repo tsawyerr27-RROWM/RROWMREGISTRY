@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import ModalShell from "@/components/ui/ModalShell";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
@@ -75,13 +76,10 @@ export function StudioSaleTransferModal({
       tone="silver"
       panelClassName="relative max-h-[92vh] w-full max-w-lg overflow-y-auto p-6 md:p-8"
     >
+      <InfoTooltip text="Link this transfer to the recorded sale so the ledger stays accurate. This is a lasting provenance step. Double-check before saving." />
       <h2 className="font-serif text-xl font-normal text-neutral-950">
         Complete sale · ownership
       </h2>
-      <p className="mt-2 text-sm leading-relaxed text-neutral-600">
-        Link this transfer to the recorded sale so the ledger stays accurate.
-        This is a lasting provenance step. Double-check before saving.
-      </p>
       <p className="liquid-glass-inset !rounded-xl mt-4 px-3 py-2 text-sm text-neutral-700 tabular-nums">
         {new Intl.NumberFormat("en-US", {
           style: "currency",

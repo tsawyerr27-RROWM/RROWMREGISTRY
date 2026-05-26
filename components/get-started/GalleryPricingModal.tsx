@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import ModalShell from "@/components/ui/ModalShell";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 type Props = {
   isOpen: boolean;
@@ -49,17 +50,13 @@ export function GalleryPricingModal({ isOpen, onClose }: Props) {
         <p className="text-sm font-medium text-neutral-700">
           Institutional studio · Paid access
         </p>
+        <InfoTooltip text="Institutional studio accounts are on a paid tier. Review what is included now and what is planned next, then continue to create an account when you are ready." />
         <h2
           id="gallery-pricing-title"
           className="mt-3 font-serif text-2xl font-normal leading-tight tracking-tight text-neutral-950 md:text-[1.75rem]"
         >
           Choose how your institutional studio uses RROWM
         </h2>
-        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-neutral-600">
-          Institutional studio accounts are on a paid tier. Review what is included now and
-          what is planned next, then continue to create an account when you are
-          ready.
-        </p>
 
         <div className="mt-10 grid gap-8 border-t border-[color:var(--rrowm-atmo-rim)] pt-10 md:grid-cols-2 md:gap-10">
           <section

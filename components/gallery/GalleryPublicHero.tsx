@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 export type GalleryPublicHeroProps = {
   name: string;
@@ -38,9 +39,7 @@ export function GalleryPublicHero({
         aria-hidden
       />
       <div className="relative px-6 py-12 sm:px-10 sm:py-14 lg:px-14 lg:py-16">
-        <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-white/40">
-          Institutional continuity · public catalogue
-        </p>
+        <InfoTooltip text="Public catalogue profile. Works and institutional continuity visible to the registry." theme="dark" />
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <span
             className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
@@ -88,10 +87,6 @@ export function GalleryPublicHero({
           <p className="mt-6 max-w-2xl text-[12px] leading-relaxed text-white/45">
             {enduranceNote}
           </p>
-        ) : null}
-
-        {description ? (
-          <p className="mt-10 max-w-2xl text-[15px] leading-[1.75] text-white/65">{description}</p>
         ) : null}
 
         <div className="mt-10 flex flex-wrap items-center gap-4 border-t border-white/10 pt-8">

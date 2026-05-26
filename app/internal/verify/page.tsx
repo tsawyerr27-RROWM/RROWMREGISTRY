@@ -4,7 +4,6 @@ import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { deferredRouterPush } from "@/lib/deferred-app-router";
-import Link from "next/link";
 import Image from "next/image";
 
 type PendingArtwork = {
@@ -191,15 +190,9 @@ export default function InternalVerify() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-black to-slate-900 text-white">
-      <div className="mx-auto max-w-5xl px-6 py-16">
+      <div className="mx-auto max-w-5xl px-4 pb-16 pt-24 sm:px-6 lg:px-8">
         <header className="mb-12 flex items-center justify-between">
           <div>
-            <Link
-              href="/admin"
-              className="text-sm text-white/50 underline-offset-4 hover:text-white/70 hover:underline"
-            >
-              &larr; Admin Console
-            </Link>
             <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
               Pending verifications
             </h1>
@@ -210,12 +203,6 @@ export default function InternalVerify() {
               </p>
             )}
           </div>
-          <Link
-            href="/studio"
-            className="text-sm text-white/70 underline-offset-4 hover:text-white hover:underline"
-          >
-            Back to studio
-          </Link>
         </header>
 
         {artworks.length === 0 && (

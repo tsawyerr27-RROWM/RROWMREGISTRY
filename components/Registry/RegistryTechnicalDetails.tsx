@@ -27,13 +27,13 @@ export function RegistryTechnicalDetails({
         <div>
           <dt className="text-neutral-500">Verification hash</dt>
           <dd className="break-all font-mono text-xs text-neutral-600">
-            {verificationHash || "—"}
+            {verificationHash || "–"}
           </dd>
         </div>
         <div>
           <dt className="text-neutral-500">Timeline hash</dt>
           <dd className="break-all font-mono text-xs text-neutral-600">
-            {timelineHash || "—"}
+            {timelineHash || "–"}
           </dd>
         </div>
       </dl>
