@@ -7,6 +7,8 @@ import {
   chronologyContinuationKindLabel,
   PROVENANCE_REGISTRY_DISCLAIMER,
 } from "@/lib/provenance-transfer";
+import { clientIpFromRequest } from "@/lib/registry-action-security/client-ip";
+import { guardRegistryPreview } from "@/lib/registry-action-security/guards";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
 
 export const runtime = "nodejs";
@@ -32,6 +34,13 @@ export async function GET(req: Request) {
   if (token.length < 32) {
     return NextResponse.json(empty(), { status: 400 });
   }
+
+  const previewBlocked = await guardRegistryPreview(
+    req,
+    "provenance_preview",
+    clientIpFromRequest(req)
+  );
+  if (previewBlocked) return previewBlocked;
 
   const service = createSupabaseServiceClient();
   const { data: tr, error } = await service

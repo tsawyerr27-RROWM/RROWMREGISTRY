@@ -3,29 +3,45 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 export type AdminApiContext = {
-  userId: string;
-  email: string;
   service: SupabaseClient;
 };
 
 /**
- * Parsed allowlist from ADMIN_EMAILS env var.
- * Comma-separated, lowercased, trimmed. If unset, falls back to DB-only check.
+ * Verifies that the caller has a valid admin session cookie
+ * (set by POST /api/admin/login). Returns a service-role Supabase client.
  */
-function adminEmailAllowlist(): Set<string> | null {
-  const raw = process.env.ADMIN_EMAILS?.trim();
-  if (!raw) return null;
-  const emails = raw
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  return emails.length > 0 ? new Set(emails) : null;
+export async function requireAdminApi(
+  _req: Request
+): Promise<
+  { ok: true; ctx: AdminApiContext } | { ok: false; status: number; error: string }
+> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) {
+    return { ok: false, status: 500, error: "Server misconfiguration" };
+  }
+
+  const cookieStore = await cookies();
+  const session = cookieStore.get("rrowm_admin_session");
+
+  if (!session?.value) {
+    return { ok: false, status: 401, error: "Unauthorized" };
+  }
+
+  const service = createClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  return { ok: true, ctx: { service } };
 }
 
 /**
- * Supabase client scoped to the caller (cookie or Bearer). Use for RPCs that rely on auth.uid().
+ * Supabase client scoped to the caller (cookie or Bearer).
+ * Use for RPCs that rely on auth.uid().
  */
-export async function createUserSupabaseClient(req: Request): Promise<SupabaseClient | null> {
+export async function createUserSupabaseClient(
+  req: Request
+): Promise<SupabaseClient | null> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !anon) return null;
@@ -48,88 +64,8 @@ export async function createUserSupabaseClient(req: Request): Promise<SupabaseCl
           cookiesToSet.forEach(({ name, value, options }) => {
             cookieStore.set(name, value, options);
           });
-        } catch {
-          /* ignore */
-        }
+        } catch {}
       },
     },
   });
-}
-
-/**
- * Authenticated request + service-role client + admin verification.
- * Two-layer check: DB `artists.is_admin` AND ADMIN_EMAILS env allowlist (if set).
- */
-export async function requireAdminApi(
-  req: Request
-): Promise<
-  { ok: true; ctx: AdminApiContext } | { ok: false; status: number; error: string }
-> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !anon || !serviceKey) {
-    return { ok: false, status: 500, error: "Server misconfiguration" };
-  }
-
-  const authHeader = req.headers.get("authorization") ?? "";
-  let userId: string | null = null;
-  let userEmail = "";
-
-  if (authHeader.toLowerCase().startsWith("bearer ")) {
-    const tokenClient = createClient(url, anon, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data, error } = await tokenClient.auth.getUser();
-    if (error || !data?.user) {
-      return { ok: false, status: 401, error: "Unauthorized" };
-    }
-    userId = data.user.id;
-    userEmail = String(data.user.email || "").toLowerCase();
-  } else {
-    const cookieStore = await cookies();
-    const cookieClient = createServerClient(url, anon, {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          } catch {
-            /* ignore */
-          }
-        },
-      },
-    });
-    const { data, error } = await cookieClient.auth.getUser();
-    if (error || !data?.user) {
-      return { ok: false, status: 401, error: "Unauthorized" };
-    }
-    userId = data.user.id;
-    userEmail = String(data.user.email || "").toLowerCase();
-  }
-
-  const service = createClient(url, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-
-  const allowlist = adminEmailAllowlist();
-  const emailAllowed = allowlist ? allowlist.has(userEmail) : false;
-
-  const { data: profile } = await service
-    .from("artists")
-    .select("is_admin")
-    .eq("id", userId)
-    .maybeSingle();
-
-  const dbAdmin = Boolean(profile?.is_admin);
-
-  if (!emailAllowed && !dbAdmin) {
-    return { ok: false, status: 403, error: "Forbidden" };
-  }
-
-  return { ok: true, ctx: { userId, email: userEmail, service } };
 }

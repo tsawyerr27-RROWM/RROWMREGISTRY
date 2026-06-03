@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 
+import { logActivityEvent } from "@/lib/log-activity";
 import {
   buildOwnershipClaimNotes,
   isAcquisitionType,
   type OwnershipAcquisitionType,
 } from "@/lib/collector-ownership-claim";
+import { guardRegistryMutation } from "@/lib/registry-action-security/guards";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
 
@@ -94,7 +96,7 @@ export async function POST(req: Request) {
 
   const { data: art, error: artErr } = await service
     .from("artworks")
-    .select("id, registry_id, verification_status")
+    .select("id, title, registry_id, verification_status, current_owner_id")
     .eq("id", artworkId)
     .maybeSingle();
 
@@ -104,6 +106,30 @@ export async function POST(req: Request) {
   if (String(art.verification_status || "") !== "verified") {
     return NextResponse.json(
       { error: "Only verified registry works can be declared." },
+      { status: 400 }
+    );
+  }
+
+  const custodianId = art.current_owner_id
+    ? String(art.current_owner_id)
+    : null;
+  if (custodianId && custodianId !== user.id) {
+    return NextResponse.json(
+      {
+        error:
+          "Another custodian is already recorded for this work. Use a continuity transfer or contact support.",
+      },
+      { status: 403 }
+    );
+  }
+
+  const files = form.getAll("files").filter((x) => x instanceof File) as File[];
+  if (files.length === 0) {
+    return NextResponse.json(
+      {
+        error:
+          "Upload at least one supporting document (invoice, receipt, or custody record).",
+      },
       { status: 400 }
     );
   }
@@ -157,7 +183,6 @@ export async function POST(req: Request) {
   const eventId = String(inserted.id);
   const storagePaths: string[] = [];
 
-  const files = form.getAll("files").filter((x) => x instanceof File) as File[];
   const bounded = files.slice(0, MAX_FILES);
 
   for (const file of bounded) {
@@ -215,6 +240,22 @@ export async function POST(req: Request) {
       console.error("[collector/ownership-claim] notes update", upNotesErr);
     }
   }
+
+  const title = String(art.title || "").trim() || "Artwork";
+  const registryId = art.registry_id ? String(art.registry_id) : "";
+  const regSuffix = registryId ? ` (${registryId})` : "";
+
+  await logActivityEvent({
+    userId: user.id,
+    type: "collector_ownership_declared",
+    message: `Ownership declaration recorded: ${title}${regSuffix}`,
+    artworkId,
+    metadata: {
+      title,
+      registry_id: registryId || null,
+      acquisition_type: acquisitionType,
+    },
+  });
 
   return NextResponse.json({
     ok: true,

@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 
-import { INVITE_EMAIL_CREATED_MAIL_FAILED_MESSAGE } from "@/lib/email-config";
 import { buildArtworkAuthenticationInvitationEmail } from "@/lib/emails/artwork-authentication-invitation";
 import {
   hintForResendDeliveryError,
   sendResendEmail,
 } from "@/lib/emails/send-email";
 import { buildArtworkAuthenticationInviteUrl } from "@/lib/artwork-authentication-invite";
+import { galleryApiError } from "@/lib/gallery-api-errors-i18n";
 import { generateInviteToken, inviteExpiryDate } from "@/lib/invite-token";
+import { resolveRequestLocale } from "@/lib/request-locale";
 import { getSiteUrl } from "@/lib/site-url";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
@@ -15,21 +16,31 @@ import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
+  const url = new URL(req.url);
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json(
+      { error: galleryApiError("gallery.api.invalidJson", "en") },
+      { status: 400 }
+    );
   }
 
-  const inviteId = String(
-    (body as { invite_id?: string; inviteId?: string })?.invite_id ??
-      (body as { inviteId?: string })?.inviteId ??
-      ""
-  ).trim();
+  const o = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
+  const lang = resolveRequestLocale(
+    req.headers.get("accept-language"),
+    url.searchParams.get("lang"),
+    o.lang
+  );
+
+  const inviteId = String(o.invite_id ?? o.inviteId ?? "").trim();
 
   if (!inviteId) {
-    return NextResponse.json({ error: "Missing invite_id" }, { status: 400 });
+    return NextResponse.json(
+      { error: galleryApiError("gallery.api.missingInviteId", lang) },
+      { status: 400 }
+    );
   }
 
   const supabase = await createSupabaseServerClient();
@@ -39,7 +50,10 @@ export async function POST(req: Request) {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: galleryApiError("gallery.api.unauthorized", lang) },
+      { status: 401 }
+    );
   }
 
   const { data: inv, error: invErr } = await supabase
@@ -49,7 +63,10 @@ export async function POST(req: Request) {
     .maybeSingle();
 
   if (invErr || !inv?.id) {
-    return NextResponse.json({ error: "Invitation not found" }, { status: 404 });
+    return NextResponse.json(
+      { error: galleryApiError("gallery.api.inviteNotFound", lang) },
+      { status: 404 }
+    );
   }
 
   const { data: mem } = await supabase
@@ -61,14 +78,14 @@ export async function POST(req: Request) {
 
   if (!mem || mem.role !== "admin") {
     return NextResponse.json(
-      { error: "Only gallery administrators can resend invitations." },
+      { error: galleryApiError("gallery.api.resendAdminOnly", lang) },
       { status: 403 }
     );
   }
 
   if (String(inv.status) === "authenticated") {
     return NextResponse.json(
-      { error: "This invitation is already completed on file." },
+      { error: galleryApiError("gallery.api.artworkAuthAlreadyCompleted", lang) },
       { status: 400 }
     );
   }
@@ -104,7 +121,10 @@ export async function POST(req: Request) {
 
   if (upErr || !row) {
     return NextResponse.json(
-      { error: upErr?.message || "Could not refresh invitation." },
+      {
+        error:
+          upErr?.message || galleryApiError("gallery.api.couldNotRecordInvite", lang),
+      },
       { status: 400 }
     );
   }
@@ -118,6 +138,7 @@ export async function POST(req: Request) {
     inviteLink,
     recipientEmail: emailStr,
     personalMessage: inv.message,
+    lang,
   });
 
   const sent = await sendResendEmail({
@@ -137,7 +158,7 @@ export async function POST(req: Request) {
       : {
           emailDeliveryError:
             hintForResendDeliveryError(sent.message) ||
-            INVITE_EMAIL_CREATED_MAIL_FAILED_MESSAGE,
+            galleryApiError("gallery.api.emailUpdatedFailed", lang),
         }),
   });
 }

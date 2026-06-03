@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { issueCertificateForVerifiedArtwork } from "@/lib/issue-certificate";
 import { logActivityEvent } from "@/lib/log-activity";
-import {
-  buildProvenanceContinuationNotes,
-  isProvenanceTransferType,
-} from "@/lib/provenance-transfer";
+import { guardRegistryMutation } from "@/lib/registry-action-security/guards";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
+import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 
 export const runtime = "nodejs";
 
@@ -38,129 +35,47 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userEmail = String(user.email || "").trim().toLowerCase();
-  if (!userEmail) {
-    return NextResponse.json(
-      { error: "Your account must have an email to accept." },
-      { status: 400 }
-    );
-  }
+  const blocked = await guardRegistryMutation(req, {
+    actionKey: "provenance_accept",
+    subjectKey: user.id,
+    maxAttempts: 20,
+    windowSeconds: 3600,
+  });
+  if (blocked) return blocked;
 
-  const service = createSupabaseServiceClient();
-  const { data: tr, error: trErr } = await service
-    .from("provenance_transfers")
-    .select("*")
-    .eq("invite_token", token)
-    .maybeSingle();
-
-  if (trErr || !tr?.id) {
-    return NextResponse.json({ error: "Invitation not found." }, { status: 404 });
-  }
-
-  const status = String(tr.status || "").toLowerCase();
-  if (status !== "pending_acceptance") {
-    return NextResponse.json(
-      {
-        error:
-          "This invitation is no longer open for confirmation.",
-      },
-      { status: 400 }
-    );
-  }
-
-  const expMs = tr.token_expires_at
-    ? new Date(String(tr.token_expires_at)).getTime()
-    : null;
-  if (
-    expMs != null &&
-    Number.isFinite(expMs) &&
-    expMs < Date.now()
-  ) {
-    await service
-      .from("provenance_transfers")
-      .update({ status: "expired" })
-      .eq("id", tr.id);
-    return NextResponse.json({ error: "This invitation has expired." }, { status: 400 });
-  }
-
-  const recipient = String(tr.recipient_email || "").trim().toLowerCase();
-  if (recipient !== userEmail) {
-    return NextResponse.json(
-      {
-        error:
-          "Sign in with the email address this continuation was sent to.",
-      },
-      { status: 403 }
-    );
-  }
-
-  const artworkId = String(tr.artwork_id || "");
-  const fromUserId = String(tr.from_user_id || "");
-  if (fromUserId === user.id) {
-    return NextResponse.json(
-      { error: "You cannot confirm a chronology invitation you sent yourself." },
-      { status: 400 }
-    );
-  }
-
-  const transferTypeRaw = String(tr.transfer_type || "");
-  if (!isProvenanceTransferType(transferTypeRaw)) {
-    return NextResponse.json({ error: "Invalid transfer record." }, { status: 400 });
-  }
-
-  const notes = buildProvenanceContinuationNotes({
-    transferId: String(tr.id),
-    transferType: transferTypeRaw,
-    participantNote: typeof tr.note === "string" ? tr.note : null,
+  const { data, error } = await supabase.rpc("accept_provenance_transfer", {
+    p_token: token,
   });
 
-  const { data: oe, error: oeErr } = await service
-    .from("ownership_events")
-    .insert({
-      artwork_id: artworkId,
-      transfer_type: "ownership_transfer",
-      to_user_id: user.id,
-      created_by: user.id,
-      notes,
-      provenance_transfer_id: String(tr.id),
-    })
-    .select("id")
-    .single();
-
-  if (oeErr || !oe?.id) {
-    console.error("[provenance-transfer/accept] ownership insert", oeErr);
-    return NextResponse.json(
-      { error: "Could not extend the chronology from this invitation." },
-      { status: 400 }
-    );
+  if (error) {
+    const msg = summarizeRpcError(error);
+    const code = String((error as { code?: string }).code ?? "");
+    const lower = msg.toLowerCase();
+    const status =
+      code === "42501" ||
+      lower.includes("not authenticated") ||
+      lower.includes("sign in with the email") ||
+      lower.includes("custodian")
+        ? 403
+        : lower.includes("not found")
+          ? 404
+          : 400;
+    return NextResponse.json({ error: msg || "Could not accept invitation." }, { status });
   }
 
-  const oeId = String(oe.id);
-  const nowIso = new Date().toISOString();
+  const row =
+    data && typeof data === "object" ? (data as Record<string, unknown>) : {};
+  const artworkId = String(row.artwork_id ?? "");
+  const oeId = String(row.ownership_event_id ?? "");
 
-  const { error: upTrErr } = await service
-    .from("provenance_transfers")
-    .update({
-      status: "completed",
-      recipient_user_id: user.id,
-      completed_at: nowIso,
-      token_used_at: nowIso,
-      ownership_event_id: oeId,
-    })
-    .eq("id", tr.id)
-    .eq("status", "pending_acceptance");
+  if (artworkId) {
+    const service = createSupabaseServiceClient();
+    const { data: tr } = await service
+      .from("provenance_transfers")
+      .select("from_user_id")
+      .eq("ownership_event_id", oeId)
+      .maybeSingle();
 
-  if (upTrErr) {
-    console.error("[provenance-transfer/accept] transfer update", upTrErr);
-  }
-
-  try {
-    await issueCertificateForVerifiedArtwork(artworkId);
-  } catch {
-    /* best-effort */
-  }
-
-  {
     const { data: art } = await service
       .from("artworks")
       .select("title, registry_id")
@@ -168,6 +83,7 @@ export async function POST(req: Request) {
       .maybeSingle();
     const title = String(art?.title || "").trim() || "Artwork";
     const reg = art?.registry_id ? ` (${art.registry_id})` : "";
+    const fromUserId = tr?.from_user_id ? String(tr.from_user_id) : "";
 
     await logActivityEvent({
       userId: user.id,
@@ -176,7 +92,6 @@ export async function POST(req: Request) {
       artworkId,
       metadata: {
         registry_id: art?.registry_id ?? null,
-        transfer_id: String(tr.id),
         ownership_event_id: oeId,
       },
     });
@@ -189,7 +104,6 @@ export async function POST(req: Request) {
         artworkId,
         metadata: {
           registry_id: art?.registry_id ?? null,
-          transfer_id: String(tr.id),
           accepted_by: user.id,
         },
       });

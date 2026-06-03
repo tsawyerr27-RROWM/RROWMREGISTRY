@@ -123,3 +123,22 @@ export async function validateDisputeTarget(
       return false;
   }
 }
+
+/** Server-side: caller must have a stake in the dispute target (mirrors RLS). */
+export async function userHasDisputeStake(
+  service: SupabaseClient,
+  userId: string,
+  targetType: DisputeTargetType,
+  targetId: string
+): Promise<boolean> {
+  const { data, error } = await service.rpc("user_has_dispute_stake", {
+    p_user_id: userId,
+    p_target_type: targetType,
+    p_target_id: targetId,
+  });
+  if (error) {
+    console.warn("[disputes] userHasDisputeStake", error.message);
+    return false;
+  }
+  return data === true;
+}

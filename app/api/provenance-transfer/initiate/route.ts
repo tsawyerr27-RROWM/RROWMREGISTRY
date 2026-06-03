@@ -12,6 +12,7 @@ import { generateInviteToken, inviteExpiryDate } from "@/lib/invite-token";
 import { logActivityEvent } from "@/lib/log-activity";
 import { isProvenanceTransferType } from "@/lib/provenance-transfer";
 import { getSiteUrl } from "@/lib/site-url";
+import { guardRegistryMutation } from "@/lib/registry-action-security/guards";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
 
@@ -101,6 +102,14 @@ export async function POST(req: Request) {
   if (authError || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const blocked = await guardRegistryMutation(req, {
+    actionKey: "provenance_initiate",
+    subjectKey: user.id,
+    maxAttempts: 15,
+    windowSeconds: 3600,
+  });
+  if (blocked) return blocked;
 
   const userEmail = String(user.email || "").toLowerCase();
   if (recipientEmail === userEmail) {

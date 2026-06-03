@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { getArtistTier } from "@/lib/artist-tier";
+import { logActivityEvent } from "@/lib/log-activity";
+import { guardRegistryMutation } from "@/lib/registry-action-security/guards";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
+import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 
 export const runtime = "nodejs";
 
@@ -47,129 +50,47 @@ export async function POST(req: Request) {
     );
   }
 
-  const emailLc = user.email?.trim().toLowerCase() ?? "";
-  if (!emailLc) {
+  const blocked = await guardRegistryMutation(req, {
+    actionKey: "invite_accept",
+    subjectKey: user.id,
+    maxAttempts: 20,
+    windowSeconds: 3600,
+  });
+  if (blocked) return blocked;
+
+  const { data, error } = await supabase.rpc("accept_gallery_artist_invite", {
+    p_token: token,
+  });
+
+  if (error) {
+    const msg = summarizeRpcError(error);
+    const code = String((error as { code?: string }).code ?? "");
+    const lower = msg.toLowerCase();
+    const status =
+      code === "42501" || lower.includes("sign in with the invited")
+        ? 403
+        : lower.includes("not found")
+          ? 404
+          : lower.includes("expired") || lower.includes("no longer")
+            ? 410
+            : 400;
     return NextResponse.json(
-      {
-        error:
-          "Your session has no verified email claim; sign in again and retry.",
-      },
-      { status: 400 }
+      { error: msg || "Could not accept this invitation." },
+      { status }
     );
   }
+
+  const galleryId =
+    data && typeof data === "object"
+      ? String((data as { gallery_id?: unknown }).gallery_id ?? "")
+      : "";
 
   const service = createSupabaseServiceClient();
-
-  const { data: invite, error: selErr } = await service
-    .from("gallery_artist_invites")
-    .select(
-      "id, artist_email, status, invite_token, token_expires_at, token_used_at, gallery_id"
-    )
-    .eq("invite_token", token)
-    .maybeSingle();
-
-  if (selErr || !invite) {
-    return NextResponse.json(
-      {
-        error:
-          "This invitation is not recognised. It may be incorrect, withdrawn, or already completed.",
-      },
-      { status: 404 }
-    );
-  }
-
-  if (String(invite.status || "").toLowerCase() !== "pending") {
-    return NextResponse.json(
-      {
-        error:
-          "This invitation is no longer active. It may already have been accepted or closed.",
-      },
-      { status: 410 }
-    );
-  }
-
-  if (invite.token_used_at != null) {
-    return NextResponse.json(
-      {
-        error:
-          "This invitation has already been used. Sign in with your invited email, or request a new invitation from the institution.",
-      },
-      { status: 410 }
-    );
-  }
-
-  if (String(invite.invite_token || "") !== token) {
-    return NextResponse.json(
-      {
-        error:
-          "This invitation link is no longer valid. Request a fresh invitation from the institution.",
-      },
-      { status: 410 }
-    );
-  }
-
-  if (
-    invite.token_expires_at &&
-    new Date(String(invite.token_expires_at)).getTime() < Date.now()
-  ) {
-    return NextResponse.json(
-      {
-        error:
-          "This invitation has expired. Ask the institution to send a new invitation from the registry.",
-      },
-      { status: 410 }
-    );
-  }
-
-  if (String(invite.artist_email || "").trim().toLowerCase() !== emailLc) {
-    return NextResponse.json(
-      {
-        error:
-          "Sign in using the invited email address, or register with exactly that email to continue.",
-      },
-      { status: 403 }
-    );
-  }
-
-  const nowIso = new Date().toISOString();
-
-  const { error: updErr } = await service
-    .from("gallery_artist_invites")
-    .update({
-      status: "accepted",
-      accepted_at: nowIso,
-      accepted_user_id: user.id,
-      token_used_at: nowIso,
-      invite_token: null,
-      visibility_status: "pending",
-    })
-    .eq("id", invite.id)
-    .eq("invite_token", token);
-
-  if (updErr) {
-    console.error("[invite/accept] update failed", updErr);
-    return NextResponse.json(
-      { error: "Could not accept this invitation. Try again in a moment." },
-      { status: 500 }
-    );
-  }
-
   const { data: artistRow } = await service
     .from("artists")
     .select("id")
     .eq("id", user.id)
     .maybeSingle();
-
-  if (artistRow) {
-    await service
-      .from("artists")
-      .update({
-        gallery_id: invite.gallery_id,
-        represented_by_gallery: true,
-        shown_on_institutional_public: false,
-      })
-      .eq("id", user.id);
-  }
 
   const tier = getArtistTier(
     { visibility_status: "pending", status: "accepted" },
@@ -178,10 +99,17 @@ export async function POST(req: Request) {
       : null
   );
 
+  await logActivityEvent({
+    userId: user.id,
+    type: "gallery_invite_accepted",
+    message: "Gallery invitation accepted",
+    metadata: { gallery_id: galleryId || null },
+  });
+
   return NextResponse.json(
     {
       ok: true,
-      galleryId: invite.gallery_id,
+      galleryId: galleryId || null,
       tier,
       message:
         "Invitation accepted. Finish artist onboarding. The gallery will be notified once your profile is complete.",

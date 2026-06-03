@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-import { issueCertificateForVerifiedArtwork } from "@/lib/issue-certificate";
 import { logActivityEvent } from "@/lib/log-activity";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
@@ -51,25 +50,6 @@ export async function POST(req: Request) {
   const o =
     data && typeof data === "object" ? (data as Record<string, unknown>) : {};
   const artworkId = String(o.artwork_id ?? "");
-
-  if (artworkId && !o.already_authenticated) {
-    try {
-      const service = createSupabaseServiceClient();
-      await service
-        .from("artworks")
-        .update({ verification_status: "verified" })
-        .eq("id", artworkId)
-        .neq("verification_status", "verified");
-    } catch {
-      /* DB trigger will handle certificate issuance */
-    }
-
-    try {
-      await issueCertificateForVerifiedArtwork(artworkId);
-    } catch {
-      /* best-effort — DB trigger is the primary path */
-    }
-  }
 
   if (artworkId && !o.already_authenticated) {
     const service = createSupabaseServiceClient();

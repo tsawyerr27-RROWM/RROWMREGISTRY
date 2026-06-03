@@ -11,9 +11,9 @@ import {
   resolveArtistNameOnFile,
 } from "@/lib/artwork-authentication-review";
 import {
-  ARTWORK_AUTH_INVITE_COPY,
   type ArtworkAuthenticationInvitePreview,
 } from "@/lib/artwork-authentication-invite";
+import { getArtworkAuthInviteCopy, resolveArtworkAuthInviteLang } from "@/lib/artwork-auth-invite-copy-i18n";
 import { maskArtistInviteEmail } from "@/lib/mask-email";
 import { CANONICAL_RECORD_PHRASES } from "@/lib/representation-language";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
@@ -136,15 +136,8 @@ async function previewByArtworkId(
   }
 
   const userEmail = String(user.email || "").toLowerCase();
-  const { data: artistRow } = await service
-    .from("artists")
-    .select("display_name, full_name")
-    .eq("id", user.id)
-    .maybeSingle();
-  const displayName =
-    artistRow?.display_name?.trim() || artistRow?.full_name?.trim() || "";
 
-  if (!artistMayReviewArtwork(art, user.id, userEmail, displayName)) {
+  if (!artistMayReviewArtwork(art, user.id, userEmail)) {
     return emptyArtworkReviewPreview();
   }
 
@@ -214,7 +207,12 @@ export async function GET(req: Request) {
 
   return NextResponse.json({
     ...preview,
-    copy: ARTWORK_AUTH_INVITE_COPY,
+    copy: getArtworkAuthInviteCopy(
+      resolveArtworkAuthInviteLang(
+        req.headers.get("accept-language"),
+        url.searchParams.get("lang")
+      )
+    ),
     phrases: CANONICAL_RECORD_PHRASES,
   });
 }

@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 
-import { INVITE_EMAIL_CREATED_MAIL_FAILED_MESSAGE } from "@/lib/email-config";
 import { buildArtistInvitationEmail } from "@/lib/emails/artist-gallery-invitation";
 import {
   hintForResendDeliveryError,
   sendResendEmail,
 } from "@/lib/emails/send-email";
+import { galleryApiError } from "@/lib/gallery-api-errors-i18n";
 import { generateInviteToken, inviteExpiryDate } from "@/lib/invite-token";
 import { logActivityEvent } from "@/lib/log-activity";
 import { getArtistTier } from "@/lib/artist-tier";
+import { resolveRequestLocale } from "@/lib/request-locale";
 import { getSiteUrl } from "@/lib/site-url";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
@@ -19,27 +20,47 @@ function redactInviteTokenInUrl(url: string): string {
 }
 
 export async function POST(req: Request) {
+  const url = new URL(req.url);
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json(
+      { error: galleryApiError("gallery.api.invalidJson", "en") },
+      { status: 400 }
+    );
   }
 
   if (!body || typeof body !== "object") {
-    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+    return NextResponse.json(
+      { error: galleryApiError("gallery.api.invalidBody", "en") },
+      { status: 400 }
+    );
   }
 
-  const { gallery_id, artist_email } = body as Record<string, unknown>;
+  const o = body as Record<string, unknown>;
+  const lang = resolveRequestLocale(
+    req.headers.get("accept-language"),
+    url.searchParams.get("lang"),
+    o.lang
+  );
+
+  const { gallery_id, artist_email } = o;
   const gid = typeof gallery_id === "string" ? gallery_id.trim() : "";
   const emailRaw = typeof artist_email === "string" ? artist_email.trim() : "";
   const emailStr = emailRaw.toLowerCase();
 
   if (!gid) {
-    return NextResponse.json({ error: "Missing gallery_id" }, { status: 400 });
+    return NextResponse.json(
+      { error: galleryApiError("gallery.api.missingGalleryId", lang) },
+      { status: 400 }
+    );
   }
   if (!emailStr || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr)) {
-    return NextResponse.json({ error: "Invalid artist_email" }, { status: 400 });
+    return NextResponse.json(
+      { error: galleryApiError("gallery.api.invalidArtistEmail", lang) },
+      { status: 400 }
+    );
   }
 
   const supabase = await createSupabaseServerClient();
@@ -49,7 +70,10 @@ export async function POST(req: Request) {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: galleryApiError("gallery.api.unauthorized", lang) },
+      { status: 401 }
+    );
   }
 
   const { data: mem, error: memErr } = await supabase
@@ -61,7 +85,7 @@ export async function POST(req: Request) {
 
   if (memErr || !mem || mem.role !== "admin") {
     return NextResponse.json(
-      { error: "Only gallery administrators can send invitations." },
+      { error: galleryApiError("gallery.api.inviteAdminOnly", lang) },
       { status: 403 }
     );
   }
@@ -75,13 +99,16 @@ export async function POST(req: Request) {
   if (galErr) {
     console.error("[gallery-invite] galleries lookup", galErr);
     return NextResponse.json(
-      { error: "Could not load gallery." },
+      { error: galleryApiError("gallery.api.couldNotLoadGallery", lang) },
       { status: 500 }
     );
   }
 
   if (!gal?.id) {
-    return NextResponse.json({ error: "Gallery not found." }, { status: 404 });
+    return NextResponse.json(
+      { error: galleryApiError("gallery.api.galleryNotFound", lang) },
+      { status: 404 }
+    );
   }
 
   const galleryName = gal.name?.trim() || "Gallery";
@@ -98,7 +125,7 @@ export async function POST(req: Request) {
   if (dupErr) {
     console.error("[gallery-invite] duplicate lookup", dupErr);
     return NextResponse.json(
-      { error: "Could not verify invitation state." },
+      { error: galleryApiError("gallery.api.couldNotVerifyInviteState", lang) },
       { status: 500 }
     );
   }
@@ -106,7 +133,7 @@ export async function POST(req: Request) {
   if (pendingDup?.id) {
     return NextResponse.json(
       {
-        error: "This artist has already been invited.",
+        error: galleryApiError("gallery.api.alreadyInvited", lang),
         duplicate: true as const,
         invite_id: pendingDup.id,
       },
@@ -144,7 +171,7 @@ export async function POST(req: Request) {
         .maybeSingle();
       return NextResponse.json(
         {
-          error: "This artist has already been invited.",
+          error: galleryApiError("gallery.api.alreadyInvited", lang),
           duplicate: true as const,
           ...(raceDup?.id ? { invite_id: raceDup.id } : {}),
         },
@@ -152,13 +179,19 @@ export async function POST(req: Request) {
       );
     }
     return NextResponse.json(
-      { error: insErr.message || "Could not record invite." },
+      {
+        error:
+          insErr.message || galleryApiError("gallery.api.couldNotRecordInvite", lang),
+      },
       { status: 400 }
     );
   }
 
   if (!row) {
-    return NextResponse.json({ error: "Could not record invite." }, { status: 400 });
+    return NextResponse.json(
+      { error: galleryApiError("gallery.api.couldNotRecordInvite", lang) },
+      { status: 400 }
+    );
   }
 
   const tier = getArtistTier(row, null);
@@ -178,6 +211,7 @@ export async function POST(req: Request) {
     inviteLink,
     galleryPublicPageUrl,
     recipientEmail: emailStr,
+    lang,
   });
 
   const replyTo =
@@ -237,7 +271,7 @@ export async function POST(req: Request) {
       emailSent,
       ...(emailSent
         ? {}
-        : { emailDeliveryError: INVITE_EMAIL_CREATED_MAIL_FAILED_MESSAGE }),
+        : { emailDeliveryError: galleryApiError("gallery.api.emailCreatedFailed", lang) }),
     },
     { status: 200 }
   );

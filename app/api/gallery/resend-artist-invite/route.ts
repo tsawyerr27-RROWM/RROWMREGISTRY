@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 
-import { INVITE_EMAIL_UPDATED_MAIL_FAILED_MESSAGE } from "@/lib/email-config";
 import { buildArtistInvitationEmail } from "@/lib/emails/artist-gallery-invitation";
 import {
   hintForResendDeliveryError,
   sendResendEmail,
 } from "@/lib/emails/send-email";
+import { galleryApiError } from "@/lib/gallery-api-errors-i18n";
 import { generateInviteToken, inviteExpiryDate } from "@/lib/invite-token";
 import { getArtistTier } from "@/lib/artist-tier";
+import { resolveRequestLocale } from "@/lib/request-locale";
 import { getSiteUrl } from "@/lib/site-url";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
@@ -32,21 +33,35 @@ function parseInviteId(body: Record<string, unknown>): string {
  * Input is invite id only; gallery is resolved server-side. Response omits invite_token.
  */
 export async function POST(req: Request) {
+  const url = new URL(req.url);
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json(
+      { error: galleryApiError("gallery.api.invalidJson", "en") },
+      { status: 400 }
+    );
   }
 
   if (!body || typeof body !== "object") {
-    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+    return NextResponse.json(
+      { error: galleryApiError("gallery.api.invalidBody", "en") },
+      { status: 400 }
+    );
   }
 
-  const iid = parseInviteId(body as Record<string, unknown>);
+  const o = body as Record<string, unknown>;
+  const lang = resolveRequestLocale(
+    req.headers.get("accept-language"),
+    url.searchParams.get("lang"),
+    o.lang
+  );
+
+  const iid = parseInviteId(o);
   if (!iid) {
     return NextResponse.json(
-      { error: "Missing invite_id or inviteId." },
+      { error: galleryApiError("gallery.api.missingInviteId", lang) },
       { status: 400 }
     );
   }
@@ -58,7 +73,10 @@ export async function POST(req: Request) {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: galleryApiError("gallery.api.unauthorized", lang) },
+      { status: 401 }
+    );
   }
 
   const service = createSupabaseServiceClient();
@@ -71,7 +89,7 @@ export async function POST(req: Request) {
 
   if (selErr || !existing?.gallery_id) {
     return NextResponse.json(
-      { error: "Invitation not found." },
+      { error: galleryApiError("gallery.api.inviteNotFound", lang) },
       { status: 404 }
     );
   }
@@ -87,17 +105,14 @@ export async function POST(req: Request) {
 
   if (memErr || !mem || mem.role !== "admin") {
     return NextResponse.json(
-      { error: "Only gallery administrators can resend invitations." },
+      { error: galleryApiError("gallery.api.resendAdminOnly", lang) },
       { status: 403 }
     );
   }
 
   if (String(existing.status || "").toLowerCase() !== "pending") {
     return NextResponse.json(
-      {
-        error:
-          "Only pending invitations can be reissued. Accepted or declined rows cannot be resent.",
-      },
+      { error: galleryApiError("gallery.api.inviteNotPending", lang) },
       { status: 400 }
     );
   }
@@ -109,7 +124,10 @@ export async function POST(req: Request) {
     .maybeSingle();
 
   if (galErr || !gal?.id) {
-    return NextResponse.json({ error: "Gallery not found." }, { status: 404 });
+    return NextResponse.json(
+      { error: galleryApiError("gallery.api.galleryNotFound", lang) },
+      { status: 404 }
+    );
   }
 
   const galleryName = gal.name?.trim() || "Gallery";
@@ -139,7 +157,10 @@ export async function POST(req: Request) {
   if (updErr || !row) {
     console.error("[gallery-invite-resend] update failed", updErr);
     return NextResponse.json(
-      { error: updErr?.message || "Could not reissue invitation." },
+      {
+        error:
+          updErr?.message || galleryApiError("gallery.api.couldNotRecordInvite", lang),
+      },
       { status: 400 }
     );
   }
@@ -162,6 +183,7 @@ export async function POST(req: Request) {
     inviteLink,
     galleryPublicPageUrl,
     recipientEmail: emailStr,
+    lang,
   });
 
   const replyTo =
@@ -206,7 +228,7 @@ export async function POST(req: Request) {
       emailSent,
       ...(emailSent
         ? {}
-        : { emailDeliveryError: INVITE_EMAIL_UPDATED_MAIL_FAILED_MESSAGE }),
+        : { emailDeliveryError: galleryApiError("gallery.api.emailUpdatedFailed", lang) }),
     },
     { status: 200 }
   );

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { maskArtistInviteEmail } from "@/lib/mask-email";
+import { clientIpFromRequest } from "@/lib/registry-action-security/client-ip";
+import { guardRegistryPreview } from "@/lib/registry-action-security/guards";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
 
 export const runtime = "nodejs";
@@ -37,6 +39,13 @@ function emptyPreview(): InvitePreviewPayload {
  * the token may be used for signup. `used` is true when `token_used_at` is set or status is accepted.
  */
 export async function GET(req: Request) {
+  const previewBlocked = await guardRegistryPreview(
+    req,
+    "gallery_invite_preview",
+    clientIpFromRequest(req)
+  );
+  if (previewBlocked) return previewBlocked;
+
   const url = new URL(req.url);
   const token = String(url.searchParams.get("token") || "").trim();
 

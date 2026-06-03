@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 
 import {
   type ArtworkAuthenticationInvitePreview,
-  ARTWORK_AUTH_INVITE_COPY,
 } from "@/lib/artwork-authentication-invite";
+import { getArtworkAuthInviteCopy, resolveArtworkAuthInviteLang } from "@/lib/artwork-auth-invite-copy-i18n";
 import { maskArtistInviteEmail } from "@/lib/mask-email";
 import { CANONICAL_RECORD_PHRASES } from "@/lib/representation-language";
 import { ARTWORK_CONFIRMATION_EVENT_TYPES } from "@/lib/artwork-representation";
+import { clientIpFromRequest } from "@/lib/registry-action-security/client-ip";
+import { guardRegistryPreview } from "@/lib/registry-action-security/guards";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
 
@@ -38,6 +40,13 @@ export async function GET(req: Request) {
   if (token.length < 32) {
     return NextResponse.json(empty(), { status: 400 });
   }
+
+  const previewBlocked = await guardRegistryPreview(
+    req,
+    "artwork_auth_preview",
+    clientIpFromRequest(req)
+  );
+  if (previewBlocked) return previewBlocked;
 
   const service = createSupabaseServiceClient();
   const { data: inv, error } = await service
@@ -140,7 +149,12 @@ export async function GET(req: Request) {
 
   return NextResponse.json({
     ...preview,
-    copy: ARTWORK_AUTH_INVITE_COPY,
+    copy: getArtworkAuthInviteCopy(
+      resolveArtworkAuthInviteLang(
+        req.headers.get("accept-language"),
+        url.searchParams.get("lang")
+      )
+    ),
     phrases: CANONICAL_RECORD_PHRASES,
   });
 }
