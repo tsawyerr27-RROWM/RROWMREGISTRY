@@ -39,10 +39,13 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (isAdminRoute(request.nextUrl.pathname)) {
-    if (!user) {
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("next", request.nextUrl.pathname);
-      return NextResponse.redirect(loginUrl);
+    const isAdminApi = request.nextUrl.pathname.startsWith("/api/admin/");
+    const isAdminLogin = request.nextUrl.pathname === "/admin";
+    if (!isAdminApi && !isAdminLogin) {
+      const adminSession = request.cookies.get("rrowm_admin_session");
+      if (!adminSession?.value) {
+        return NextResponse.redirect(new URL("/admin", request.url));
+      }
     }
   }
 
