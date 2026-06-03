@@ -5,10 +5,16 @@ import type {
   ArchivalTimelineEvent,
 } from "@/lib/provenance-timeline";
 import {
-  recordCompletenessDescription,
-  recordCompletenessLabel,
-} from "@/lib/record-completeness";
-import { chronologyTemporalRecallLines } from "@/lib/archival-temporal";
+  chronologyTemporalRecallLinesI18n,
+  formatArchivalDate,
+  recordCompletenessDescriptionKey,
+  recordCompletenessLabelKey,
+  translateContinuityIndicator,
+  translateEventTitle,
+  translateParticipantLabel,
+  translateVerificationLabel,
+} from "@/lib/archival-provenance-i18n";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 function kindGlyph(kind: ArchivalTimelineEvent["narrativeKind"]): string {
   switch (kind) {
@@ -35,24 +41,18 @@ function kindGlyph(kind: ArchivalTimelineEvent["narrativeKind"]): string {
   }
 }
 
-function formatStamp(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
-
 function EventRow({
   ev,
   isLast,
   relaxedSpacing,
+  locale,
+  t,
 }: {
   ev: ArchivalTimelineEvent;
   isLast: boolean;
   relaxedSpacing?: boolean;
+  locale: string;
+  t: ReturnType<typeof useLocalePreferences>["t"];
 }) {
   const pb = relaxedSpacing ? "pb-14 md:pb-[4.25rem]" : "pb-12 md:pb-16";
   return (
@@ -79,16 +79,18 @@ function EventRow({
             dateTime={ev.dateIso}
             className="text-[11px] font-normal uppercase tracking-[0.12em] text-stone-500"
           >
-            {formatStamp(ev.dateIso)}
+            {formatArchivalDate(ev.dateIso, locale)}
           </time>
-          <span className="text-[11px] text-stone-400">{ev.verificationLabel}</span>
+          <span className="text-[11px] text-stone-400">
+            {translateVerificationLabel(ev.verificationLabel, t)}
+          </span>
         </div>
         <h3 className="mt-3 font-serif text-lg font-normal leading-snug text-neutral-950 md:text-[1.125rem]">
-          {ev.displayTitle}
+          {translateEventTitle(ev, t)}
         </h3>
         {ev.participantLabel ? (
           <p className="mt-3 text-[13px] leading-relaxed text-stone-600 md:text-[0.9375rem]">
-            {ev.participantLabel}
+            {translateParticipantLabel(ev.participantLabel, t)}
           </p>
         ) : null}
         {(ev.hasSupportingEvidence || ev.certificateRelated) && (
@@ -98,7 +100,7 @@ function EventRow({
                 <span className="text-stone-300" aria-hidden>
                   ·
                 </span>
-                Supporting material attached
+                {t("provenance.supportingMaterial")}
               </span>
             ) : null}
             {ev.certificateRelated ? (
@@ -106,7 +108,7 @@ function EventRow({
                 <span className="text-stone-300" aria-hidden>
                   ·
                 </span>
-                Certificate on file
+                {t("provenance.certificateOnFile")}
               </span>
             ) : null}
           </p>
@@ -121,28 +123,24 @@ export function ArchivalProvenanceTimeline({
 }: {
   bundle: ArchivalProvenanceBundle;
 }) {
+  const { t, region } = useLocalePreferences();
   const { events, recordCompleteness, continuityIndicators } = bundle;
-  const levelWord = recordCompletenessLabel(recordCompleteness);
-  const temporalRecall = chronologyTemporalRecallLines(bundle);
+  const temporalRecall = chronologyTemporalRecallLinesI18n(bundle, t);
 
   if (!events.length) {
     return (
-      <p className="text-sm leading-relaxed text-stone-600">
-        No chronology milestones are on file for this work yet.
-      </p>
+      <p className="text-sm leading-relaxed text-stone-600">{t("provenance.empty")}</p>
     );
   }
 
   return (
     <div className="space-y-0">
-      {/* Chronology first — emotional center */}
       <div>
         <h3 className="font-serif text-lg font-normal text-neutral-950 md:text-xl">
-          Chronology
+          {t("provenance.chronology")}
         </h3>
         <p className="mt-5 max-w-xl text-[13px] leading-relaxed text-stone-500">
-          Entries accumulate; later filings sit alongside earlier ones. Multiple
-          participants may appear as confirmations and custody steps are documented.
+          {t("provenance.chronologyIntro")}
         </p>
         {temporalRecall.length > 0 ? (
           <div className="mt-6 max-w-xl space-y-2 text-[12px] leading-relaxed text-stone-500/95">
@@ -165,29 +163,32 @@ export function ArchivalProvenanceTimeline({
                 ev={ev}
                 isLast={i === events.length - 1}
                 relaxedSpacing={events.length >= 6}
+                locale={region.locale}
+                t={t}
               />
             ))}
           </ol>
         </div>
       </div>
 
-      {/* Secondary context — quieter, below the story */}
       <div className="mt-16 border-t border-stone-200/70 pt-12 md:mt-20 md:pt-16">
         <div className="space-y-10">
           <div>
             <p className="text-[10px] font-normal uppercase tracking-[0.18em] text-stone-400">
-              How the file reads
+              {t("provenance.howFileReads")}
             </p>
-            <p className="mt-2 font-serif text-lg font-normal text-stone-800">{levelWord}</p>
+            <p className="mt-2 font-serif text-lg font-normal text-stone-800">
+              {t(recordCompletenessLabelKey(recordCompleteness))}
+            </p>
             <p className="mt-3 max-w-xl text-[13px] leading-[1.65] text-stone-500">
-              {recordCompletenessDescription(recordCompleteness)}
+              {t(recordCompletenessDescriptionKey(recordCompleteness))}
             </p>
           </div>
 
           {continuityIndicators.length > 0 ? (
             <div>
               <p className="text-[10px] font-normal uppercase tracking-[0.18em] text-stone-400">
-                Continuity markers
+                {t("provenance.continuityMarkers")}
               </p>
               <ul className="mt-5 space-y-3">
                 {continuityIndicators.map((line) => (
@@ -198,7 +199,7 @@ export function ArchivalProvenanceTimeline({
                     <span className="text-stone-300 select-none" aria-hidden>
                       ·
                     </span>
-                    <span>{line}</span>
+                    <span>{translateContinuityIndicator(line, t)}</span>
                   </li>
                 ))}
               </ul>

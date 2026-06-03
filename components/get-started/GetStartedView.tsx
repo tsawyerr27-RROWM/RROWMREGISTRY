@@ -7,6 +7,7 @@ import { AmbientNarrativeField } from "@/components/LandingPage/AmbientNarrative
 import { GalleryPricingModal } from "./GalleryPricingModal";
 import { IconArtist, IconCollector, IconGallery } from "./role-icons";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 /** Stroke/fill use `currentColor` on the SVG — restrained neutral tints only. */
 const ICON_TINT: Record<"artist" | "gallery" | "collector", string> = {
@@ -65,6 +66,7 @@ function CardBody({
 }
 
 export function GetStartedView() {
+  const { t } = useLocalePreferences();
   const [galleryModalOpen, setGalleryModalOpen] = useState(false);
 
   return (
@@ -76,17 +78,17 @@ export function GetStartedView() {
         <header className="max-w-2xl">
           <InfoTooltip text="Each path opens the right studio (artist, institutional, or collector). Underneath: one chronology per work, on file." />
           <h1 className="font-serif text-[2rem] font-normal leading-[1.1] tracking-tight text-neutral-950 md:text-[2.35rem] md:leading-[1.08]">
-            Choose how you take part
+            {t("getStarted.title")}
           </h1>
           <p className="mt-5 text-sm leading-relaxed text-neutral-500">
-            Already have an account?{" "}
+            {t("getStarted.alreadyAccount")}{" "}
             <Link
               href="/login"
               className="font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-[0.25em] transition hover:text-neutral-950 hover:decoration-neutral-500"
             >
-              Sign in
+              {t("getStarted.signIn")}
             </Link>
-            . Your role follows your profile, not this page alone.
+            . {t("getStarted.roleNote")}
           </p>
         </header>
 
@@ -101,9 +103,9 @@ export function GetStartedView() {
             <Link href="/signup?role=artist" className={CARD_CLASS}>
               <CardBody
                 role="artist"
-                title="I am an Artist"
-                description="Register represented works so your catalogue presence, chronology, and certificates stay on one record."
-                cta="Continue as artist"
+                title={t("getStarted.artistTitle")}
+                description={t("getStarted.artistDesc")}
+                cta={t("getStarted.artistCta")}
                 icon={<IconArtist />}
               />
             </Link>
@@ -115,9 +117,9 @@ export function GetStartedView() {
             >
               <CardBody
                 role="gallery"
-                title="I run an institutional studio"
-                description="Verified gallery workflows: participant confirmations and listings on file for represented artists."
-                cta="View plans and continue"
+                title={t("getStarted.galleryTitle")}
+                description={t("getStarted.galleryDesc")}
+                cta={t("getStarted.galleryCta")}
                 icon={<IconGallery />}
               />
             </button>
@@ -125,9 +127,9 @@ export function GetStartedView() {
             <Link href="/signup?role=collector" className={CARD_CLASS}>
               <CardBody
                 role="collector"
-                title="I am a Collector"
-                description="Browse the public catalogue, read the current record, and file custody when you hold a work."
-                cta="Continue as collector"
+                title={t("getStarted.collectorTitle")}
+                description={t("getStarted.collectorDesc")}
+                cta={t("getStarted.collectorCta")}
                 icon={<IconCollector />}
               />
             </Link>
@@ -138,7 +140,7 @@ export function GetStartedView() {
           <div className="relative z-10 max-w-2xl px-6 py-10 md:px-8 md:py-12">
             <InfoTooltip text="Verified listings and chronology offer a shared surface for inquiry, not a marketplace pitch." />
             <h2 className="font-serif text-xl font-normal text-neutral-950">
-              On the catalogue
+              {t("getStarted.catalogueTitle")}
             </h2>
           </div>
         </section>

@@ -32,32 +32,20 @@ export default function InternalVerify() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: sessionData } = await sb().auth.getSession();
-
-      if (!sessionData?.session) {
-        deferredRouterPush(
-          router,
-          "/login?next=" + encodeURIComponent("/internal/verify")
-        );
+      const res = await fetch("/api/admin/check", { credentials: "include" });
+      if (!res.ok) {
+        deferredRouterPush(router, "/admin");
+        return;
+      }
+      const body = await res.json();
+      if (!body?.isAdmin) {
+        deferredRouterPush(router, "/admin");
         return;
       }
 
-      const currentUser = sessionData.session.user;
-      setUser(currentUser);
-      setAccessToken(sessionData.session.access_token ?? null);
-
-      const { data: profileData } = await sb()
-        .from("artists")
-        .select("*")
-        .eq("id", currentUser.id)
-        .single();
-
-      if (!profileData?.is_admin) {
-        deferredRouterPush(router, "/studio");
-        return;
-      }
-
-      setProfile(profileData);
+      setUser({ id: "admin" });
+      setProfile({ is_admin: true });
+      setAccessToken("admin-session");
 
       const { data: unverified } = await sb()
         .from("artworks")
@@ -137,6 +125,7 @@ export default function InternalVerify() {
 
         const response = await fetch("/api/issue-certificate", {
           method: "POST",
+          credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ artwork_id: artwork.id }),
         });

@@ -4,7 +4,8 @@ import {
   rrowmEmailInnerFromOpts,
   type RrowmEmailLayoutOpts,
 } from "@/lib/emails/rrowm-email-layout";
-import { CANONICAL_RECORD_PHRASES } from "@/lib/representation-language";
+import { fillMessage, translate } from "@/lib/locale-messages";
+import type { AppLang } from "@/lib/request-locale";
 
 export type ArtworkAuthenticationInvitationEmailParams = {
   galleryName: string;
@@ -13,71 +14,101 @@ export type ArtworkAuthenticationInvitationEmailParams = {
   inviteLink: string;
   recipientEmail: string;
   personalMessage?: string | null;
+  lang?: AppLang;
 };
 
-export function artworkAuthenticationInvitationSubject(artworkTitle: string): string {
-  const t = artworkTitle.trim() || "Artwork";
-  return `Authenticate artwork record on file · ${t}`;
+export function artworkAuthenticationInvitationSubject(
+  artworkTitle: string,
+  lang: AppLang = "en"
+): string {
+  const t =
+    artworkTitle.trim() || translate("gallery.email.fallback.artwork", lang);
+  return fillMessage(translate("gallery.email.artworkAuth.subject", lang), {
+    title: t,
+  });
 }
 
 export function buildArtworkAuthenticationInvitationEmail(
   p: ArtworkAuthenticationInvitationEmailParams
 ): { subject: string; html: string; text: string } {
-  const g = escapeHtml(p.galleryName.trim() || "An institution");
-  const title = escapeHtml(p.artworkTitle.trim() || "Work on file");
+  const lang = p.lang ?? "en";
+  const gName =
+    p.galleryName.trim() || translate("gallery.email.fallback.institution", lang);
+  const g = escapeHtml(gName);
+  const titleRaw =
+    p.artworkTitle.trim() || translate("gallery.email.fallback.artwork", lang);
+  const title = escapeHtml(titleRaw);
   const reg = escapeHtml(p.registryId.trim());
+  const recordDeepensOverTime = translate("representation.recordDeepensOverTime", lang);
   const note =
     p.personalMessage?.trim()
       ? escapeHtml(p.personalMessage.trim())
       : null;
 
+  const registryLine = reg
+    ? `<br/><span style="font-family:ui-monospace,monospace;font-size:12px;color:#525252;">${reg}</span>`
+    : "";
+
   const layout: RrowmEmailLayoutOpts = {
-    preheader:
-      "Review, authenticate, and deepen a canonical artwork record on file.",
+    preheader: translate("gallery.email.artworkAuth.preheader", lang),
     blocks: [
-      { type: "kicker", text: "Artwork record · Continuity invitation" },
+      { type: "kicker", text: translate("gallery.email.artworkAuth.kicker", lang) },
       {
         type: "p",
-        html: `An artwork associated with your practice is already on file within the registry.`,
+        html: translate("gallery.email.artworkAuth.body1", lang),
       },
       {
         type: "p",
-        html: `<strong>${title}</strong>${reg ? `<br/><span style="font-family:ui-monospace,monospace;font-size:12px;color:#525252;">${reg}</span>` : ""}<br/>Filed with continuity participation from <strong>${g}</strong>.`,
+        html: fillMessage(translate("gallery.email.artworkAuth.body2", lang), {
+          title: `<strong>${title}</strong>`,
+          registryLine,
+          galleryName: `<strong>${g}</strong>`,
+        }),
       },
       { type: "hr" },
       {
         type: "p",
-        html: `You are invited to review, authenticate authorship, and deepen the documentary record. ${escapeHtml(CANONICAL_RECORD_PHRASES.recordDeepensOverTime)}. This is not an approval request or onboarding task for the institution.`,
+        html: fillMessage(translate("gallery.email.artworkAuth.body3", lang), {
+          recordDeepensOverTime: escapeHtml(recordDeepensOverTime),
+        }),
       },
       ...(note
         ? [
             {
               type: "p" as const,
-              html: `<em>Note from ${g}:</em> ${note}`,
+              html: `<em>${fillMessage(
+                translate("gallery.email.artworkAuth.noteFrom", lang),
+                { galleryName: g }
+              )}</em> ${note}`,
             },
           ]
         : []),
       {
         type: "p",
-        html: `The link is for this address only and expires as set in the invitation record.`,
+        html: translate("gallery.email.artworkAuth.body4", lang),
       },
     ],
-    cta: { label: "Review artwork record", url: p.inviteLink },
-    footnoteHtml: `If this was not intended for you, take no action. Do not forward the link.`,
+    cta: {
+      label: translate("gallery.email.artworkAuth.cta", lang),
+      url: p.inviteLink,
+    },
+    footnoteHtml: translate("gallery.email.artworkAuth.footnote", lang),
   };
 
   const inner = rrowmEmailInnerFromOpts(layout);
-  const subject = artworkAuthenticationInvitationSubject(p.artworkTitle);
+  const subject = artworkAuthenticationInvitationSubject(p.artworkTitle, lang);
 
   const text = [
     subject,
     "",
-    "An artwork associated with your practice is already on file within the registry.",
+    translate("gallery.email.artworkAuth.body1", lang),
     "",
-    `${p.artworkTitle.trim() || "Work"} · ${p.registryId}`,
-    `Institution: ${p.galleryName.trim() || "Institution"}`,
+    `${titleRaw} · ${p.registryId}`,
+    `${translate("gallery.email.fallback.institution", lang)}: ${gName}`,
     "",
-    "You are invited to review, authenticate authorship, and deepen the record.",
+    fillMessage(translate("gallery.email.artworkAuth.body3", lang), {
+      recordDeepensOverTime,
+    }),
     note ? `\nNote: ${p.personalMessage?.trim()}` : "",
     "",
     p.inviteLink,

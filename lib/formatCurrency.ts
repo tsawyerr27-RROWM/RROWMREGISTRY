@@ -1,8 +1,12 @@
-export function formatCurrency(amount: number, currency: string) {
-  return new Intl.NumberFormat("en-GB", {
+export function formatCurrency(
+  amount: number,
+  currency: string,
+  locale = "en-GB"
+) {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
-    maximumFractionDigits: 0,
+    maximumFractionDigits: currency === "JPY" ? 0 : 0,
   }).format(amount);
 }
 

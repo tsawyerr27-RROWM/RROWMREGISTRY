@@ -3,8 +3,8 @@ import { deferredRouterPush } from "@/lib/deferred-app-router";
 
 export const STUDIO_SECTION_IDS = [
   "Studio",
-  "Records",
   "Artworks",
+  "Records",
   "Certificates",
   "Ownership",
 ] as const;

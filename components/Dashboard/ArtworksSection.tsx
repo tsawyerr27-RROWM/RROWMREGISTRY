@@ -1,6 +1,9 @@
+"use client";
+
 import { useMemo } from "react";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { ExperienceEmptyStateButton } from "@/components/ui/ExperienceEmptyState";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { workspace } from "@/styles/workspace-design";
 import {
   StudioSearchRow,
@@ -85,6 +88,7 @@ export function ArtworksSection({
   studioArtworksAccent = "violet",
   representingInstitutionName,
 }: ArtworksSectionProps) {
+  const { t } = useLocalePreferences();
   const accent = useMemo(
     () => studioArtworksAccentTheme(studioArtworksAccent),
     [studioArtworksAccent]
@@ -100,11 +104,11 @@ export function ArtworksSection({
           tone="light"
           searchQuery={searchQuery}
           onSearchChange={onSearchChange}
-          searchPlaceholder="Search artworks…"
+          searchPlaceholder={t("studio.search.artworks")}
           aside={
             <>
               <label className="sr-only" htmlFor="artworks-filter">
-                Filter artworks
+                {t("studio.filter.artworks")}
               </label>
               <select
                 id="artworks-filter"
@@ -114,11 +118,11 @@ export function ArtworksSection({
                 }
                 className={studioFilterSelectClass("light")}
               >
-                <option value="all">All works</option>
-                <option value="verified">Verified only</option>
-                <option value="unverified">Not verified</option>
-                <option value="priced">With declared value</option>
-                <option value="unpriced">No declared value</option>
+                <option value="all">{t("registry.filters.allWorks")}</option>
+                <option value="verified">{t("studio.filter.verifiedOnly")}</option>
+                <option value="unverified">{t("studio.filter.notVerified")}</option>
+                <option value="priced">{t("studio.filter.withDeclaredValue")}</option>
+                <option value="unpriced">{t("studio.filter.noDeclaredValue")}</option>
               </select>
             </>
           }
@@ -127,9 +131,9 @@ export function ArtworksSection({
 
       {noSearchMatches ? (
         <div
-          className={`rounded-2xl border border-neutral-300/90 bg-gradient-to-br from-white via-neutral-50/90 ${accent.noMatchTo} px-8 py-12 text-center text-sm text-neutral-600 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9),0_4px_24px_-12px_rgba(0,0,0,0.06)]`}
+          className={`rounded-2xl border border-neutral-300/90 bg-gradient-to-br from-white via-neutral-50/90 ${accent.noMatchTo} px-8 py-12 text-center text-[15px] text-neutral-600 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9),0_4px_24px_-12px_rgba(0,0,0,0.06)]`}
         >
-          No works match your search or filter.
+          {t("studio.artworks.noMatches")}
         </div>
       ) : null}
 
@@ -180,7 +184,7 @@ export function ArtworksSection({
                       />
                     </svg>
                     <span className="text-sm text-neutral-500">
-                      No image on file
+                      {t("registry.card.noImage")}
                     </span>
                   </div>
                 )}
@@ -210,14 +214,14 @@ export function ArtworksSection({
                   {artwork.verification_status === "verified" ? (
                     <span
                       className="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 ring-1 ring-emerald-200/80"
-                      title="Verified on the record."
+                      title={t("studio.artworks.verifiedTooltip")}
                     >
                       <span aria-hidden>✓</span>
-                      Verified
+                      {t("studio.artworks.verified")}
                     </span>
                   ) : (
                     <span className="inline-flex rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] font-medium text-neutral-600 ring-1 ring-neutral-200/90">
-                      Not verified
+                      {t("studio.artworks.notVerified")}
                     </span>
                   )}
                 </div>
@@ -241,7 +245,7 @@ export function ArtworksSection({
                       </span>
                     ) : (
                       <span className="text-[10px] text-neutral-400">
-                        No record ID
+                        {t("studio.artworks.noRecordId")}
                       </span>
                     )}
                   </div>
@@ -253,7 +257,7 @@ export function ArtworksSection({
                     }}
                     className={`shrink-0 rounded-xl ${accent.recordBtn}`}
                   >
-                    Record value
+                    {t("studio.artworks.recordValue")}
                   </button>
                 </div>
               </div>
@@ -278,15 +282,15 @@ export function ArtworksSection({
           <p
             className={`mt-8 text-sm font-semibold ${accent.emptyLabel}`}
           >
-            Your studio
+            {t("studio.artworks.emptyLabel")}
           </p>
           <InfoTooltip text="Register a piece to open its catalogue record and chronology. Later filings you add stay on the same entry." />
-          <h3 className="mt-3 font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-[1.65rem]">
-            No represented works on file yet
+          <h3 className="mt-3 font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950 md:text-[1.85rem]">
+            {t("studio.artworks.emptyTitle")}
           </h3>
           <div className="mt-10 flex justify-center">
             <ExperienceEmptyStateButton
-              label="Register artwork"
+              label={t("studio.registerArtwork")}
               onClick={onRegisterClick}
             />
           </div>

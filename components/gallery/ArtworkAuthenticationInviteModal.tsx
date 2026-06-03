@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import ModalShell from "@/components/ui/ModalShell";
-import { ARTWORK_AUTH_INVITE_COPY } from "@/lib/artwork-authentication-invite";
-import { CANONICAL_RECORD_PHRASES } from "@/lib/representation-language";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fillMessage } from "@/lib/locale-messages";
+import { translateCanonicalPhrase } from "@/lib/representation-i18n";
 import { workspace } from "@/styles/workspace-design";
 
 export type ArtworkAuthInviteTarget = {
@@ -42,6 +43,7 @@ export function ArtworkAuthenticationInviteModal({
   isAdmin,
   onSent,
 }: Props) {
+  const { t, region } = useLocalePreferences();
   const [email, setEmail] = useState(defaultEmail);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
@@ -59,17 +61,18 @@ export function ArtworkAuthenticationInviteModal({
 
   if (!artwork) return null;
 
-  const title = (artwork.title || "").trim() || "Untitled work";
+  const title =
+    (artwork.title || "").trim() || t("gallery.participation.untitledWork");
   const reg = artwork.registry_id?.trim() || "";
 
   const submit = async () => {
     if (!isAdmin) {
-      setError("Only gallery administrators can send artwork authentication invitations.");
+      setError(t("gallery.artworkAuth.adminOnlyError"));
       return;
     }
     const trimmed = email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      setError("Enter a valid artist email.");
+      setError(t("gallery.artworkAuth.invalidEmail"));
       return;
     }
     setBusy(true);
@@ -85,6 +88,7 @@ export function ArtworkAuthenticationInviteModal({
           artist_email: trimmed,
           artist_name: artistNameOnFile,
           message: note.trim() || null,
+          lang: region.lang,
         }),
       });
       const j = (await res.json().catch(() => ({}))) as {
@@ -93,23 +97,23 @@ export function ArtworkAuthenticationInviteModal({
         emailDeliveryError?: string;
       };
       if (!res.ok) {
-        setError(j.error || "Invitation could not be sent.");
+        setError(j.error || t("gallery.artworkAuth.sendFailed"));
         return;
       }
       if (j.emailDeliveryError) {
         setSuccess(
-          `Invitation on file for ${trimmed}. ${j.emailDeliveryError}`
+          `${fillMessage(t("gallery.artworkAuth.inviteOnFile"), { email: trimmed })} ${j.emailDeliveryError}`
         );
       } else {
         setSuccess(
           j.emailSent
-            ? `Continuity invitation sent to ${trimmed}.`
-            : `Invitation on file for ${trimmed}.`
+            ? fillMessage(t("gallery.artworkAuth.inviteSent"), { email: trimmed })
+            : fillMessage(t("gallery.artworkAuth.inviteOnFile"), { email: trimmed })
         );
       }
       onSent?.();
     } catch {
-      setError("Network error. Try again.");
+      setError(t("gallery.artworkAuth.networkError"));
     } finally {
       setBusy(false);
     }
@@ -123,9 +127,9 @@ export function ArtworkAuthenticationInviteModal({
       panelClassName="max-h-[90vh] w-full max-w-xl overflow-auto"
     >
       <div className="p-8 md:p-10">
-        <InfoTooltip text={ARTWORK_AUTH_INVITE_COPY.modalLead} />
-        <h2 className="mt-2 font-serif text-2xl font-normal tracking-tight text-neutral-950">
-          {ARTWORK_AUTH_INVITE_COPY.modalTitle}
+        <InfoTooltip text={t("gallery.artworkAuth.modalLead")} />
+        <h2 className="mt-2 font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950">
+          {t("gallery.artworkAuth.modalTitle")}
         </h2>
 
         <div className="mt-6 flex gap-4 rounded-xl border border-neutral-900/[0.06] bg-neutral-50/80 p-4">
@@ -145,18 +149,18 @@ export function ArtworkAuthenticationInviteModal({
               <p className="mt-0.5 font-mono text-[10px] text-neutral-500">{reg}</p>
             ) : null}
             <p className="mt-2 text-[12px] text-neutral-600">
-              Artist on file: {artistNameOnFile}
+              {t("gallery.artworkAuth.artistOnFile")} {artistNameOnFile}
             </p>
             <ul className="mt-2 space-y-0.5 text-[11px] text-neutral-500">
               <li>
                 {institutionOnFile
-                  ? CANONICAL_RECORD_PHRASES.institutionAttestationOnFile
-                  : "Institution continuity pending"}
+                  ? translateCanonicalPhrase("institutionAttestationOnFile", t)
+                  : t("gallery.artworkAuth.institutionContinuityPending")}
               </li>
               <li>
                 {artistAttestationOnFile
-                  ? CANONICAL_RECORD_PHRASES.artistAttestationOnFile
-                  : CANONICAL_RECORD_PHRASES.artistAttestationNotYetOnFile}
+                  ? translateCanonicalPhrase("artistAttestationOnFile", t)
+                  : translateCanonicalPhrase("artistAttestationMayDeepen", t)}
               </li>
             </ul>
           </div>
@@ -165,7 +169,7 @@ export function ArtworkAuthenticationInviteModal({
         <div className="mt-8 space-y-5">
           <div>
             <label className={labelClass} htmlFor="artwork-auth-invite-email">
-              Artist email
+              {t("gallery.invitations.artistEmail")}
             </label>
             <input
               id="artwork-auth-invite-email"
@@ -173,13 +177,13 @@ export function ArtworkAuthenticationInviteModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={fieldClass}
-              placeholder="artist@example.com"
+              placeholder={t("gallery.invitations.emailPlaceholder")}
               disabled={!isAdmin || busy}
             />
           </div>
           <div>
             <label className={labelClass} htmlFor="artwork-auth-invite-note">
-              Personal note (optional)
+              {t("gallery.artworkAuth.personalNote")}
             </label>
             <textarea
               id="artwork-auth-invite-note"
@@ -187,14 +191,14 @@ export function ArtworkAuthenticationInviteModal({
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className={`${fieldClass} resize-none`}
-              placeholder="A brief continuity note. Archival tone, not an approval request."
+              placeholder={t("gallery.artworkAuth.notePlaceholder")}
               disabled={!isAdmin || busy}
             />
           </div>
         </div>
 
         <p className="mt-5 text-[12px] leading-relaxed text-neutral-500">
-          {ARTWORK_AUTH_INVITE_COPY.modalOutcome}
+          {t("gallery.artworkAuth.modalOutcome")}
         </p>
 
         {error ? (
@@ -215,14 +219,14 @@ export function ArtworkAuthenticationInviteModal({
             onClick={() => void submit()}
             className="flex-1 rounded-2xl bg-neutral-950 px-6 py-3.5 text-sm font-semibold text-white transition enabled:hover:bg-neutral-800 disabled:opacity-50"
           >
-            {busy ? "Sending…" : ARTWORK_AUTH_INVITE_COPY.ctaSend}
+            {busy ? t("common.sending") : t("gallery.artworkAuth.ctaSend")}
           </button>
           <button
             type="button"
             onClick={onClose}
             className="rounded-2xl border border-neutral-200/90 bg-white/90 px-6 py-3.5 text-sm font-semibold text-neutral-800 transition hover:bg-neutral-50"
           >
-            {success ? "Close" : "Cancel"}
+            {success ? t("gallery.artworkAuth.close") : t("common.cancel")}
           </button>
         </div>
       </div>

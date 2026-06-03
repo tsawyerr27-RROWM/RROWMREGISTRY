@@ -108,7 +108,7 @@ export function InfoTooltip({ text, theme = "light", className = "" }: Props) {
           transform: `translateX(calc(-50% + ${pos.shiftX}px))`,
           visibility: open ? "visible" : "hidden",
         }}
-        className={`pointer-events-none absolute left-1/2 z-20 w-64 rounded-lg border px-3 py-2 text-[11px] leading-snug font-medium text-left transition-opacity ${
+        className={`pointer-events-none absolute left-1/2 z-20 w-72 rounded-lg border px-3.5 py-2.5 text-xs leading-snug font-medium text-left transition-opacity ${
           pos.top ? "bottom-full mb-2" : "top-full mt-2"
         } ${s.bubble} ${open ? "opacity-100" : "opacity-0"}`}
       >

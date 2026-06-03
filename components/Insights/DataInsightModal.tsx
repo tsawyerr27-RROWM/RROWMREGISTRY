@@ -1,6 +1,7 @@
 "use client";
 
 import ModalShell from "@/components/ui/ModalShell";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { AnimatePresence } from "framer-motion";
 import {
   Line,
@@ -63,7 +64,8 @@ export function DataInsightModal({
   /** Context for how chart/breakdown relate (e.g. overlapping categories, definitions). */
   dataNotes?: string[];
 }) {
-  const lineSpecs = lines || [{ key: "value", label: "Value" }];
+  const { t } = useLocalePreferences();
+  const lineSpecs = lines || [{ key: "value", label: t("studio.insight.defaultValueLabel") }];
   const showLegend = kind === "line" && lineSpecs.length > 1;
   const hasChartData = Array.isArray(data) && data.length > 0;
   const isLoadingChart = Boolean(chartLoading);
@@ -110,12 +112,12 @@ export function DataInsightModal({
                             aria-hidden
                           />
                           <p className="text-sm text-neutral-500">
-                            Retrieving series on file…
+                            {t("studio.insight.loadingSeries")}
                           </p>
                         </div>
                       ) : (
                         <div className="flex h-full items-center justify-center px-6 text-center text-sm text-neutral-500">
-                          No series data for this period.
+                          {t("studio.insight.noSeriesData")}
                         </div>
                       )
                     ) : (
@@ -259,7 +261,7 @@ export function DataInsightModal({
                     role="note"
                   >
                     <p className="font-semibold text-neutral-900">
-                      How to read this
+                      {t("studio.insight.howToRead")}
                     </p>
                     <ul className="mt-2 list-disc space-y-1.5 pl-4">
                       {dataNotes.map((note, i) => (
@@ -272,7 +274,7 @@ export function DataInsightModal({
                 {breakdown && breakdown.length > 0 ? (
                   <div>
                     <h3 className="text-base font-semibold text-neutral-900">
-                      Breakdown
+                      {t("studio.insight.breakdownHeading")}
                     </h3>
                     <ul className="mt-4 divide-y divide-black/[0.06] overflow-hidden rounded-xl border border-black/[0.06] bg-white/60">
                       {breakdown.map((b, i) => (
@@ -293,7 +295,7 @@ export function DataInsightModal({
                 {insights && insights.length > 0 ? (
                   <div>
                     <h3 className="text-base font-semibold text-neutral-900">
-                      Notes
+                      {t("studio.insight.notesHeading")}
                     </h3>
                     <ul className="mt-4 space-y-3 rounded-xl border border-black/[0.06] bg-white/60 px-4 py-4 text-sm leading-relaxed text-neutral-700 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8)]">
                       {insights.slice(0, 4).map((t, i) => (

@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import ModalShell from "@/components/ui/ModalShell";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { formatValueEventLabel } from "@/lib/format-registry-labels";
 
@@ -36,6 +39,7 @@ export function ArtworkDetailModal({
   onClose,
   valueHistory,
 }: ArtworkDetailModalProps) {
+  const { t } = useLocalePreferences();
   const hasScroll = valueHistory.length > 0;
 
   return (
@@ -80,12 +84,12 @@ export function ArtworkDetailModal({
                     "–"}
                 </p>
                 {artwork.dimensions ? (
-                  <p className="mt-2 text-sm text-neutral-500">
+                  <p className="mt-2 text-[15px] text-neutral-500">
                     {artwork.dimensions}
                   </p>
                 ) : null}
                 {artwork.description ? (
-                  <p className="mt-5 max-w-prose whitespace-pre-wrap text-sm leading-relaxed text-neutral-600">
+                  <p className="mt-5 max-w-prose whitespace-pre-wrap text-[15px] leading-relaxed text-neutral-600">
                     {artwork.description}
                   </p>
                 ) : null}
@@ -102,7 +106,7 @@ export function ArtworkDetailModal({
                 <div>
                   <InfoTooltip text="Declared value events for this work." />
                   <p className="text-sm font-semibold text-neutral-500">
-                    Value history
+                    {t("studio.artworkDetail.valueHistory")}
                   </p>
                 </div>
               </div>
@@ -110,8 +114,8 @@ export function ArtworkDetailModal({
               {valueHistory.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-neutral-300/90 bg-white/60 px-5 py-8 text-center">
                   <InfoTooltip text="Record a value event to show how declared value changes over time." />
-                  <p className="text-sm font-medium text-neutral-900">
-                    No value history yet
+                  <p className="text-[15px] font-medium text-neutral-900">
+                    {t("studio.artworkDetail.noValueHistory")}
                   </p>
                 </div>
               ) : (
@@ -158,7 +162,7 @@ export function ArtworkDetailModal({
                               </span>
                             </div>
                             {event.note ? (
-                              <p className="mt-3 text-sm leading-relaxed text-neutral-700">
+                              <p className="mt-3 text-[15px] leading-relaxed text-neutral-700">
                                 {event.note}
                               </p>
                             ) : null}

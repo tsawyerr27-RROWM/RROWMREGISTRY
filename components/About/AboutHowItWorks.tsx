@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { UseCaseJourney } from "@/components/LandingPage/UseCaseJourney";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import {
   NARRATIVE_REVEAL_DURATION_S,
   narrativeLayout,
@@ -13,6 +14,7 @@ type AboutHowItWorksProps = {
 };
 
 export function AboutHowItWorks({ density = "default" }: AboutHowItWorksProps) {
+  const { t } = useLocalePreferences();
   const reduce = useReducedMotion();
   const digest = density === "digest";
   const Shell = digest ? "div" : "section";
@@ -34,7 +36,7 @@ export function AboutHowItWorks({ density = "default" }: AboutHowItWorksProps) {
             : "font-serif text-[clamp(1.85rem,3vw,2.65rem)] font-normal leading-tight tracking-tight text-neutral-950"
         }
       >
-        How it works
+        {t("about.how.title")}
       </h2>
       <motion.div
         className={digest ? "mt-6 md:mt-7" : "mt-14 md:mt-16"}

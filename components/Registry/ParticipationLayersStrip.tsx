@@ -4,7 +4,7 @@ import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 type Props = {
   layers: ParticipationLayer[];
-  /** Light = public catalogue pages; dark = stewardship / dark heroes */
+  /** Light = public catalogue pages; dark = studio / dark heroes */
   variant?: "light" | "dark";
   className?: string;
   showFootnote?: boolean;

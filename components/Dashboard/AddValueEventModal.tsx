@@ -3,6 +3,7 @@
 import { useId, useState, type ReactNode } from "react";
 import ModalShell from "@/components/ui/ModalShell";
 import { CurrencyCombobox } from "@/components/ui/CurrencyCombobox";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 export type AddValueEventFormState = {
   declared_value: string;
@@ -21,7 +22,7 @@ type ArtworkMini = {
 
 /** Shared with RegisterModal — `liquid-glass-inset` uses border-radius:0 in CSS; override for round fields */
 const fieldBase =
-  "liquid-glass-inset !rounded-2xl mt-2 w-full px-4 py-3.5 text-sm leading-snug text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/15";
+  "liquid-glass-inset !rounded-2xl mt-2 w-full px-4 py-3.5 text-[15px] leading-snug text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/15";
 
 const selectClass = `${fieldBase} appearance-none`;
 
@@ -102,6 +103,7 @@ export function AddValueEventModal({
   onClose,
   onSubmit,
 }: AddValueEventModalProps) {
+  const { t } = useLocalePreferences();
   const valueId = useId();
   const currencyId = useId();
   const typeId = useId();
@@ -121,8 +123,8 @@ export function AddValueEventModal({
           <div className="pointer-events-none absolute -bottom-12 -left-16 h-48 w-48 rounded-full bg-violet-400/10 blur-3xl" />
           <div className="relative space-y-6 p-6 pb-8 pt-14 md:p-8 md:pb-10 md:pt-16">
             <header className="space-y-4 border-b border-black/[0.06] pb-6">
-              <h2 className="font-serif text-2xl font-normal leading-tight tracking-tight text-neutral-950 md:text-[1.65rem]">
-                Record value event
+              <h2 className="font-serif text-[1.75rem] font-normal leading-tight tracking-[-0.01em] text-neutral-950 md:text-[1.85rem]">
+                {t("studio.valueEvent.title")}
               </h2>
               {artwork.registry_id ? (
                 <p className="font-mono text-[11px] text-neutral-500">
@@ -135,20 +137,14 @@ export function AddValueEventModal({
               <div>
                 <FieldLabel
                   htmlFor={valueId}
-                  label="Declared amount"
-                  tipTitle="Declared amount"
-                  tip={
-                    <p>
-                      The figure you are logging for this event (valuation, sale
-                      price, estimate, etc.). Match what was actually stated or
-                      agreed. This becomes part of your provenance trail.
-                    </p>
-                  }
+                  label={t("studio.valueEvent.declaredAmount")}
+                  tipTitle={t("studio.valueEvent.declaredAmount")}
+                  tip={<p>{t("studio.valueEvent.helpAmount")}</p>}
                 />
                 <input
                   id={valueId}
                   type="number"
-                  placeholder="Amount"
+                  placeholder={t("studio.valueEvent.amountPlaceholder")}
                   className={fieldBase}
                   value={form.declared_value}
                   onChange={(e) =>
@@ -163,14 +159,9 @@ export function AddValueEventModal({
               <div>
                 <FieldLabel
                   htmlFor={currencyId}
-                  label="Currency"
-                  tipTitle="Currency"
-                  tip={
-                    <p>
-                      ISO currency for the amount above. Choose the currency the
-                      value was quoted in, not an implied conversion.
-                    </p>
-                  }
+                  label={t("studio.form.currency")}
+                  tipTitle={t("studio.form.currency")}
+                  tip={<p>{t("studio.valueEvent.helpCurrency")}</p>}
                 />
                 <div className="mt-2">
                   <CurrencyCombobox
@@ -189,38 +180,9 @@ export function AddValueEventModal({
               <div>
                 <FieldLabel
                   htmlFor={typeId}
-                  label="Event type"
-                  tipTitle="Event types"
-                  tip={
-                    <ul className="list-disc space-y-1.5 pl-4 text-[11px] text-neutral-600">
-                      <li>
-                        <strong className="text-neutral-800">Initial</strong>
-                        : first recorded anchor for the work.
-                      </li>
-                      <li>
-                        <strong className="text-neutral-800">
-                          Primary sale
-                        </strong>
-                        : first sale from the artist or primary market.
-                      </li>
-                      <li>
-                        <strong className="text-neutral-800">
-                          Secondary sale
-                        </strong>
-                        : resale on the secondary market.
-                      </li>
-                      <li>
-                        <strong className="text-neutral-800">Appraisal</strong>
-                        : formal or expert valuation.
-                      </li>
-                      <li>
-                        <strong className="text-neutral-800">
-                          Internal estimate
-                        </strong>
-                        : your studio reference figure (not necessarily public).
-                      </li>
-                    </ul>
-                  }
+                  label={t("studio.form.eventType")}
+                  tipTitle={t("studio.form.eventType")}
+                  tip={<p>{t("studio.valueEvent.helpEventTypes")}</p>}
                 />
                 <select
                   id={typeId}
@@ -233,41 +195,26 @@ export function AddValueEventModal({
                     })
                   }
                 >
-                  <option value="initial">Initial</option>
-                  <option value="primary_sale">Primary Sale</option>
-                  <option value="secondary_sale">Secondary Sale</option>
-                  <option value="appraisal">Appraisal</option>
-                  <option value="internal_estimate">Internal Estimate</option>
+                  <option value="initial">{t("studio.form.eventInitial")}</option>
+                  <option value="primary_sale">
+                    {t("studio.form.eventPrimarySale")}
+                  </option>
+                  <option value="secondary_sale">
+                    {t("studio.form.eventSecondarySale")}
+                  </option>
+                  <option value="appraisal">{t("studio.form.eventAppraisal")}</option>
+                  <option value="internal_estimate">
+                    {t("studio.form.eventInternalEstimate")}
+                  </option>
                 </select>
               </div>
 
               <div>
                 <FieldLabel
                   htmlFor={visId}
-                  label="Visibility"
-                  tipTitle="Who can see this"
-                  tip={
-                    <ul className="list-disc space-y-1.5 pl-4 text-[11px] text-neutral-600">
-                      <li>
-                        <strong className="text-neutral-800">Private</strong>
-                        : only you (and authorised roles) in the studio.
-                      </li>
-                      <li>
-                        <strong className="text-neutral-800">Gallery</strong>
-                        : shared in gallery-facing contexts where enabled.
-                      </li>
-                      <li>
-                        <strong className="text-neutral-800">
-                          Certificate
-                        </strong>
-                        : can appear on or alongside the certificate layer.
-                      </li>
-                      <li>
-                        <strong className="text-neutral-800">Public</strong>
-                        : eligible for public registry surfaces when policy allows.
-                      </li>
-                    </ul>
-                  }
+                  label={t("studio.form.visibility")}
+                  tipTitle={t("studio.form.visibility")}
+                  tip={<p>{t("studio.valueEvent.helpVisibility")}</p>}
                 />
                 <select
                   id={visId}
@@ -280,30 +227,25 @@ export function AddValueEventModal({
                     })
                   }
                 >
-                  <option value="private">Private</option>
-                  <option value="gallery">Gallery</option>
-                  <option value="certificate">Certificate</option>
-                  <option value="public">Public</option>
+                  <option value="private">{t("studio.form.visibilityPrivate")}</option>
+                  <option value="gallery">{t("studio.form.visibilityGallery")}</option>
+                  <option value="certificate">
+                    {t("studio.form.visibilityCertificate")}
+                  </option>
+                  <option value="public">{t("studio.form.visibilityPublic")}</option>
                 </select>
               </div>
 
               <div>
                 <FieldLabel
                   htmlFor={noteId}
-                  label="Note (optional)"
-                  tipTitle="Notes"
-                  tip={
-                    <p>
-                      Optional context: fair, channel, buyer type, appraiser, or
-                      anything that helps future you interpret this event.
-                      Whether it appears publicly still depends on visibility
-                      above.
-                    </p>
-                  }
+                  label={t("studio.valueEvent.noteOptional")}
+                  tipTitle={t("studio.valueEvent.noteOptional")}
+                  tip={<p>{t("studio.valueEvent.helpNotes")}</p>}
                 />
                 <textarea
                   id={noteId}
-                  placeholder="Optional context"
+                  placeholder={t("studio.valueEvent.notePlaceholder")}
                   rows={3}
                   className={`${fieldBase} resize-y min-h-[5.5rem]`}
                   value={form.note}
@@ -319,7 +261,7 @@ export function AddValueEventModal({
 
             <div className="flex flex-col-reverse gap-3 border-t border-black/[0.06] pt-6 sm:flex-row sm:justify-end sm:gap-3">
               <button type="button" onClick={onClose} className={btnGhost}>
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 type="button"
@@ -327,7 +269,7 @@ export function AddValueEventModal({
                 onClick={onSubmit}
                 className={btnPrimary}
               >
-                {loading ? "Saving…" : "Save"}
+                {loading ? t("common.saving") : t("common.save")}
               </button>
             </div>
           </div>

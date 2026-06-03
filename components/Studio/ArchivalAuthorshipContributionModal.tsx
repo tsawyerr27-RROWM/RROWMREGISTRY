@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import ModalShell from "@/components/ui/ModalShell";
-import { CANONICAL_RECORD_PHRASES } from "@/lib/representation-language";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { translateCanonicalPhrase } from "@/lib/representation-i18n";
 
 const fieldClass =
   "w-full rounded-2xl border border-neutral-200/90 bg-white/90 px-4 py-3 text-sm leading-snug text-neutral-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/15 resize-none";
@@ -35,6 +36,7 @@ export function ArchivalAuthorshipContributionModal({
   busy = false,
   onSubmit,
 }: Props) {
+  const { t } = useLocalePreferences();
   const [authorshipStatement, setAuthorshipStatement] = useState("");
   const [chronologyContribution, setChronologyContribution] = useState("");
 
@@ -56,50 +58,53 @@ export function ArchivalAuthorshipContributionModal({
       panelClassName="max-h-[90vh] w-full max-w-xl overflow-auto"
     >
       <div className="p-8 md:p-10">
-        <InfoTooltip text={<>Archival authorship contribution. {CANONICAL_RECORD_PHRASES.recordDeepensOverTime}. Your words are filed as participant attestation on the chronology. They do not replace institution filings or rewrite the canonical record.</>} />
-        <h2 className="mt-2 font-serif text-2xl font-normal tracking-tight text-neutral-950">
-          Deepen the record
+        <InfoTooltip
+          text={`${translateCanonicalPhrase("recordDeepensOverTime", t)}. ${translateCanonicalPhrase("notApprovalWorkflow", t)}`}
+        />
+        <h2 className="mt-2 font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950">
+          {t("studio.authorship.title")}
         </h2>
 
         <div className="mt-6 rounded-xl border border-neutral-900/[0.06] bg-neutral-50/80 px-4 py-3">
           <p className="text-sm font-medium text-neutral-900">
-            {(artworkTitle || "").trim() || "Work on file"}
+            {(artworkTitle || "").trim() || t("studio.authorship.workFallback")}
           </p>
           {registryId ? (
             <p className="mt-1 font-mono text-[10px] text-neutral-500">{registryId}</p>
           ) : null}
           {institutionName ? (
             <p className="mt-1 text-[12px] text-neutral-500">
-              {CANONICAL_RECORD_PHRASES.institutionAttestationOnFile} · {institutionName}
+              {translateCanonicalPhrase("institutionAttestationOnFile", t)} ·{" "}
+              {institutionName}
             </p>
           ) : null}
         </div>
 
         <div className="mt-8 space-y-6">
           <div>
-            <label className={labelClass}>Authorship statement</label>
+            <label className={labelClass}>{t("studio.authorship.statement")}</label>
             <textarea
               rows={4}
               value={authorshipStatement}
               onChange={(e) => setAuthorshipStatement(e.target.value)}
               className={fieldClass}
-              placeholder="How you understand authorship for this work: practice, intent, or documentary context…"
+              placeholder={t("studio.authorship.statementPlaceholder")}
             />
           </div>
           <div>
-            <label className={labelClass}>Chronology contribution</label>
+            <label className={labelClass}>{t("studio.authorship.chronology")}</label>
             <textarea
               rows={3}
               value={chronologyContribution}
               onChange={(e) => setChronologyContribution(e.target.value)}
               className={fieldClass}
-              placeholder="Dates, production context, exhibition history, or continuity you want on file…"
+              placeholder={t("studio.authorship.chronologyPlaceholder")}
             />
           </div>
         </div>
 
         <p className="mt-6 text-[12px] leading-relaxed text-neutral-500">
-          {CANONICAL_RECORD_PHRASES.notApprovalWorkflow}
+          {translateCanonicalPhrase("notApprovalWorkflow", t)}
         </p>
 
         <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row">
@@ -114,7 +119,9 @@ export function ArchivalAuthorshipContributionModal({
             }
             className="flex-1 rounded-2xl bg-neutral-950 px-6 py-3.5 text-sm font-semibold text-white transition enabled:hover:bg-neutral-800 disabled:opacity-50"
           >
-            {busy ? "Filing contribution…" : "File contribution on chronology"}
+            {busy
+              ? t("studio.authorship.filing")
+              : t("studio.authorship.fileContribution")}
           </button>
           <button
             type="button"
@@ -122,7 +129,7 @@ export function ArchivalAuthorshipContributionModal({
             disabled={busy}
             className="rounded-2xl border border-neutral-200/90 bg-white/90 px-6 py-3.5 text-sm font-semibold text-neutral-800 transition hover:bg-neutral-50 disabled:opacity-50"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
         </div>
       </div>

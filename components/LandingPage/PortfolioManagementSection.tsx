@@ -6,7 +6,7 @@ import { useCallback, useState } from "react";
 import {
   narrativeLayout,
 } from "@/styles/narrative-layout";
-import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -85,13 +85,13 @@ const ROLES: RoleConfig[] = [
   },
   {
     id: "collector",
-    label: "Collector workspace",
+    label: "Collector studio",
     workspace: "Collector studio",
     accentVar: "--rrowm-accent-collector",
     capabilities: [
       {
         title: "Holdings ledger",
-        detail: "Verified ownership, transfers, and claims structured for your stewardship.",
+        detail: "Verified ownership, transfers, and claims structured for your studio.",
         preview: "6 holdings · 2 transfers on file",
       },
       {
@@ -131,7 +131,7 @@ function RolePreview({
       animate={{ opacity: 1, y: 0 }}
       exit={reduce ? undefined : { opacity: 0, y: -8 }}
       transition={{ duration: reduce ? 0 : 0.42, ease }}
-      className="relative overflow-hidden rounded-[1.35rem] border border-[color:var(--rrowm-atmo-rim)] bg-[color-mix(in_srgb,var(--rrowm-atmo-panel)_82%,transparent)] shadow-[0_28px_80px_-52px_rgba(15,23,42,0.2)] backdrop-blur-md"
+      className="relative overflow-hidden rounded-[1.35rem] border border-[color:var(--rrowm-atmo-rim)] bg-[color-mix(in_srgb,var(--rrowm-atmo-panel)_82%,transparent)] shadow-[0_16px_40px_-20px_rgba(15,23,42,0.1)] backdrop-blur-md"
     >
       <div
         className="pointer-events-none absolute -right-16 -top-12 h-48 w-48 rounded-full blur-2xl"
@@ -199,8 +199,8 @@ function RolePreview({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-medium text-neutral-900">{cap.title}</p>
-                    <p className="mt-1.5 text-sm leading-[1.68] text-neutral-600">
+                    <p className="text-[14px] font-medium text-neutral-900">{cap.title}</p>
+                    <p className="mt-1.5 text-[15px] leading-[1.68] text-neutral-600">
                       {cap.detail}
                     </p>
                   </div>
@@ -239,6 +239,7 @@ function RolePreview({
 
 export function PortfolioManagementSection() {
   const reduce = useReducedMotion();
+  const { t } = useLocalePreferences();
   const [activeRoleId, setActiveRoleId] = useState<RoleId>("artist");
   const [hoverIndex, setHoverIndex] = useState<number | null>(0);
 
@@ -273,12 +274,11 @@ export function PortfolioManagementSection() {
       <div className={`${narrativeLayout.gutter} relative ${narrativeLayout.sectionPadYTight}`}>
         <div className="grid gap-10 lg:grid-cols-12 lg:items-start lg:gap-12">
           <div className="lg:col-span-5">
-            <InfoTooltip text="One registry identity runs through an artist studio, a gallery desk, and a collector workspace. Each view follows how that participant files on the chronology." />
             <h2
               id="landing-portfolio-mgmt-heading"
               className="max-w-[min(100%,28rem)] font-serif text-[clamp(1.6rem,2.8vw,2.35rem)] font-normal leading-[1.16] tracking-tight text-neutral-950"
             >
-              Portfolio management across every role
+              {t("landing.portfolio.title")}
             </h2>
 
             <motion.div

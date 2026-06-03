@@ -48,12 +48,30 @@ import {
   WorkspaceShellFooterLinks,
 } from "@/components/Studio/WorkspaceShell";
 import { workspace } from "@/styles/workspace-design";
+import { appendPersonalArchiveNavItem } from "@/lib/personal-archive-nav";
+import { STUDIO_SECTION_LABEL_KEYS } from "@/lib/workspace-nav-i18n";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fillMessage } from "@/lib/locale-messages";
+import {
+  translateOwnershipOwnerLabel,
+  translateOwnershipPartyLabel,
+  translateOwnershipStatusLabel,
+  translateOwnershipLedgerSubtitle,
+  translateTransferTypeLabel,
+  translateValueEventType,
+  translateVisibilityLevel,
+} from "@/lib/ownership-ledger-i18n";
 import { OwnershipLedgerActionConfirmModal } from "@/components/ownership/OwnershipLedgerActionConfirmModal";
 import { AddValueEventModal } from "@/components/Dashboard/AddValueEventModal";
 import { DataInsightModal } from "@/components/Insights/DataInsightModal";
 import { resolveArtworkOwnerId } from "@/lib/resolve-artwork-owner-id";
 import { formatCurrency } from "@/lib/formatCurrency";
-import { generateRoleInsight, getDashboardInsights } from "@/lib/insights";
+import { getDashboardInsights } from "@/lib/insights";
+import {
+  translateInsightBarCategory,
+  translateRoleInsight,
+} from "@/lib/insights-i18n";
+import { translateActivityMessage } from "@/lib/activity-i18n";
 import { testModeEnabled } from "@/lib/test-mode";
 import { TestDataControls } from "@/components/Admin/TestDataControls";
 import { getOnboardingRedirectPath } from "@/lib/onboarding";
@@ -72,7 +90,6 @@ import {
   formatOwnershipOwnerPrimary,
   ownershipStatusBadge,
   ownershipSystemTrustRank,
-  formatOwnershipLedgerSubtitle,
 } from "@/lib/ownership-ledger";
 
 function isUuid(value: string) {
@@ -96,6 +113,7 @@ function isSaleLikeValueType(valueType: string | null | undefined) {
 
 export default function Dashboard() {
   const sb = useSupabaseBrowserLazy();
+  const { t, formatMoney } = useLocalePreferences();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [representationReviewQueue, setRepresentationReviewQueue] = useState<
@@ -348,21 +366,30 @@ export default function Dashboard() {
         const { series } = insights.artworkTrend;
         const cat = insights.catalogue;
         setInsightKind("line");
-        setInsightTitle("Catalogue highlights");
+        setInsightTitle(t("studio.insight.title.worksArtist"));
         setInsightSubtitle(
-          generateRoleInsight("artist", {
-            artworkTrend: insights.artworkTrend,
-            catalogue: cat,
-          })
+          translateRoleInsight(
+            "artist",
+            {
+              artworkTrend: insights.artworkTrend,
+              catalogue: cat,
+            },
+            t
+          )
         );
-        setInsightLines([{ key: "works", label: "Works" }]);
+        setInsightLines([{ key: "works", label: t("studio.insight.line.worksArtist") }]);
         setInsightData(series);
         setInsightBreakdown([
-          { label: "Total works", value: String(cat.totalWorks) },
-          { label: "Unique works", value: String(cat.uniqueWorks) },
-          { label: "Edition works", value: String(cat.editionWorks) },
+          { label: t("studio.insight.breakdown.totalWorks"), value: String(cat.totalWorks) },
+          { label: t("studio.insight.breakdown.uniqueWorks"), value: String(cat.uniqueWorks) },
+          { label: t("studio.insight.breakdown.editionWorks"), value: String(cat.editionWorks) },
           ...(cat.mostActivePeriod
-            ? [{ label: "Most active period", value: cat.mostActivePeriod }]
+            ? [
+                {
+                  label: t("studio.insight.breakdown.mostActivePeriod"),
+                  value: cat.mostActivePeriod,
+                },
+              ]
             : []),
         ]);
         return;
@@ -376,27 +403,39 @@ export default function Dashboard() {
         });
         const h = insights.health;
         setInsightKind("bar");
-        setInsightTitle("Record health");
-        setInsightSubtitle(generateRoleInsight("artist", { health: h }));
+        setInsightTitle(t("studio.insight.title.health"));
+        setInsightSubtitle(translateRoleInsight("artist", { health: h }, t));
         setInsightData([
-          { month: "Fully verified", events: h.fullyVerified },
-          { month: "Certified", events: h.withCertificates },
-          { month: "Incomplete", events: h.missingVerification },
+          {
+            month: translateInsightBarCategory("fullyVerified", t),
+            events: h.fullyVerified,
+          },
+          {
+            month: translateInsightBarCategory("certified", t),
+            events: h.withCertificates,
+          },
+          {
+            month: translateInsightBarCategory("incomplete", t),
+            events: h.missingVerification,
+          },
         ]);
         setInsightBreakdown([
           {
-            label: "Fully verified (strict)",
+            label: t("studio.insight.breakdown.fullyVerifiedStrict"),
             value: String(h.fullyVerified),
           },
-          { label: "With certificate", value: String(h.withCertificates) },
           {
-            label: "Missing verification",
+            label: t("studio.insight.breakdown.withCertificate"),
+            value: String(h.withCertificates),
+          },
+          {
+            label: t("studio.insight.breakdown.missingVerification"),
             value: String(h.missingVerification),
           },
         ]);
         setInsightDataNotes([
-          "These bars are not additive: one work can count toward more than one category.",
-          "“Fully verified” needs a non-revoked certificate, a gallery attestation, and verified ownership. That bar is stricter than the per-row “verified” badge in your studio list.",
+          t("studio.insight.note.healthNonAdditive"),
+          t("studio.insight.note.healthStrictArtist"),
         ]);
         return;
       }
@@ -408,9 +447,9 @@ export default function Dashboard() {
       });
       const { series, currencies, latestValues } = insights.valueTrend;
       setInsightKind("line");
-      setInsightTitle("Value progression");
+      setInsightTitle(t("studio.insight.title.valueArtist"));
       setInsightSubtitle(
-        generateRoleInsight("artist", { valueTrend: insights.valueTrend })
+        translateRoleInsight("artist", { valueTrend: insights.valueTrend }, t)
       );
       setInsightLines(currencies.map((c) => ({ key: c, label: c })));
       setInsightData(series);
@@ -418,13 +457,13 @@ export default function Dashboard() {
       const breakdown = Object.keys(latestValues)
         .sort()
         .map((c) => ({
-          label: `Latest declared (${c})`,
+          label: fillMessage(t("studio.insight.breakdown.latestDeclared"), {
+            currency: c,
+          }),
           value: formatCurrency(latestValues[c], c),
         }));
       setInsightBreakdown(breakdown);
-      setInsightDataNotes([
-        "Figures are the latest declared value per currency from your value events (the same basis as the chart series), not a roll-up of every artwork’s current list price.",
-      ]);
+      setInsightDataNotes([t("studio.insight.note.valueBasisArtist")]);
     } finally {
       setInsightLoading(false);
     }
@@ -671,13 +710,13 @@ export default function Dashboard() {
       console.error(error);
       showToast(
         "error",
-        error.message || "Verification request could not be recorded."
+        error.message || t("studio.toast.verificationRequestFailed")
       );
       setOwnershipUiBusyId(null);
       return;
     }
     await refreshSelectedArtworkEventsRef.current(selectedArtwork.id);
-    showToast("success", "Verification request recorded on file.");
+    showToast("success", t("studio.toast.verificationRequestRecorded"));
     setOwnershipUiBusyId(null);
   };
 
@@ -686,7 +725,7 @@ export default function Dashboard() {
     const { data: sessionData } = await sb().auth.getSession();
     const token = sessionData?.session?.access_token;
     if (!token) {
-      showToast("error", "Session ended. Sign in again to continue.");
+      showToast("error", t("studio.toast.sessionEnded"));
       setOwnershipUiBusyId(null);
       return;
     }
@@ -702,7 +741,7 @@ export default function Dashboard() {
     if (!res.ok) {
       showToast(
         "error",
-        typeof json?.error === "string" ? json.error : "Verification did not complete."
+        typeof json?.error === "string" ? json.error : t("studio.toast.verificationIncomplete")
       );
       setOwnershipUiBusyId(null);
       return;
@@ -710,7 +749,7 @@ export default function Dashboard() {
     if (selectedArtwork?.id) {
       await refreshSelectedArtworkEventsRef.current(selectedArtwork.id);
     }
-    showToast("success", "Custody step verified on the chronology.");
+    showToast("success", t("studio.toast.custodyVerified"));
     setOwnershipUiBusyId(null);
   };
 
@@ -793,7 +832,7 @@ useEffect(() => {
     } catch (e) {
       showToast(
         "error",
-        "Connection interrupted. Reconnect, then open the studio again."
+        t("studio.toast.connectionInterrupted")
       );
       // Let the rest of the UI render; the app will fail gracefully when calls error.
     }
@@ -1070,16 +1109,19 @@ useEffect(() => {
 
   const studioNavItems = useMemo(
     () =>
-      (["Studio", "Records", "Artworks", "Certificates", "Ownership"] as const).map(
-        (item) => ({
-          id: item,
-          label: item,
-          showDot:
-            (item === "Records" && governanceAttention) ||
-            (item === "Ownership" && Object.keys(saleSignals).length > 0),
-        })
+      appendPersonalArchiveNavItem(
+        (["Studio", "Artworks", "Records", "Certificates", "Ownership"] as const).map(
+          (item) => ({
+            id: item,
+            label: t(STUDIO_SECTION_LABEL_KEYS[item]),
+            showDot:
+              (item === "Records" && governanceAttention) ||
+              (item === "Ownership" && Object.keys(saleSignals).length > 0),
+          })
+        ),
+        t
       ),
-    [saleSignals, governanceAttention]
+    [saleSignals, governanceAttention, t]
   );
 
   const amendmentArtworkOptions = useMemo(
@@ -1158,15 +1200,15 @@ useEffect(() => {
       });
       const j = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        showToast("error", j?.error || "Could not file contribution.");
+        showToast("error", j?.error || t("studio.toast.contributionFailed"));
         return;
       }
-      showToast("success", "Authorship contribution filed on the chronology.");
+      showToast("success", t("studio.toast.contributionFiled"));
       setAuthorshipContributionTarget(null);
       await fetchRepresentationReviewQueue();
       if (user?.id) await fetchArtworks(user.id);
     } catch {
-      showToast("error", "Could not file contribution.");
+      showToast("error", t("studio.toast.contributionError"));
     } finally {
       setAuthorshipContributionBusy(false);
     }
@@ -1183,15 +1225,15 @@ useEffect(() => {
       });
       const j = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        showToast("error", j?.error || "Could not confirm.");
+        showToast("error", j?.error || t("studio.toast.confirmFailed"));
         return;
       }
-      showToast("success", "Confirmation recorded on file.");
+      showToast("success", t("studio.toast.confirmRecorded"));
       await fetchRepresentationReviewQueue();
       await fetchRepresentationAmendments();
       if (user?.id) await fetchArtworks(user.id);
     } catch {
-      showToast("error", "Could not confirm.");
+      showToast("error", t("studio.toast.confirmError"));
     } finally {
       setRepresentationConfirmBusyId(null);
     }
@@ -1237,17 +1279,17 @@ useEffect(() => {
       });
       const j = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        showToast("error", j?.error || "Could not resolve amendment.");
+        showToast("error", j?.error || t("studio.toast.amendmentResolveFailed"));
         return;
       }
       showToast(
         "success",
-        accept ? "Amendment accepted on file." : "Amendment declined on file."
+        accept ? t("studio.toast.amendmentAccepted") : t("studio.toast.amendmentDeclined")
       );
       await fetchRepresentationAmendments();
       if (user?.id) await fetchArtworks(user.id);
     } catch {
-      showToast("error", "Could not resolve amendment.");
+      showToast("error", t("studio.toast.amendmentResolveError"));
     } finally {
       setAmendmentBusyId(null);
     }
@@ -1264,13 +1306,13 @@ useEffect(() => {
       });
       const j = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        showToast("error", j?.error || "Could not withdraw.");
+        showToast("error", j?.error || t("studio.toast.withdrawFailed"));
         return;
       }
-      showToast("success", "Amendment withdrawn on file.");
+      showToast("success", t("studio.toast.amendmentWithdrawn"));
       await fetchRepresentationAmendments();
     } catch {
-      showToast("error", "Could not withdraw.");
+      showToast("error", t("studio.toast.withdrawError"));
     } finally {
       setAmendmentBusyId(null);
     }
@@ -1288,17 +1330,17 @@ useEffect(() => {
       });
       const j = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        showToast("error", j?.error || "Could not end representation.");
+        showToast("error", j?.error || t("studio.toast.endRepresentationFailed"));
         return;
       }
-      showToast("success", "Representation ended on file.");
+      showToast("success", t("studio.toast.representationEnded"));
       setEndRepOpen(false);
       setRepStateActive(false);
       await fetchRepresentationReviewQueue();
       await fetchRepresentationAmendments();
       await fetchArtworks(user.id);
     } catch {
-      showToast("error", "Could not end representation.");
+      showToast("error", t("studio.toast.endRepresentationError"));
     } finally {
       setEndRepBusy(false);
     }
@@ -1319,7 +1361,7 @@ useEffect(() => {
     if (!res.ok) {
       throw new Error(j?.error || "Request failed.");
     }
-    showToast("success", "Amendment request filed on the chronology.");
+    showToast("success", t("studio.toast.amendmentRequestFiled"));
     await fetchRepresentationAmendments();
     if (user?.id) await fetchArtworks(user.id);
   };
@@ -1455,7 +1497,7 @@ useEffect(() => {
       );
       showToast(
         "error",
-        "Activity log could not be written. The underlying action may still be on file."
+        t("studio.toast.activityLogFailed")
       );
     }
   };
@@ -1474,7 +1516,7 @@ useEffect(() => {
 
     if (claimError) {
       console.error(claimError);
-      showToast("error", "Claim could not be approved.");
+      showToast("error", t("studio.toast.claimApproveFailed"));
       setClaimActionId(null);
       return;
     }
@@ -1490,7 +1532,7 @@ useEffect(() => {
     );
     if (latestErr) {
       console.error(latestErr);
-      showToast("error", "Custody ledger could not be opened.");
+      showToast("error", t("studio.toast.custodyLedgerFailed"));
       setClaimActionId(null);
       return;
     }
@@ -1514,7 +1556,7 @@ useEffect(() => {
 
       if (eventError) {
         console.error(eventError);
-        showToast("error", "Custody row could not be updated.");
+        showToast("error", t("studio.toast.custodyRowUpdateFailed"));
         setClaimActionId(null);
         return;
       }
@@ -1534,7 +1576,7 @@ useEffect(() => {
 
       if (eventError) {
         console.error(eventError);
-        showToast("error", "Custody row could not be recorded.");
+        showToast("error", t("studio.toast.custodyRowRecordFailed"));
         setClaimActionId(null);
         return;
       }
@@ -1542,7 +1584,7 @@ useEffect(() => {
 
     // current_owner_id / test_owner_id refreshed by DB trigger when to_user_id is set.
 
-    showToast("success", "Ownership claim recorded on the chronology.");
+    showToast("success", t("studio.toast.claimRecorded"));
     await logActivity({
       type: "ownership_confirmed",
       message: `Ownership confirmed: ${claim.artworks?.title || claim.artwork_id}`,
@@ -1565,12 +1607,12 @@ useEffect(() => {
 
     if (error) {
       console.error(error);
-      showToast("error", "Claim could not be withdrawn.");
+      showToast("error", t("studio.toast.claimWithdrawFailed"));
       setClaimActionId(null);
       return;
     }
 
-    showToast("success", "Claim withdrawn from review.");
+    showToast("success", t("studio.toast.claimWithdrawn"));
     await logActivity({
       type: "ownership_claim_rejected",
       message: "Ownership claim rejected",
@@ -1704,7 +1746,7 @@ const handleRegisterArtwork = async () => {
 
   } catch (err) {
     console.error(err);
-    showToast("error", "Work could not be registered on file.");
+    showToast("error", t("studio.toast.registerFailed"));
   }
 
   setRegisterLoading(false);
@@ -1720,7 +1762,7 @@ const handleRegisterArtwork = async () => {
         <p className="mt-8 text-sm font-medium text-neutral-500">
           RROWM
         </p>
-        <p className="mt-2 text-sm text-neutral-700">Opening studio…</p>
+        <p className="mt-2 text-sm text-neutral-700">{t("studio.loading.opening")}</p>
       </div>
     );
   }
@@ -1873,7 +1915,7 @@ const averageByCurrency: Record<string, number> = Object.keys(
 
 const studioSidebarActivity =
   activityFeed.length === 0 ? (
-    <p className="text-xs text-neutral-500">No recent activity yet.</p>
+    <p className="text-xs text-neutral-500">{t("studio.shell.noActivity")}</p>
   ) : (
     <div
       className={
@@ -1884,7 +1926,7 @@ const studioSidebarActivity =
     >
       {activityFeed.map((item) => (
         <div key={item.id} className="text-xs text-neutral-600">
-          <p>{item.message}</p>
+          <p>{translateActivityMessage(item, t)}</p>
           <p className="mt-1 text-[10px] text-neutral-400">
             {new Date((item.created_at ?? item.at) || Date.now()).toLocaleString()}
           </p>
@@ -1944,7 +1986,7 @@ return (
               displayName={
                 profile?.display_name?.trim() ||
                 profile?.full_name?.trim() ||
-                "Artist"
+                t("studio.hero.fallbackArtist")
               }
               totalWorks={totalWorks}
               verifiedWorks={verifiedWorks}
@@ -1966,8 +2008,8 @@ return (
             />
 
             <DashboardSection
-              title="Value & coverage"
-              subtitle="Totals and how complete your registry records are."
+              title={t("studio.overview.valueCoverage.title")}
+              subtitle={t("studio.overview.valueCoverage.subtitle")}
             >
               <div className="grid gap-6 lg:grid-cols-12">
                 <div className="lg:col-span-7">
@@ -1981,7 +2023,9 @@ return (
                           className="cursor-pointer text-left"
                         >
                           <Metric
-                            label={`Total value (${currency})`}
+                            label={fillMessage(t("studio.overview.totalValueCurrency"), {
+                              currency,
+                            })}
                             value={formatCurrency(totalsByCurrency[currency], currency)}
                             compact
                           />
@@ -1990,8 +2034,8 @@ return (
                     ) : (
                       <div className="sm:col-span-2">
                         <Metric
-                          label="Total value"
-                          value="No priced works yet"
+                          label={t("studio.overview.totalValue")}
+                          value={t("studio.overview.noPricedWorks")}
                           compact
                         />
                       </div>
@@ -2002,7 +2046,9 @@ return (
                       {Object.keys(averageByCurrency).map((currency) => (
                         <Metric
                           key={`avg-${currency}`}
-                          label={`Avg value (${currency})`}
+                          label={fillMessage(t("studio.overview.avgValueCurrency"), {
+                            currency,
+                          })}
                           value={new Intl.NumberFormat("en-US", {
                             style: "currency",
                             currency,
@@ -2021,23 +2067,23 @@ return (
                   className="flex cursor-pointer flex-col gap-6 border-t border-black/[0.08] pt-8 text-left transition-opacity hover:opacity-85 lg:col-span-5 lg:border-t-0 lg:border-l lg:border-black/[0.08] lg:pl-10 lg:pt-0"
                 >
                   <p className="text-sm font-semibold text-neutral-500">
-                    Record health
+                    {t("studio.overview.recordHealth")}
                   </p>
                   <DashboardStatBar
-                    label="Priced"
+                    label={t("studio.overview.priced")}
                     percent={percentPriced}
-                    hint="Works with a declared value"
+                    hint={t("studio.overview.pricedHint")}
                   />
                   <DashboardStatBar
-                    label="Verified"
+                    label={t("studio.artworks.verified")}
                     percent={percentVerified}
-                    hint="Verified in the registry"
+                    hint={t("studio.overview.verifiedHint")}
                     barClass="bg-emerald-500"
                   />
                   <DashboardStatBar
-                    label="Locked"
+                    label={t("studio.overview.locked")}
                     percent={percentLocked}
-                    hint="Immutable after verification"
+                    hint={t("studio.overview.lockedHint")}
                     barClass="bg-neutral-700"
                   />
                 </button>
@@ -2046,14 +2092,13 @@ return (
 
             {/* Ownership requests */}
             <DashboardSection
-              title="Ownership requests"
-              subtitle="Collectors requesting recognition. Review and respond."
+              title={t("studio.overview.ownershipRequests.title")}
+              subtitle={t("studio.overview.ownershipRequests.subtitle")}
             >
               {ownershipClaims.length === 0 ? (
                 <div className="border-t border-dashed border-black/20 py-14 text-center">
-                  <p className="text-sm leading-relaxed text-neutral-600">
-                    No pending claims. When a collector submits a claim on your
-                    work, it will appear here.
+                  <p className="text-[15px] leading-relaxed text-neutral-600">
+                    {t("studio.overview.noPendingClaims")}
                   </p>
                 </div>
               ) : (
@@ -2061,7 +2106,7 @@ return (
                   {ownershipClaims.map((claim) => (
                     <div key={claim.id} className="py-10 first:pt-2">
                       <p className="text-sm font-medium text-amber-800/90">
-                        Pending review
+                        {t("studio.overview.pendingReview")}
                       </p>
                       <p className="mt-3 text-lg font-medium text-neutral-900">
                         {claim.artworks?.registry_id ? (
@@ -2079,7 +2124,7 @@ return (
                         {claim.artworks?.registry_id}
                       </p>
                       <p className="mt-2 text-xs text-neutral-500">
-                        Claimant{" "}
+                        {t("studio.overview.claimant")}{" "}
                         <span className="font-mono text-neutral-700">
                           {claim.collector_id?.slice(0, 8)}…
                         </span>
@@ -2097,8 +2142,8 @@ return (
                           className="rounded-xl bg-neutral-950 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-50"
                         >
                           {claimActionId === claim.id
-                            ? "Processing…"
-                            : "Approve"}
+                            ? t("common.processing")
+                            : t("common.approve")}
                         </button>
                         <button
                           type="button"
@@ -2107,8 +2152,8 @@ return (
                           className="border border-black/15 bg-transparent px-5 py-2.5 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50 disabled:opacity-50"
                         >
                           {claimActionId === claim.id
-                            ? "Processing…"
-                            : "Reject"}
+                            ? t("common.processing")
+                            : t("common.reject")}
                         </button>
                       </div>
                     </div>
@@ -2119,30 +2164,30 @@ return (
 
             {/* Value progression */}
             <DashboardSection
-              title="Value progression"
-              subtitle="How values move from initial to latest where comparable."
+              title={t("studio.overview.valueProgression.title")}
+              subtitle={t("studio.overview.valueProgression.subtitle")}
             >
               <div className="grid gap-5 md:grid-cols-3">
                 {growthData.length > 0 ? (
                   <>
                     <Metric
-                      label="Avg change in value"
+                      label={t("studio.overview.avgChange")}
                       value={
                         averageGrowth !== null
                           ? `${averageGrowth > 0 ? "↑" : averageGrowth < 0 ? "↓" : ""} ${averageGrowth}%`
                           : "–"
                       }
-                      hint="Mean % change where initial and latest share a currency."
+                      hint={t("studio.overview.avgChangeHint")}
                       compact
                     />
                     <Metric
-                      label="Works with increased value"
+                      label={t("studio.overview.worksIncreased")}
                       value={growingWorks}
                       compact
                       tone="emerald"
                     />
                     <Metric
-                      label="Declining works"
+                      label={t("studio.overview.decliningWorks")}
                       value={decliningWorks}
                       compact
                       tone="amber"
@@ -2151,8 +2196,8 @@ return (
                 ) : (
                   <div className="md:col-span-3">
                     <Metric
-                      label="Value change"
-                      value="No progression data yet"
+                      label={t("studio.overview.valueChange")}
+                      value={t("studio.overview.noProgressionData")}
                       compact
                     />
                   </div>
@@ -2162,23 +2207,23 @@ return (
 
             {/* Ownership intelligence */}
             <DashboardSection
-              title="Ownership intelligence"
-              subtitle="Transfers, holds, and movement across your catalogue."
+              title={t("studio.overview.ownershipIntel.title")}
+              subtitle={t("studio.overview.ownershipIntel.subtitle")}
             >
               <div className="grid gap-5 md:grid-cols-3">
                 <Metric
-                  label="Total transfers"
+                  label={t("studio.overview.totalTransfers")}
                   value={totalTransfers}
                   compact
                 />
                 <Metric
-                  label="Works you still hold"
+                  label={t("studio.overview.worksYouHold")}
                   value={worksStillHeld}
                   compact
                   tone="emerald"
                 />
                 <Metric
-                  label="Avg hold (days)"
+                  label={t("studio.overview.avgHoldDays")}
                   value={
                     avgHoldDurationDays
                       ? Math.round(avgHoldDurationDays)
@@ -2191,38 +2236,38 @@ return (
 
             {/* Registry insights */}
             <DashboardSection
-              title="Catalogue highlights"
-              subtitle="Standout records from your registry activity."
+              title={t("studio.overview.catalogueHighlights.title")}
+              subtitle={t("studio.overview.catalogueHighlights.subtitle")}
             >
               <div className="grid gap-5 md:grid-cols-3">
                 <Metric
-                  label="Most transferred"
+                  label={t("studio.overview.mostTransferred")}
                   value={
                     mostTransferredArtwork
                       ? `${mostTransferredArtwork.title} · ${mostTransferredArtwork.ownership_transfer_count || 0}`
                       : "–"
                   }
-                  hint="Highest transfer count."
+                  hint={t("studio.overview.mostTransferredHint")}
                   compact
                 />
                 <Metric
-                  label="Longest held"
+                  label={t("studio.overview.longestHeld")}
                   value={
                     longestHeldArtwork
                       ? `${longestHeldArtwork.artwork.title} · ${Math.round(longestHeldArtwork.duration / (1000 * 60 * 60 * 24))}d`
                       : "–"
                   }
-                  hint="Longest span between first and latest transfer."
+                  hint={t("studio.overview.longestHeldHint")}
                   compact
                 />
                 <Metric
-                  label="Fastest appreciating"
+                  label={t("studio.overview.fastestAppreciating")}
                   value={
                     fastestAppreciatingArtwork
                       ? `${fastestAppreciatingArtwork.growth}%`
                       : "–"
                   }
-                  hint="Largest % gain from initial to latest (same currency)."
+                  hint={t("studio.overview.fastestAppreciatingHint")}
                   compact
                 />
               </div>
@@ -2247,8 +2292,8 @@ return (
 
             {repStateActive ? (
               <GovernanceSectionShell
-                eyebrow="Institutional relationship"
-                title="Relationship on file"
+                eyebrow={t("studio.records.institutionalRelationship")}
+                title={t("studio.records.relationshipOnFile")}
                 description={`${REPRESENTATION_PHRASES.representationOnFile}. Ending active relationship does not remove prior attestations; ${REPRESENTATION_PHRASES.priorFilingsRemainVisible.toLowerCase()}.`}
                 actions={
                   <button
@@ -2256,14 +2301,16 @@ return (
                     onClick={() => setEndRepOpen(true)}
                     className="rounded-xl border border-neutral-900/[0.12] bg-white/90 px-4 py-2.5 text-xs font-medium text-neutral-800 transition hover:bg-neutral-50"
                   >
-                    End on file
+                    {t("studio.records.endOnFile")}
                   </button>
                 }
               >
                 <p className="text-sm text-neutral-600">
                   {repGalleryName
-                    ? `Linked with ${repGalleryName}.`
-                    : "Your institution link remains visible on prior filings after ending."}
+                    ? fillMessage(t("studio.records.linkedWith"), {
+                        name: repGalleryName,
+                      })
+                    : t("studio.records.linkVisibleAfterEnding")}
                 </p>
               </GovernanceSectionShell>
             ) : null}
@@ -2283,8 +2330,7 @@ return (
             !repStateActive &&
             representationAmendments.length === 0 ? (
               <p className="text-sm leading-relaxed text-neutral-500">
-                No records awaiting your attestation. When a canonical record is
-                associated with your practice, it appears here to authenticate and deepen.
+                {t("studio.records.noAwaitingAttestation")}
               </p>
             ) : null}
           </div>
@@ -2390,7 +2436,7 @@ return (
     <ArchivalAuthorshipContributionModal
       isOpen={authorshipContributionTarget !== null}
       onClose={() => setAuthorshipContributionTarget(null)}
-      artworkTitle={authorshipContributionTarget?.title?.trim() || "Work on file"}
+      artworkTitle={authorshipContributionTarget?.title?.trim() || t("studio.authorship.workFallback")}
       registryId={authorshipContributionTarget?.registry_id}
       institutionName={authorshipContributionTarget?.gallery_name}
       busy={authorshipContributionBusy}
@@ -2421,11 +2467,11 @@ return (
 
         if (error) {
           console.error(error);
-          showToast("error", "Value filing could not be recorded.");
+          showToast("error", t("studio.toast.valueFilingFailed"));
         } else {
           await fetchArtworks(user.id);
           setValueModalArtwork(null);
-          showToast("success", "Value event recorded on file.");
+          showToast("success", t("studio.toast.valueEventRecorded"));
 
           await logActivity({
             type: "value_added",
@@ -2506,10 +2552,10 @@ return (
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-amber-900/85">
-                      Sale recorded
+                      {t("studio.ledger.saleRecorded")}
                     </p>
                     <p className="mt-2 text-sm text-amber-950/90">
-                      Complete ownership transfer to keep provenance accurate.
+                      {t("studio.ledger.completeTransfer")}
                     </p>
                     <p className="mt-2 text-xs text-amber-800/85">
                       {new Intl.NumberFormat("en-US", {
@@ -2517,7 +2563,7 @@ return (
                         currency: prefillCurrency,
                         maximumFractionDigits: 0,
                       }).format(prefillPrice)}{" "}
-                      · {String(saleEvent.value_type || "").replaceAll("_", " ")} ·{" "}
+                      · {translateValueEventType(saleEvent.value_type, t)} ·{" "}
                       {saleEvent.created_at
                         ? new Date(saleEvent.created_at).toLocaleDateString()
                         : ""}
@@ -2539,7 +2585,7 @@ return (
                       }}
                       className="rounded-2xl bg-amber-300 px-5 py-2.5 text-sm font-semibold text-amber-950 shadow-sm transition hover:bg-amber-200"
                     >
-                      Record transfer details
+                      {t("studio.ledger.recordTransferDetails")}
                     </button>
                   </div>
                 </div>
@@ -2564,15 +2610,15 @@ return (
                           ? saleTransferForm.buyer_type
                           : null;
                       if (buyerUserId && !isUuid(buyerUserId)) {
-                        showToast("error", "Buyer account id must be a UUID.");
+                        showToast("error", t("studio.toast.buyerUuidInvalid"));
                         return;
                       }
                       if (saleTransferForm.buyer_mode === "user" && !buyerUserId) {
-                        showToast("error", "Buyer account id is required.");
+                        showToast("error", t("studio.toast.buyerIdRequired"));
                         return;
                       }
                       if (saleTransferForm.buyer_mode === "external" && !buyerName) {
-                        showToast("error", "Buyer name is required for this filing.");
+                        showToast("error", t("studio.toast.buyerNameRequired"));
                         return;
                       }
 
@@ -2590,7 +2636,7 @@ return (
                         sale_type: saleTransferForm.sale_type,
                         sale_date: saleDateIso,
                       });
-                      showToast("success", "Recording transfer on file…");
+                      showToast("success", t("studio.toast.recordingTransfer"));
 
                       const { error: insertErr } = await sb()
                         .from("ownership_events")
@@ -2623,7 +2669,9 @@ return (
                         );
                         showToast(
                           "error",
-                          `Transfer could not be filed: ${summarizeRpcError(insertErr)}`
+                          fillMessage(t("studio.toast.transferFailed"), {
+                            error: summarizeRpcError(insertErr),
+                          })
                         );
                         return;
                       }
@@ -2643,7 +2691,7 @@ return (
                         if (ownerUpdateErr) {
                           showToast(
                             "error",
-                            "Transfer recorded; current owner could not be updated automatically."
+                            t("studio.toast.transferOwnerUpdateFailed")
                           );
                           return;
                         }
@@ -2653,18 +2701,18 @@ return (
                       await refreshSelectedArtworkEvents(selectedArtwork.id);
                       await fetchArtworks(user.id);
                       setShowSaleTransferForm(false);
-                      showToast("success", "Chronology continued for this transfer.");
+                      showToast("success", t("studio.toast.transferContinued"));
                     }}
                   >
                     <div className="md:col-span-2">
                       <p className="text-sm font-semibold text-amber-900/85">
-                        Transfer details
+                        {t("studio.ledger.transferDetails")}
                       </p>
                     </div>
 
                     <label className="block">
                       <span className="text-sm text-neutral-600">
-                        Seller (prefilled)
+                        {t("studio.ledger.sellerPrefilled")}
                       </span>
                       <input
                         value={saleTransferForm.seller_id}
@@ -2675,13 +2723,13 @@ return (
                           }))
                         }
                         className={ledgerInsetFieldClass}
-                        placeholder="Seller user id"
+                        placeholder={t("studio.ledger.sellerUserIdPlaceholder")}
                       />
                     </label>
 
                     <label className="block md:col-span-2">
                       <span className="text-sm text-neutral-600">
-                        Buyer
+                        {t("studio.ledger.buyer")}
                       </span>
                       <div className="mt-2 grid gap-3 md:grid-cols-2">
                         <select
@@ -2694,8 +2742,8 @@ return (
                           }
                           className={ledgerInsetFieldClass}
                         >
-                          <option value="external">External buyer</option>
-                          <option value="user">Existing user</option>
+                          <option value="external">{t("studio.ledger.externalBuyer")}</option>
+                          <option value="user">{t("studio.ledger.existingUser")}</option>
                         </select>
 
                         {saleTransferForm.buyer_mode === "user" ? (
@@ -2708,7 +2756,7 @@ return (
                               }))
                             }
                             className={ledgerInsetFieldClass}
-                            placeholder="Buyer user id (UUID)"
+                            placeholder={t("studio.ledger.buyerUserIdPlaceholder")}
                           />
                         ) : (
                           <input
@@ -2720,7 +2768,7 @@ return (
                               }))
                             }
                             className={ledgerInsetFieldClass}
-                            placeholder="Buyer name"
+                            placeholder={t("studio.ledger.buyerNamePlaceholder")}
                           />
                         )}
                       </div>
@@ -2742,14 +2790,24 @@ return (
                             }
                             className={ledgerInsetFieldClass}
                           >
-                            <option value="collector">Collector</option>
-                            <option value="gallery">Gallery</option>
-                            <option value="institution">Institution</option>
-                            <option value="private">Private</option>
-                            <option value="unknown">Unknown</option>
+                            <option value="collector">
+                              {t("studio.ledger.buyerType.collector")}
+                            </option>
+                            <option value="gallery">
+                              {t("studio.ledger.buyerType.gallery")}
+                            </option>
+                            <option value="institution">
+                              {t("studio.ledger.buyerType.institution")}
+                            </option>
+                            <option value="private">
+                              {t("studio.ledger.buyerType.private")}
+                            </option>
+                            <option value="unknown">
+                              {t("studio.ledger.buyerType.unknown")}
+                            </option>
                           </select>
                           <div className="text-xs text-amber-100/70 md:self-center">
-                            External buyers don’t need an account.
+                            {t("studio.ledger.externalBuyerNote")}
                           </div>
                         </div>
                       ) : null}
@@ -2757,7 +2815,7 @@ return (
 
                     <label className="block">
                       <span className="text-sm text-neutral-600">
-                        Sale type
+                        {t("studio.ledger.saleType")}
                       </span>
                       <select
                         value={saleTransferForm.sale_type}
@@ -2769,14 +2827,14 @@ return (
                         }
                         className={ledgerInsetFieldClass}
                       >
-                        <option value="primary">Primary</option>
-                        <option value="secondary">Secondary</option>
+                        <option value="primary">{t("studio.ledger.saleTypePrimary")}</option>
+                        <option value="secondary">{t("studio.ledger.saleTypeSecondary")}</option>
                       </select>
                     </label>
 
                     <label className="block">
                       <span className="text-sm text-neutral-600">
-                        Date of sale
+                        {t("studio.ledger.dateOfSale")}
                       </span>
                       <input
                         type="date"
@@ -2793,7 +2851,7 @@ return (
 
                     <label className="block md:col-span-2">
                       <span className="text-sm text-neutral-600">
-                        Notes
+                        {t("studio.ledger.notes")}
                       </span>
                       <textarea
                         value={saleTransferForm.note}
@@ -2805,7 +2863,7 @@ return (
                         }
                         className={ledgerInsetFieldClass}
                         rows={3}
-                        placeholder="Optional context (invoice, venue, etc.)"
+                        placeholder={t("studio.ledger.notesPlaceholder")}
                       />
                     </label>
                     <div className="md:col-span-2 flex flex-col-reverse gap-3 pt-2 md:flex-row md:items-center md:justify-end">
@@ -2814,13 +2872,13 @@ return (
                         onClick={() => setShowSaleTransferForm(false)}
                         className="rounded-2xl border border-neutral-200/90 bg-white/70 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-900"
                       >
-                        Cancel
+                        {t("common.cancel")}
                       </button>
                       <button
                         type="submit"
                         className="rounded-2xl bg-amber-300 px-5 py-2.5 text-sm font-semibold text-amber-950 transition hover:bg-amber-200"
                       >
-                        Save transfer
+                        {t("studio.ledger.saveTransfer")}
                       </button>
                     </div>
                   </form>
@@ -2836,7 +2894,7 @@ return (
                 <div className="relative h-36 w-36 shrink-0 overflow-hidden rounded-2xl bg-neutral-100 ring-1 ring-neutral-200/90 shadow-[0_20px_50px_-24px_rgba(15,23,42,0.12)]">
                   <img
                     src={selectedArtwork.image_url}
-                    alt={String(selectedArtwork.title || "Artwork")}
+                    alt={String(selectedArtwork.title || t("studio.ledger.artworkFallback"))}
                     className="h-full w-full object-cover"
                   />
                   <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-neutral-200/80" />
@@ -2861,7 +2919,7 @@ return (
               )}
               <div className="min-w-0 flex-1 text-center sm:text-left">
                 <p className="text-sm font-medium text-emerald-800/85">
-                  Ownership ledger
+                  {t("studio.ledger.title")}
                 </p>
                 <h2 className="mt-3 font-serif text-3xl font-normal leading-[1.1] tracking-tight text-neutral-950 md:text-[2.15rem]">
                   {selectedArtwork.registry_id ? (
@@ -2891,10 +2949,10 @@ return (
               <div className="mb-6 flex items-center justify-between">
                 <div>
                   <p className="text-xs font-semibold text-emerald-800/85">
-                    Value history
+                    {t("studio.artworkDetail.valueHistory")}
                   </p>
                   <p className="mt-1 text-sm text-neutral-600">
-                    Every declared value event for this work.
+                    {t("studio.ledger.valueHistorySubtitle")}
                   </p>
                 </div>
               </div>
@@ -2906,7 +2964,7 @@ return (
                 >
                   {valueHistory.length === 0 && (
                     <p className="text-neutral-500 text-sm">
-                      No value events recorded yet.
+                      {t("studio.ledger.noValueEvents")}
                     </p>
                   )}
 
@@ -2917,10 +2975,10 @@ return (
                     >
                       <div>
                         <p className="text-xs text-neutral-500">
-                          {event.value_type.replace("_", " ")}
+                          {translateValueEventType(event.value_type, t)}
                         </p>
                         <p className="mt-1 text-sm text-neutral-700">
-                          {event.note || "No additional context"}
+                          {event.note || t("studio.ledger.noAdditionalContext")}
                         </p>
                         <p className="mt-1 text-xs text-neutral-500">
                           {new Date(event.created_at).toLocaleString()}
@@ -2935,7 +2993,8 @@ return (
                           }).format(Number(event.declared_value))}
                         </p>
                         <p className="mt-1 text-xs text-neutral-500">
-                          Visibility: {event.visibility_level}
+                          {t("studio.ledger.visibility")}:{" "}
+                          {translateVisibilityLevel(event.visibility_level, t)}
                         </p>
                       </div>
                     </div>
@@ -2948,10 +3007,10 @@ return (
             <div className="space-y-6">
               <div className="rounded-2xl border border-neutral-200/90 bg-white/70 p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)] md:p-6">
                 <p className="text-xs font-semibold text-emerald-800/85">
-                  Ownership history
+                  {t("studio.ledger.ownershipHistory")}
                 </p>
                 <p className="mt-1 text-sm text-neutral-600">
-                  Every transfer and confirmation for this work.
+                  {t("studio.ledger.ownershipHistorySubtitle")}
                 </p>
 
                 <div className="relative mt-5">
@@ -2959,7 +3018,7 @@ return (
                   <div className="h-[min(42vh,18rem)] space-y-5 overflow-y-auto overscroll-y-contain pl-8 pr-1 [scrollbar-color:rgba(15,23,42,0.15)_transparent] [scrollbar-width:thin]">
                   {ownershipHistory.length === 0 && (
                     <p className="text-neutral-500 text-sm mt-4">
-                      No ownership events recorded yet.
+                      {t("studio.ledger.noOwnershipEvents")}
                     </p>
                   )}
 
@@ -2977,16 +3036,24 @@ return (
                       ownershipSystemTrustRank(sysStatus) !==
                         ownershipSystemTrustRank(prevSys);
                     const badge = ownershipStatusBadge(sysStatus, "light");
+                    const badgeLabel = translateOwnershipStatusLabel(sysStatus, t);
                     const isLatest = i === ownershipHistory.length - 1;
-                    const ownerLabel = formatOwnershipOwnerPrimary(event, {
-                      viewerUserId: user?.id,
-                      artworkArtistId: selectedArtwork?.artist_id,
-                      artistDisplayName:
-                        profile?.display_name?.trim() ||
-                        profile?.full_name?.trim() ||
-                        null,
-                    });
-                    const subline = formatOwnershipLedgerSubtitle(event);
+                    const ownerLabel = translateOwnershipOwnerLabel(
+                      formatOwnershipOwnerPrimary(event, {
+                        viewerUserId: user?.id,
+                        artworkArtistId: selectedArtwork?.artist_id,
+                        artistDisplayName:
+                          profile?.display_name?.trim() ||
+                          profile?.full_name?.trim() ||
+                          null,
+                      }),
+                      t
+                    );
+                    const subline = translateOwnershipLedgerSubtitle(
+                      event,
+                      t,
+                      formatMoney
+                    );
                     const rawNote = event.note ?? event.notes;
                     const noteStr =
                       typeof rawNote === "string" ? rawNote.trim() : "";
@@ -3020,14 +3087,14 @@ return (
                         >
                           {isLatest ? (
                             <p className="text-sm text-neutral-500 mb-2">
-                              Current owner
+                              {t("studio.ledger.currentOwner")}
                             </p>
                           ) : null}
                           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                             <p className="text-[15px] font-medium text-neutral-900 tracking-tight">
                               {ownerLabel}
                             </p>
-                            <span className={badge.className}>{badge.label}</span>
+                            <span className={badge.className}>{badgeLabel}</span>
                           </div>
                           <p className="mt-1.5 text-[13px] text-neutral-600 leading-snug">
                             {subline}
@@ -3044,9 +3111,9 @@ return (
                               claimHolder &&
                               String(claimHolder) !== user.id;
                             const claimedMsg = claimedByYou
-                              ? "You have claimed ownership"
+                              ? t("studio.ledger.claimedByYou")
                               : claimedByOther
-                                ? "Ownership claimed by another collector"
+                                ? t("studio.ledger.claimedByOther")
                                 : null;
                             return claimedMsg ? (
                               <p className="mt-1 text-[11px] text-neutral-600 leading-snug">
@@ -3063,9 +3130,12 @@ return (
                             </p>
                           ) : null}
                           <p className="mt-2 text-[11px] text-neutral-500">
-                            From{" "}
+                            {t("studio.ledger.from")}{" "}
                             <span className="text-neutral-800">
-                              {formatOwnershipParty(event, "from")}
+                              {translateOwnershipPartyLabel(
+                                formatOwnershipParty(event, "from"),
+                                t
+                              )}
                             </span>
                           </p>
                           {(isLatest &&
@@ -3093,8 +3163,8 @@ return (
                                   className="text-[11px] font-medium text-neutral-600 hover:text-emerald-800 disabled:opacity-50"
                                 >
                                   {ownershipUiBusyId === event.id
-                                    ? "Submitting…"
-                                    : "Request verification"}
+                                    ? t("studio.ledger.submitting")
+                                    : t("studio.ledger.requestVerification")}
                                 </button>
                               ) : null}
                               {userIsAdmin &&
@@ -3112,8 +3182,8 @@ return (
                                   className="text-[11px] font-medium text-neutral-500 transition-colors hover:text-emerald-700 disabled:opacity-50"
                                 >
                                   {ownershipUiBusyId === event.id
-                                    ? "Verifying…"
-                                    : "Verify ownership"}
+                                    ? t("studio.ledger.verifying")
+                                    : t("studio.ledger.verifyOwnership")}
                                 </button>
                               ) : null}
                             </div>
@@ -3128,11 +3198,10 @@ return (
 
               <div className="rounded-2xl border border-neutral-200/90 bg-white/75 p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.95)]">
                 <p className="text-xs font-semibold text-neutral-500">
-                  Integrity notes
+                  {t("studio.ledger.integrityNotes")}
                 </p>
                 <p className="mt-2 text-sm text-neutral-600">
-                  Any anomalies or special situations with this work’s
-                  ownership journey will appear here.
+                  {t("studio.ledger.integritySubtitle")}
                 </p>
 
                 {ownershipHistory.length > 0 ? (
@@ -3146,13 +3215,23 @@ return (
                     {ownershipHistory.map((event) => {
                       const st = latestOwnershipSystemStatus(event);
                       const b = ownershipStatusBadge(st, "light");
+                      const bLabel = translateOwnershipStatusLabel(st, t);
+                      const transferLabel = translateTransferTypeLabel(
+                        event.transfer_type as string | null | undefined,
+                        t
+                      );
                       return (
                         <li key={event.id} className="leading-relaxed">
-                          <span className={b.className}>{b.label}</span>
+                          <span className={b.className}>{bLabel}</span>
                           <span className="text-neutral-500">
                             {" "}
-                            · {event.transfer_type.replace("_", " ")} on{" "}
-                            {new Date(event.created_at).toLocaleDateString()}
+                            ·{" "}
+                            {fillMessage(t("studio.ledger.integrityEventOn"), {
+                              type: transferLabel,
+                              date: new Date(
+                                event.created_at
+                              ).toLocaleDateString(),
+                            })}
                           </span>
                         </li>
                       );
@@ -3160,7 +3239,7 @@ return (
                   </ul>
                 ) : (
                   <p className="mt-4 text-sm text-emerald-200/70">
-                    No integrity data available.
+                    {t("studio.ledger.noIntegrityData")}
                   </p>
                 )}
               </div>
@@ -3173,7 +3252,7 @@ return (
     <DataInsightModal
       open={insightOpen !== null}
       onClose={() => setInsightOpen(null)}
-      title={insightTitle || "Insight"}
+      title={insightTitle || t("studio.insight.fallbackTitle")}
       subtitle={insightSubtitle || null}
       chartLoading={insightLoading}
       kind={insightKind}
@@ -3213,7 +3292,7 @@ return (
       subjectName={
         profile?.display_name?.trim() ||
         profile?.full_name?.trim() ||
-        "Artist"
+        t("studio.hero.fallbackArtist")
       }
       institutionName={repGalleryName}
       busy={endRepBusy}

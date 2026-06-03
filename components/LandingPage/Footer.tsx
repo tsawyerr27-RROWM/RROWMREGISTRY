@@ -31,8 +31,7 @@ export function Footer() {
               />
             </Link>
             <p className="mt-8 text-sm leading-relaxed text-neutral-600">
-              A cryptographically verifiable registry for contemporary art,
-              protecting authorship and provenance.
+              {t("footer.blurb")}
             </p>
           </div>
 

@@ -14,6 +14,10 @@ import {
   WorkspaceShell,
   WorkspaceShellFooterLinks,
 } from "@/components/Studio/WorkspaceShell";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { appendPersonalArchiveNavItem } from "@/lib/personal-archive-nav";
+import { COLLECTOR_SECTION_LABEL_KEYS } from "@/lib/workspace-nav-i18n";
+import { fillMessage } from "@/lib/locale-messages";
 import {
   getCollectorOwnedArtworkIds,
   sortPortfolioRows,
@@ -22,7 +26,9 @@ import {
   latestOwnershipSystemStatus,
   normalizeVerificationStatus,
   ownershipStatusBadge,
+  type OwnershipSystemStatus,
 } from "@/lib/ownership-ledger";
+import { translateOwnershipStatusLabel } from "@/lib/ownership-ledger-i18n";
 import { getUnresolvedSaleSignals } from "@/lib/studio-signals";
 import { testModeEnabled } from "@/lib/test-mode";
 import { TestDataControls } from "@/components/Admin/TestDataControls";
@@ -66,20 +72,9 @@ type CollectionSnapshot = {
   certificatesAvailable: number;
 };
 
-function workHeldWord(n: number) {
-  return n === 1 ? "work" : "works";
-}
-
-function recordWord(n: number) {
-  return n === 1 ? "record" : "records";
-}
-
-function transferWord(n: number) {
-  return n === 1 ? "transfer" : "transfers";
-}
-
 export default function CollectorStudioPage() {
   const router = useRouter();
+  const { t } = useLocalePreferences();
   const sb = useSupabaseBrowserLazy();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -90,7 +85,7 @@ export default function CollectorStudioPage() {
   >({});
   const [sortMode, setSortMode] = useState<"activity" | "value">("activity");
   const [latestOwnershipByArt, setLatestOwnershipByArt] = useState<
-    Record<string, { label: string; className: string }>
+    Record<string, { status: OwnershipSystemStatus; className: string }>
   >({});
   const [studioAttention, setStudioAttention] = useState<{
     claimed: { registryId: string; title: string }[];
@@ -240,7 +235,7 @@ export default function CollectorStudioPage() {
           .in("id", artistIds);
         for (const a of artists || []) {
           nameMap[String(a.id)] =
-            a.display_name?.trim() || a.full_name?.trim() || "Artist";
+            a.display_name?.trim() || a.full_name?.trim() || t("collector.fallback.artist");
         }
       }
       setArtistNames(nameMap);
@@ -261,8 +256,10 @@ export default function CollectorStudioPage() {
         .order("created_at", { ascending: false })
         .order("id", { ascending: false });
 
-      const latestMap: Record<string, { label: string; className: string }> =
-        {};
+      const latestMap: Record<
+        string,
+        { status: OwnershipSystemStatus; className: string }
+      > = {};
       const seenFirst = new Set<string>();
       const latestNorm = new Map<
         string,
@@ -282,10 +279,13 @@ export default function CollectorStudioPage() {
           seenFirst.add(aid);
           const st = normalizeVerificationStatus(o.verification_status);
           latestNorm.set(aid, st);
-          latestMap[aid] = ownershipStatusBadge(
-            latestOwnershipSystemStatus(o as Record<string, unknown>),
-            "light"
-          );
+          latestMap[aid] = {
+            status: latestOwnershipSystemStatus(o as Record<string, unknown>),
+            className: ownershipStatusBadge(
+              latestOwnershipSystemStatus(o as Record<string, unknown>),
+              "light"
+            ).className,
+          };
         }
       }
       setLatestOwnershipByArt(latestMap);
@@ -293,13 +293,13 @@ export default function CollectorStudioPage() {
       const regById: Record<string, string> = {};
       const titleById: Record<string, string> = {};
       for (const r of list) {
-        titleById[r.id] = (r.title || "").trim() || "Untitled";
+        titleById[r.id] = (r.title || "").trim() || t("collector.fallback.untitled");
         if (r.registry_id) regById[r.id] = r.registry_id;
       }
       const toLink = (aid: string) => {
         const reg = regById[aid];
         if (!reg) return null;
-        return { registryId: reg, title: titleById[aid] || "Work" };
+        return { registryId: reg, title: titleById[aid] || t("collector.fallback.work") };
       };
 
       const claimedLinks = [...claimedArtworkIds]
@@ -383,7 +383,7 @@ export default function CollectorStudioPage() {
   const displayName =
     collectorProfile?.display_name?.trim() ||
     collectorProfile?.slug ||
-    "Collector";
+    t("collector.fallback.collector");
   const locationLine = collectorProfile?.location?.trim() || null;
 
   const publicCollectionHref = useMemo(() => {
@@ -408,38 +408,48 @@ export default function CollectorStudioPage() {
     for (const x of studioAttention.unverifiedOwnership) {
       items.push({
         key: `uv-${x.registryId}`,
-        text: `Ownership verification pending: ${x.title}`,
+        text: fillMessage(t("collector.attention.verificationPending"), {
+          title: x.title,
+        }),
         href: `/collector-studio/artwork/${encodeURIComponent(x.registryId)}`,
       });
     }
     for (const x of studioAttention.unresolvedSales) {
       items.push({
         key: `sale-${x.registryId}`,
-        text: `Transfer to resolve: ${x.title}`,
+        text: fillMessage(t("collector.attention.transferResolve"), {
+          title: x.title,
+        }),
         href: `/collector-studio/artwork/${encodeURIComponent(x.registryId)}`,
       });
     }
     for (const x of studioAttention.claimed) {
       items.push({
         key: `claim-${x.registryId}`,
-        text: `Ownership claim in progress: ${x.title}`,
+        text: fillMessage(t("collector.attention.claimInProgress"), {
+          title: x.title,
+        }),
         href: `/collector-studio/artwork/${encodeURIComponent(x.registryId)}`,
       });
     }
     return items;
-  }, [studioAttention]);
+  }, [studioAttention, t]);
 
   const collectorNavItems = useMemo(
-    () => [
-      { id: "workspace", label: "Workspace" },
-      { id: "works", label: "Works" },
-      {
-        id: "attention",
-        label: "Attention",
-        showDot: intelligenceItems.length > 0,
-      },
-    ],
-    [intelligenceItems.length]
+    () =>
+      appendPersonalArchiveNavItem(
+        [
+          { id: "workspace", label: t(COLLECTOR_SECTION_LABEL_KEYS.workspace) },
+          { id: "works", label: t(COLLECTOR_SECTION_LABEL_KEYS.works) },
+          {
+            id: "attention",
+            label: t(COLLECTOR_SECTION_LABEL_KEYS.attention),
+            showDot: intelligenceItems.length > 0,
+          },
+        ],
+        t
+      ),
+    [intelligenceItems.length, t]
   );
 
   if (loading || !userId) {
@@ -449,7 +459,7 @@ export default function CollectorStudioPage() {
           className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-neutral-900/10 to-transparent"
           aria-hidden
         />
-        <p className="text-center text-sm text-neutral-500">Loading…</p>
+        <p className="text-center text-sm text-neutral-500">{t("collector.shell.loading")}</p>
       </div>
     );
   }
@@ -463,11 +473,11 @@ export default function CollectorStudioPage() {
           href={publicCollectionHref}
           className="mt-4 block text-sm font-medium text-neutral-500 transition hover:text-neutral-800"
         >
-          Public collection →
+          {t("collector.shell.publicCollection")} →
         </Link>
       ) : null}
       <p className="mt-6 text-xs leading-relaxed text-neutral-400">
-        Public listings only list works where ownership is verified.
+        {t("collector.shell.publicListingsNote")}
       </p>
     </>
   );
@@ -494,7 +504,7 @@ export default function CollectorStudioPage() {
           limit={8}
         />
       }
-      activityHeading="Recent notes"
+      activityHeading={t("studio.shell.recentNotes")}
       onSignOut={handleSignOut}
     >
       {activeSection === "workspace" ? (
@@ -523,58 +533,75 @@ export default function CollectorStudioPage() {
           </div>
 
           <section className="mt-12 border-t border-neutral-900/10 pt-14">
-            <h2 className="sr-only">Collection overview</h2>
+            <h2 className="sr-only">{t("collector.overview.srOnly")}</h2>
             {snap && snap.held === 0 ? (
               <p className="text-[17px] leading-[1.65] text-neutral-600">
-                No works held yet. When you claim or receive ownership, they will
-                appear here.
+                {t("collector.overview.empty")}
               </p>
             ) : snap ? (
               <div className="space-y-3 text-[17px] leading-[1.65] text-neutral-700">
                 <p>
-                  <span className="tabular-nums text-neutral-900">{snap.held}</span>{" "}
-                  {workHeldWord(snap.held)} held.
+                  {fillMessage(t("collector.overview.held"), {
+                    count: String(snap.held),
+                    units:
+                      snap.held === 1
+                        ? t("collector.word.work")
+                        : t("collector.word.works"),
+                  })}
                 </p>
                 {snap.verifiedOwnership > 0 ? (
                   <p>
-                    <span className="tabular-nums text-neutral-900">
-                      {snap.verifiedOwnership}
-                    </span>{" "}
-                    verified ownership {recordWord(snap.verifiedOwnership)}.
+                    {fillMessage(t("collector.overview.verifiedOwnership"), {
+                      count: String(snap.verifiedOwnership),
+                      units:
+                        snap.verifiedOwnership === 1
+                          ? t("collector.word.record")
+                          : t("collector.word.records"),
+                    })}
                   </p>
                 ) : null}
                 {snap.pendingTransfer > 0 ? (
                   <p>
-                    <span className="tabular-nums text-neutral-900">
-                      {snap.pendingTransfer}
-                    </span>{" "}
-                    pending {transferWord(snap.pendingTransfer)}.
+                    {fillMessage(t("collector.overview.pendingTransfer"), {
+                      count: String(snap.pendingTransfer),
+                      units:
+                        snap.pendingTransfer === 1
+                          ? t("collector.word.transfer")
+                          : t("collector.word.transfers"),
+                    })}
                   </p>
                 ) : null}
                 {snap.pendingVerification > 0 && snap.verifiedOwnership < snap.held ? (
                   <p className="text-neutral-600">
-                    <span className="tabular-nums text-neutral-900">
-                      {snap.pendingVerification}
-                    </span>{" "}
-                    ownership {recordWord(snap.pendingVerification)} not yet verified.
+                    {fillMessage(t("collector.overview.notVerified"), {
+                      count: String(snap.pendingVerification),
+                      units:
+                        snap.pendingVerification === 1
+                          ? t("collector.word.record")
+                          : t("collector.word.records"),
+                    })}
                   </p>
                 ) : null}
                 {snap.ownershipClaims > 0 ? (
                   <p className="text-neutral-600">
-                    <span className="tabular-nums text-neutral-900">
-                      {snap.ownershipClaims}
-                    </span>{" "}
-                    open ownership{" "}
-                    {snap.ownershipClaims === 1 ? "claim" : "claims"}.
+                    {fillMessage(t("collector.overview.openClaims"), {
+                      count: String(snap.ownershipClaims),
+                      units:
+                        snap.ownershipClaims === 1
+                          ? t("collector.word.claim")
+                          : t("collector.word.claims"),
+                    })}
                   </p>
                 ) : null}
                 {snap.certificatesAvailable > 0 ? (
                   <p className="text-neutral-600">
-                    <span className="tabular-nums text-neutral-900">
-                      {snap.certificatesAvailable}
-                    </span>{" "}
-                    {snap.certificatesAvailable === 1 ? "work" : "works"} with a
-                    certificate on record.
+                    {fillMessage(t("collector.overview.withCertificate"), {
+                      count: String(snap.certificatesAvailable),
+                      units:
+                        snap.certificatesAvailable === 1
+                          ? t("collector.word.work")
+                          : t("collector.word.works"),
+                    })}
                   </p>
                 ) : null}
               </div>
@@ -587,11 +614,11 @@ export default function CollectorStudioPage() {
         <section>
           <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-4">
             <h2 className="font-serif text-xl font-normal text-neutral-900">
-              Works
+              {t("collector.works.title")}
             </h2>
             {sorted.length > 0 ? (
               <p className="text-xs text-neutral-400">
-                <span className="text-neutral-500">Order:</span>{" "}
+                <span className="text-neutral-500">{t("collector.works.order")}</span>{" "}
                 <button
                   type="button"
                   onClick={() => setSortMode("activity")}
@@ -601,7 +628,7 @@ export default function CollectorStudioPage() {
                       : "underline decoration-transparent underline-offset-4 hover:text-neutral-700"
                   }
                 >
-                  Recency
+                  {t("collector.works.sortRecency")}
                 </button>
                 <span className="mx-2 text-neutral-300" aria-hidden>
                   ·
@@ -615,7 +642,7 @@ export default function CollectorStudioPage() {
                       : "underline decoration-transparent underline-offset-4 hover:text-neutral-700"
                   }
                 >
-                  Declared value
+                  {t("collector.works.sortValue")}
                 </button>
               </p>
             ) : null}
@@ -623,27 +650,34 @@ export default function CollectorStudioPage() {
 
           {sorted.length === 0 ? (
             <p className="mt-10 text-sm leading-relaxed text-neutral-500">
-              Claim ownership from the{" "}
+              {t("collector.works.emptyPrefix")}{" "}
               <Link
                 href="/registry"
                 className="text-neutral-800 underline decoration-neutral-300 underline-offset-[5px] hover:decoration-neutral-500"
               >
-                registry
+                {t("collector.works.emptyLink")}
               </Link>{" "}
-              to build this list.
+              {t("collector.works.emptySuffix")}
             </p>
           ) : (
             <ul className="mt-12 space-y-0 divide-y divide-neutral-900/10">
               {sorted.map((r) => {
                 const reg = r.registry_id?.trim() || "–";
-                const title = (r.title || "").trim() || "Untitled";
+                const title = (r.title || "").trim() || t("collector.fallback.untitled");
                 const artist =
                   r.artist_id && artistNames[r.artist_id]
                     ? artistNames[r.artist_id]
-                    : "Artist";
-                const own =
-                  latestOwnershipByArt[r.id] ??
-                  ownershipStatusBadge("unassigned", "light");
+                    : t("collector.fallback.artist");
+                const ownEntry =
+                  latestOwnershipByArt[r.id] ?? {
+                    status: "unassigned" as OwnershipSystemStatus,
+                    className: ownershipStatusBadge("unassigned", "light").className,
+                  };
+                const ownLabel = translateOwnershipStatusLabel(
+                  ownEntry.status,
+                  t
+                );
+                const ownClassName = ownEntry.className;
                 const href = r.registry_id
                   ? `/collector-studio/artwork/${encodeURIComponent(r.registry_id)}`
                   : "#";
@@ -662,16 +696,16 @@ export default function CollectorStudioPage() {
                       <p className="mt-3 font-mono text-xs tracking-tight text-neutral-400">
                         {reg}
                       </p>
-                      <p className={`mt-3 text-sm ${own.className}`}>
-                        {own.label}
+                      <p className={`mt-3 text-sm ${ownClassName}`}>
+                        {ownLabel}
                         {flagSale ? (
                           <span className="block pt-1 text-xs font-normal text-amber-900/80">
-                            Transfer pending
+                            {t("collector.works.transferPending")}
                           </span>
                         ) : null}
                         {flagUnver ? (
                           <span className="block pt-1 text-xs font-normal text-neutral-500">
-                            Verification outstanding
+                            {t("collector.works.verificationOutstanding")}
                           </span>
                         ) : null}
                       </p>
@@ -687,11 +721,11 @@ export default function CollectorStudioPage() {
       {activeSection === "attention" ? (
         <section>
           <h2 className="font-serif text-xl font-normal text-neutral-900">
-            Requiring attention
+            {t("collector.attention.title")}
           </h2>
           {intelligenceItems.length === 0 ? (
             <p className="mt-8 text-sm leading-relaxed text-neutral-500">
-              Nothing calls for action right now.
+              {t("collector.attention.empty")}
             </p>
           ) : (
             <ul className="mt-10 space-y-6">

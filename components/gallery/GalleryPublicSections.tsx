@@ -52,7 +52,7 @@ export function GalleryPublicSections({
               <InfoTooltip text="Artists with an institution-linked association on file. Presence follows representation and chronology participation, not promotion." />
               <h2
                 id="gallery-roster-heading"
-                className="font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-3xl"
+                className="font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950 md:text-3xl"
               >
                 Represented participants
               </h2>
@@ -126,7 +126,7 @@ export function GalleryPublicSections({
             <InfoTooltip text="Works attributed to represented participants. Each record carries its own chronology and current catalogue listing. Continuity deepens as filings accrue." />
             <h2
               id="gallery-catalogue-heading"
-              className="font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-3xl"
+              className="font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950 md:text-3xl"
             >
               Represented works
             </h2>
@@ -147,7 +147,7 @@ export function GalleryPublicSections({
 
         {artworks.length === 0 ? (
           <div className="mt-10 rounded-[1.25rem] border border-neutral-900/[0.07] bg-gradient-to-br from-white/90 to-neutral-50/50 px-8 py-14 shadow-[0_24px_56px_-36px_rgba(15,23,42,0.14)] sm:px-10 sm:py-16">
-            <h3 className="font-serif text-2xl font-normal tracking-tight text-neutral-950">
+            <h3 className="font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950">
               No represented works on file yet
             </h3>
             <p className="mt-4 max-w-lg text-[15px] leading-[1.65] text-neutral-600">

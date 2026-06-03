@@ -52,7 +52,7 @@ export function GalleryRegistrationOutcome({
       aria-live="polite"
     >
       <InfoTooltip text="This canonical record is now on file within the registry. Artist attestation may deepen when the artist authenticates authorship." />
-      <h2 className="mt-2 font-serif text-xl font-normal text-neutral-950 md:text-2xl">
+      <h2 className="mt-2 font-serif text-[1.35rem] font-normal text-neutral-950 md:text-[1.75rem]">
         {data.title}
       </h2>
       <p className={`mt-2 ${workspace.type.registryId}`}>{data.registryId}</p>

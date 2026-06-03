@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { ArchivalAuthorshipContributionModal } from "@/components/Studio/ArchivalAuthorshipContributionModal";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import type { ArtworkAuthenticationInvitePreview } from "@/lib/artwork-authentication-invite";
-import { CANONICAL_RECORD_PHRASES } from "@/lib/representation-language";
+import { fillMessage } from "@/lib/locale-messages";
+import { translateCanonicalPhrase } from "@/lib/representation-i18n";
 import { workspace } from "@/styles/workspace-design";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
@@ -42,12 +44,14 @@ export function ArtworkRecordReviewView({
   onContribute,
 }: Props) {
   const router = useRouter();
+  const { t } = useLocalePreferences();
   const publicRecordHref = preview.registryId?.trim()
     ? `/artwork/${encodeURIComponent(preview.registryId.trim())}`
     : null;
 
   const hasArtworkData = Boolean(
-    preview.artworkTitle?.trim() && preview.artworkTitle !== "Work on file"
+    preview.artworkTitle?.trim() &&
+      preview.artworkTitle !== t("gallery.artworkAuth.review.workOnFile")
   ) || Boolean(preview.imageUrl);
 
   if (preview.completed || done) {
@@ -57,11 +61,11 @@ export function ArtworkRecordReviewView({
           <ArtworkRecordCard preview={preview} />
           <StatusShell tone="success">
             <p className="font-serif text-xl text-neutral-950">
-              Authorship authenticated on file
+              {t("gallery.artworkAuth.review.authenticatedTitle")}
             </p>
             <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-              {CANONICAL_RECORD_PHRASES.artistAttestationOnFile}. You may deepen
-              the chronology with an archival authorship contribution.
+              {translateCanonicalPhrase("artistAttestationOnFile", t)}.{" "}
+              {t("gallery.artworkAuth.review.authenticatedBody")}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               {publicRecordHref ? (
@@ -69,7 +73,7 @@ export function ArtworkRecordReviewView({
                   href={publicRecordHref}
                   className="rounded-xl bg-neutral-950 px-5 py-2.5 text-sm font-semibold text-white"
                 >
-                  View public record
+                  {t("gallery.artworkAuth.review.viewPublicRecord")}
                 </Link>
               ) : null}
               <button
@@ -77,13 +81,13 @@ export function ArtworkRecordReviewView({
                 onClick={onOpenContribute}
                 className="rounded-xl border border-neutral-900/12 bg-white px-5 py-2.5 text-sm font-medium text-neutral-800"
               >
-                Contribute authorship
+                {t("gallery.artworkAuth.review.contributeAuthorship")}
               </button>
               <Link
                 href="/studio"
                 className="rounded-xl px-5 py-2.5 text-sm text-neutral-600 underline"
               >
-                Artist studio
+                {t("gallery.artworkAuth.review.artistStudio")}
               </Link>
             </div>
           </StatusShell>
@@ -107,8 +111,7 @@ export function ArtworkRecordReviewView({
         {hasArtworkData ? <ArtworkRecordCard preview={preview} /> : null}
         <StatusShell>
           <p className="text-sm leading-relaxed text-neutral-700">
-            This continuity invitation was withdrawn. The institution may send a
-            new invitation linked to this artwork record if appropriate.
+            {t("gallery.artworkAuth.review.withdrawn")}
           </p>
         </StatusShell>
         <JoinPlatformCTA
@@ -127,8 +130,7 @@ export function ArtworkRecordReviewView({
         {hasArtworkData ? <ArtworkRecordCard preview={preview} /> : null}
         <StatusShell>
           <p className="text-sm leading-relaxed text-neutral-700">
-            This invitation link has expired. The institution may send a new
-            invitation linked to this artwork record.
+            {t("gallery.artworkAuth.review.expired")}
           </p>
         </StatusShell>
         <JoinPlatformCTA
@@ -145,21 +147,20 @@ export function ArtworkRecordReviewView({
     return (
       <StatusShell>
         <p className="text-sm leading-relaxed text-neutral-700">
-          This record review is not available. It may already be authenticated,
-          or the invitation link may have changed.
+          {t("gallery.artworkAuth.review.unavailable")}
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link
             href="/signup"
             className="rounded-xl bg-neutral-950 px-5 py-2.5 text-sm font-semibold text-white"
           >
-            Join the registry
+            {t("gallery.artworkAuth.review.joinRegistry")}
           </Link>
           <Link
             href="/login"
             className="rounded-xl border border-neutral-900/12 bg-white px-5 py-2.5 text-sm font-medium text-neutral-800"
           >
-            Sign in
+            {t("gallery.artworkAuth.review.signIn")}
           </Link>
         </div>
       </StatusShell>
@@ -178,9 +179,9 @@ export function ArtworkRecordReviewView({
             rel="noopener noreferrer"
             className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-4"
           >
-            Open public record
+            {t("gallery.artworkAuth.review.openPublicRecord")}
           </Link>{" "}
-          in a new tab for full chronology context.
+          {t("gallery.artworkAuth.review.openPublicRecordHint")}
         </p>
       ) : null}
 
@@ -191,35 +192,29 @@ export function ArtworkRecordReviewView({
           <p className="text-sm leading-relaxed text-neutral-800">
             {preview.maskedRecipientEmail ? (
               <>
-                Join the registry or sign in as{" "}
-                <span className="font-medium">
-                  {preview.maskedRecipientEmail}
-                </span>{" "}
-                to authenticate authorship, add continuity, and deepen this
-                record.
+                {fillMessage(t("gallery.artworkAuth.review.signInPrompt"), {
+                  email: preview.maskedRecipientEmail,
+                })}
               </>
             ) : (
-              <>
-                Join the registry or sign in to authenticate authorship, add
-                continuity, and deepen this record on file.
-              </>
+              <>{t("gallery.artworkAuth.review.signInPromptGeneric")}</>
             )}
           </p>
           <p className="text-[12px] text-neutral-600">
-            {CANONICAL_RECORD_PHRASES.notApprovalWorkflow}
+            {translateCanonicalPhrase("notApprovalWorkflow", t)}
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
               href={signupHref}
               className="rounded-xl bg-neutral-950 px-5 py-2.5 text-sm font-semibold text-white"
             >
-              Join to review
+              {t("gallery.artworkAuth.review.joinToReview")}
             </Link>
             <Link
               href={loginHref}
               className="rounded-xl border border-neutral-900/12 bg-white px-5 py-2.5 text-sm font-medium text-neutral-800"
             >
-              Sign in
+              {t("gallery.artworkAuth.review.signIn")}
             </Link>
           </div>
         </div>
@@ -231,7 +226,7 @@ export function ArtworkRecordReviewView({
             onClick={() => void onAccept()}
             className="w-full rounded-xl bg-neutral-950 px-6 py-3.5 text-sm font-semibold text-white transition enabled:hover:bg-neutral-800 disabled:opacity-50"
           >
-            {busy ? "Recording…" : "Authenticate authorship on file"}
+            {busy ? t("common.recording") : t("gallery.artworkAuth.review.authenticateCta")}
           </button>
           {publicRecordHref ? (
             <button
@@ -239,11 +234,11 @@ export function ArtworkRecordReviewView({
               onClick={() => router.push(publicRecordHref)}
               className="w-full rounded-xl border border-neutral-900/10 bg-white px-6 py-3 text-sm font-medium text-neutral-800"
             >
-              View public record first
+              {t("gallery.artworkAuth.review.viewRecordFirst")}
             </button>
           ) : null}
           <p className="text-center text-[12px] text-neutral-500">
-            {CANONICAL_RECORD_PHRASES.notApprovalWorkflow}
+            {translateCanonicalPhrase("notApprovalWorkflow", t)}
           </p>
         </div>
       ) : (
@@ -269,12 +264,13 @@ function ArtworkRecordCard({
 }: {
   preview: ArtworkAuthenticationInvitePreview;
 }) {
+  const { t } = useLocalePreferences();
   return (
     <>
       <header className={workspace.panel.shell}>
-        <InfoTooltip text="An artwork associated with your practice is on file within the registry. Review the record, then authenticate authorship to add to the continuity." />
-        <h1 className="mt-3 font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-3xl">
-          {preview.artworkTitle || "Work on file"}
+        <InfoTooltip text={t("gallery.artworkAuth.review.cardTooltip")} />
+        <h1 className="mt-3 font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950 md:text-3xl">
+          {preview.artworkTitle || t("gallery.artworkAuth.review.workOnFile")}
         </h1>
         {preview.registryId ? (
           <p className={`mt-2 ${workspace.type.registryId}`}>
@@ -298,23 +294,27 @@ function ArtworkRecordCard({
         className={`${workspace.panel.shell} space-y-3 text-sm text-neutral-700`}
       >
         <p>
-          <span className="font-medium text-neutral-900">Artist on file:</span>{" "}
-          {preview.artistNameOnFile || "Artist"}
+          <span className="font-medium text-neutral-900">
+            {t("gallery.artworkAuth.review.artistLabel")}:
+          </span>{" "}
+          {preview.artistNameOnFile || t("gallery.fallback.artist")}
         </p>
         <p>
-          <span className="font-medium text-neutral-900">Institution:</span>{" "}
-          {preview.galleryName || "Institution"}
+          <span className="font-medium text-neutral-900">
+            {t("gallery.artworkAuth.review.institutionLabel")}:
+          </span>{" "}
+          {preview.galleryName || t("gallery.fallback.gallery")}
         </p>
         <ul className="space-y-1 text-[12px] text-neutral-500">
           <li>
             {preview.institutionOnFile
-              ? CANONICAL_RECORD_PHRASES.institutionAttestationOnFile
-              : "Institution continuity on file"}
+              ? translateCanonicalPhrase("institutionAttestationOnFile", t)
+              : t("gallery.artworkAuth.institutionContinuityPending")}
           </li>
           <li>
             {preview.artistAttestationOnFile
-              ? CANONICAL_RECORD_PHRASES.artistAttestationOnFile
-              : CANONICAL_RECORD_PHRASES.artistAttestationNotYetOnFile}
+              ? translateCanonicalPhrase("artistAttestationOnFile", t)
+              : translateCanonicalPhrase("artistAttestationMayDeepen", t)}
           </li>
         </ul>
         {preview.personalMessage ? (
@@ -338,6 +338,7 @@ function JoinPlatformCTA({
   loginHref: string;
   publicRecordHref: string | null;
 }) {
+  const { t } = useLocalePreferences();
   if (!hasArtworkData) return null;
 
   return (
@@ -345,31 +346,30 @@ function JoinPlatformCTA({
       className={`${workspace.panel.shell} space-y-4 border-amber-900/10 bg-amber-50/30`}
     >
       <p className="text-sm leading-relaxed text-neutral-800">
-        Join the registry to authenticate authorship, add to the chronology, and
-        deepen the documentary record on file.
+        {t("gallery.artworkAuth.review.joinPlatformPrompt")}
       </p>
       <p className="text-[12px] text-neutral-600">
-        {CANONICAL_RECORD_PHRASES.notApprovalWorkflow}
+        {translateCanonicalPhrase("notApprovalWorkflow", t)}
       </p>
       <div className="flex flex-wrap gap-3">
         <Link
           href={signupHref}
           className="rounded-xl bg-neutral-950 px-5 py-2.5 text-sm font-semibold text-white"
         >
-          Join the registry
+          {t("gallery.artworkAuth.review.joinRegistry")}
         </Link>
         <Link
           href={loginHref}
           className="rounded-xl border border-neutral-900/12 bg-white px-5 py-2.5 text-sm font-medium text-neutral-800"
         >
-          Sign in
+          {t("gallery.artworkAuth.review.signIn")}
         </Link>
         {publicRecordHref ? (
           <Link
             href={publicRecordHref}
             className="rounded-xl px-5 py-2.5 text-sm text-neutral-600 underline decoration-neutral-300 underline-offset-4"
           >
-            View public record
+            {t("gallery.artworkAuth.review.viewPublicRecord")}
           </Link>
         ) : null}
       </div>

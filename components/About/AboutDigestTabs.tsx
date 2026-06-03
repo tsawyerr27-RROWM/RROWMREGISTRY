@@ -7,25 +7,28 @@ import { AboutHowItWorks } from "@/components/About/AboutHowItWorks";
 import { PublicVsPrivate } from "@/components/About/PublicVsPrivate";
 import { SystemProperties } from "@/components/About/SystemProperties";
 import { WhatRegistryIs } from "@/components/About/WhatRegistryIs";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import type { MessageKey } from "@/lib/locale-messages";
 
-const TABS = [
-  { id: "what", label: "What it is" },
-  { id: "how", label: "How it works" },
-  { id: "visibility", label: "Visibility" },
-  { id: "properties", label: "Properties" },
-  { id: "who", label: "Who it is for" },
+const TAB_DEFS = [
+  { id: "what", labelKey: "about.tabs.what" as MessageKey },
+  { id: "how", labelKey: "about.tabs.how" as MessageKey },
+  { id: "visibility", labelKey: "about.tabs.visibility" as MessageKey },
+  { id: "properties", labelKey: "about.tabs.properties" as MessageKey },
+  { id: "who", labelKey: "about.tabs.who" as MessageKey },
 ] as const;
 
-type TabId = (typeof TABS)[number]["id"];
+type TabId = (typeof TAB_DEFS)[number]["id"];
 
 export function AboutDigestTabs() {
+  const { t } = useLocalePreferences();
   const baseId = useId();
   const [active, setActive] = useState<TabId>("what");
 
   return (
     <div
       className="rrowm-atmo-section--reflective relative overflow-hidden rounded-[1.75rem] border border-[color:var(--rrowm-atmo-rim)] shadow-[0_32px_90px_-58px_rgba(15,23,42,0.2)] backdrop-blur-md transition-[border-color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] md:hover:border-[color:color-mix(in_srgb,var(--rrowm-atmo-rim)_82%,rgb(75_72_88))] md:hover:shadow-[0_34px_92px_-56px_rgba(15,23,42,0.21)]"
-      aria-label="About the registry"
+      aria-label={t("about.tabs.aria")}
     >
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.32]"
@@ -39,9 +42,9 @@ export function AboutDigestTabs() {
         <div
           className="flex flex-wrap gap-2 md:gap-2.5"
           role="tablist"
-          aria-label="Sections"
+          aria-label={t("about.tabs.sections")}
         >
-          {TABS.map((tab) => {
+          {TAB_DEFS.map((tab) => {
             const selected = active === tab.id;
             return (
               <button
@@ -59,7 +62,7 @@ export function AboutDigestTabs() {
                     : "border border-[color:var(--rrowm-atmo-rim)] bg-[color-mix(in_srgb,var(--rrowm-atmo-panel)_78%,transparent)] text-neutral-700 hover:bg-[color-mix(in_srgb,var(--rrowm-atmo-panel-raise)_82%,transparent)] hover:text-neutral-950 active:scale-[0.99]"
                 }`}
               >
-                {tab.label}
+                {t(tab.labelKey)}
               </button>
             );
           })}

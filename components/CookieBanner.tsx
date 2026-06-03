@@ -7,6 +7,7 @@ import {
   type CookieConsentValue,
   readCookieConsent,
 } from "@/lib/cookie-consent";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 function dispatchConsent(value: CookieConsentValue) {
   window.dispatchEvent(
@@ -15,6 +16,7 @@ function dispatchConsent(value: CookieConsentValue) {
 }
 
 export function CookieBanner() {
+  const { t } = useLocalePreferences();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -46,20 +48,19 @@ export function CookieBanner() {
         className="pointer-events-auto w-full max-w-lg border border-black/[0.06] bg-white/85 px-5 py-5 shadow-[0_-8px_40px_-12px_rgba(15,23,42,0.12)] backdrop-blur-xl md:max-w-2xl md:px-7 md:py-6"
       >
         <p className="text-[13px] leading-relaxed text-neutral-600 md:text-sm">
-          We use cookies to maintain core functionality and improve the
-          experience.{" "}
+          {t("cookie.message")}{" "}
           <Link
             href="/privacy"
             className="text-neutral-800 underline decoration-neutral-300 underline-offset-[0.2em] transition hover:text-neutral-950 hover:decoration-neutral-500"
           >
-            Privacy
+            {t("cookie.privacy")}
           </Link>
           {" · "}
           <Link
             href="/terms"
             className="text-neutral-800 underline decoration-neutral-300 underline-offset-[0.2em] transition hover:text-neutral-950 hover:decoration-neutral-500"
           >
-            Terms
+            {t("cookie.terms")}
           </Link>
         </p>
         <div className="mt-5 flex flex-wrap items-center gap-3 md:gap-4">
@@ -68,14 +69,14 @@ export function CookieBanner() {
             onClick={() => persist("accepted")}
             className="rounded-lg bg-neutral-950 px-4 py-2.5 text-xs font-medium text-white transition hover:bg-neutral-800"
           >
-            Accept
+            {t("cookie.accept")}
           </button>
           <button
             type="button"
             onClick={() => persist("declined")}
             className="rounded-lg border border-black/[0.08] bg-white/60 px-4 py-2.5 text-xs font-medium text-neutral-700 transition hover:bg-neutral-50 hover:text-neutral-950"
           >
-            Decline
+            {t("cookie.decline")}
           </button>
         </div>
       </div>

@@ -3,16 +3,20 @@
  * Status precedence: incomplete → needs_attention → ready.
  */
 
+import type {
+  OpsActionLabelKey,
+  ReadinessReasonCode,
+} from "@/lib/gallery-ops-i18n";
+
 export type RecordReadinessStatus = "ready" | "needs_attention" | "incomplete";
 
 export type ReadinessAction =
-  | { kind: "link"; href: string; label: string }
-  | { kind: "roster"; label: string };
+  | { kind: "link"; href: string; labelKey: OpsActionLabelKey }
+  | { kind: "roster"; labelKey: OpsActionLabelKey };
 
 export type RecordReadinessResult = {
   status: RecordReadinessStatus;
-  /** Primary line for UI (short). */
-  reason: string;
+  reasonCode: ReadinessReasonCode | null;
   action: ReadinessAction | null;
 };
 
@@ -53,7 +57,7 @@ export function computeRecordReadiness(
   if (!registryOk) {
     return {
       status: "incomplete",
-      reason: "Registry ID missing",
+      reasonCode: "registry_id_missing",
       action: null,
     };
   }
@@ -61,19 +65,19 @@ export function computeRecordReadiness(
   if (!artistOk) {
     return {
       status: "incomplete",
-      reason: "No artist linked",
-      action: { kind: "roster", label: "Assign artist" },
+      reasonCode: "no_artist_linked",
+      action: { kind: "roster", labelKey: "gallery.ops.action.assignArtist" },
     };
   }
 
   if (!ownershipOk) {
     return {
       status: "incomplete",
-      reason: "No ownership on file",
+      reasonCode: "no_ownership",
       action: {
         kind: "link",
         href: `/registry/${encodeURIComponent(artwork.registry_id!)}`,
-        label: "View record",
+        labelKey: "gallery.ops.action.viewRecord",
       },
     };
   }
@@ -86,11 +90,11 @@ export function computeRecordReadiness(
   if (!titleOk) {
     return {
       status: "needs_attention",
-      reason: "Title missing",
+      reasonCode: "title_missing",
       action: {
         kind: "link",
         href: `/artwork/${encodeURIComponent(artwork.registry_id!)}`,
-        label: "Complete details",
+        labelKey: "gallery.ops.action.completeDetails",
       },
     };
   }
@@ -98,11 +102,11 @@ export function computeRecordReadiness(
   if (!metaHashOk) {
     return {
       status: "needs_attention",
-      reason: "Metadata fingerprint missing",
+      reasonCode: "metadata_fingerprint_missing",
       action: {
         kind: "link",
         href: `/registry/${encodeURIComponent(artwork.registry_id!)}`,
-        label: "View record",
+        labelKey: "gallery.ops.action.viewRecord",
       },
     };
   }
@@ -110,11 +114,11 @@ export function computeRecordReadiness(
   if (!hasDeclaredValue) {
     return {
       status: "needs_attention",
-      reason: "Missing declared value",
+      reasonCode: "missing_declared_value",
       action: {
         kind: "link",
         href: `/registry/${encodeURIComponent(artwork.registry_id!)}`,
-        label: "Add value",
+        labelKey: "gallery.ops.action.addValue",
       },
     };
   }
@@ -122,11 +126,11 @@ export function computeRecordReadiness(
   if (!imageOk) {
     return {
       status: "needs_attention",
-      reason: "Missing image",
+      reasonCode: "missing_image",
       action: {
         kind: "link",
         href: `/artwork/${encodeURIComponent(artwork.registry_id!)}`,
-        label: "Complete details",
+        labelKey: "gallery.ops.action.completeDetails",
       },
     };
   }
@@ -134,16 +138,16 @@ export function computeRecordReadiness(
   if (!metaComplete) {
     return {
       status: "needs_attention",
-      reason: "Incomplete metadata (year / medium)",
+      reasonCode: "incomplete_metadata",
       action: {
         kind: "link",
         href: `/artwork/${encodeURIComponent(artwork.registry_id!)}`,
-        label: "Complete details",
+        labelKey: "gallery.ops.action.completeDetails",
       },
     };
   }
 
-  return { status: "ready", reason: "", action: null };
+  return { status: "ready", reasonCode: null, action: null };
 }
 
 export function aggregateReadinessCounts(

@@ -207,7 +207,7 @@ export function CollectorVaultSection({
           >
             Sign in
           </Link>{" "}
-          to see whether you can access private stewardship files for this work.
+          to see whether you can access private studio files for this work.
         </p>
       ) : !canViewVault ? (
         <p className="mt-6 max-w-xl text-sm leading-relaxed text-neutral-600">

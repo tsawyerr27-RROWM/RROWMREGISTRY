@@ -74,7 +74,7 @@ function EmptyWorksPanel({ title, body }: { title: string; body: string }) {
       <p className="text-sm font-semibold text-teal-800/70">
         Collection
       </p>
-      <h2 className="mt-4 font-serif text-2xl font-normal tracking-tight text-neutral-950">
+      <h2 className="mt-4 font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950">
         {title}
       </h2>
       <p className="mt-4 max-w-lg text-[15px] leading-[1.65] text-neutral-600">{body}</p>
@@ -250,7 +250,7 @@ export default async function CollectorProfilePage({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <InfoTooltip text="Works where this collector holds verified ownership on the RROWM registry." />
-            <h2 className="font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-[1.75rem]">
+            <h2 className="font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950 md:text-[1.85rem]">
               Registered works
             </h2>
           </div>

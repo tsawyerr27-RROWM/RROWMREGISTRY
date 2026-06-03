@@ -57,7 +57,7 @@ export function EnquiryModal({
   return (
     <div className="liquid-glass-backdrop backdrop-blur-xl fixed inset-0 z-[200] flex items-center justify-center px-5">
       <div className="w-full max-w-md rounded-3xl border border-black/[0.08] bg-white/90 p-6 shadow-[0_24px_70px_-30px_rgba(0,0,0,0.35)] backdrop-blur">
-        <h2 className="font-serif text-2xl font-normal tracking-tight text-neutral-950">
+        <h2 className="font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950">
           Send enquiry
         </h2>
         <p className="mt-2 text-sm text-neutral-600">

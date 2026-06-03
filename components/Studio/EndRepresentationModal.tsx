@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import ModalShell from "@/components/ui/ModalShell";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import {
-  CANONICAL_RECORD_PHRASES,
-  REPRESENTATION_PHRASES,
-} from "@/lib/representation-language";
+  translateCanonicalPhrase,
+} from "@/lib/representation-i18n";
 import { workspace } from "@/styles/workspace-design";
 
 type Props = {
@@ -29,6 +29,7 @@ export function EndRepresentationModal({
   busy = false,
   onConfirm,
 }: Props) {
+  const { t } = useLocalePreferences();
   const [notes, setNotes] = useState("");
   const [acknowledged, setAcknowledged] = useState(false);
 
@@ -39,20 +40,29 @@ export function EndRepresentationModal({
     onClose();
   };
 
+  const tooltipText = [
+    translateCanonicalPhrase("priorContributionsRemainVisible", t),
+    translateCanonicalPhrase("historicalInstitutionLayer", t),
+  ].join(". ");
+
   return (
     <ModalShell isOpen={open} onClose={handleClose} tone="silver">
       <div className="max-w-md">
-        <InfoTooltip text={<>Ends active representation between the parties. {CANONICAL_RECORD_PHRASES.priorContributionsRemainVisible}. {CANONICAL_RECORD_PHRASES.historicalInstitutionLayer}. The canonical artwork record remains.</>} />
+        <InfoTooltip
+          text={`${t("studio.endRepresentation.title")}. ${tooltipText}`}
+        />
         <h3 className="font-serif text-xl font-normal text-neutral-950">
-          End representation on file
+          {t("studio.endRepresentation.title")}
         </h3>
         <label className="mt-5 block">
-          <span className={workspace.type.label}>Note (optional)</span>
+          <span className={workspace.type.label}>
+            {t("studio.endRepresentation.noteOptional")}
+          </span>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            placeholder="e.g. roster change, contract concluded…"
+            placeholder={t("studio.endRepresentation.notePlaceholder")}
             className={workspace.modal.field}
           />
         </label>
@@ -65,8 +75,7 @@ export function EndRepresentationModal({
             className="mt-1 h-4 w-4 rounded border-neutral-300"
           />
           <span className="text-sm leading-relaxed text-neutral-700">
-            I understand prior institution filings and chronology entries remain
-            visible on the public record.
+            {t("studio.endRepresentation.acknowledge")}
           </span>
         </label>
         <div className="mt-6 flex justify-end gap-2">
@@ -76,7 +85,7 @@ export function EndRepresentationModal({
             onClick={handleClose}
             className="rounded-xl px-4 py-2.5 text-sm text-neutral-600 transition hover:text-neutral-900"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             type="button"
@@ -84,7 +93,7 @@ export function EndRepresentationModal({
             onClick={() => void onConfirm(notes.trim())}
             className="rounded-xl bg-neutral-950 px-5 py-2.5 text-sm font-semibold text-white transition enabled:hover:bg-neutral-800 disabled:opacity-45"
           >
-            {busy ? "Ending…" : "End on file"}
+            {busy ? t("common.ending") : t("studio.records.endOnFile")}
           </button>
         </div>
       </div>

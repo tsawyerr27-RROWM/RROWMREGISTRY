@@ -80,6 +80,23 @@ export const REGIONS: readonly Region[] = [
 
 export const REGION_STORAGE_KEY = "rrowm_region";
 
+const REGION_COOKIE_MAX_AGE_S = 60 * 60 * 24 * 365;
+
+export function parseRegionId(raw: string | null | undefined): RegionId | null {
+  if (!raw) return null;
+  const id = raw.trim().toLowerCase();
+  if (id === "gb" || id === "us" || id === "de" || id === "fr" || id === "jp" || id === "au") {
+    return id;
+  }
+  return null;
+}
+
+/** Persist region for SSR + client hydration (mirrors localStorage). */
+export function writeRegionCookie(id: RegionId) {
+  if (typeof document === "undefined") return;
+  document.cookie = `${REGION_STORAGE_KEY}=${encodeURIComponent(id)};path=/;max-age=${REGION_COOKIE_MAX_AGE_S};samesite=lax`;
+}
+
 export function getRegion(id: RegionId): Region {
   const r = REGIONS.find((x) => x.id === id);
   return r ?? REGIONS[0];

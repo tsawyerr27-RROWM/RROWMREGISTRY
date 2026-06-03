@@ -35,7 +35,7 @@ export function ArtworkListingSignal({
   return (
     <div className="mt-6 rounded-2xl border border-black/[0.06] bg-white/60 px-5 py-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       <InfoTooltip text="Preparation only. Marketplace is feature-flagged off by default." />
-      <p className="font-serif text-2xl font-normal tracking-tight text-neutral-950">
+      <p className="font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950">
         {priceLabel}
       </p>
       <p className="mt-2 text-sm text-neutral-600">

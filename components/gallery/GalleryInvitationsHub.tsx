@@ -3,13 +3,13 @@
 import type { RefObject } from "react";
 import { useState } from "react";
 
-import { ARTWORK_AUTH_INVITE_COPY } from "@/lib/artwork-authentication-invite";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import type { ArtworkAuthenticationInviteRow } from "@/lib/artwork-authentication-invite";
-import { GalleryArtworkAuthenticationInvitesSection } from "@/components/gallery/GalleryArtworkAuthenticationInvitesSection";
 import {
   GalleryInvitationsSection,
   type GalleryInviteRow,
 } from "@/components/gallery/GalleryInvitationsSection";
+import { GalleryArtworkAuthenticationInvitesSection } from "@/components/gallery/GalleryArtworkAuthenticationInvitesSection";
 import { workspace } from "@/styles/workspace-design";
 
 type Tab = "representation" | "artwork";
@@ -44,6 +44,7 @@ type Props = {
 };
 
 export function GalleryInvitationsHub(props: Props) {
+  const { t } = useLocalePreferences();
   const [tab, setTab] = useState<Tab>("representation");
 
   const tabClass = (active: boolean) =>
@@ -60,16 +61,14 @@ export function GalleryInvitationsHub(props: Props) {
       className="scroll-mt-20 space-y-8 text-neutral-900"
     >
       <header className={`max-w-2xl ${workspace.panel.shell} !p-6 md:!p-8`}>
-        <h1 className={workspace.panel.title}>Invitations</h1>
+        <h1 className={workspace.panel.title}>{t("gallery.nav.invitations")}</h1>
         <p className={workspace.panel.description}>
-          Two continuity channels: general representation, and artwork-specific
-          authentication. The canonical record exists independently; invitations
-          deepen participant attestations.
+          {t("gallery.invitations.hubDesc")}
         </p>
         <div
           className="mt-6 flex flex-wrap gap-2"
           role="tablist"
-          aria-label="Invitation type"
+          aria-label={t("gallery.invitations.tabListLabel")}
         >
           <button
             type="button"
@@ -78,7 +77,7 @@ export function GalleryInvitationsHub(props: Props) {
             className={tabClass(tab === "representation")}
             onClick={() => setTab("representation")}
           >
-            Representation
+            {t("gallery.invitations.tabRepresentation")}
           </button>
           <button
             type="button"
@@ -87,7 +86,7 @@ export function GalleryInvitationsHub(props: Props) {
             className={tabClass(tab === "artwork")}
             onClick={() => setTab("artwork")}
           >
-            Artwork authentication
+            {t("gallery.invitations.tabArtworkAuth")}
             {props.artworkAuthInvites.length > 0 ? (
               <span className="ml-1.5 tabular-nums opacity-80">
                 ({props.artworkAuthInvites.length})
@@ -120,8 +119,8 @@ export function GalleryInvitationsHub(props: Props) {
           onMakeInvitePublic={props.onMakeInvitePublic}
           invitePublishError={props.invitePublishError}
           hidePageHeader
-          sectionEyebrow={ARTWORK_AUTH_INVITE_COPY.representationSectionTitle}
-          sectionDescription={ARTWORK_AUTH_INVITE_COPY.representationSectionDesc}
+          sectionEyebrow={t("gallery.invitations.representationSectionTitle")}
+          sectionDescription={t("gallery.invitations.representationSectionDesc")}
         />
       ) : (
         <GalleryArtworkAuthenticationInvitesSection

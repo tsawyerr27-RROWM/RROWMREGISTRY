@@ -1,5 +1,8 @@
+"use client";
+
 import type { ArtworkStatusFilter, RegistrySort } from "@/lib/registry-list-params";
 import { REGISTRY_FILTER_LABELS } from "@/lib/representation-language";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 type Props = {
   /** Form action, e.g. `/registry` */
@@ -27,6 +30,7 @@ export function RegistryListFilters({
   status = "all",
   variant = "glass",
 }: Props) {
+  const { t } = useLocalePreferences();
   const qId = `${idPrefix}-q`;
   const sortId = `${idPrefix}-sort`;
   const statusId = `${idPrefix}-status`;
@@ -58,14 +62,14 @@ export function RegistryListFilters({
           htmlFor={qId}
           className="text-sm font-medium text-neutral-700"
         >
-          Search
+          {t("registry.filters.search")}
         </label>
         <input
           id={qId}
           name="q"
           type="search"
           defaultValue={q}
-          placeholder="Title or registry ID"
+          placeholder={t("registry.filters.searchPlaceholder")}
           autoComplete="off"
           className={inputClass}
         />
@@ -76,7 +80,7 @@ export function RegistryListFilters({
             htmlFor={statusId}
             className="text-sm font-medium text-neutral-700"
           >
-            Status
+            {t("registry.filters.status")}
           </label>
           <select
             id={statusId}
@@ -84,7 +88,7 @@ export function RegistryListFilters({
             defaultValue={status}
             className={selectClass}
           >
-            <option value="all">All works</option>
+            <option value="all">{t("registry.filters.allWorks")}</option>
             <option value="verified">{REGISTRY_FILTER_LABELS.verifiedOnly}</option>
             <option value="pending">
               {REGISTRY_FILTER_LABELS.participationPending}
@@ -97,7 +101,7 @@ export function RegistryListFilters({
           htmlFor={sortId}
           className="text-sm font-medium text-neutral-700"
         >
-          Sort
+          {t("registry.filters.sort")}
         </label>
         <select
           id={sortId}
@@ -105,10 +109,10 @@ export function RegistryListFilters({
           defaultValue={sort}
           className={selectClass}
         >
-          <option value="newest">Newest first</option>
-          <option value="oldest">Oldest first</option>
-          <option value="title_asc">Title A–Z</option>
-          <option value="title_desc">Title Z–A</option>
+          <option value="newest">{t("registry.filters.sortNewest")}</option>
+          <option value="oldest">{t("registry.filters.sortOldest")}</option>
+          <option value="title_asc">{t("registry.filters.sortTitleAsc")}</option>
+          <option value="title_desc">{t("registry.filters.sortTitleDesc")}</option>
         </select>
       </div>
       <input type="hidden" name="page" value="1" />
@@ -117,7 +121,7 @@ export function RegistryListFilters({
           type="submit"
           className="rounded-xl bg-neutral-950 px-8 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800"
         >
-          Apply
+          {t("registry.filters.apply")}
         </button>
       </div>
     </form>

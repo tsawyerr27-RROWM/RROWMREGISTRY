@@ -2,6 +2,11 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { warnSupabaseRpc } from "@/lib/supabase-rpc-error";
+import { PersonalArchiveControl } from "@/components/archive/PersonalArchiveControl";
+import {
+  getArtworkArchiveCount,
+  isArtworkArchived,
+} from "@/lib/personal-archive";
 import { recordVerificationPendingLabel } from "@/lib/representation-language";
 
 export const dynamic = "force-dynamic";
@@ -12,6 +17,8 @@ export default async function VerifyPage({
   params: Promise<{ registry_id: string }>;
 }) {
   const supabase = await createSupabaseServerClient();
+  const { data: authData } = await supabase.auth.getUser();
+  const sessionUser = authData?.user ?? null;
   const { registry_id } = await params;
   const cleanId = registry_id.trim();
 
@@ -56,6 +63,12 @@ export default async function VerifyPage({
     certificate = certRows?.[0] as CertPublic | undefined;
     isRevoked = Boolean(certificate?.revoked);
   }
+
+  const archiveCount = await getArtworkArchiveCount(supabase, artwork.id);
+  const userArchived =
+    sessionUser != null
+      ? await isArtworkArchived(supabase, artwork.id, sessionUser.id)
+      : false;
 
   return (
     <div className="ds-page-environment relative flex min-h-screen items-center justify-center px-6 py-24 pt-28">
@@ -156,6 +169,16 @@ export default async function VerifyPage({
             </a>
           </p>
         ) : null}
+
+        <PersonalArchiveControl
+          artworkId={artwork.id}
+          registryId={artwork.registry_id}
+          isSignedIn={Boolean(sessionUser)}
+          initialArchived={userArchived}
+          initialCount={archiveCount}
+          variant="compact"
+          loginNextPath={`/verify/${encodeURIComponent(artwork.registry_id)}`}
+        />
         </div>
       </div>
     </div>

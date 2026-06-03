@@ -222,25 +222,13 @@ export function buildPreviewFromArtwork(params: {
 export function artistMayReviewArtwork(
   art: ArtworkRow,
   userId: string,
-  userEmail: string,
-  displayName: string
+  userEmail: string
 ): boolean {
   if (art.artist_id && String(art.artist_id) === userId) return true;
   const email = userEmail.trim().toLowerCase();
-  if (
-    email &&
-    art.pending_artist_email &&
-    art.pending_artist_email.trim().toLowerCase() === email
-  ) {
-    return true;
-  }
-  const dn = displayName.trim().toLowerCase();
-  if (
-    dn &&
-    art.catalogue_artist_name &&
-    art.catalogue_artist_name.trim().toLowerCase() === dn
-  ) {
-    return true;
-  }
-  return false;
+  return (
+    email.length > 0 &&
+    Boolean(art.pending_artist_email) &&
+    art.pending_artist_email!.trim().toLowerCase() === email
+  );
 }

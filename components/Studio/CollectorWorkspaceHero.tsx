@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { RegistryCatalogueInfoTooltip } from "@/components/Registry/RegistryCatalogueInfoTooltip";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { ArtworksHeroPreview } from "@/components/Dashboard/ArtworksHeroPreview";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fillMessage } from "@/lib/locale-messages";
 import {
   CompletenessMeter,
   HeroActionButton,
@@ -43,7 +46,8 @@ export function CollectorWorkspaceHero({
   snapshot,
   onGoToSection,
 }: Props) {
-  const headline = displayName.trim() || "Your collection";
+  const { t } = useLocalePreferences();
+  const headline = displayName.trim() || t("collector.hero.fallbackCollection");
   const hasPreview = previewArtworks.length > 0;
   const anyPreviewImage = previewArtworks.some(
     (a) => a.image_url && String(a.image_url).trim() !== ""
@@ -66,7 +70,7 @@ export function CollectorWorkspaceHero({
       <div className="relative grid gap-10 px-6 py-12 lg:grid-cols-12 lg:gap-8 lg:px-10 lg:py-14 xl:px-14">
         <div className="flex flex-col justify-between lg:col-span-7">
           <div>
-            <InfoTooltip text="A quiet space for what you hold. Ownership state, attention items, and history, without catalogue marketing chrome." theme="dark" />
+            <InfoTooltip text={t("collector.hero.tooltip")} theme="dark" />
             <h1 className="mt-3 font-serif text-[2rem] font-normal leading-[1.05] tracking-tight text-white md:text-[2.65rem] lg:text-[2.85rem]">
               {headline}
             </h1>
@@ -78,30 +82,34 @@ export function CollectorWorkspaceHero({
           <div className="mt-10 space-y-5 lg:mt-12">
             <ul className="grid gap-4 sm:grid-cols-3 sm:gap-5">
               <HeroTile
-                title="Ownership on record"
+                title={t("collector.hero.ownershipOnRecord")}
                 footer={
                   <HeroActionButton onClick={() => onGoToSection("works")}>
-                    View works
+                    {t("collector.hero.viewWorks")}
                   </HeroActionButton>
                 }
               >
                 <HeroStat
                   value={snapshot.held}
-                  sub={snapshot.held === 1 ? "work" : "works"}
-                  label="In your stewardship"
+                  sub={
+                    snapshot.held === 1
+                      ? t("collector.hero.work")
+                      : t("collector.hero.works")
+                  }
+                  label={t("collector.hero.inStewardship")}
                 />
                 <CompletenessMeter
                   percent={verifiedPct}
-                  label="Verified ownership"
+                  label={t("collector.hero.verifiedOwnership")}
                   accent="teal"
                 />
               </HeroTile>
 
               <HeroTile
-                title="Private by default"
+                title={t("collector.hero.privateByDefault")}
                 footer={
                   <HeroInlineLink href="/account" className="block w-full">
-                    Account &amp; presence
+                    {t("collector.hero.accountPresence")}
                   </HeroInlineLink>
                 }
               >
@@ -113,20 +121,24 @@ export function CollectorWorkspaceHero({
                         : "bg-white/5 ring-white/15"
                     }`}
                   >
-                    <span className="text-[9px] uppercase text-white/45">Profile</span>
+                    <span className="text-[9px] uppercase text-white/45">
+                      {t("collector.hero.profile")}
+                    </span>
                     <span
                       className={`text-sm font-semibold ${
                         snapshot.profilePublic ? "text-emerald-200" : "text-white/40"
                       }`}
                     >
-                      {snapshot.profilePublic ? "On" : "Off"}
+                      {snapshot.profilePublic
+                        ? t("collector.hero.on")
+                        : t("collector.hero.off")}
                     </span>
                   </div>
                   <div className="min-w-0 space-y-1.5">
                     <p className="text-[11px] leading-relaxed text-white/55">
                       {snapshot.profilePublic
-                        ? "Public collection page is available."
-                        : "No public profile. Workspace stays private."}
+                        ? t("collector.hero.publicPageAvailable")
+                        : t("collector.hero.workspacePrivate")}
                     </p>
                     <span
                       className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
@@ -135,37 +147,47 @@ export function CollectorWorkspaceHero({
                           : "bg-white/10 text-white/50"
                       }`}
                     >
-                      {snapshot.anonymousOnPublic ? "Anonymous label" : "Name shown"}
+                      {snapshot.anonymousOnPublic
+                        ? t("collector.hero.anonymousLabel")
+                        : t("collector.hero.nameShown")}
                     </span>
                   </div>
                 </div>
               </HeroTile>
 
               <HeroTile
-                title="Continuity"
+                title={t("collector.hero.continuity")}
                 footer={
                   snapshot.attentionCount > 0 ? (
                     <HeroActionButton onClick={() => onGoToSection("attention")}>
-                      Open attention ({snapshot.attentionCount})
+                      {fillMessage(t("collector.hero.openAttention"), {
+                        count: String(snapshot.attentionCount),
+                      })}
                     </HeroActionButton>
                   ) : (
-                    <span className="text-[11px] text-white/40">Nothing needs attention</span>
+                    <span className="text-[11px] text-white/40">
+                      {t("collector.hero.nothingNeedsAttention")}
+                    </span>
                   )
                 }
               >
                 <HeroStat
                   value={snapshot.attentionCount}
                   sub={
-                    snapshot.attentionCount === 1 ? "item" : "items"
+                    snapshot.attentionCount === 1
+                      ? t("collector.hero.item")
+                      : t("collector.hero.items")
                   }
-                  label="Transfers, claims & verification"
+                  label={t("collector.hero.attentionLabel")}
                 />
                 {snapshot.attentionCount > 0 ? (
                   <span className="inline-flex w-fit rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-medium text-amber-100/95 ring-1 ring-amber-400/30">
-                    Action suggested
+                    {t("collector.hero.actionSuggested")}
                   </span>
                 ) : (
-                  <span className="text-[11px] text-emerald-300/80">All clear</span>
+                  <span className="text-[11px] text-emerald-300/80">
+                    {t("collector.hero.allClear")}
+                  </span>
                 )}
               </HeroTile>
             </ul>
@@ -176,23 +198,24 @@ export function CollectorWorkspaceHero({
               href="/account"
               className="rounded-lg bg-white px-5 py-2.5 text-[13px] font-semibold text-neutral-950 shadow-lg shadow-black/25 transition [transition-timing-function:var(--rrowm-ease-out)] hover:bg-white/90"
             >
-              Account &amp; presence
+              {t("collector.hero.accountPresence")}
             </Link>
             {publicPageHref ? (
               <Link
                 href={publicPageHref}
                 className="rounded-lg border border-white/25 bg-white/5 px-5 py-2.5 text-[13px] font-medium text-white backdrop-blur-sm transition hover:bg-white/10"
               >
-                Public collection
+                {t("collector.hero.publicCollection")}
               </Link>
             ) : (
               <span className="rounded-lg border border-white/15 px-5 py-2.5 text-[13px] text-white/40">
-                Public page when slug is available
+                {t("collector.hero.publicPageWhenSlug")}
               </span>
             )}
-            <div className="ml-auto flex gap-5 text-[12px] text-white/50">
+            <div className="ml-auto flex items-center gap-3 text-[12px] text-white/50">
+              <RegistryCatalogueInfoTooltip theme="dark" />
               <Link href="/registry" className="transition hover:text-white">
-                Registry
+                {t("collector.hero.registry")}
               </Link>
             </div>
           </div>
@@ -204,7 +227,7 @@ export function CollectorWorkspaceHero({
             <div className="rounded-2xl bg-gradient-to-b from-white/10 to-white/[0.02] p-6 ring-1 ring-white/10 backdrop-blur-md">
               {!hasPreview ? (
                 <p className="mt-8 text-center text-sm leading-relaxed text-white/45">
-                  Works you hold will surface here with images when records include them.
+                  {t("collector.hero.previewEmpty")}
                 </p>
               ) : (
                 <>
@@ -213,7 +236,7 @@ export function CollectorWorkspaceHero({
                   </div>
                   {!anyPreviewImage ? (
                     <p className="mt-4 text-center text-xs leading-relaxed text-white/40">
-                      Images appear when works include artwork images.
+                      {t("collector.hero.previewNoImages")}
                     </p>
                   ) : null}
                 </>

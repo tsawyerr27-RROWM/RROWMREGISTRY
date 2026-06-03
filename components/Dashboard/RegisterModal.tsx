@@ -1,6 +1,9 @@
+"use client";
+
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import ModalShell from "@/components/ui/ModalShell";
 import { CurrencyCombobox } from "@/components/ui/CurrencyCombobox";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 export type RegisterModalArtwork = {
   title: string;
@@ -17,12 +20,12 @@ export type RegisterModalArtwork = {
 
 /** `liquid-glass-inset` sets border-radius:0 in globals — force round corners */
 const fieldClass =
-  "liquid-glass-inset !rounded-2xl w-full px-4 py-3 text-sm leading-snug text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/15";
+  "liquid-glass-inset !rounded-2xl w-full px-4 py-3.5 text-[15px] leading-snug text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/15";
 
 const selectClass = `${fieldClass} appearance-none`;
 
 const textareaClass =
-  "w-full rounded-2xl border border-neutral-200/90 bg-white/90 px-4 py-3 text-sm leading-snug text-neutral-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/15 resize-none";
+  "w-full rounded-2xl border border-neutral-200/90 bg-white/90 px-4 py-3.5 text-[15px] leading-snug text-neutral-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/15 resize-none";
 
 const labelClass =
   "mb-2 block text-sm font-semibold text-neutral-500";
@@ -69,6 +72,7 @@ export function RegisterModal({
   onPendingArtistEmailChange,
   variant = "default",
 }: RegisterModalProps) {
+  const { t } = useLocalePreferences();
   const isGallery = variant === "gallery";
   const rosterOptions =
     isGallery && Array.isArray(representedArtistOptions)
@@ -95,13 +99,13 @@ export function RegisterModal({
         {variant === "gallery" ? (
           <>
             <InfoTooltip text="Issues a registry identifier and opens the canonical artwork record, the same documentary object an artist would file. Your institution attestation layers onto the chronology; the artist may later authenticate authorship and deepen detail. Not an approval or upload queue." />
-            <h2 className="font-serif text-2xl font-normal leading-tight tracking-tight text-neutral-950 md:text-[1.65rem]">
-              Register a work
+            <h2 className="font-serif text-[1.75rem] font-normal leading-tight tracking-[-0.01em] text-neutral-950 md:text-[1.85rem]">
+              {t("studio.register.titleGallery")}
             </h2>
           </>
         ) : (
-          <h2 className="font-serif text-2xl font-normal leading-tight tracking-tight text-neutral-950 md:text-[1.65rem]">
-            Register new artwork
+          <h2 className="font-serif text-[1.75rem] font-normal leading-tight tracking-[-0.01em] text-neutral-950 md:text-[1.85rem]">
+            {t("studio.register.titleNew")}
           </h2>
         )}
 
@@ -110,42 +114,44 @@ export function RegisterModal({
             <>
               <div>
                 <label className={labelClass}>
-                  Artist name{hasRosterLink ? "" : " *"}
+                  {t("studio.register.artistName")}
+                  {hasRosterLink ? "" : " *"}
                 </label>
                 <input
                   type="text"
                   value={catalogueArtistName}
                   onChange={(e) => onCatalogueArtistNameChange?.(e.target.value)}
                   className={fieldClass}
-                  placeholder="As credited on the work"
+                  placeholder={t("studio.register.asCreditedPlaceholder")}
                   disabled={hasRosterLink}
                 />
                 <p className="mt-2 text-[12px] leading-relaxed text-neutral-500">
-                  Plain text is sufficient. An artist account is not required to open
-                  the canonical record.
+                  {t("studio.register.plainTextHint")}
                 </p>
               </div>
               <div>
-                <label className={labelClass}>Artist email (optional)</label>
+                <label className={labelClass}>
+                  {t("studio.register.artistEmailOptional")}
+                </label>
                 <input
                   type="email"
                   value={pendingArtistEmail}
                   onChange={(e) => onPendingArtistEmailChange?.(e.target.value)}
                   className={fieldClass}
-                  placeholder="For a later authenticate & deepen invitation"
+                  placeholder={t("studio.register.emailInvitePlaceholder")}
                 />
               </div>
               {rosterOptions.length > 0 ? (
                 <div>
                   <label className={labelClass}>
-                    Link to roster artist (optional)
+                    {t("studio.register.linkRosterOptional")}
                   </label>
                   <select
                     value={representedArtistId || ""}
                     onChange={(e) => onRepresentedArtistChange?.(e.target.value)}
                     className={selectClass}
                   >
-                    <option value="">No account link, name on file only</option>
+                    <option value="">{t("studio.register.noAccountLink")}</option>
                     {rosterOptions.map((o) => (
                       <option key={o.id} value={o.id}>
                         {o.label}
@@ -157,7 +163,7 @@ export function RegisterModal({
             </>
           ) : null}
           <div>
-            <label className={labelClass}>Title *</label>
+            <label className={labelClass}>{t("studio.form.titleRequired")}</label>
             <input
               type="text"
               value={newArtwork.title}
@@ -165,13 +171,13 @@ export function RegisterModal({
                 onArtworkChange({ ...newArtwork, title: e.target.value })
               }
               className={fieldClass}
-              placeholder="Artwork title"
+              placeholder={t("studio.register.placeholderTitle")}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <label className={labelClass}>Year</label>
+              <label className={labelClass}>{t("studio.form.year")}</label>
               <input
                 type="text"
                 value={newArtwork.year}
@@ -179,12 +185,12 @@ export function RegisterModal({
                   onArtworkChange({ ...newArtwork, year: e.target.value })
                 }
                 className={fieldClass}
-                placeholder="2024"
+                placeholder={t("studio.register.placeholderYear")}
               />
             </div>
 
             <div>
-              <label className={labelClass}>Medium</label>
+              <label className={labelClass}>{t("studio.form.medium")}</label>
               <input
                 type="text"
                 value={newArtwork.medium}
@@ -192,13 +198,13 @@ export function RegisterModal({
                   onArtworkChange({ ...newArtwork, medium: e.target.value })
                 }
                 className={fieldClass}
-                placeholder="Oil on canvas"
+                placeholder={t("studio.register.placeholderMedium")}
               />
             </div>
           </div>
 
           <div>
-            <label className={labelClass}>Dimensions</label>
+            <label className={labelClass}>{t("studio.form.dimensions")}</label>
             <input
               type="text"
               value={newArtwork.dimensions}
@@ -209,12 +215,12 @@ export function RegisterModal({
                 })
               }
               className={fieldClass}
-              placeholder="48 × 36 in"
+              placeholder={t("studio.register.placeholderDimensions")}
             />
           </div>
 
           <div>
-            <label className={labelClass}>Description</label>
+            <label className={labelClass}>{t("studio.form.description")}</label>
             <textarea
               value={newArtwork.description}
               onChange={(e) =>
@@ -225,12 +231,12 @@ export function RegisterModal({
               }
               rows={4}
               className={textareaClass}
-              placeholder="Describe the work…"
+              placeholder={t("studio.register.placeholderDescription")}
             />
           </div>
 
           <div>
-            <label className={labelClass}>Visibility</label>
+            <label className={labelClass}>{t("studio.form.visibility")}</label>
             <select
               value={newArtwork.visibility_level}
               onChange={(e) =>
@@ -241,15 +247,15 @@ export function RegisterModal({
               }
               className={selectClass}
             >
-              <option value="private">Private</option>
-              <option value="gallery">Gallery</option>
-              <option value="public">Public</option>
+              <option value="private">{t("studio.form.visibilityPrivate")}</option>
+              <option value="gallery">{t("studio.form.visibilityGallery")}</option>
+              <option value="public">{t("studio.form.visibilityPublic")}</option>
             </select>
           </div>
 
           <div>
             <label className={labelClass}>
-              Image{isGallery ? " *" : ""}
+              {isGallery ? t("studio.form.imageRequired") : t("studio.form.image")}
             </label>
             <input
               type="file"
@@ -266,7 +272,7 @@ export function RegisterModal({
 
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <label className={labelClass}>Initial amount (optional)</label>
+              <label className={labelClass}>{t("studio.form.initialAmount")}</label>
               <input
                 type="number"
                 value={newArtwork.declared_value || ""}
@@ -277,11 +283,11 @@ export function RegisterModal({
                   })
                 }
                 className={fieldClass}
-                placeholder="e.g. 50000"
+                placeholder={t("studio.register.placeholderAmount")}
               />
             </div>
             <div>
-              <label className={labelClass}>Currency</label>
+              <label className={labelClass}>{t("studio.form.currency")}</label>
               <div className="mt-2">
                 <CurrencyCombobox
                   value={String(newArtwork.currency || "").toUpperCase()}
@@ -297,7 +303,7 @@ export function RegisterModal({
           </div>
 
           <div>
-            <label className={labelClass}>Event type</label>
+            <label className={labelClass}>{t("studio.form.eventType")}</label>
             <select
               value={newArtwork.value_type || "initial"}
               onChange={(e) =>
@@ -308,11 +314,17 @@ export function RegisterModal({
               }
               className={selectClass}
             >
-              <option value="initial">Initial</option>
-              <option value="primary_sale">Primary Sale</option>
-              <option value="secondary_sale">Secondary Sale</option>
-              <option value="appraisal">Appraisal</option>
-              <option value="internal_estimate">Internal Estimate</option>
+              <option value="initial">{t("studio.form.eventInitial")}</option>
+              <option value="primary_sale">
+                {t("studio.form.eventPrimarySale")}
+              </option>
+              <option value="secondary_sale">
+                {t("studio.form.eventSecondarySale")}
+              </option>
+              <option value="appraisal">{t("studio.form.eventAppraisal")}</option>
+              <option value="internal_estimate">
+                {t("studio.form.eventInternalEstimate")}
+              </option>
             </select>
           </div>
         </div>
@@ -325,13 +337,13 @@ export function RegisterModal({
             className={`${btnPrimary} sm:flex-1`}
           >
             {registerLoading
-              ? "Recording…"
+              ? t("common.recording")
               : variant === "gallery"
-                ? "Issue canonical record"
-                : "Register artwork"}
+                ? t("studio.register.issueCanonical")
+                : t("studio.registerArtwork")}
           </button>
           <button type="button" onClick={onClose} className={btnSecondary}>
-            Cancel
+            {t("common.cancel")}
           </button>
         </div>
       </div>

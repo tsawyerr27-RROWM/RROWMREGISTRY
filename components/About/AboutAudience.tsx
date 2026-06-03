@@ -1,10 +1,14 @@
+"use client";
+
 import { narrativeLayout } from "@/styles/narrative-layout";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 type AboutAudienceProps = {
   density?: "default" | "digest";
 };
 
 export function AboutAudience({ density = "default" }: AboutAudienceProps) {
+  const { t } = useLocalePreferences();
   const digest = density === "digest";
   const Shell = digest ? "div" : "section";
 
@@ -25,7 +29,7 @@ export function AboutAudience({ density = "default" }: AboutAudienceProps) {
             : "font-serif text-[clamp(1.85rem,3vw,2.65rem)] font-normal leading-tight tracking-tight text-neutral-950"
         }
       >
-        Who it is for
+        {t("about.audience.title")}
       </h2>
       <div
         className={
@@ -42,10 +46,9 @@ export function AboutAudience({ density = "default" }: AboutAudienceProps) {
           }
         >
           <span className="font-medium text-neutral-900">
-            Artists &amp; studios
+            {t("about.audience.artistsLabel")}
           </span>{" "}
-          establishing a lasting record for works they stand behind, with
-          certificates and provenance tied to one identity.
+          {t("about.audience.artistsBody")}
         </p>
         <p
           className={
@@ -55,10 +58,9 @@ export function AboutAudience({ density = "default" }: AboutAudienceProps) {
           }
         >
           <span className="font-medium text-neutral-900">
-            Galleries &amp; estates
+            {t("about.audience.galleriesLabel")}
           </span>{" "}
-          maintaining continuity across exhibitions and transfers without
-          fragmenting the story of each piece.
+          {t("about.audience.galleriesBody")}
         </p>
         <p
           className={
@@ -68,10 +70,9 @@ export function AboutAudience({ density = "default" }: AboutAudienceProps) {
           }
         >
           <span className="font-medium text-neutral-900">
-            Collectors &amp; researchers
+            {t("about.audience.collectorsLabel")}
           </span>{" "}
-          using the public layer to verify what is on record before going
-          further through authenticated channels.
+          {t("about.audience.collectorsBody")}
         </p>
       </div>
     </Shell>

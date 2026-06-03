@@ -1,4 +1,5 @@
-import Link from "next/link";
+"use client";
+
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { resolveArtworkOwnerId } from "@/lib/resolve-artwork-owner-id";
 import { ExperienceEmptyStateButton } from "@/components/ui/ExperienceEmptyState";
@@ -7,6 +8,11 @@ import {
   StudioSearchRow,
   studioFilterSelectClass,
 } from "@/components/Dashboard/studioListPrimitives";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import {
+  fillMessage,
+  type MessageKey,
+} from "@/lib/locale-messages";
 import { workspace } from "@/styles/workspace-design";
 
 type LatestOwner = {
@@ -16,9 +22,12 @@ type LatestOwner = {
   to_type?: string | null;
 };
 
+type Translate = (key: MessageKey) => string;
+
 function currentHolderLabel(
   artwork: Record<string, unknown>,
-  userId: string | undefined
+  userId: string | undefined,
+  t: Translate
 ): string {
   const latest = artwork.__latest_owner as LatestOwner | undefined;
 
@@ -28,24 +37,28 @@ function currentHolderLabel(
       : latest.to_name;
   }
   if (latest?.to_user_id) {
-    if (latest.to_user_id === userId) return "You";
-    return `Collector (${latest.to_user_id.slice(0, 6)}…)`;
+    if (latest.to_user_id === userId) return t("studio.ownership.you");
+    return fillMessage(t("studio.ownership.collectorId"), {
+      id: latest.to_user_id.slice(0, 6),
+    });
   }
 
   const oid = resolveArtworkOwnerId(artwork);
-  if (!oid) return "Unassigned";
-  if (oid === userId) return "You";
-  return `Collector (${oid.slice(0, 6)}…)`;
+  if (!oid) return t("studio.ownership.unassigned");
+  if (oid === userId) return t("studio.ownership.you");
+  return fillMessage(t("studio.ownership.collectorId"), {
+    id: oid.slice(0, 6),
+  });
 }
 
 function latestEventIsSale(artwork: Record<string, unknown>): boolean {
   const latest = artwork.__latest_owner as LatestOwner | undefined;
-  const t = String(latest?.transfer_type || "").toLowerCase();
+  const transferType = String(latest?.transfer_type || "").toLowerCase();
   return (
-    t === "sale" ||
-    t === "auction" ||
-    t === "primary_sale" ||
-    t === "secondary_sale"
+    transferType === "sale" ||
+    transferType === "auction" ||
+    transferType === "primary_sale" ||
+    transferType === "secondary_sale"
   );
 }
 
@@ -83,17 +96,29 @@ type OwnershipSectionProps = {
   >;
 };
 
-function TransferDots({ count }: { count: number }) {
+function TransferDots({
+  count,
+  t,
+}: {
+  count: number;
+  t: Translate;
+}) {
   const n = Math.max(0, Math.min(count, 6));
   if (n <= 0) {
     return (
-      <span className="text-xs text-neutral-400">No transfers yet</span>
+      <span className="text-xs text-neutral-400">
+        {t("studio.ownership.noTransfers")}
+      </span>
     );
   }
+  const ledgerKey =
+    count === 1
+      ? "studio.ownership.transferLedger"
+      : "studio.ownership.transferLedgerPlural";
   return (
     <div
       className="flex flex-wrap items-center gap-x-1 gap-y-1"
-      title={`${count} transfer${count === 1 ? "" : "s"} on the ledger`}
+      title={fillMessage(t(ledgerKey), { count: String(count) })}
     >
       {Array.from({ length: n }).map((_, i) => (
         <span key={i} className="flex items-center">
@@ -128,6 +153,7 @@ export function OwnershipSection({
   userId,
   saleSignals,
 }: OwnershipSectionProps) {
+  const { t } = useLocalePreferences();
   const isTrulyEmpty = totalOwnershipCount === 0;
   const noMatches =
     totalOwnershipCount > 0 && filteredArtworks.length === 0;
@@ -138,11 +164,11 @@ export function OwnershipSection({
         <StudioSearchRow
           searchQuery={searchQuery}
           onSearchChange={onSearchChange}
-          searchPlaceholder="Search by title…"
+          searchPlaceholder={t("studio.search.byTitle")}
           aside={
             <>
               <label className="sr-only" htmlFor="ownership-filter">
-                Filter ownership records
+                {t("studio.filter.ownership")}
               </label>
               <select
                 id="ownership-filter"
@@ -158,10 +184,26 @@ export function OwnershipSection({
                 }
                 className={studioFilterSelectClass("light")}
               >
-                <option value="all">{`All records (${filterCounts.all})`}</option>
-                <option value="needs_transfer">{`Needs transfer (${filterCounts.needs_transfer})`}</option>
-                <option value="sold">{`Sold (${filterCounts.sold})`}</option>
-                <option value="owned_by_you">{`Held by you (${filterCounts.owned_by_you})`}</option>
+                <option value="all">
+                  {fillMessage(t("studio.ownership.filterAll"), {
+                    count: String(filterCounts.all),
+                  })}
+                </option>
+                <option value="needs_transfer">
+                  {fillMessage(t("studio.ownership.filterNeedsTransfer"), {
+                    count: String(filterCounts.needs_transfer),
+                  })}
+                </option>
+                <option value="sold">
+                  {fillMessage(t("studio.ownership.filterSold"), {
+                    count: String(filterCounts.sold),
+                  })}
+                </option>
+                <option value="owned_by_you">
+                  {fillMessage(t("studio.ownership.filterHeldByYou"), {
+                    count: String(filterCounts.owned_by_you),
+                  })}
+                </option>
               </select>
             </>
           }
@@ -169,8 +211,8 @@ export function OwnershipSection({
       ) : null}
 
       {noMatches ? (
-        <div className="rounded-2xl border border-neutral-200/90 bg-white/80 px-8 py-12 text-center text-sm text-neutral-600 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)]">
-          No ownership records match your search or filter.
+        <div className="rounded-2xl border border-neutral-200/90 bg-white/80 px-8 py-12 text-center text-[15px] text-neutral-600 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)]">
+          {t("studio.ownership.noMatches")}
         </div>
       ) : null}
 
@@ -184,7 +226,7 @@ export function OwnershipSection({
             const title =
               typeof titleRaw === "string" && titleRaw.trim()
                 ? titleRaw.trim()
-                : "Untitled";
+                : t("registry.card.untitled");
             const registryIdRaw = (artwork as { registry_id?: unknown })
               .registry_id;
             const registryId =
@@ -220,13 +262,18 @@ export function OwnershipSection({
               ) || 0;
             const sold = latestEventIsSale(artwork);
             const youHold = holderIsYou(artwork, userId);
-            const holder = currentHolderLabel(artwork, userId);
+            const holder = currentHolderLabel(artwork, userId, t);
 
             const accentBorder = hasSaleSignal
               ? "border-l-amber-500/70"
               : youHold && !hasSaleSignal
                 ? "border-l-emerald-500/60"
                 : "border-l-neutral-300";
+
+            const transfersKey =
+              transferCount === 1
+                ? "studio.ownership.transfersOnRecord"
+                : "studio.ownership.transfersOnRecordPlural";
 
             return (
               <WorkspaceRecordCard
@@ -246,45 +293,46 @@ export function OwnershipSection({
                   <>
                     {hasSaleSignal ? (
                       <p className="mb-3 rounded-lg border border-amber-200/90 bg-amber-50 px-2.5 py-2 text-xs font-semibold text-amber-900">
-                        Sale logged: finish transfer
+                        {t("studio.ownership.saleLogged")}
                       </p>
                     ) : null}
                     <div className="mb-3 flex flex-wrap gap-1.5">
                       {(artwork as { verification_status?: string })
                         .verification_status === "verified" ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 ring-1 ring-emerald-200/80">
-                          Verified
+                          {t("studio.artworks.verified")}
                         </span>
                       ) : null}
                       {sold ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-800 ring-1 ring-rose-200/80">
-                          Last event · Sale
+                          {t("studio.ownership.lastEventSale")}
                         </span>
                       ) : null}
                       {youHold ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 ring-1 ring-emerald-200/80">
-                          In your custody
+                          {t("studio.ownership.inYourCustody")}
                         </span>
                       ) : null}
                     </div>
                     <div className="rounded-xl border border-neutral-200/90 bg-white/80 p-3.5">
                       <p className="text-xs font-semibold text-neutral-500">
-                        Current holder
+                        {t("studio.ownership.currentHolder")}
                       </p>
-                      <p className="mt-2 text-sm font-medium leading-snug text-neutral-900">
+                      <p className="mt-2 text-[15px] font-medium leading-snug text-neutral-900">
                         {holder}
                       </p>
                     </div>
                     <div className="mt-4">
                       <p className="text-xs font-semibold text-neutral-500">
-                        Chain depth
+                        {t("studio.ownership.chainDepth")}
                       </p>
                       <p className="mt-1 text-xs text-neutral-500">
-                        {transferCount} transfer
-                        {transferCount === 1 ? "" : "s"} on record
+                        {fillMessage(t(transfersKey), {
+                          count: String(transferCount),
+                        })}
                       </p>
                       <div className="mt-2">
-                        <TransferDots count={transferCount} />
+                        <TransferDots count={transferCount} t={t} />
                       </div>
                     </div>
                     <div className="mt-4 flex items-center justify-between gap-2 border-t border-neutral-200/80 pt-4">
@@ -295,12 +343,12 @@ export function OwnershipSection({
                           </span>
                         ) : (
                           <span className="text-[10px] text-neutral-400">
-                            No registry ID
+                            {t("studio.ownership.noRegistryId")}
                           </span>
                         )}
                       </div>
                       <span className="shrink-0 rounded-xl bg-neutral-900 px-3 py-2 text-[11px] font-semibold text-white">
-                        Ledger →
+                        {t("studio.ownership.ledgerLink")}
                       </span>
                     </div>
                   </>
@@ -312,15 +360,15 @@ export function OwnershipSection({
       ) : isTrulyEmpty ? (
         <div className="rounded-2xl border border-neutral-200/90 bg-white/80 p-10 text-center shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)] md:p-14">
           <p className="text-xs text-neutral-500">
-            Ownership
+            {t("studio.ownership.emptyLabel")}
           </p>
           <InfoTooltip text="When transfers or claims are recorded, each work appears here with holder, chain depth, and sale signals." />
-          <h3 className="mt-4 font-serif text-2xl font-normal tracking-tight text-neutral-950">
-            No ownership activity yet
+          <h3 className="mt-4 font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950 md:text-[1.85rem]">
+            {t("studio.ownership.emptyTitle")}
           </h3>
           <div className="mt-10 flex justify-center">
             <ExperienceEmptyStateButton
-              label="Register artwork"
+              label={t("studio.registerArtwork")}
               onClick={onRegisterClick}
             />
           </div>

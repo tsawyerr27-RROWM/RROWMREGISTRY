@@ -10,6 +10,12 @@ import {
   WorkspaceShell,
   WorkspaceShellFooterLinks,
 } from "@/components/Studio/WorkspaceShell";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { WorkspaceSidebarActivityFeed } from "@/components/Studio/WorkspaceSidebarActivityFeed";
+import { useAccountActivityFeed } from "@/hooks/useAccountActivityFeed";
+import { translateActivityMessage } from "@/lib/activity-i18n";
+import { appendPersonalArchiveNavItem } from "@/lib/personal-archive-nav";
+import { GALLERY_SECTION_LABEL_KEYS } from "@/lib/workspace-nav-i18n";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 import { TestDataControls } from "@/components/Admin/TestDataControls";
 import { getOnboardingRedirectPath } from "@/lib/onboarding";
@@ -40,11 +46,14 @@ import {
   authenticatedArtworkAuthInviteIds,
   pendingArtworkAuthInviteByArtworkId,
 } from "@/lib/artwork-auth-invite-ui";
-import { CANONICAL_RECORD_PHRASES } from "@/lib/representation-language";
 import { GalleryVerifyAttestationModal } from "@/components/gallery/GalleryVerifyAttestationModal";
-import { INVITE_EMAIL_UPDATED_MAIL_FAILED_MESSAGE } from "@/lib/email-config";
 import { formatCurrency } from "@/lib/formatCurrency";
-import { generateRoleInsight, getDashboardInsights } from "@/lib/insights";
+import { getDashboardInsights } from "@/lib/insights";
+import {
+  translateInsightBarCategory,
+  translateRoleInsight,
+} from "@/lib/insights-i18n";
+import { fillMessage, type MessageKey } from "@/lib/locale-messages";
 import { RrowmMiniBarChart } from "@/components/ui/RrowmMiniBarChart";
 import { RecordReadinessSection } from "@/components/gallery/RecordReadinessSection";
 import { RecordIntegritySection } from "@/components/gallery/RecordIntegritySection";
@@ -92,10 +101,13 @@ function formatShortWhen(iso: string | null | undefined): string {
   }
 }
 
-function formatVerificationStatus(status: string | null | undefined): string {
+function formatVerificationStatus(
+  status: string | null | undefined,
+  tr: (key: MessageKey) => string
+): string {
   const s = String(status || "").toLowerCase();
-  if (s === "verified") return "Verified";
-  if (!s) return "Pending";
+  if (s === "verified") return tr("gallery.catalogue.verified");
+  if (!s) return tr("gallery.representation.pending");
   return s.replace(/_/g, " ");
 }
 
@@ -137,39 +149,45 @@ type ArtworkRow = {
   current_owner_id: string | null;
 };
 
-function formatRegisterFailure(error: unknown): string {
+function formatRegisterFailure(
+  error: unknown,
+  tr: (key: MessageKey) => string
+): string {
   const msg = summarizeRpcError(error);
   if (msg && msg !== "RPC error (no enumerable fields)") return msg;
   if (error instanceof Error && error.message) return error.message;
-  return "Work could not be registered on file. Check permissions, required fields, and that institution catalogue migrations are applied in Supabase.";
+  return tr("gallery.toast.registerFailedDetail");
 }
 
 function buildArtistInviteEmailDraft(params: {
   galleryName: string;
   artistEmail: string;
   gallerySlug?: string | null;
+  t: (key: MessageKey) => string;
 }): string {
   const site = getSiteUrl();
-  const { galleryName, artistEmail } = params;
+  const { galleryName, artistEmail, t } = params;
   const slug = params.gallerySlug?.trim();
   const galleryLine = slug
-    ? `Gallery page: ${site}/gallery/${slug}`
-    : `Gallery page: ${site}/gallery/<gallery-slug>`;
+    ? fillMessage(t("gallery.inviteDraft.galleryPage"), {
+        url: `${site}/gallery/${slug}`,
+      })
+    : fillMessage(t("gallery.inviteDraft.galleryPagePlaceholder"), { site });
   return [
-    `Subject: ${galleryName} invited you to join the RROWM Registry`,
+    `Subject: ${fillMessage(t("gallery.inviteDraft.subject"), { galleryName })}`,
     "",
-    `To: ${artistEmail}`,
+    fillMessage(t("gallery.inviteDraft.to"), { email: artistEmail }),
     "",
-    `${galleryName} invited you to join the RROWM Registry as a represented artist.`,
+    fillMessage(t("gallery.inviteDraft.bodyIntro"), { galleryName }),
     "",
-    `To accept, use the personalised link from the registry email (single-use token).`,
-    `Sign up with exactly this invited address.`,
+    t("gallery.inviteDraft.acceptLine1"),
+    t("gallery.inviteDraft.acceptLine2"),
     "",
-    `Registry signup: ${site}/signup?invite_token=<paste-from-registry-email-if-needed>`,
+    fillMessage(t("gallery.inviteDraft.registrySignup"), { site }),
     "",
     galleryLine,
     "",
-    `After you finish artist onboarding, your invitation is confirmed and your gallery may be notified.`,
+    t("gallery.inviteDraft.afterOnboarding"),
   ].join("\n");
 }
 
@@ -177,6 +195,7 @@ type GalleryRole = "admin" | "staff";
 
 export default function GalleryDashboardPage() {
   const router = useRouter();
+  const { t, region } = useLocalePreferences();
   const sb = useSupabaseBrowserLazy();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -403,7 +422,7 @@ export default function GalleryDashboardPage() {
 
     if (memErr) {
       setProfileError(
-        summarizeRpcError(memErr) || "Could not load gallery membership."
+        summarizeRpcError(memErr) || t("gallery.toast.loadMembershipFailed")
       );
       setGallery(null);
       setArtworks([]);
@@ -510,7 +529,7 @@ export default function GalleryDashboardPage() {
     const artistNameById: Record<string, string> = {};
     for (const a of artistList) {
       artistNameById[a.id] =
-        a.display_name?.trim() || a.full_name?.trim() || "Artist";
+        a.display_name?.trim() || a.full_name?.trim() || t("gallery.fallback.artist");
     }
 
     const artistConfirmTypes = [
@@ -814,21 +833,23 @@ export default function GalleryDashboardPage() {
         });
         const j = (await res.json().catch(() => ({}))) as { error?: string };
         if (!res.ok) {
-          setProfileError(j?.error || "Amendment could not be resolved.");
+          setProfileError(j?.error || t("studio.toast.amendmentResolveFailed"));
           return;
         }
         setProfileError(null);
         setSuccessMessage(
-          accept ? "Amendment accepted on file." : "Amendment declined on file."
+          accept
+            ? t("studio.toast.amendmentAccepted")
+            : t("studio.toast.amendmentDeclined")
         );
         await load();
       } catch {
-        setProfileError("Amendment could not be resolved.");
+        setProfileError(t("studio.toast.amendmentResolveError"));
       } finally {
         setAmendmentBusyId(null);
       }
     },
-    [load]
+    [load, t]
   );
 
   const withdrawAmendment = useCallback(
@@ -843,19 +864,19 @@ export default function GalleryDashboardPage() {
         });
         const j = (await res.json().catch(() => ({}))) as { error?: string };
         if (!res.ok) {
-          setProfileError(j?.error || "Could not withdraw amendment.");
+          setProfileError(j?.error || t("studio.toast.withdrawFailed"));
           return;
         }
         setProfileError(null);
-        setSuccessMessage("Amendment withdrawn on file.");
+        setSuccessMessage(t("studio.toast.amendmentWithdrawn"));
         await load();
       } catch {
-        setProfileError("Could not withdraw amendment.");
+        setProfileError(t("studio.toast.withdrawError"));
       } finally {
         setAmendmentBusyId(null);
       }
     },
-    [load]
+    [load, t]
   );
 
   const confirmEndRepresentation = useCallback(
@@ -874,22 +895,20 @@ export default function GalleryDashboardPage() {
         });
         const j = (await res.json().catch(() => ({}))) as { error?: string };
         if (!res.ok) {
-          setProfileError(j?.error || "Could not end representation.");
+          setProfileError(j?.error || t("studio.toast.endRepresentationFailed"));
           return;
         }
         setProfileError(null);
-        setSuccessMessage(
-          "Representation ended on file. Prior filings remain visible on the chronology."
-        );
+        setSuccessMessage(t("gallery.toast.representationEndedFull"));
         setEndRepTarget(null);
         await load();
       } catch {
-        setProfileError("Could not end representation.");
+        setProfileError(t("studio.toast.endRepresentationError"));
       } finally {
         setEndRepBusy(false);
       }
     },
-    [endRepTarget, load]
+    [endRepTarget, load, t]
   );
 
   const submitGalleryAmendmentRequest = useCallback(
@@ -906,13 +925,13 @@ export default function GalleryDashboardPage() {
       });
       const j = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        throw new Error(j?.error || "Request failed.");
+        throw new Error(j?.error || t("gallery.toast.registerRequestFailed"));
       }
       setProfileError(null);
-      setSuccessMessage("Amendment request filed on the chronology.");
+      setSuccessMessage(t("studio.toast.amendmentRequestFiled"));
       await load();
     },
-    [load]
+    [load, t]
   );
 
   const verifyQueue = useMemo(
@@ -938,7 +957,7 @@ export default function GalleryDashboardPage() {
     for (const a of artists) {
       m.set(
         a.id,
-        a.display_name?.trim() || a.full_name?.trim() || "Artist"
+        a.display_name?.trim() || a.full_name?.trim() || t("gallery.fallback.artist")
       );
     }
     return m;
@@ -959,18 +978,13 @@ export default function GalleryDashboardPage() {
     [artworks]
   );
 
+  const { items: accountActivityItems } = useAccountActivityFeed(userId, 1);
+
   const latestActivityLine = useMemo(() => {
-    if (artworks.length === 0) return null as string | null;
-    const sorted = [...artworks].sort(
-      (a, b) =>
-        new Date(b.created_at ?? 0).getTime() -
-        new Date(a.created_at ?? 0).getTime()
-    );
-    const w = sorted[0];
-    const t = (w.title || "").trim() || "Work";
-    const when = formatShortWhen(w.created_at);
-    return when ? `Latest activity: ${t} · ${when}` : `Latest activity: ${t}`;
-  }, [artworks]);
+    const item = accountActivityItems[0];
+    if (!item) return null as string | null;
+    return translateActivityMessage(item, t);
+  }, [accountActivityItems, t]);
 
   const pendingInviteCount = useMemo(
     () => invites.filter((i) => i.status === "pending").length,
@@ -1101,7 +1115,7 @@ export default function GalleryDashboardPage() {
         .map((a) => ({
           id: a.id,
           label:
-            a.display_name?.trim() || a.full_name?.trim() || "Artist",
+            a.display_name?.trim() || a.full_name?.trim() || t("gallery.fallback.artist"),
         })),
     [artists]
   );
@@ -1126,9 +1140,7 @@ export default function GalleryDashboardPage() {
 
   const recordArtistInvite = async () => {
     if (!isAdmin) {
-      setInviteError(
-        "Only gallery administrators can record invitations."
-      );
+      setInviteError(t("gallery.toast.inviteRecordAdminOnly"));
       setInviteMessage(null);
       return;
     }
@@ -1158,6 +1170,7 @@ export default function GalleryDashboardPage() {
         body: JSON.stringify({
           gallery_id: gallery.id,
           artist_email: trimmed,
+          lang: region.lang,
         }),
       });
       payload = (await res.json().catch(() => ({}))) as typeof payload;
@@ -1170,7 +1183,7 @@ export default function GalleryDashboardPage() {
             setInviteError(null);
           } else {
             setInviteDuplicateFromApi(null);
-            setInviteError("An invite for this address is already on file.");
+            setInviteError(t("gallery.toast.inviteDuplicateOnFile"));
           }
           setInviteMessage(null);
           return;
@@ -1179,13 +1192,13 @@ export default function GalleryDashboardPage() {
         setInviteError(
           typeof payload.error === "string" && payload.error.trim()
             ? payload.error.trim()
-            : `The request did not complete (${res.status}).`
+            : fillMessage(t("gallery.toast.requestIncomplete"), { status: res.status })
         );
         return;
       }
     } catch {
       setInviteDuplicateFromApi(null);
-      setInviteError("Network error. Try again.");
+      setInviteError(t("gallery.artworkAuth.networkError"));
       return;
     } finally {
       setInviting(false);
@@ -1213,16 +1226,21 @@ export default function GalleryDashboardPage() {
 
     if (payload.emailDeliveryError) {
       setInviteMessage(
-        `On file for ${trimmed}. ${payload.emailDeliveryError}`
+        fillMessage(t("gallery.toast.inviteOnFileWithDetail"), {
+          email: trimmed,
+          detail: payload.emailDeliveryError,
+        })
       );
       return;
     }
     if (payload.emailSent) {
-      setInviteMessage(`Invite on file. Copy sent to ${trimmed}.`);
+      setInviteMessage(
+        fillMessage(t("gallery.toast.inviteSentTo"), { email: trimmed })
+      );
       return;
     }
     setInviteMessage(
-      `Recorded for ${trimmed}. Email not sent; copy the manual draft or adjust mail settings (RESEND_API_KEY, RESEND_FROM_* on email.rrowm.io, NEXT_PUBLIC_APP_URL / NEXT_PUBLIC_SITE_URL).`
+      fillMessage(t("gallery.toast.inviteRecordedNoEmail"), { email: trimmed })
     );
   };
 
@@ -1236,7 +1254,7 @@ export default function GalleryDashboardPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ invite_id: inviteId }),
+        body: JSON.stringify({ invite_id: inviteId, lang: region.lang }),
       });
       const payload = (await res.json().catch(() => ({}))) as {
         error?: string;
@@ -1245,19 +1263,20 @@ export default function GalleryDashboardPage() {
       };
       if (!res.ok) {
         setArtworkAuthInviteError(
-          payload.error || `Could not resend (${res.status}).`
+          payload.error ||
+            fillMessage(t("gallery.toast.couldNotResend"), { status: res.status })
         );
         return;
       }
       setArtworkAuthInviteMessage(
         payload.emailSent
-          ? "Artwork authentication invitation resent."
+          ? t("gallery.toast.artworkAuthResent")
           : payload.emailDeliveryError ||
-              "Invitation refreshed on file; email not sent."
+              t("gallery.toast.artworkAuthRefreshedNoEmail")
       );
       await load();
     } catch {
-      setArtworkAuthInviteError("Network error. Try again.");
+      setArtworkAuthInviteError(t("gallery.artworkAuth.networkError"));
     } finally {
       setResendingArtworkAuthInviteId(null);
     }
@@ -1280,19 +1299,19 @@ export default function GalleryDashboardPage() {
       const res = await fetch("/api/gallery/resend-artist-invite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ invite_id: inviteId }),
+        body: JSON.stringify({ invite_id: inviteId, lang: region.lang }),
       });
       payload = (await res.json().catch(() => ({}))) as typeof payload;
       if (!res.ok) {
         setInviteError(
           typeof payload.error === "string" && payload.error.trim()
             ? payload.error.trim()
-            : `The request did not complete (${res.status}).`
+            : fillMessage(t("gallery.toast.requestIncomplete"), { status: res.status })
         );
         return;
       }
     } catch {
-      setInviteError("Network error. Try again.");
+      setInviteError(t("gallery.artworkAuth.networkError"));
       return;
     } finally {
       setResendingInviteId(null);
@@ -1335,10 +1354,10 @@ export default function GalleryDashboardPage() {
     }
     if (payload.emailSent) {
       setInviteMessage(
-        "Invite resent on file. A new signup link was sent to the artist."
+        t("gallery.toast.inviteResentSignupLink")
       );
     } else {
-      setInviteMessage(INVITE_EMAIL_UPDATED_MAIL_FAILED_MESSAGE);
+      setInviteMessage(t("gallery.toast.inviteLinkRefreshedNoEmail"));
     }
   };
 
@@ -1360,7 +1379,7 @@ export default function GalleryDashboardPage() {
         setInvitePublishError(
           typeof payload.error === "string" && payload.error.trim()
             ? payload.error.trim()
-            : `Could not publish (${res.status}).`
+            : fillMessage(t("gallery.toast.couldNotPublish"), { status: res.status })
         );
         return;
       }
@@ -1369,11 +1388,9 @@ export default function GalleryDashboardPage() {
           x.id === inviteId ? { ...x, visibility_status: "public" } : x
         )
       );
-      setInviteMessage(
-        "Visibility updated. The artist is now Public on your institutional page."
-      );
+      setInviteMessage(t("gallery.toast.inviteVisibilityPublic"));
     } catch {
-      setInvitePublishError("Network error. Try again.");
+      setInvitePublishError(t("gallery.artworkAuth.networkError"));
     } finally {
       setPublishingPublicInviteId(null);
     }
@@ -1386,11 +1403,12 @@ export default function GalleryDashboardPage() {
       lastRecordedInviteEmail?.trim() ||
       "artist@example.com";
     return buildArtistInviteEmailDraft({
-      galleryName: gallery.name?.trim() || "Gallery",
+      galleryName: gallery.name?.trim() || t("gallery.fallback.gallery"),
       artistEmail: sample,
       gallerySlug: gallery.slug,
+      t,
     });
-  }, [gallery?.id, gallery?.name, gallery?.slug, inviteEmail, lastRecordedInviteEmail]);
+  }, [gallery?.id, gallery?.name, gallery?.slug, inviteEmail, lastRecordedInviteEmail, t]);
 
   const copyInviteDraft = async () => {
     if (!inviteEmailDraft) return;
@@ -1399,7 +1417,7 @@ export default function GalleryDashboardPage() {
       setInviteCopyDone(true);
       window.setTimeout(() => setInviteCopyDone(false), 2500);
     } catch {
-      setInviteError("Could not copy. Select the text manually.");
+      setInviteError(t("gallery.toast.copyFailed"));
     }
   };
 
@@ -1412,11 +1430,11 @@ export default function GalleryDashboardPage() {
         : registerCatalogueArtistName.trim();
     if (!newArtwork.title.trim()) return;
     if (!newArtwork.imageFile) {
-      setProfileError("Image is required to open the canonical record on file.");
+      setProfileError(t("gallery.toast.imageRequired"));
       return;
     }
     if (!linkedArtistId && !catalogueName) {
-      setProfileError("Artist name is required when no roster artist is linked.");
+      setProfileError(t("gallery.toast.artistNameRequired"));
       return;
     }
     setRegisterLoading(true);
@@ -1541,7 +1559,7 @@ export default function GalleryDashboardPage() {
       setProfileError(null);
       setSuccessMessage(null);
       setLastRegistration({
-        title: newArtwork.title.trim() || "Work",
+        title: newArtwork.title.trim() || t("gallery.fallback.untitled"),
         registryId,
         artworkId: artworkIdForValue,
         institutionFilingOk,
@@ -1573,7 +1591,7 @@ export default function GalleryDashboardPage() {
       });
       await load();
     } catch (e) {
-      const detail = formatRegisterFailure(e);
+      const detail = formatRegisterFailure(e, t);
       console.error("[gallery register]", detail);
       setProfileError(detail);
     }
@@ -1582,7 +1600,7 @@ export default function GalleryDashboardPage() {
 
   const saveProfile = async () => {
     if (!isAdmin) {
-      setProfileError("Only gallery administrators can edit institutional presence.");
+      setProfileError(t("gallery.toast.profileAdminOnly"));
       return;
     }
     if (!gallery?.id || !userId) return;
@@ -1598,7 +1616,7 @@ export default function GalleryDashboardPage() {
       .eq("id", gallery.id);
     setSavingProfile(false);
     if (error) {
-      setProfileError(error.message || "Changes could not be filed.");
+      setProfileError(error.message || t("gallery.toast.profileSaveFailed"));
       return;
     }
     await load();
@@ -1615,14 +1633,12 @@ export default function GalleryDashboardPage() {
     setVerifyBusy(null);
     if (error) {
       setProfileError(
-        summarizeRpcError(error) || "Verification did not complete."
+        summarizeRpcError(error) || t("gallery.toast.verifyFailed")
       );
       return;
     }
     setVerifyTarget(null);
-    setSuccessMessage(
-      "Attestation recorded. This work is now verified on the registry."
-    );
+    setSuccessMessage(t("gallery.toast.verifySuccess"));
     await load();
   };
 
@@ -1646,21 +1662,32 @@ export default function GalleryDashboardPage() {
         const { series } = insights.artworkTrend;
         const cat = insights.catalogue;
         setInsightKind("line");
-        setInsightTitle("Catalogue over time");
+        setInsightTitle(t("studio.insight.title.worksGallery"));
         setInsightSubtitle(
-          generateRoleInsight("gallery", {
-            artworkTrend: insights.artworkTrend,
-            catalogue: cat,
-          })
+          translateRoleInsight(
+            "gallery",
+            {
+              artworkTrend: insights.artworkTrend,
+              catalogue: cat,
+            },
+            t
+          )
         );
-        setInsightLines([{ key: "works", label: "Cumulative works" }]);
+        setInsightLines([
+          { key: "works", label: t("studio.insight.line.worksGallery") },
+        ]);
         setInsightData(series);
         setInsightBreakdown([
-          { label: "Total works", value: String(cat.totalWorks) },
-          { label: "Unique", value: String(cat.uniqueWorks) },
-          { label: "Editions", value: String(cat.editionWorks) },
+          { label: t("studio.insight.breakdown.totalWorks"), value: String(cat.totalWorks) },
+          { label: t("studio.insight.breakdown.unique"), value: String(cat.uniqueWorks) },
+          { label: t("studio.insight.breakdown.editions"), value: String(cat.editionWorks) },
           ...(cat.mostActivePeriod
-            ? [{ label: "Peak period", value: cat.mostActivePeriod }]
+            ? [
+                {
+                  label: t("studio.insight.breakdown.peakPeriod"),
+                  value: cat.mostActivePeriod,
+                },
+              ]
             : []),
         ]);
         return;
@@ -1669,51 +1696,63 @@ export default function GalleryDashboardPage() {
       if (kind === "health") {
         const h = insights.health;
         setInsightKind("bar");
-        setInsightTitle("Record health");
-        setInsightSubtitle(generateRoleInsight("gallery", { health: h }));
+        setInsightTitle(t("studio.insight.title.health"));
+        setInsightSubtitle(translateRoleInsight("gallery", { health: h }, t));
         setInsightData([
-          { month: "Fully verified", events: h.fullyVerified },
-          { month: "Certified", events: h.withCertificates },
-          { month: "Incomplete", events: h.missingVerification },
+          {
+            month: translateInsightBarCategory("fullyVerified", t),
+            events: h.fullyVerified,
+          },
+          {
+            month: translateInsightBarCategory("certified", t),
+            events: h.withCertificates,
+          },
+          {
+            month: translateInsightBarCategory("incomplete", t),
+            events: h.missingVerification,
+          },
         ]);
         setInsightBreakdown([
           {
-            label: "Fully verified (strict)",
+            label: t("studio.insight.breakdown.fullyVerifiedStrict"),
             value: String(h.fullyVerified),
           },
-          { label: "With certificate", value: String(h.withCertificates) },
           {
-            label: "Missing verification",
+            label: t("studio.insight.breakdown.withCertificate"),
+            value: String(h.withCertificates),
+          },
+          {
+            label: t("studio.insight.breakdown.missingVerification"),
             value: String(h.missingVerification),
           },
         ]);
         setInsightDataNotes([
-          "These bars are not additive: one work can count toward more than one category.",
-          "“Fully verified” needs a non-revoked certificate, a gallery attestation, and verified ownership. That bar is stricter than the per-row “verified” badge on each artwork.",
+          t("studio.insight.note.healthNonAdditive"),
+          t("studio.insight.note.healthStrictGallery"),
         ]);
         return;
       }
 
       const { series, currencies } = insights.valueTrend;
       setInsightKind("line");
-      setInsightTitle("Declared value");
+      setInsightTitle(t("studio.insight.title.valueGallery"));
       setInsightSubtitle(
-        generateRoleInsight("gallery", { valueTrend: insights.valueTrend })
+        translateRoleInsight("gallery", { valueTrend: insights.valueTrend }, t)
       );
       setInsightLines(currencies.map((c) => ({ key: c, label: c })));
       setInsightData(series);
       const breakdown = Object.entries(insights.valueTrend.latestValues)
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([c, v]) => ({
-          label: `Latest declared (${c})`,
+          label: fillMessage(t("studio.insight.breakdown.latestDeclared"), {
+            currency: c,
+          }),
           value: formatCurrency(v, c),
         }));
       setInsightBreakdown(breakdown);
-      setInsightDataNotes([
-        "Figures are the latest declared value per currency from value events (the same basis as the chart series), not a roll-up of every artwork’s current list price.",
-      ]);
+      setInsightDataNotes([t("studio.insight.note.valueBasisGallery")]);
     } catch {
-      setInsightSubtitle("Could not load this insight. Try again.");
+      setInsightSubtitle(t("studio.insight.loadFailed"));
     } finally {
       setInsightLoading(false);
     }
@@ -1856,9 +1895,21 @@ export default function GalleryDashboardPage() {
       setProfileError(null);
       setSuccessMessage(null);
       try {
+        const { fetchRegistryCsrfToken } = await import(
+          "@/lib/registry-action-security/fetch-csrf"
+        );
+        const csrfToken = await fetchRegistryCsrfToken();
+        if (!csrfToken) {
+          setProfileError(t("gallery.toast.certificateFailed"));
+          return;
+        }
         const res = await fetch("/api/issue-certificate", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            "x-csrf-token": csrfToken,
+          },
           body: JSON.stringify({ artwork_id: artworkId }),
         });
         if (!res.ok) {
@@ -1866,7 +1917,7 @@ export default function GalleryDashboardPage() {
           const msg =
             typeof body?.error === "string" && body.error.trim()
               ? body.error.trim()
-              : "Certificate could not be filed.";
+              : t("gallery.toast.certificateFailed");
           setProfileError(msg);
           return;
         }
@@ -1874,15 +1925,15 @@ export default function GalleryDashboardPage() {
         const created = Boolean(body?.created);
         setSuccessMessage(
           created
-            ? "Certificate filed for this work."
-            : "Certificate already on file for this work."
+            ? t("gallery.toast.certificateFiled")
+            : t("gallery.toast.certificateAlreadyOnFile")
         );
         await load();
       } catch {
-        setProfileError("Certificate could not be filed. Try again.");
+        setProfileError(t("gallery.toast.certificateRetryFailed"));
       }
     },
-    [load]
+    [load, t]
   );
 
   const handleSignOut = useCallback(async () => {
@@ -1895,39 +1946,46 @@ export default function GalleryDashboardPage() {
     (representationSummary?.amendments_pending ?? 0) > 0;
 
   const galleryNavItems = useMemo(
-    () => [
-      { id: "studio", label: "Overview" },
-      {
-        id: "record-depth",
-        label: "Record depth",
-        showDot: participationAttention,
-      },
-      { id: "roster", label: "Artists" },
-      { id: "catalogue", label: "Works" },
-      {
-        id: "verification",
-        label: "Continuity & certs",
-        showDot: Boolean(gallery?.verified) && verifyQueue.length > 0,
-      },
-      {
-        id: "invitations",
-        label: "Invitations",
-        showDot: pendingInviteCount > 0,
-      },
-    ],
+    () =>
+      appendPersonalArchiveNavItem(
+        [
+          { id: "studio", label: t(GALLERY_SECTION_LABEL_KEYS.studio) },
+          {
+            id: "record-depth",
+            label: t(GALLERY_SECTION_LABEL_KEYS["record-depth"]),
+            showDot: participationAttention,
+          },
+          { id: "roster", label: t(GALLERY_SECTION_LABEL_KEYS.roster) },
+          { id: "catalogue", label: t(GALLERY_SECTION_LABEL_KEYS.catalogue) },
+          {
+            id: "verification",
+            label: t(GALLERY_SECTION_LABEL_KEYS.verification),
+            showDot: Boolean(gallery?.verified) && verifyQueue.length > 0,
+          },
+          {
+            id: "invitations",
+            label: t(GALLERY_SECTION_LABEL_KEYS.invitations),
+            showDot: pendingInviteCount > 0,
+          },
+        ],
+        t
+      ),
     [
       pendingInviteCount,
       gallery?.verified,
       verifyQueue.length,
       participationAttention,
+      t,
     ]
   );
 
-  const sidebarActivityNode = latestActivityLine ? (
-    <p className="text-[13px] leading-snug text-neutral-600">{latestActivityLine}</p>
-  ) : (
-    <p className="text-[13px] text-neutral-500">No recent catalogue activity.</p>
-  );
+  const sidebarActivityNode = userId ? (
+    <WorkspaceSidebarActivityFeed
+      userId={userId}
+      variant="compact"
+      emptyMessage={t("gallery.shell.noCatalogueActivity")}
+    />
+  ) : null;
 
   const priorityQueue = useMemo(() => {
     if (!gallery || artworks.length === 0) return [];
@@ -1969,7 +2027,7 @@ export default function GalleryDashboardPage() {
   if (loading) {
     return (
       <div className="ds-page-environment min-h-screen pt-24 text-center text-sm text-neutral-500">
-        Loading…
+        {t("gallery.shell.loading")}
       </div>
     );
   }
@@ -1979,12 +2037,11 @@ export default function GalleryDashboardPage() {
       <div className="ds-page-environment min-h-screen px-6 pt-24 text-neutral-800">
         <main className="mx-auto max-w-lg">
           <TestDataControls />
-          <p className="font-serif text-2xl font-normal tracking-tight text-neutral-950">
-            Create your gallery profile
+          <p className="font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950">
+            {t("gallery.empty.createProfile")}
           </p>
           <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-            This establishes your presence and authority within the registry. You
-            need a linked gallery record before the dashboard can load.
+            {t("gallery.empty.createProfileBody")}
           </p>
           {profileError ? (
             <p className="mt-4 text-sm text-red-800">{profileError}</p>
@@ -1993,14 +2050,14 @@ export default function GalleryDashboardPage() {
             href="/onboarding?focus=gallery"
             className="mt-10 inline-block border-b border-neutral-900 pb-1 text-sm font-medium text-neutral-900 transition hover:opacity-70"
           >
-            Continue to gallery onboarding →
+            {t("gallery.empty.continueOnboarding")}
           </Link>
         </main>
       </div>
     );
   }
 
-  const orgName = gallery.name?.trim() || "Gallery";
+  const orgName = gallery.name?.trim() || t("gallery.fallback.gallery");
   const worksCount = artworks.length;
   const verifiedWorksCount = artworks.filter(
     (w) => w.verification_status === "verified"
@@ -2025,7 +2082,7 @@ export default function GalleryDashboardPage() {
         isTransitioning={isTransitioningSection}
         sidebarFooter={<WorkspaceShellFooterLinks isLight />}
         sidebarActivity={sidebarActivityNode}
-        activityHeading="Catalogue activity"
+        activityHeading={t("studio.shell.catalogueActivity")}
         onSignOut={handleSignOut}
       >
         {activeSection === "studio" ? (
@@ -2078,7 +2135,7 @@ export default function GalleryDashboardPage() {
               onClick={() => setSuccessMessage(null)}
               className="font-medium underline underline-offset-4"
             >
-              Dismiss
+              {t("gallery.shell.dismiss")}
             </button>
           </p>
         ) : null}
@@ -2093,15 +2150,17 @@ export default function GalleryDashboardPage() {
           />
         ) : null}
 
-        <section className="mt-10" aria-label="Catalogue intelligence">
+        <section className="mt-10" aria-label={t("gallery.intelligence.title")}>
           <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="font-serif text-xl font-normal text-neutral-950 md:text-2xl">
-                Catalogue intelligence
+              <h2 className="font-serif text-[1.35rem] font-normal text-neutral-950 md:text-[1.75rem]">
+                {t("gallery.intelligence.title")}
               </h2>
             </div>
             {insightLoading ? (
-              <span className="text-[11px] text-neutral-400">Syncing metrics…</span>
+              <span className="text-[11px] text-neutral-400">
+                {t("gallery.intelligence.syncing")}
+              </span>
             ) : null}
           </div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -2112,16 +2171,18 @@ export default function GalleryDashboardPage() {
               className="group rounded-2xl border border-neutral-900/[0.06] bg-white/50 p-5 text-left shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-sm transition hover:border-neutral-900/12 hover:bg-white/85 disabled:cursor-not-allowed disabled:opacity-45"
             >
               <p className="text-sm font-medium text-neutral-700">
-                Registration pace
+                {t("gallery.intelligence.registrationPace")}
               </p>
               <p className="mt-2 font-serif text-3xl tabular-nums leading-none text-neutral-950">
                 {worksCount}
               </p>
-              <p className="mt-1 text-[12px] text-neutral-500">works registered</p>
+              <p className="mt-1 text-[12px] text-neutral-500">
+                {t("gallery.intelligence.worksRegistered")}
+              </p>
               {registrationTrend.length === 0 ? (
                 <div className="mt-4 min-h-12">
                   <span className="text-[11px] leading-snug text-neutral-400">
-                    Add works to see cumulative trend.
+                    {t("gallery.intelligence.addWorksTrend")}
                   </span>
                 </div>
               ) : (
@@ -2135,7 +2196,7 @@ export default function GalleryDashboardPage() {
                 />
               )}
               <p className="mt-3 text-[11px] leading-snug text-neutral-400">
-                Tap for catalogue detail and composition.
+                {t("gallery.intelligence.tapCatalogueDetail")}
               </p>
             </button>
 
@@ -2146,17 +2207,17 @@ export default function GalleryDashboardPage() {
               className="group rounded-2xl border border-neutral-900/[0.06] bg-white/50 p-5 text-left shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-sm transition hover:border-neutral-900/12 hover:bg-white/85 disabled:cursor-not-allowed disabled:opacity-45"
             >
               <p className="text-sm font-medium text-neutral-700">
-                Declared value
+                {t("gallery.intelligence.declaredValue")}
               </p>
               <p className="mt-3 line-clamp-3 text-[13px] leading-relaxed text-neutral-700">
                 {valuePreviewLine ?? (
                   <span className="text-neutral-400">
-                    No declared values yet. Capture value when registering works.
+                    {t("gallery.intelligence.noDeclaredValues")}
                   </span>
                 )}
               </p>
               <p className="mt-4 text-[11px] leading-snug text-neutral-400">
-                Multi-currency progression · tap to explore.
+                {t("gallery.intelligence.multiCurrencyTap")}
               </p>
             </button>
 
@@ -2167,7 +2228,7 @@ export default function GalleryDashboardPage() {
               className="group rounded-2xl border border-neutral-900/[0.06] bg-white/50 p-5 text-left shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-sm transition hover:border-neutral-900/12 hover:bg-white/85 disabled:cursor-not-allowed disabled:opacity-45"
             >
               <p className="text-sm font-medium text-neutral-700">
-                Record health
+                {t("gallery.intelligence.recordHealth")}
               </p>
               {insightPack ? (
                 <div className="mt-4 grid grid-cols-3 gap-2 text-center">
@@ -2176,7 +2237,7 @@ export default function GalleryDashboardPage() {
                       {insightPack.health.fullyVerified}
                     </p>
                     <p className="mt-1 text-sm font-medium text-neutral-600">
-                      Verified
+                      {t("studio.insight.bar.fullyVerified")}
                     </p>
                   </div>
                   <div>
@@ -2184,7 +2245,7 @@ export default function GalleryDashboardPage() {
                       {insightPack.health.withCertificates}
                     </p>
                     <p className="mt-1 text-sm font-medium text-neutral-600">
-                      Certified
+                      {t("studio.insight.bar.certified")}
                     </p>
                   </div>
                   <div>
@@ -2192,17 +2253,19 @@ export default function GalleryDashboardPage() {
                       {insightPack.health.missingVerification}
                     </p>
                     <p className="mt-1 text-sm font-medium text-neutral-600">
-                      Gaps
+                      {t("gallery.intelligence.gaps")}
                     </p>
                   </div>
                 </div>
               ) : (
                 <p className="mt-4 text-[12px] text-neutral-400">
-                  {worksCount === 0 ? "No data yet." : "Loading breakdown…"}
+                  {worksCount === 0
+                    ? t("gallery.intelligence.noData")
+                    : t("gallery.intelligence.loadingBreakdown")}
                 </p>
               )}
               <p className="mt-4 text-[11px] leading-snug text-neutral-400">
-                Certificates and verification gaps · tap for chart.
+                {t("gallery.intelligence.certificatesAndGaps")}
               </p>
             </button>
 
@@ -2212,29 +2275,32 @@ export default function GalleryDashboardPage() {
               className="rounded-2xl border border-neutral-900/[0.06] bg-gradient-to-br from-white/80 to-neutral-50/90 p-5 text-left shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-sm transition hover:border-neutral-900/12"
             >
               <p className="text-sm font-medium text-neutral-700">
-                Institutional verification
+                {t("gallery.hero.institutionalVerification")}
               </p>
               <p className="mt-2 font-serif text-3xl tabular-nums leading-none text-neutral-950">
                 {verificationPct}
                 <span className="text-lg text-neutral-400">%</span>
               </p>
               <p className="mt-1 text-[12px] text-neutral-500">
-                of catalogue verified on registry
+                {t("gallery.intelligence.ofCatalogueVerified")}
               </p>
               {gallery.verified && awaitingVerificationCount > 0 ? (
                 <p className="mt-3 text-[12px] font-medium text-amber-900/90">
-                  {awaitingVerificationCount} record
-                  {awaitingVerificationCount === 1 ? "" : "s"} not yet verified
+                  {fillMessage(t("gallery.intelligence.recordsNotVerified"), {
+                    count: String(awaitingVerificationCount),
+                  })}
                 </p>
               ) : !gallery.verified ? (
                 <p className="mt-3 text-[12px] text-neutral-500">
-                  Gallery verification pending. Attestation unlocks after approval.
+                  {t("gallery.intelligence.galleryVerificationPending")}
                 </p>
               ) : (
-                <p className="mt-3 text-[12px] text-neutral-400">Queue clear.</p>
+                <p className="mt-3 text-[12px] text-neutral-400">
+                  {t("gallery.intelligence.queueClear")}
+                </p>
               )}
               <p className="mt-4 text-[11px] leading-snug text-neutral-400">
-                Open Verification to attest pending works.
+                {t("gallery.intelligence.openVerification")}
               </p>
             </button>
           </div>
@@ -2243,16 +2309,15 @@ export default function GalleryDashboardPage() {
         <section className="mt-8 rounded-xl border border-white/70 bg-white/45 px-4 py-3.5 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-sm">
           <div className="flex flex-col gap-1.5 text-[13px] leading-snug text-neutral-600 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-6 sm:gap-y-1">
             <p className="tabular-nums">
-              <span className="font-semibold text-neutral-900">{artists.length}</span> represented
-              {" · "}
-              <span className="font-semibold text-neutral-900">{worksCount}</span> works
-              {verifiedWorksCount > 0 ? (
-                <>
-                  {" "}
-                  · <span className="font-semibold text-neutral-900">{verifiedWorksCount}</span>{" "}
-                  verified
-                </>
-              ) : null}
+              {fillMessage(t("gallery.summary.representedWorks"), {
+                artists: String(artists.length),
+                works: String(worksCount),
+              })}
+              {verifiedWorksCount > 0
+                ? fillMessage(t("gallery.summary.verifiedSuffix"), {
+                    count: String(verifiedWorksCount),
+                  })
+                : null}
             </p>
             {latestActivityLine ? (
               <p className="text-[12px] text-neutral-500 sm:border-l sm:border-neutral-900/10 sm:pl-6">
@@ -2260,7 +2325,7 @@ export default function GalleryDashboardPage() {
               </p>
             ) : (
               <p className="text-[12px] text-neutral-400 sm:border-l sm:border-neutral-900/10 sm:pl-6">
-                No recent activity.
+                {t("gallery.summary.noRecentActivity")}
               </p>
             )}
           </div>
@@ -2293,8 +2358,7 @@ export default function GalleryDashboardPage() {
             {representationAmendments.length === 0 &&
             (representationSummary?.participation_pending ?? 0) === 0 ? (
               <p className="text-sm leading-relaxed text-neutral-500">
-                No attestations awaiting depth. When canonical records are on file,
-                artist authentication and amendments appear here.
+                {t("gallery.recordDepth.empty")}
               </p>
             ) : null}
           </div>
@@ -2309,15 +2373,17 @@ export default function GalleryDashboardPage() {
               <div className="border-b border-neutral-900/[0.06] bg-white/40 px-5 py-5 sm:px-7 sm:py-6">
                 <div className="flex flex-wrap items-end justify-between gap-4">
                   <div>
-                    <InfoTooltip text="Linked to your gallery on the registry" />
-                    <h2 className="font-serif text-xl font-normal text-neutral-950 md:text-2xl">
-                      Artists
+                    <InfoTooltip text={t("gallery.roster.tooltip")} />
+                    <h2 className="font-serif text-[1.35rem] font-normal text-neutral-950 md:text-[1.75rem]">
+                      {t(GALLERY_SECTION_LABEL_KEYS.roster)}
                     </h2>
                   </div>
                   <span className="inline-flex items-center rounded-full border border-neutral-900/[0.06] bg-white/70 px-3 py-1 text-[12px] tabular-nums text-neutral-700 shadow-[0_1px_0_rgba(15,23,42,0.04)]">
                     <span className="font-semibold text-neutral-900">{artists.length}</span>
                     <span className="ml-1.5 text-neutral-500">
-                      {artists.length === 1 ? "artist" : "artists"}
+                      {artists.length === 1
+                        ? t("gallery.roster.artist")
+                        : t("gallery.roster.artists")}
                     </span>
                   </span>
                 </div>
@@ -2326,9 +2392,11 @@ export default function GalleryDashboardPage() {
               <div className="p-5 sm:p-7">
                 {artists.length === 0 ? (
                   <div className="rounded-[1.25rem] border border-dashed border-neutral-900/15 bg-gradient-to-br from-neutral-50/80 via-white/55 to-white/40 px-6 py-12 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
-                    <p className="font-serif text-lg text-neutral-900">No artists yet</p>
+                    <p className="font-serif text-lg text-neutral-900">
+                      {t("gallery.roster.noArtists")}
+                    </p>
                     <p className="mx-auto mt-2 max-w-sm text-[13px] leading-relaxed text-neutral-600">
-                      When you connect artists, they appear here with representation status and work counts.
+                      {t("gallery.roster.noArtistsBody")}
                     </p>
                     {isAdmin ? (
                       <button
@@ -2336,11 +2404,11 @@ export default function GalleryDashboardPage() {
                         onClick={() => goToInvitationsSection()}
                         className="mt-8 inline-flex items-center rounded-full bg-neutral-950 px-5 py-2.5 text-[13px] font-semibold text-white shadow-md shadow-neutral-900/20 transition hover:bg-neutral-800"
                       >
-                        Go to Invitations
+                        {t("gallery.roster.goToInvitations")}
                       </button>
                     ) : (
                       <p className="mt-6 text-[13px] text-neutral-500">
-                        Ask an administrator to invite artists.
+                        {t("gallery.roster.askAdmin")}
                       </p>
                     )}
                   </div>
@@ -2349,7 +2417,7 @@ export default function GalleryDashboardPage() {
                     <ul className="space-y-3">
                       {artists.map((a) => {
                         const name =
-                          a.display_name?.trim() || a.full_name?.trim() || "Artist";
+                          a.display_name?.trim() || a.full_name?.trim() || t("gallery.fallback.artist");
                         const worksN = worksCountByArtistId.get(a.id) ?? 0;
                         const represented =
                           a.represented_by_gallery === true;
@@ -2376,11 +2444,11 @@ export default function GalleryDashboardPage() {
                                         href={`/artist/${a.slug}`}
                                         className="text-[12px] font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-4 transition hover:text-neutral-900"
                                       >
-                                        View public profile
+                                        {t("gallery.roster.viewPublicProfile")}
                                       </Link>
                                     ) : (
                                       <span className="text-[12px] text-neutral-400">
-                                        No public profile
+                                        {t("gallery.roster.noPublicProfile")}
                                       </span>
                                     )}
                                   </div>
@@ -2397,10 +2465,10 @@ export default function GalleryDashboardPage() {
                                   }`}
                                 >
                                   {represented
-                                    ? "Represented"
+                                    ? t("gallery.representation.represented")
                                     : historical
-                                      ? "Historical"
-                                      : "Pending"}
+                                      ? t("gallery.representation.historical")
+                                      : t("gallery.representation.pending")}
                                 </span>
                                 {represented && canManageRepresentation ? (
                                   <button
@@ -2479,9 +2547,9 @@ export default function GalleryDashboardPage() {
           <>
             <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
               <div>
-                <InfoTooltip text="Catalogue records filed by your institution. Register a work to open the chronology and layer institution attestations." />
-                <h2 className="font-serif text-xl font-normal text-neutral-950 md:text-2xl">
-                  Works
+                <InfoTooltip text={t("gallery.catalogue.tooltip")} />
+                <h2 className="font-serif text-[1.35rem] font-normal text-neutral-950 md:text-[1.75rem]">
+                  {t(GALLERY_SECTION_LABEL_KEYS.catalogue)}
                 </h2>
               </div>
               <button
@@ -2489,7 +2557,7 @@ export default function GalleryDashboardPage() {
                 onClick={openRegisterWorkspace}
                 className="rounded-xl bg-neutral-950 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-neutral-800"
               >
-                Register a work
+                {t("gallery.catalogue.registerWork")}
               </button>
             </div>
             <PriorityQueueSection
@@ -2561,18 +2629,19 @@ export default function GalleryDashboardPage() {
             <section className="rounded-2xl border border-neutral-900/[0.05] bg-white/40 p-6 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-sm sm:p-7">
               <div className="flex flex-wrap items-baseline justify-between gap-3">
                 <h2 className="font-serif text-lg font-normal text-neutral-950 md:text-xl">
-                  Registered works
+                  {t("gallery.catalogue.registeredWorks")}
                 </h2>
                 {worksCount > 0 ? (
                   <span className="text-[11px] tabular-nums text-neutral-400">
-                    {worksCount} in catalogue
+                    {fillMessage(t("gallery.catalogue.inCatalogue"), {
+                      count: String(worksCount),
+                    })}
                   </span>
                 ) : null}
               </div>
               {artworks.length === 0 ? (
                 <p className="mt-4 text-[13px] text-neutral-500">
-                  No works in the institutional catalogue yet. Register a canonical
-                  record at any time. Artist accounts are optional.
+                  {t("gallery.catalogue.empty")}
                 </p>
               ) : (
                 <ul className="mt-6 max-h-[min(70vh,36rem)] divide-y divide-neutral-900/[0.05] overflow-y-auto pr-1">
@@ -2582,7 +2651,7 @@ export default function GalleryDashboardPage() {
                       : null;
                     const artistLabel =
                       linkedName ||
-                      (w.catalogue_artist_name?.trim() || "Artist on file");
+                      (w.catalogue_artist_name?.trim() || t("gallery.catalogue.artistOnFile"));
                     const authInviteComplete = authenticatedAuthInviteArtworkIds.has(
                       w.id
                     );
@@ -2597,13 +2666,15 @@ export default function GalleryDashboardPage() {
                       w.id
                     );
                     const artistAuthLabel = authInviteComplete
-                      ? CANONICAL_RECORD_PHRASES.artistAttestationOnFile
+                      ? t("gallery.catalogue.artistAttestationOnFile")
                       : w.artist_id
-                        ? CANONICAL_RECORD_PHRASES.artistAttestationMayDeepen
-                        : CANONICAL_RECORD_PHRASES.artistAttestationNotYetOnFile;
+                        ? t("gallery.catalogue.artistAttestationMayDeepen")
+                        : t("gallery.catalogue.artistAttestationNotYetOnFile");
                     const verified =
                       String(w.verification_status || "").toLowerCase() === "verified";
-                    const statusLabel = verified ? "Verified" : "On file";
+                    const statusLabel = verified
+                      ? t("gallery.catalogue.verified")
+                      : t("gallery.catalogue.onFile");
                     return (
                       <li
                         key={w.id}
@@ -2627,7 +2698,7 @@ export default function GalleryDashboardPage() {
                             }
                             className="text-[14px] font-medium text-neutral-950 underline decoration-neutral-200/90 underline-offset-2 transition hover:decoration-neutral-500"
                           >
-                            {(w.title || "").trim() || "Untitled"}
+                            {(w.title || "").trim() || t("gallery.fallback.untitled")}
                           </Link>
                           {w.registry_id ? (
                             <p className="mt-0.5 font-mono text-[10px] tracking-tight text-neutral-400">
@@ -2649,7 +2720,7 @@ export default function GalleryDashboardPage() {
                           </span>
                           {needsAuthInvite && pendingAuthInvite ? (
                             <span className="text-[10px] text-neutral-500">
-                              Invitation on file
+                              {t("gallery.catalogue.invitationOnFile")}
                             </span>
                           ) : needsAuthInvite ? (
                             <button
@@ -2657,7 +2728,7 @@ export default function GalleryDashboardPage() {
                               onClick={() => openArtworkAuthInviteForWork(w.id)}
                               className="rounded-lg border border-neutral-900/10 bg-white/90 px-2.5 py-1 text-[10px] font-medium text-neutral-800 transition hover:bg-neutral-50"
                             >
-                              Invite artist to authenticate
+                              {t("gallery.catalogue.inviteArtistAuthenticate")}
                             </button>
                           ) : null}
                         </div>
@@ -2676,16 +2747,18 @@ export default function GalleryDashboardPage() {
               id="gallery-verification-queue"
               className="scroll-mt-24 rounded-2xl border border-neutral-900/[0.05] bg-white/35 p-6 backdrop-blur-sm sm:p-7"
             >
-              <InfoTooltip text="Confirm only when the record is ready. A confirmation step follows." />
+              <InfoTooltip text={t("gallery.verification.tooltip")} />
               <h2 className="font-serif text-lg font-normal text-neutral-950 md:text-xl">
-                Verification
+                {t(GALLERY_SECTION_LABEL_KEYS.verification)}
               </h2>
               {!gallery.verified ? (
                 <p className="mt-4 text-[13px] text-neutral-500">
-                  Your institution is not verified yet. Verification actions are unavailable.
+                  {t("gallery.verification.notVerifiedInstitution")}
                 </p>
               ) : verifyQueue.length === 0 ? (
-                <p className="mt-4 text-[13px] text-neutral-400">Nothing awaiting verification.</p>
+                <p className="mt-4 text-[13px] text-neutral-400">
+                  {t("gallery.verification.nothingAwaiting")}
+                </p>
               ) : (
                 <>
                   <ul className="mt-5 divide-y divide-neutral-900/[0.05]">
@@ -2696,7 +2769,7 @@ export default function GalleryDashboardPage() {
                       >
                         <div className="min-w-0">
                           <p className="text-[14px] font-medium text-neutral-950">
-                            {(w.title || "").trim() || "Untitled"}
+                            {(w.title || "").trim() || t("gallery.fallback.untitled")}
                           </p>
                           {w.registry_id ? (
                             <p className="font-mono text-[10px] text-neutral-400">{w.registry_id}</p>
@@ -2708,7 +2781,7 @@ export default function GalleryDashboardPage() {
                           onClick={() => setVerifyTarget(w)}
                           className="shrink-0 rounded-md bg-neutral-950 px-3.5 py-1.5 text-sm font-semibold text-white shadow-md shadow-neutral-900/15 transition [transition-timing-function:var(--rrowm-ease-out)] hover:bg-neutral-800 disabled:opacity-50"
                         >
-                          {verifyBusy === w.id ? "…" : "Mark verified"}
+                          {verifyBusy === w.id ? "…" : t("gallery.verification.markVerified")}
                         </button>
                       </li>
                     ))}
@@ -2725,18 +2798,11 @@ export default function GalleryDashboardPage() {
         tone="light"
         panelClassName="max-w-lg pr-14 md:pr-16"
       >
-        <h2 className="font-serif text-xl font-normal tracking-tight text-neutral-950 md:text-2xl">
-          About this workspace
+        <h2 className="font-serif text-[1.35rem] font-normal tracking-[-0.01em] text-neutral-950 md:text-[1.75rem]">
+          {t("gallery.guide.title")}
         </h2>
         <p className="mt-5 text-sm leading-relaxed text-neutral-600">
-          This workspace groups your{" "}
-          <span className="font-medium text-neutral-800">registry catalogue</span>,{" "}
-          <span className="font-medium text-neutral-800">participation</span>,{" "}
-          <span className="font-medium text-neutral-800">continuity & certs</span>, and{" "}
-          <span className="font-medium text-neutral-800">Invitations</span> for optional
-          artist authentication. Register canonical records at any time with a plain-text
-          artist name; layered participation deepens over time: institution filing first,
-          then artist attestation when ready.
+          {t("gallery.guide.body")}
         </p>
       </ModalShell>
 
@@ -2775,8 +2841,8 @@ export default function GalleryDashboardPage() {
         artistNameOnFile={
           authInviteTarget?.catalogue_artist_name?.trim() ||
           (authInviteTarget?.artist_id
-            ? artistNameById.get(authInviteTarget.artist_id) || "Artist"
-            : "Artist on file")
+            ? artistNameById.get(authInviteTarget.artist_id) || t("gallery.fallback.artist")
+            : t("gallery.catalogue.artistOnFile"))
         }
         artistAttestationOnFile={
           authInviteTarget
@@ -2800,7 +2866,7 @@ export default function GalleryDashboardPage() {
       <DataInsightModal
         open={insightOpen !== null}
         onClose={() => setInsightOpen(null)}
-        title={insightTitle || "Insight"}
+        title={insightTitle || t("studio.insight.fallbackTitle")}
         subtitle={insightSubtitle || null}
         chartLoading={insightLoading}
         kind={insightKind}
@@ -2814,7 +2880,7 @@ export default function GalleryDashboardPage() {
       <EndRepresentationModal
         open={endRepTarget != null}
         onClose={() => !endRepBusy && setEndRepTarget(null)}
-        subjectName={endRepTarget?.name ?? "Artist"}
+        subjectName={endRepTarget?.name ?? t("gallery.fallback.artist")}
         institutionName={orgName}
         busy={endRepBusy}
         onConfirm={confirmEndRepresentation}

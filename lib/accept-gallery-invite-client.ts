@@ -1,3 +1,5 @@
+import { fetchRegistryCsrfToken } from "@/lib/registry-action-security/fetch-csrf";
+
 const INVITE_TOKEN_STORAGE_KEY = "rrowm_invite_token";
 
 /** Read pending gallery invite token from session storage (signup / login flows). */
@@ -37,10 +39,21 @@ export async function acceptPendingGalleryInvite(): Promise<{
   }
 
   try {
+    const csrfToken = await fetchRegistryCsrfToken();
+    if (!csrfToken) {
+      return {
+        ok: false,
+        error: "Could not prepare a secure session. Refresh and try again.",
+      };
+    }
+
     const res = await fetch("/api/invite/accept", {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-csrf-token": csrfToken,
+      },
       body: JSON.stringify({ token }),
     });
     const body = (await res.json().catch(() => null)) as {

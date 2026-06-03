@@ -4,6 +4,7 @@ import { useState } from "react";
 
 const SUBJECTS = [
   { value: "", label: "General (optional)" },
+  { value: "privacy", label: "Privacy or data rights" },
   { value: "partnership", label: "Partnership or collaboration" },
   { value: "institutional", label: "Institutional enquiry" },
   { value: "press", label: "Press or media" },
@@ -61,7 +62,7 @@ export function ContactForm() {
   if (status === "success") {
     return (
       <div className="border border-black/[0.06] bg-white/70 px-6 py-10 backdrop-blur-md md:px-8 md:py-12">
-        <p className="font-serif text-xl font-normal tracking-tight text-neutral-950 md:text-2xl">
+        <p className="font-serif text-[1.35rem] font-normal tracking-[-0.01em] text-neutral-950 md:text-[1.75rem]">
           Message received
         </p>
         <p className="mt-4 text-[15px] leading-relaxed text-neutral-600">

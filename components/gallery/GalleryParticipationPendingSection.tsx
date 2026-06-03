@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { GovernanceSectionShell } from "@/components/Studio/GovernanceSectionShell";
-import { CANONICAL_RECORD_PHRASES } from "@/lib/representation-language";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fillMessage } from "@/lib/locale-messages";
 import { workspace } from "@/styles/workspace-design";
 
 export type ParticipationPendingWork = {
@@ -17,7 +18,6 @@ export type ParticipationPendingWork = {
 type Props = {
   items: ParticipationPendingWork[];
   onGoToInvitations?: () => void;
-  /** Open artwork authentication invite modal for one record */
   onInviteWork?: (artworkId: string) => void;
   isAdmin?: boolean;
 };
@@ -33,26 +33,30 @@ function formatWhen(iso: string | null): string {
   }
 }
 
-/**
- * Canonical records where artist attestation may still deepen (not an approval queue).
- */
 export function GalleryRecordDepthSection({
   items,
   onGoToInvitations,
   onInviteWork,
   isAdmin,
 }: Props) {
+  const { t } = useLocalePreferences();
+
   if (items.length === 0) return null;
+
+  const description = `${t("gallery.participation.descIntro")} ${t("gallery.participation.descMiddle")} ${t("gallery.participation.descOutro")}`;
 
   return (
     <GovernanceSectionShell
       id="gallery-record-depth"
-      eyebrow="Record depth"
-      title="Attestations may deepen"
-      description={`Each work below is a ${CANONICAL_RECORD_PHRASES.canonicalRecordOnFile.toLowerCase()} with your institution's continuity layer. ${CANONICAL_RECORD_PHRASES.artistAttestationMayDeepen} when the artist authenticates authorship. The record is complete; layers accumulate.`}
+      eyebrow={t("gallery.nav.recordDepth")}
+      title={t("gallery.participation.title")}
+      description={description}
       badge={
         <span className={workspace.card.pill}>
-          {items.length} {items.length === 1 ? "record" : "records"}
+          {items.length}{" "}
+          {items.length === 1
+            ? t("gallery.participation.record")
+            : t("gallery.participation.records")}
         </span>
       }
       actions={
@@ -62,14 +66,14 @@ export function GalleryRecordDepthSection({
             onClick={onGoToInvitations}
             className="rounded-xl border border-neutral-900/[0.12] bg-white/90 px-4 py-2.5 text-xs font-medium text-neutral-800 transition hover:bg-neutral-50"
           >
-            Invite to authenticate
+            {t("gallery.participation.inviteAuthenticate")}
           </button>
         ) : null
       }
     >
       <ul className="space-y-3">
         {items.map((row) => {
-          const title = row.title?.trim() || "Untitled work";
+          const title = row.title?.trim() || t("gallery.participation.untitledWork");
           const reg = row.registry_id?.trim();
           const when = formatWhen(row.filed_at);
           return (
@@ -88,7 +92,7 @@ export function GalleryRecordDepthSection({
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-[10px] text-neutral-400">
-                      No image
+                      {t("gallery.participation.noImage")}
                     </div>
                   )}
                 </div>
@@ -100,8 +104,12 @@ export function GalleryRecordDepthSection({
                     <p className={`mt-0.5 ${workspace.type.registryId}`}>{reg}</p>
                   ) : null}
                   <p className={`mt-1 ${workspace.type.metaQuiet}`}>
-                    {row.artist_name || "Associated artist"}
-                    {when ? ` · Institution layer ${when}` : ""}
+                    {row.artist_name || t("gallery.participation.associatedArtist")}
+                    {when
+                      ? fillMessage(t("gallery.participation.institutionLayer"), {
+                          when,
+                        })
+                      : ""}
                   </p>
                 </div>
               </div>
@@ -111,7 +119,7 @@ export function GalleryRecordDepthSection({
                     href={`/artwork/${encodeURIComponent(reg)}`}
                     className="text-xs font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-4"
                   >
-                    Public record
+                    {t("gallery.participation.publicRecord")}
                   </Link>
                 ) : null}
                 {isAdmin && typeof onInviteWork === "function" ? (
@@ -120,7 +128,7 @@ export function GalleryRecordDepthSection({
                     onClick={() => onInviteWork(row.artwork_id)}
                     className="rounded-lg border border-neutral-900/10 bg-white px-2.5 py-1 text-[10px] font-medium text-neutral-800 transition hover:bg-neutral-50"
                   >
-                    Invite to authenticate
+                    {t("gallery.participation.inviteAuthenticate")}
                   </button>
                 ) : null}
               </div>

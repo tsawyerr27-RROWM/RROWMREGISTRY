@@ -1,26 +1,30 @@
+"use client";
+
 import { narrativeLayout } from "@/styles/narrative-layout";
-import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import type { MessageKey } from "@/lib/locale-messages";
 
 type SystemPropertiesProps = {
   density?: "default" | "digest";
 };
 
-const ITEMS = [
+const ITEM_KEYS = [
   {
-    title: "Immutable records",
-    body: "Once committed, core registry facts and timestamps are not silently rewritten. Changes are explicit, not overwritten in place.",
+    titleKey: "about.properties.p1Title" as MessageKey,
+    bodyKey: "about.properties.p1Body" as MessageKey,
   },
   {
-    title: "Verification layer",
-    body: "Cryptographic checks and record linkage allow anyone with access to validate against the public layer without trusting a single intermediary.",
+    titleKey: "about.properties.p2Title" as MessageKey,
+    bodyKey: "about.properties.p2Body" as MessageKey,
   },
   {
-    title: "Provenance tracking",
-    body: "Transfers and material events can be appended over time so the lineage of a work remains inspectable within policy.",
+    titleKey: "about.properties.p3Title" as MessageKey,
+    bodyKey: "about.properties.p3Body" as MessageKey,
   },
 ] as const;
 
 export function SystemProperties({ density = "default" }: SystemPropertiesProps) {
+  const { t } = useLocalePreferences();
   const digest = density === "digest";
   const Shell = digest ? "div" : "section";
 
@@ -48,7 +52,7 @@ export function SystemProperties({ density = "default" }: SystemPropertiesProps)
               : "font-serif text-[clamp(1.85rem,3vw,2.65rem)] font-normal leading-tight tracking-tight text-neutral-950"
           }
         >
-          System properties
+          {t("about.properties.title")}
         </h2>
         <ul
           className={
@@ -57,16 +61,15 @@ export function SystemProperties({ density = "default" }: SystemPropertiesProps)
               : "mt-12 divide-y divide-[color:var(--rrowm-atmo-rim)] border-y border-[color:var(--rrowm-atmo-rim)] md:mt-16"
           }
         >
-          {ITEMS.map((item) => (
+          {ITEM_KEYS.map((item) => (
             <li
-              key={item.title}
+              key={item.titleKey}
               className={
                 digest
                   ? "py-5 md:py-6"
                   : "py-10 md:py-12"
               }
             >
-              <InfoTooltip text={item.body} />
               <h3
                 className={
                   digest
@@ -74,8 +77,17 @@ export function SystemProperties({ density = "default" }: SystemPropertiesProps)
                     : "text-lg font-medium text-neutral-950 md:pt-0.5"
                 }
               >
-                {item.title}
+                {t(item.titleKey)}
               </h3>
+              <p
+                className={
+                  digest
+                    ? "mt-2 text-[13px] leading-relaxed text-neutral-600"
+                    : "mt-3 max-w-2xl text-[15px] leading-relaxed text-neutral-600"
+                }
+              >
+                {t(item.bodyKey)}
+              </p>
             </li>
           ))}
         </ul>

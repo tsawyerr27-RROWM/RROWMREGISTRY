@@ -15,8 +15,13 @@ import {
   getCurrentOwner,
   heldByCredibilityClass,
 } from "@/lib/get-current-owner";
+import { PersonalArchiveControl } from "@/components/archive/PersonalArchiveControl";
 import { ParticipationLayersStrip } from "@/components/Registry/ParticipationLayersStrip";
 import { getArtworkParticipationLayers } from "@/lib/get-artwork-participation-layers";
+import {
+  getArtworkArchiveCount,
+  isArtworkArchived,
+} from "@/lib/personal-archive";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +58,8 @@ export default async function ArtworkPage({
   const cleanId = registry_id.trim();
 
   const supabase = await createSupabaseServerClient();
+  const { data: authData } = await supabase.auth.getUser();
+  const sessionUser = authData?.user ?? null;
 
   const { data: artwork, error: artworkError } = await supabase
     .from("artworks")
@@ -140,6 +147,12 @@ export default async function ArtworkPage({
     revoked_reason: string | null;
   };
   const cert = (certRows?.[0] ?? null) as CertPublic | null;
+
+  const archiveCount = await getArtworkArchiveCount(supabase, artwork.id);
+  const userArchived =
+    sessionUser != null
+      ? await isArtworkArchived(supabase, artwork.id, sessionUser.id)
+      : false;
 
   const { data: valueRows } = await supabase
     .from("value_events")
@@ -403,6 +416,15 @@ export default async function ArtworkPage({
                   </span>
                 )}
               </div>
+              <PersonalArchiveControl
+                artworkId={artwork.id}
+                registryId={artwork.registry_id}
+                isSignedIn={Boolean(sessionUser)}
+                initialArchived={userArchived}
+                initialCount={archiveCount}
+                variant="hero"
+                loginNextPath={`/artwork/${encodeURIComponent(artwork.registry_id)}`}
+              />
             </div>
 
             {gallery && (
@@ -425,7 +447,7 @@ export default async function ArtworkPage({
         {artwork.description ? (
           <section className="mx-auto mt-20 max-w-3xl">
             <div className="rounded-[1.75rem] border border-black/[0.06] bg-white/70 px-7 py-10 shadow-[0_24px_64px_-36px_rgba(15,23,42,0.12)] backdrop-blur-[2px] md:px-11 md:py-12">
-              <h2 className="font-serif text-2xl font-normal tracking-tight text-neutral-950">
+              <h2 className="font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950">
                 About this work
               </h2>
               <div className="mt-8 space-y-6 text-lg leading-[1.75] text-neutral-700">
@@ -447,7 +469,7 @@ export default async function ArtworkPage({
               aria-hidden
             />
             <div className="relative">
-              <h2 className="font-serif text-2xl font-normal tracking-tight text-neutral-950">
+              <h2 className="font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950">
                 Provenance
               </h2>
               <div className="mt-8">
@@ -468,7 +490,7 @@ export default async function ArtworkPage({
         {/* Trust bridge */}
         <section className="mx-auto mt-20 max-w-2xl text-center md:mt-24">
           <div className="rounded-3xl border border-black/[0.06] bg-gradient-to-b from-white/90 to-neutral-50/80 px-6 py-12 shadow-[0_28px_72px_-40px_rgba(15,23,42,0.14)] backdrop-blur-sm md:px-10 md:py-14">
-            <h2 className="font-serif text-2xl font-normal tracking-tight text-neutral-950">
+            <h2 className="font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950">
               Registry
             </h2>
             <div className="mt-8 space-y-4 text-base leading-relaxed text-neutral-700">

@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { translateActivityMessage } from "@/lib/activity-i18n";
+import { fillMessage } from "@/lib/locale-messages";
+import {
+  translateRawVerificationStatus,
+  translateTransferTypeLabel,
+  translateValueEventType,
+} from "@/lib/ownership-ledger-i18n";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 
@@ -35,6 +43,7 @@ export function CollectorStudioActivityPreview({
   priorityOwnershipEventIds = [],
   limit = 8,
 }: CollectorStudioActivityPreviewProps) {
+  const { t } = useLocalePreferences();
   const [lines, setLines] = useState<Line[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,7 +52,8 @@ export function CollectorStudioActivityPreview({
   const titleByArtworkId: Record<string, string> = {};
   for (const p of portfolio) {
     if (p.registry_id) registryByArtworkId[p.id] = p.registry_id;
-    titleByArtworkId[p.id] = (p.title || "").trim() || "Untitled work";
+    titleByArtworkId[p.id] =
+      (p.title || "").trim() || t("collector.activity.untitledWork");
   }
 
   useEffect(() => {
@@ -80,7 +90,7 @@ export function CollectorStudioActivityPreview({
           .limit(10),
         supabase
           .from("activity_events")
-          .select("id, created_at, type, message, artwork_id")
+          .select("id, created_at, type, message, artwork_id, metadata")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
           .limit(10),
@@ -100,14 +110,16 @@ export function CollectorStudioActivityPreview({
       for (const r of ve.data || []) {
         const aid = String(r.artwork_id || "");
         const reg = registryByArtworkId[aid];
-        const title = titleByArtworkId[aid] || "Work";
-        const vt = String(r.value_type || "update").replaceAll("_", " ");
+        const title = titleByArtworkId[aid] || t("collector.fallback.work");
+        const kind = translateValueEventType(r.value_type, t);
         const rawId = String(r.id ?? "");
         merged.push({
           id: `v-${r.id}`,
           created_at: String(r.created_at || ""),
-          label: priVe.has(rawId) ? "Sale: transfer pending" : "Value recorded",
-          detail: `${title} · ${vt}`,
+          label: priVe.has(rawId)
+            ? t("collector.activity.saleTransferPending")
+            : t("collector.activity.valueRecorded"),
+          detail: fillMessage(t("collector.activity.detail"), { title, kind }),
           href: reg ? `/collector-studio/artwork/${encodeURIComponent(reg)}` : undefined,
           pinned: priVe.has(rawId),
         });
@@ -116,22 +128,28 @@ export function CollectorStudioActivityPreview({
       for (const r of oe.data || []) {
         const aid = String(r.artwork_id || "");
         const reg = registryByArtworkId[aid];
-        const title = titleByArtworkId[aid] || "Work";
-        const tt = String(r.transfer_type || "transfer").replaceAll("_", " ");
-        const vs = r.verification_status
-          ? ` · ${String(r.verification_status)}`
-          : "";
+        const title = titleByArtworkId[aid] || t("collector.fallback.work");
+        const kind = translateTransferTypeLabel(r.transfer_type, t);
         const rawOeId = String(r.id ?? "");
         const claimed =
           String(r.verification_status || "").toLowerCase() === "claimed";
+        const status = r.verification_status
+          ? translateRawVerificationStatus(String(r.verification_status), t)
+          : "";
         merged.push({
           id: `o-${r.id}`,
           created_at: String(r.created_at || ""),
           label:
             priOe.has(rawOeId) || claimed
-              ? "Ownership claim"
-              : "Ownership update",
-          detail: `${title} · ${tt}${vs}`,
+              ? t("collector.activity.ownershipClaim")
+              : t("collector.activity.ownershipUpdate"),
+          detail: status
+            ? fillMessage(t("collector.activity.detailWithStatus"), {
+                title,
+                kind,
+                status,
+              })
+            : fillMessage(t("collector.activity.detail"), { title, kind }),
           href: reg ? `/collector-studio/artwork/${encodeURIComponent(reg)}` : undefined,
           pinned: priOe.has(rawOeId) || claimed,
         });
@@ -140,12 +158,17 @@ export function CollectorStudioActivityPreview({
       for (const r of ver.data || []) {
         const aid = String(r.artwork_id || "");
         const reg = registryByArtworkId[aid];
-        const title = titleByArtworkId[aid] || "Work";
+        const title = titleByArtworkId[aid] || t("collector.fallback.work");
+        const kind = String(
+          (r as { message?: string }).message ||
+            (r as { event_type?: string }).event_type ||
+            "update"
+        );
         merged.push({
           id: `e-${r.id}`,
           created_at: String(r.created_at || ""),
-          label: "Verification",
-          detail: `${title} · ${String((r as { message?: string }).message || (r as { event_type?: string }).event_type || "update")}`,
+          label: t("collector.activity.verification"),
+          detail: fillMessage(t("collector.activity.detail"), { title, kind }),
           href: reg ? `/collector-studio/artwork/${encodeURIComponent(reg)}` : undefined,
         });
       }
@@ -156,8 +179,15 @@ export function CollectorStudioActivityPreview({
         merged.push({
           id: `a-${r.id}`,
           created_at: String(r.created_at || ""),
-          label: String(r.type || "Activity").replaceAll("_", " "),
-          detail: String(r.message || ""),
+          label: translateActivityMessage(
+            {
+              type: r.type,
+              message: r.message,
+              metadata: (r as { metadata?: Record<string, unknown> }).metadata,
+            },
+            t
+          ),
+          detail: "",
           href: reg
             ? `/collector-studio/artwork/${encodeURIComponent(reg)}`
             : undefined,
@@ -184,24 +214,25 @@ export function CollectorStudioActivityPreview({
     priorityValueEventIds.join("|"),
     priorityOwnershipEventIds.join("|"),
     limit,
+    t,
   ]);
 
   if (artworkIds.length === 0) {
     return (
       <p className="text-sm leading-relaxed text-neutral-500">
-        Activity will appear when you hold works.
+        {t("collector.activity.emptyHold")}
       </p>
     );
   }
 
   if (loading) {
-    return <p className="text-sm text-neutral-400">Loading…</p>;
+    return <p className="text-sm text-neutral-400">{t("collector.activity.loading")}</p>;
   }
 
   if (lines.length === 0) {
     return (
       <p className="text-sm leading-relaxed text-neutral-500">
-        No recent events across your collection.
+        {t("collector.activity.noEvents")}
       </p>
     );
   }
@@ -223,10 +254,12 @@ export function CollectorStudioActivityPreview({
 
         const inner = (
           <>
-            <p className="text-sm font-medium text-neutral-700">
-              {r.label}
-            </p>
-            <p className="mt-2 text-[15px] leading-snug text-neutral-800">{r.detail}</p>
+            <p className="text-sm font-medium text-neutral-700">{r.label}</p>
+            {r.detail ? (
+              <p className="mt-2 text-[15px] leading-snug text-neutral-800">
+                {r.detail}
+              </p>
+            ) : null}
             {date ? (
               <p className="mt-2 text-xs tabular-nums text-neutral-400">{date}</p>
             ) : null}

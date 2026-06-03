@@ -1,5 +1,7 @@
 "use client";
 
+import { fetchRegistryCsrfToken } from "@/lib/registry-action-security/fetch-csrf";
+
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -55,11 +57,19 @@ export function AcceptProvenanceClient() {
     setBusy(true);
     setErr(null);
     try {
+      const csrfToken = await fetchRegistryCsrfToken();
+      if (!csrfToken) {
+        setErr("Could not prepare a secure session. Refresh and try again.");
+        return;
+      }
       const res = await fetch("/api/provenance-transfer/accept", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
         credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "x-csrf-token": csrfToken,
+        },
+        body: JSON.stringify({ token }),
       });
       const j = (await res.json().catch(() => ({}))) as {
         error?: string;
@@ -147,7 +157,7 @@ export function AcceptProvenanceClient() {
     return (
       <div className="space-y-4 rounded-xl border border-neutral-200/90 bg-white px-6 py-8 text-center shadow-[0_20px_50px_-40px_rgba(15,23,42,0.12)]">
         <InfoTooltip text="A new custodial chapter is now part of the historical record." />
-        <p className="font-serif text-xl font-normal text-neutral-950 md:text-2xl">
+        <p className="font-serif text-[1.35rem] font-normal text-neutral-950 md:text-[1.75rem]">
           The chronology has been continued.
         </p>
         <p className="text-[13px] text-neutral-500">
@@ -164,7 +174,7 @@ export function AcceptProvenanceClient() {
         <p className="mt-2 font-mono text-[11px] text-neutral-400">
           {preview.registryId}
         </p>
-        <h1 className="mt-4 font-serif text-2xl font-normal tracking-tight text-neutral-950">
+        <h1 className="mt-4 font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950">
           {preview.artworkTitle}
         </h1>
 

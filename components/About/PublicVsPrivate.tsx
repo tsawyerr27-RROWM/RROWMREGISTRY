@@ -1,11 +1,14 @@
+"use client";
+
 import { narrativeLayout } from "@/styles/narrative-layout";
-import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 type PublicVsPrivateProps = {
   density?: "default" | "digest";
 };
 
 export function PublicVsPrivate({ density = "default" }: PublicVsPrivateProps) {
+  const { t } = useLocalePreferences();
   const digest = density === "digest";
   const Shell = digest ? "div" : "section";
 
@@ -27,7 +30,7 @@ export function PublicVsPrivate({ density = "default" }: PublicVsPrivateProps) {
       {...(!digest ? { "aria-labelledby": "about-visibility-heading" } : {})}
     >
       <h2 {...(!digest ? { id: "about-visibility-heading" } : {})} className={h2Class}>
-        Public record, private detail
+        {t("about.visibility.title")}
       </h2>
       <div
         className={
@@ -53,7 +56,6 @@ export function PublicVsPrivate({ density = "default" }: PublicVsPrivateProps) {
             aria-hidden
           />
           <div className="relative max-w-xl">
-            <InfoTooltip text="Searchable entries show what the public layer includes: typically identifiers, record status, and what has been opted into visibility. This is the open verification surface." />
             <h3
               className={
                 digest
@@ -61,7 +63,7 @@ export function PublicVsPrivate({ density = "default" }: PublicVsPrivateProps) {
                   : "font-serif text-xl font-normal tracking-tight text-neutral-950"
               }
             >
-              Public registry
+              {t("about.visibility.publicTitle")}
             </h3>
           </div>
         </div>
@@ -78,15 +80,13 @@ export function PublicVsPrivate({ density = "default" }: PublicVsPrivateProps) {
           >
             <div className={stackGap}>
               <div>
-                <InfoTooltip text="Full certificates and sensitive documentation are available through authenticated access. Viewing is tied to login and permissions, not to anonymous browsing." />
                 <h3 className="text-sm font-medium text-neutral-100 md:text-[15px]">
-                  Certificates and account access
+                  {t("about.visibility.certsTitle")}
                 </h3>
               </div>
               <div>
-                <InfoTooltip text="Current ownership and personal details are not exposed by default. The system separates what proves the record from what protects people involved in a transaction." />
                 <h3 className="text-sm font-medium text-neutral-100 md:text-[15px]">
-                  Ownership and privacy
+                  {t("about.visibility.ownershipTitle")}
                 </h3>
               </div>
             </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getSessionSafe, getSupabaseBrowserClient } from "@/lib/supabase";
 import ModalShell from "@/components/ui/ModalShell";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 type Props = {
   artworkId: string;
@@ -16,6 +17,7 @@ export function PublicClaimOwnership({
   registryId,
   loginNextPath,
 }: Props) {
+  const { t } = useLocalePreferences();
   const [userId, setUserId] = useState<string | null | undefined>(undefined);
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState("");
@@ -31,7 +33,7 @@ export function PublicClaimOwnership({
     run();
     const { data: sub } = supabase.auth.onAuthStateChange(
       (_e: unknown, session: unknown) => {
-        setUserId((session as any)?.user?.id ?? null);
+        setUserId((session as { user?: { id?: string } })?.user?.id ?? null);
       }
     );
     return () => sub.subscription.unsubscribe();
@@ -41,6 +43,13 @@ export function PublicClaimOwnership({
 
   const submit = async () => {
     if (!userId) return;
+    const trimmed = note.trim();
+    if (trimmed.length < 12) {
+      alert(
+        "Please add a short explanation (at least 12 characters) for the artist to review."
+      );
+      return;
+    }
     setLoading(true);
     const supabase = getSupabaseBrowserClient();
     const { data: existing } = await supabase
@@ -53,20 +62,20 @@ export function PublicClaimOwnership({
 
     if (existing) {
       setLoading(false);
-      alert("You already have a pending claim for this work.");
+      alert(t("registry.record.claim.pending"));
       return;
     }
 
     const { error } = await supabase.from("ownership_claims").insert({
       artwork_id: artworkId,
       collector_id: userId,
-      note: note.trim() || null,
+      note: trimmed,
       status: "pending",
     });
     setLoading(false);
     if (error) {
       console.error(error);
-      alert(error.message || "Could not submit claim.");
+      alert(error.message || t("registry.record.claim.error"));
       return;
     }
     void supabase.rpc("ownership_certificate_verify", {
@@ -80,7 +89,7 @@ export function PublicClaimOwnership({
   if (userId === undefined) {
     return (
       <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-center text-sm text-neutral-500">
-        Checking session…
+        {t("registry.record.claim.checkingSession")}
       </div>
     );
   }
@@ -91,7 +100,7 @@ export function PublicClaimOwnership({
         href={loginHref}
         className="rounded-xl border border-neutral-200 bg-white px-4 py-3 text-center text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
       >
-        Sign in to claim ownership
+        {t("registry.record.claim.signIn")}
       </Link>
     );
   }
@@ -103,7 +112,7 @@ export function PublicClaimOwnership({
         onClick={() => setOpen(true)}
         className="w-full border border-black/[0.08] bg-white/80 px-4 py-3 text-sm font-medium text-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.85)] backdrop-blur-md transition hover:bg-white"
       >
-        Claim ownership
+        {t("registry.record.claim.button")}
       </button>
       <ModalShell
         isOpen={open}
@@ -112,20 +121,20 @@ export function PublicClaimOwnership({
         panelClassName="relative max-w-md w-full p-8"
       >
         <p className="text-sm text-neutral-400">
-          Ownership claim
+          {t("registry.record.claim.title")}
         </p>
         <h2 className="mt-2 text-xl font-semibold text-neutral-900">
-          Request ownership
+          {t("registry.record.claim.request")}
         </h2>
         <p className="mt-2 text-sm text-neutral-600">
-          Record ID{" "}
-          <span className="font-mono text-neutral-800">{registryId}</span>.
-          The artist will review your claim.
+          {t("registry.record.claim.recordId")}{" "}
+          <span className="font-mono text-neutral-800">{registryId}</span>.{" "}
+          {t("registry.record.claim.artistReview")}
         </p>
         <textarea
           className="liquid-glass-inset mt-6 w-full bg-neutral-50/50 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-900/20"
           rows={4}
-          placeholder="Optional message to the artist"
+          placeholder={t("registry.record.claim.placeholder")}
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
@@ -136,7 +145,9 @@ export function PublicClaimOwnership({
             onClick={submit}
             className="flex-1 rounded-xl bg-neutral-950 py-3 text-sm font-semibold text-white hover:bg-neutral-800 disabled:opacity-50"
           >
-            {loading ? "Submitting…" : "Submit claim"}
+            {loading
+              ? t("registry.record.claim.submitting")
+              : t("registry.record.claim.submit")}
           </button>
           <button
             type="button"
@@ -144,15 +155,15 @@ export function PublicClaimOwnership({
             onClick={() => setOpen(false)}
             className="border border-black/[0.1] bg-white/60 px-4 py-3 text-sm font-medium text-neutral-700 backdrop-blur-sm hover:bg-white/80"
           >
-            Cancel
+            {t("registry.record.claim.cancel")}
           </button>
         </div>
       </ModalShell>
-      {done && (
+      {done ? (
         <p className="mt-2 text-center text-xs text-emerald-700">
-          Claim submitted for review.
+          {t("registry.record.claim.submitted")}
         </p>
-      )}
+      ) : null}
     </>
   );
 }

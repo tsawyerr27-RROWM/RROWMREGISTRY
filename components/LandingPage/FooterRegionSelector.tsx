@@ -49,12 +49,17 @@ type Props = {
   regionId: RegionId;
   onRegionChange: (id: RegionId) => void;
   labelId: string;
+  /** Footer opens upward; header opens downward */
+  menuPlacement?: "up" | "down";
+  className?: string;
 };
 
 export function FooterRegionSelector({
   regionId,
   onRegionChange,
   labelId,
+  menuPlacement = "up",
+  className = "",
 }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -78,7 +83,7 @@ export function FooterRegionSelector({
   }, [open]);
 
   return (
-    <div ref={rootRef} className="relative w-full md:max-w-[22rem]">
+    <div ref={rootRef} className={`relative w-full md:max-w-[22rem] ${className}`}>
       <button
         type="button"
         aria-labelledby={labelId}
@@ -97,7 +102,11 @@ export function FooterRegionSelector({
           id={listId}
           role="listbox"
           aria-labelledby={labelId}
-          className="absolute bottom-full left-0 z-[100] mb-2 max-h-[min(320px,50vh)] w-full min-w-[min(100%,20rem)] overflow-y-auto rounded-[6px] border border-[#e6ebf1] bg-white py-1 shadow-[0_7px_14px_0_rgba(50,50,93,0.1),0_3px_6px_0_rgba(0,0,0,0.08)]"
+          className={`absolute left-0 z-[100] max-h-[min(320px,50vh)] w-full min-w-[min(100%,20rem)] overflow-y-auto rounded-[6px] border border-[#e6ebf1] bg-white py-1 shadow-[0_7px_14px_0_rgba(50,50,93,0.1),0_3px_6px_0_rgba(0,0,0,0.08)] ${
+            menuPlacement === "up"
+              ? "bottom-full mb-2"
+              : "top-full mt-2"
+          }`}
         >
           {REGIONS.map((r) => (
             <button

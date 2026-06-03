@@ -5,18 +5,23 @@
  * Keep this intentionally small and aligned with the existing system’s sources of truth.
  */
 
+import type {
+  IntegrityReasonCode,
+  OpsActionLabelKey,
+} from "@/lib/gallery-ops-i18n";
+
 export type RecordIntegrityStatus = "complete" | "needs_attention" | "incomplete";
 
 export type IntegrityAction =
-  | { kind: "link"; href: string; label: string }
-  | { kind: "roster"; label: string }
-  | { kind: "verify"; label: string }
-  | { kind: "issue_certificate"; label: string };
+  | { kind: "link"; href: string; labelKey: OpsActionLabelKey }
+  | { kind: "roster"; labelKey: OpsActionLabelKey }
+  | { kind: "verify"; labelKey: OpsActionLabelKey }
+  | { kind: "issue_certificate"; labelKey: OpsActionLabelKey };
 
 export type RecordIntegrityResult = {
   status: RecordIntegrityStatus;
   /** Short, human-readable reasons (1–2 for UI). */
-  reasons: string[];
+  reasonCodes: IntegrityReasonCode[];
   action: IntegrityAction | null;
 };
 
@@ -59,6 +64,45 @@ function safeArtworkEditHref(registryId: string | null | undefined): string | nu
   return `/artwork/${encodeURIComponent(rid)}`;
 }
 
+function resolveIntegrityAction(
+  top: IntegrityReasonCode[],
+  registryHref: string | null,
+  editHref: string | null
+): IntegrityAction | null {
+  if (top.includes("missing_declared_value") && registryHref) {
+    return {
+      kind: "link",
+      href: registryHref,
+      labelKey: "gallery.ops.action.addValue",
+    };
+  }
+  if (
+    (top.includes("missing_title") ||
+      top.includes("missing_image") ||
+      top.includes("missing_metadata_fingerprint")) &&
+    editHref
+  ) {
+    return {
+      kind: "link",
+      href: editHref,
+      labelKey: "gallery.ops.action.completeDetails",
+    };
+  }
+  if (top.includes("missing_verification")) {
+    return { kind: "verify", labelKey: "gallery.ops.action.verifyRecord" };
+  }
+  if (top.includes("no_certificate_on_file") && registryHref) {
+    return {
+      kind: "issue_certificate",
+      labelKey: "gallery.ops.action.issueCertificate",
+    };
+  }
+  if (registryHref) {
+    return { kind: "link", href: registryHref, labelKey: "gallery.ops.action.viewRecord" };
+  }
+  return null;
+}
+
 /**
  * Derive integrity status for one artwork using only allowed sources:
  * artworks, ownership_events, value_events, verification_events, certificates, galleries.
@@ -67,14 +111,13 @@ export function computeRecordIntegrity(
   artwork: IntegrityArtworkFields,
   s: IntegritySignals
 ): RecordIntegrityResult {
-  const reasons: string[] = [];
+  const reasonCodes: IntegrityReasonCode[] = [];
 
-  // --- Incomplete gates (hard blockers)
   if (!artwork.artist_id) {
     return {
       status: "incomplete",
-      reasons: ["No artist linked"],
-      action: { kind: "roster", label: "Assign artist" },
+      reasonCodes: ["no_artist_linked"],
+      action: { kind: "roster", labelKey: "gallery.ops.action.assignArtist" },
     };
   }
 
@@ -82,71 +125,56 @@ export function computeRecordIntegrity(
     const href = safeRegistryHref(artwork.registry_id);
     return {
       status: "incomplete",
-      reasons: ["No ownership history on file"],
-      action: href ? { kind: "link", href, label: "View record" } : null,
+      reasonCodes: ["no_ownership_history"],
+      action: href
+        ? { kind: "link", href, labelKey: "gallery.ops.action.viewRecord" }
+        : null,
     };
   }
 
-  // --- Ownership integrity
   if (
     s.ownershipLastToUserId &&
     artwork.current_owner_id &&
     String(s.ownershipLastToUserId).toLowerCase() !==
       String(artwork.current_owner_id).toLowerCase()
   ) {
-    reasons.push("Ownership ledger does not match current owner");
+    reasonCodes.push("ownership_ledger_mismatch");
   }
 
-  // --- Value completeness
   if (!s.hasAnyValueEvent) {
-    reasons.push("Missing declared value");
+    reasonCodes.push("missing_declared_value");
   }
 
-  // --- Metadata completeness (critical)
-  if (!(artwork.title || "").trim()) reasons.push("Missing title");
-  if (!(artwork.metadata_hash || "").trim())
-    reasons.push("Missing metadata fingerprint");
-  if (!(artwork.image_url || "").trim()) reasons.push("Missing image");
+  if (!(artwork.title || "").trim()) reasonCodes.push("missing_title");
+  if (!(artwork.metadata_hash || "").trim()) {
+    reasonCodes.push("missing_metadata_fingerprint");
+  }
+  if (!(artwork.image_url || "").trim()) reasonCodes.push("missing_image");
 
-  // --- Certificate state
   if (!s.hasLiveCertificate && s.hasRevokedCertificate) {
-    reasons.push("Certificate revoked");
+    reasonCodes.push("certificate_revoked");
   }
 
-  // --- Verification strength
   const hasVerification =
     s.hasLiveCertificate || (s.hasGalleryVerification && s.galleryIsVerified);
   if (!hasVerification) {
-    reasons.push("Missing verification");
+    reasonCodes.push("missing_verification");
   } else if (!s.hasLiveCertificate && s.hasGalleryVerification) {
-    // Optional improvement signal: verification exists, but not the strongest.
-    reasons.push("No certificate on file");
+    reasonCodes.push("no_certificate_on_file");
   }
 
   const status: RecordIntegrityStatus =
-    reasons.length === 0 ? "complete" : "needs_attention";
+    reasonCodes.length === 0 ? "complete" : "needs_attention";
 
-  const top = reasons.slice(0, 2);
-
-  // Action mapping (single primary CTA, calm + obvious).
+  const top = reasonCodes.slice(0, 2);
   const registryHref = safeRegistryHref(artwork.registry_id);
   const editHref = safeArtworkEditHref(artwork.registry_id);
 
-  const action: IntegrityAction | null =
-    top.includes("Missing declared value") && registryHref
-      ? { kind: "link", href: registryHref, label: "Add value" }
-      : (top.some((r) => r.startsWith("Missing ")) || top.includes("Missing title")) &&
-          editHref
-        ? { kind: "link", href: editHref, label: "Complete details" }
-        : top.includes("Missing verification")
-          ? { kind: "verify", label: "Verify record" }
-          : top.includes("No certificate on file") && registryHref
-            ? { kind: "issue_certificate", label: "Issue certificate" }
-            : registryHref
-              ? { kind: "link", href: registryHref, label: "View record" }
-              : null;
-
-  return { status, reasons: top, action };
+  return {
+    status,
+    reasonCodes: top,
+    action: resolveIntegrityAction(top, registryHref, editHref),
+  };
 }
 
 export function aggregateIntegrityCounts(items: { status: RecordIntegrityStatus }[]) {
@@ -164,4 +192,3 @@ export function aggregateIntegrityCounts(items: { status: RecordIntegrityStatus 
 export function integrityRowTitle(artwork: IntegrityArtworkFields) {
   return displayTitle(artwork);
 }
-

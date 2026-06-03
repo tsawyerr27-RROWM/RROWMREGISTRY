@@ -4,10 +4,8 @@ import {
   rrowmEmailInnerFromOpts,
   type RrowmEmailLayoutOpts,
 } from "@/lib/emails/rrowm-email-layout";
-import {
-  artistGalleryInvitationSubject,
-  CANONICAL_RECORD_PHRASES,
-} from "@/lib/representation-language";
+import { fillMessage, translate } from "@/lib/locale-messages";
+import type { AppLang } from "@/lib/request-locale";
 
 export type ArtistInvitationEmailParams = {
   /** Display name from `galleries.name` (server-resolved). */
@@ -16,38 +14,60 @@ export type ArtistInvitationEmailParams = {
   inviteLink: string;
   galleryPublicPageUrl?: string;
   recipientEmail: string;
+  lang?: AppLang;
 };
 
-export { artistGalleryInvitationSubject };
+export function artistGalleryInvitationSubject(
+  galleryName: string,
+  lang: AppLang = "en"
+): string {
+  const name = galleryName.trim() || translate("gallery.email.fallback.gallery", lang);
+  return fillMessage(translate("gallery.email.artistInvite.subject", lang), {
+    galleryName: name,
+  });
+}
 
 export function buildArtistInvitationEmail(p: ArtistInvitationEmailParams): {
   subject: string;
   html: string;
   text: string;
 } {
-  const g = escapeHtml(p.galleryName.trim() || "An institution");
+  const lang = p.lang ?? "en";
+  const gName =
+    p.galleryName.trim() || translate("gallery.email.fallback.institution", lang);
+  const g = escapeHtml(gName);
+  const inviteRecordExists = translate("representation.inviteRecordExists", lang);
+  const recordDeepensOverTime = translate("representation.recordDeepensOverTime", lang);
 
   const layout: RrowmEmailLayoutOpts = {
-    preheader: CANONICAL_RECORD_PHRASES.inviteAuthenticateRecord,
+    preheader: translate("gallery.email.artistInvite.preheader", lang),
     blocks: [
-      { type: "kicker", text: "Canonical record · Participant attestation" },
+      { type: "kicker", text: translate("gallery.email.artistInvite.kicker", lang) },
       {
         type: "p",
-        html: `<strong>${g}</strong> participates in chronology on file for works associated with your practice. ${escapeHtml(CANONICAL_RECORD_PHRASES.inviteRecordExists)}. You are invited to authenticate authorship and deepen the documentary record, not to approve an institution upload.`,
+        html: fillMessage(translate("gallery.email.artistInvite.body1", lang), {
+          galleryName: `<strong>${g}</strong>`,
+          inviteRecordExists: escapeHtml(inviteRecordExists),
+        }),
       },
       { type: "hr" },
       {
         type: "p",
-        html: `After you join: review the canonical record, authenticate authorship, add artist-authored detail, and contribute continuity events. ${escapeHtml(CANONICAL_RECORD_PHRASES.recordDeepensOverTime)}.`,
+        html: fillMessage(translate("gallery.email.artistInvite.body2", lang), {
+          recordDeepensOverTime: escapeHtml(recordDeepensOverTime),
+        }),
       },
       {
         type: "p",
-        html: `The link is for this address only, single use, and expires as set in the invitation record.`,
+        html: translate("gallery.email.artistInvite.body3", lang),
       },
     ],
-    cta: { label: "Authenticate & join", url: p.inviteLink },
+    cta: {
+      label: translate("gallery.email.artistInvite.cta", lang),
+      url: p.inviteLink,
+    },
     footnoteHtml:
-      `If this was not intended for you, take no action. Do not forward the link.` +
+      translate("gallery.email.artistInvite.footnote", lang) +
       (p.galleryPublicPageUrl
         ? `<br/><br/>Reference: ${escapeHtml(p.galleryPublicPageUrl)}`
         : ""),
@@ -55,29 +75,32 @@ export function buildArtistInvitationEmail(p: ArtistInvitationEmailParams): {
 
   const inner = rrowmEmailInnerFromOpts(layout);
 
-  const gn = p.galleryName.trim() || "Institution";
   const text = [
-    artistGalleryInvitationSubject(p.galleryName),
+    artistGalleryInvitationSubject(p.galleryName, lang),
     "",
-    `${gn} participates in chronology for works associated with your practice.`,
+    fillMessage(translate("gallery.email.artistInvite.textIntro", lang), {
+      galleryName: gName,
+    }),
     "",
-    CANONICAL_RECORD_PHRASES.inviteRecordExists,
-    CANONICAL_RECORD_PHRASES.inviteAuthenticateRecord,
+    inviteRecordExists,
+    translate("gallery.email.artistInvite.preheader", lang),
     "",
-    "Authenticate & join (single-use link):",
+    translate("gallery.email.artistInvite.textLink", lang),
     p.inviteLink,
     "",
-    `Register using this email only: ${p.recipientEmail}`,
+    fillMessage(translate("gallery.email.artistInvite.textRegister", lang), {
+      email: p.recipientEmail,
+    }),
     "",
     p.galleryPublicPageUrl ? `Reference: ${p.galleryPublicPageUrl}` : "",
     "",
-    "If this message was sent in error, disregard it.",
+    translate("gallery.email.artistInvite.textDisregard", lang),
   ]
     .filter(Boolean)
     .join("\n");
 
   return {
-    subject: artistGalleryInvitationSubject(p.galleryName),
+    subject: artistGalleryInvitationSubject(p.galleryName, lang),
     html: buildRrowmEmailHtml(inner, layout.preheader),
     text,
   };

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import type { MessageKey } from "@/lib/locale-messages";
 import {
   aggregateIntegrityCounts,
   computeRecordIntegrity,
@@ -9,6 +11,10 @@ import {
   type IntegrityArtworkFields,
   type RecordIntegrityStatus,
 } from "@/lib/gallery-record-integrity";
+import {
+  translateIntegrityReason,
+  translateOpsActionLabel,
+} from "@/lib/gallery-ops-i18n";
 
 type Props = {
   artworks: IntegrityArtworkFields[];
@@ -32,11 +38,11 @@ function statusPillClass(status: RecordIntegrityStatus): string {
   return "bg-neutral-900/[0.06] text-neutral-800 ring-1 ring-black/[0.06]";
 }
 
-function statusLabel(status: RecordIntegrityStatus): string {
-  if (status === "complete") return "Complete";
-  if (status === "needs_attention") return "Needs attention";
-  return "Incomplete";
-}
+const STATUS_KEYS: Record<RecordIntegrityStatus, MessageKey> = {
+  complete: "gallery.status.complete",
+  needs_attention: "gallery.status.needsAttention",
+  incomplete: "gallery.status.incomplete",
+};
 
 export function RecordIntegritySection({
   artworks,
@@ -51,6 +57,8 @@ export function RecordIntegritySection({
   onVerifyArtwork,
   onIssueCertificate,
 }: Props) {
+  const { t } = useLocalePreferences();
+
   if (artworks.length === 0) return null;
 
   const rows = artworks.map((w) => {
@@ -80,35 +88,35 @@ export function RecordIntegritySection({
 
   return (
     <section className="mb-8 rounded-2xl border border-neutral-900/[0.06] bg-white/50 p-6 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-sm sm:p-7">
-      <InfoTooltip text="Provenance integrity and completeness signals derived from your existing records." />
+      <InfoTooltip text={t("gallery.integrity.tooltip")} />
       <h2 className="font-serif text-lg font-normal text-neutral-950 md:text-xl">
-        Record integrity
+        {t("gallery.integrity.title")}
       </h2>
 
       <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-[13px] tabular-nums text-neutral-700">
         <span>
           <span className="font-medium text-emerald-900/90">{counts.complete}</span>{" "}
-          complete
+          {t("gallery.integrity.complete")}
         </span>
         <span>
           <span className="font-medium text-amber-950/90">
             {counts.needs_attention}
           </span>{" "}
-          needs attention
+          {t("gallery.integrity.needsAttention")}
         </span>
         <span>
           <span className="font-medium text-neutral-900">{counts.incomplete}</span>{" "}
-          incomplete
+          {t("gallery.integrity.incomplete")}
         </span>
       </div>
 
       {affected.length === 0 ? (
         <p className="mt-5 text-[13px] text-neutral-600">
-          All catalogue records meet integrity checks.
+          {t("gallery.integrity.allPass")}
         </p>
       ) : (
         <ul className="mt-6 divide-y divide-neutral-900/[0.06] border-t border-neutral-900/[0.06] pt-4">
-          {affected.map(({ artwork, status, reasons, action }) => (
+          {affected.map(({ artwork, status, reasonCodes, action }) => (
             <li
               key={artwork.id}
               className="flex flex-col gap-2 py-4 first:pt-0 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
@@ -122,11 +130,13 @@ export function RecordIntegritySection({
                     className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${statusPillClass(status)}`}
                   >
                     {status === "needs_attention" ? "⚠ " : null}
-                    {statusLabel(status)}
+                    {t(STATUS_KEYS[status])}
                   </span>
                 </div>
                 <p className="mt-1.5 text-[12px] leading-snug text-neutral-600">
-                  {reasons.join(" · ")}
+                  {reasonCodes
+                    .map((code) => translateIntegrityReason(code, t))
+                    .join(" · ")}
                 </p>
               </div>
               <div className="shrink-0 sm:pt-0.5">
@@ -135,7 +145,7 @@ export function RecordIntegritySection({
                     href={action.href}
                     className="text-[12px] font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-4 transition hover:text-neutral-950 hover:decoration-neutral-500"
                   >
-                    {action.label}
+                    {translateOpsActionLabel(action.labelKey, t)}
                   </Link>
                 ) : action?.kind === "roster" ? (
                   <button
@@ -143,7 +153,7 @@ export function RecordIntegritySection({
                     onClick={onGoToRoster}
                     className="text-left text-[12px] font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-4 transition hover:text-neutral-950 hover:decoration-neutral-500"
                   >
-                    {action.label}
+                    {translateOpsActionLabel(action.labelKey, t)}
                   </button>
                 ) : action?.kind === "verify" ? (
                   <button
@@ -151,7 +161,7 @@ export function RecordIntegritySection({
                     onClick={() => onVerifyArtwork(artwork.id)}
                     className="text-left text-[12px] font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-4 transition hover:text-neutral-950 hover:decoration-neutral-500"
                   >
-                    {action.label}
+                    {translateOpsActionLabel(action.labelKey, t)}
                   </button>
                 ) : action?.kind === "issue_certificate" ? (
                   <button
@@ -159,7 +169,7 @@ export function RecordIntegritySection({
                     onClick={() => onIssueCertificate(artwork.id)}
                     className="text-left text-[12px] font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-4 transition hover:text-neutral-950 hover:decoration-neutral-500"
                   >
-                    {action.label}
+                    {translateOpsActionLabel(action.labelKey, t)}
                   </button>
                 ) : null}
               </div>
@@ -170,4 +180,3 @@ export function RecordIntegritySection({
     </section>
   );
 }
-

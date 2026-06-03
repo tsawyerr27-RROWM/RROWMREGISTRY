@@ -1,3 +1,5 @@
+"use client";
+
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { ExperienceEmptyStateButton } from "@/components/ui/ExperienceEmptyState";
 import { WorkspaceRecordCard } from "@/components/Studio/WorkspaceRecordCard";
@@ -5,6 +7,7 @@ import {
   StudioSearchRow,
   studioFilterSelectClass,
 } from "@/components/Dashboard/studioListPrimitives";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { workspace } from "@/styles/workspace-design";
 
 export type CertificatesListFilter = "all" | "with_image" | "without_image";
@@ -49,6 +52,7 @@ export function CertificatesSection({
   onOpenCertificateOverview,
   onRegisterClick,
 }: CertificatesSectionProps) {
+  const { t } = useLocalePreferences();
   const isTrulyEmpty = totalCertificateCount === 0;
   const noMatches =
     totalCertificateCount > 0 && filteredCertificates.length === 0;
@@ -60,11 +64,11 @@ export function CertificatesSection({
           tone="light"
           searchQuery={searchQuery}
           onSearchChange={onSearchChange}
-          searchPlaceholder="Search certificates…"
+          searchPlaceholder={t("studio.search.certificates")}
           aside={
             <>
               <label className="sr-only" htmlFor="certificates-filter">
-                Filter certificates
+                {t("studio.filter.certificates")}
               </label>
               <select
                 id="certificates-filter"
@@ -76,9 +80,13 @@ export function CertificatesSection({
                 }
                 className={studioFilterSelectClass("light")}
               >
-                <option value="all">All certificates</option>
-                <option value="with_image">With artwork image</option>
-                <option value="without_image">Without image</option>
+                <option value="all">{t("studio.certificates.all")}</option>
+                <option value="with_image">
+                  {t("studio.certificates.withImage")}
+                </option>
+                <option value="without_image">
+                  {t("studio.certificates.withoutImage")}
+                </option>
               </select>
             </>
           }
@@ -86,8 +94,8 @@ export function CertificatesSection({
       ) : null}
 
       {noMatches ? (
-        <div className="rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-white via-emerald-50/40 to-neutral-50/90 px-8 py-12 text-center text-sm text-neutral-600 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)]">
-          No certificates match your search or filter.
+        <div className="rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-white via-emerald-50/40 to-neutral-50/90 px-8 py-12 text-center text-[15px] text-neutral-600 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)]">
+          {t("studio.certificates.noMatches")}
         </div>
       ) : null}
 
@@ -102,7 +110,7 @@ export function CertificatesSection({
                 "–"
               }
               imageUrl={artwork.image_url}
-              imagePlaceholder="Registry record"
+              imagePlaceholder={t("studio.certificates.imagePlaceholder")}
               accentBorderClass="border-l-emerald-500/50"
               onClick={() => onArtworkClick(artwork)}
               onKeyDown={(e) => {
@@ -119,10 +127,10 @@ export function CertificatesSection({
                     <CertificateSeal />
                     <div>
                       <p className="text-xs font-semibold text-emerald-800">
-                        Verified
+                        {t("studio.artworks.verified")}
                       </p>
                       <p className="mt-0.5 text-[10px] text-neutral-500">
-                        Registry certificate
+                        {t("studio.certificates.registryCertificate")}
                       </p>
                     </div>
                   </div>
@@ -134,7 +142,7 @@ export function CertificatesSection({
                         </span>
                       ) : (
                         <span className="text-[10px] text-neutral-400">
-                          No record ID
+                          {t("studio.artworks.noRecordId")}
                         </span>
                       )}
                     </div>
@@ -147,7 +155,7 @@ export function CertificatesSection({
                         }}
                         className="shrink-0 rounded-xl bg-emerald-900 px-3 py-2 text-[11px] font-semibold text-white transition hover:bg-emerald-800"
                       >
-                        Open →
+                        {t("studio.certificates.open")}
                       </button>
                     ) : null}
                   </div>
@@ -166,15 +174,15 @@ export function CertificatesSection({
             <CertificateSeal className="h-14 w-14" />
           </div>
           <p className="mt-8 text-sm font-semibold text-emerald-800/80">
-            Registry certificates
+            {t("studio.certificates.emptyLabel")}
           </p>
           <InfoTooltip text="When a work is verified, its certificate appears here as a permanent record you can open and share." />
-          <h3 className="mt-3 font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-[1.65rem]">
-            No verified certificates yet
+          <h3 className="mt-3 font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950 md:text-[1.85rem]">
+            {t("studio.certificates.emptyTitle")}
           </h3>
           <div className="mt-10 flex justify-center">
             <ExperienceEmptyStateButton
-              label="Register artwork"
+              label={t("studio.registerArtwork")}
               onClick={onRegisterClick}
             />
           </div>

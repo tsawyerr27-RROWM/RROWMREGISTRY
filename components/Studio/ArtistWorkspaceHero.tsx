@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { RegistryCatalogueInfoTooltip } from "@/components/Registry/RegistryCatalogueInfoTooltip";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { ArtworksHeroPreview } from "@/components/Dashboard/ArtworksHeroPreview";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fillMessage } from "@/lib/locale-messages";
 import {
   HeroActionButton,
   HeroInlineLink,
@@ -56,7 +59,8 @@ export function ArtistWorkspaceHero({
   amendmentResponsesNeeded = 0,
   onGoToAmendments,
 }: Props) {
-  const headline = displayName.trim() || "Artist";
+  const { t } = useLocalePreferences();
+  const headline = displayName.trim() || t("studio.hero.fallbackArtist");
   const path = publicPageHref ? publicPath(publicPageHref) : null;
 
   return (
@@ -81,24 +85,28 @@ export function ArtistWorkspaceHero({
           <div className="mt-10 space-y-5 lg:mt-12">
             <ul className="grid gap-4 sm:grid-cols-3 sm:gap-5">
               <HeroTile
-                title="Catalogue"
+                title={t("studio.hero.catalogue")}
                 footer={
                   <HeroActionButton onClick={() => onGoToSection("Artworks")}>
-                    Open artworks
+                    {t("studio.hero.openArtworks")}
                   </HeroActionButton>
                 }
               >
                 <HeroStat
                   value={totalWorks}
-                  sub={totalWorks === 1 ? "work" : "works"}
-                  label="Registered in studio"
+                  sub={totalWorks === 1 ? t("studio.hero.work") : t("studio.hero.works")}
+                  label={t("studio.hero.registeredInStudio")}
                 />
                 <div className="flex flex-wrap gap-1.5">
                   <span className="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-medium text-emerald-200/90 ring-1 ring-emerald-400/25">
-                    {verifiedWorks} verified
+                    {fillMessage(t("studio.hero.verifiedBadge"), {
+                      count: String(verifiedWorks),
+                    })}
                   </span>
                   <span className="rounded bg-white/10 px-2 py-0.5 text-[10px] text-white/65">
-                    {pricedWorks} priced
+                    {fillMessage(t("studio.hero.pricedBadge"), {
+                      count: String(pricedWorks),
+                    })}
                   </span>
                 </div>
                 {representationPendingCount > 0 &&
@@ -108,10 +116,14 @@ export function ArtistWorkspaceHero({
                     onClick={onGoToRepresentationReview}
                     className="mt-2 w-full rounded-md border border-amber-400/35 bg-amber-500/15 px-2 py-1.5 text-left text-[10px] font-medium text-amber-100 transition hover:bg-amber-500/25"
                   >
-                    {representationPendingCount}{" "}
-                    {representationPendingCount === 1 ? "record" : "records"} to
-                    authenticate &amp; deepen
-                    on file
+                    {fillMessage(
+                      t(
+                        representationPendingCount === 1
+                          ? "studio.hero.recordsToDeepen"
+                          : "studio.hero.recordsToDeepenPlural"
+                      ),
+                      { count: String(representationPendingCount) }
+                    )}
                   </button>
                 ) : null}
                 {amendmentResponsesNeeded > 0 &&
@@ -121,48 +133,54 @@ export function ArtistWorkspaceHero({
                     onClick={onGoToAmendments}
                     className="mt-2 w-full rounded-md border border-sky-400/35 bg-sky-500/15 px-2 py-1.5 text-left text-[10px] font-medium text-sky-100 transition hover:bg-sky-500/25"
                   >
-                    {amendmentResponsesNeeded} amendment
-                    {amendmentResponsesNeeded === 1 ? "" : "s"} need your response
+                    {fillMessage(
+                      t(
+                        amendmentResponsesNeeded === 1
+                          ? "studio.hero.amendmentNeedsResponse"
+                          : "studio.hero.amendmentsNeedResponse"
+                      ),
+                      { count: String(amendmentResponsesNeeded) }
+                    )}
                   </button>
                 ) : null}
               </HeroTile>
 
               <HeroTile
-                title="Record health"
+                title={t("studio.hero.recordHealth")}
                 footer={
                   <HeroActionButton onClick={() => onGoToSection("Certificates")}>
-                    Certificates
+                    {t("studio.hero.certificates")}
                   </HeroActionButton>
                 }
               >
-                <HeroMiniBar label="Verified" percent={percentVerified} />
+                <HeroMiniBar label={t("studio.hero.verified")} percent={percentVerified} />
                 <HeroMiniBar
-                  label="Priced"
+                  label={t("studio.hero.priced")}
                   percent={percentPriced}
                   accentClass="from-amber-400/90 to-amber-200/80"
                 />
               </HeroTile>
 
-              <HeroTile title="Public studio">
+              <HeroTile title={t("studio.hero.publicStudio")}>
                 <div className="rounded-md bg-black/35 px-3 py-2.5 ring-1 ring-white/10">
                   <p className="text-[9px] uppercase tracking-wider text-white/35">
-                    Artist page
+                    {t("studio.hero.artistPage")}
                   </p>
                   <p
                     className={`mt-1 truncate font-mono text-[11px] ${
                       path ? "text-emerald-200/90" : "text-white/40"
                     }`}
                   >
-                    {path ?? "Not published yet"}
+                    {path ?? t("studio.hero.notPublishedYet")}
                   </p>
                 </div>
                 {publicPageHref ? (
                   <HeroInlineLink href={publicPageHref} className="block w-full">
-                    View public page
+                    {t("studio.hero.viewPublicPage")}
                   </HeroInlineLink>
                 ) : (
                   <HeroInlineLink href="/account" className="block w-full">
-                    Set up presence
+                    {t("studio.hero.setupPresence")}
                   </HeroInlineLink>
                 )}
               </HeroTile>
@@ -176,18 +194,19 @@ export function ArtistWorkspaceHero({
                 onClick={onRegister}
                 className="rounded-lg bg-white px-5 py-2.5 text-[13px] font-semibold text-neutral-950 shadow-lg shadow-black/25 transition hover:bg-white/90"
               >
-                Register artwork
+                {t("studio.registerArtwork")}
               </button>
             ) : null}
             <HeroActionButton onClick={() => onGoToSection("Ownership")}>
-              Ownership ledger
+              {t("studio.hero.ownershipLedger")}
             </HeroActionButton>
-            <div className="ml-auto flex gap-5 text-[12px] text-white/50">
+            <div className="ml-auto flex items-center gap-3 text-[12px] text-white/50">
               <Link href="/account" className="transition hover:text-white">
-                Account
+                {t("nav.account")}
               </Link>
+              <RegistryCatalogueInfoTooltip theme="dark" />
               <Link href="/registry" className="transition hover:text-white">
-                Registry
+                {t("nav.registry")}
               </Link>
             </div>
           </div>
@@ -207,7 +226,7 @@ export function ArtistWorkspaceHero({
               </div>
               {previewArtworks.length === 0 ? (
                 <p className="mt-6 text-center text-xs leading-relaxed text-white/40">
-                  Register a work to see your catalogue preview here.
+                  {t("studio.hero.previewEmpty")}
                 </p>
               ) : null}
             </div>

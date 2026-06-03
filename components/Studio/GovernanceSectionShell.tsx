@@ -35,7 +35,7 @@ export function GovernanceSectionShell({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <InfoTooltip text={description} />
-          <h2 className="mt-2 font-serif text-xl font-normal text-neutral-950 md:text-2xl">
+          <h2 className="mt-2 font-serif text-[1.35rem] font-normal text-neutral-950 md:text-[1.75rem]">
             {title}
           </h2>
         </div>

@@ -10,6 +10,7 @@ import {
   acquisitionTypeLabel,
   type OwnershipAcquisitionType,
 } from "@/lib/collector-ownership-claim";
+import { fetchRegistryCsrfToken } from "@/lib/registry-action-security/fetch-csrf";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 type ArtworkPick = {
@@ -154,9 +155,20 @@ export function ClaimOwnershipFlow() {
 
   const submitClaim = async () => {
     if (!artwork?.id) return;
+    if (files.length === 0) {
+      setSubmitErr(
+        "Upload at least one supporting document (invoice, receipt, or custody record)."
+      );
+      return;
+    }
     setSubmitErr(null);
     setSubmitting(true);
     try {
+      const csrfToken = await fetchRegistryCsrfToken();
+      if (!csrfToken) {
+        setSubmitErr("Could not prepare a secure session. Refresh and try again.");
+        return;
+      }
       const fd = new FormData();
       fd.set("artwork_id", artwork.id);
       fd.set("acquisition_type", acquisitionType);
@@ -166,6 +178,8 @@ export function ClaimOwnershipFlow() {
       }
       const res = await fetch("/api/collector/ownership-claim", {
         method: "POST",
+        credentials: "include",
+        headers: { "x-csrf-token": csrfToken },
         body: fd,
       });
       const j = (await res.json().catch(() => ({}))) as {
@@ -228,7 +242,7 @@ export function ClaimOwnershipFlow() {
           </p>
         ) : null}
         <InfoTooltip text="You are declaring your position in relation to a registered work. This will be recorded as part of the provenance history." />
-        <h1 className="mt-2 font-serif text-2xl font-normal tracking-tight text-neutral-950 sm:text-3xl">
+        <h1 className="mt-2 font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950 sm:text-3xl">
           Declare ownership
         </h1>
       </header>

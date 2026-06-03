@@ -1,5 +1,9 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { collectorTemporalPresenceLines } from "@/lib/archival-temporal";
+import { fillMessage } from "@/lib/locale-messages";
 
 export type CollectorPublicHeroStats = {
   total_owned: number;
@@ -24,6 +28,7 @@ export function CollectorPublicHero({
   stats,
   ownerTools,
 }: Props) {
+  const { t } = useLocalePreferences();
   const temporalPresence = collectorTemporalPresenceLines(stats);
 
   return (
@@ -63,7 +68,9 @@ export function CollectorPublicHero({
             {stats.first_activity_at &&
             !Number.isNaN(new Date(stats.first_activity_at).getTime()) ? (
               <span className="inline-flex items-center rounded-full border border-neutral-900/8 bg-white/50 px-3.5 py-1.5 text-[12px] tabular-nums text-neutral-500 backdrop-blur-sm">
-                Stewardship since {new Date(stats.first_activity_at).getFullYear()}
+                {fillMessage(t("collector.hero.studioSince"), {
+                  year: new Date(stats.first_activity_at).getFullYear(),
+                })}
               </span>
             ) : null}
           </div>

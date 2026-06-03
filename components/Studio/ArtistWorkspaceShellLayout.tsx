@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 
+import { WorkspaceSidebarActivityFeed } from "@/components/Studio/WorkspaceSidebarActivityFeed";
 import {
   WorkspaceShell,
   WorkspaceShellFooterLinks,
@@ -15,20 +16,18 @@ import {
   navigateToStudioSection,
   type StudioSectionId,
 } from "@/lib/studio-workspace-nav";
+import { appendPersonalArchiveNavItem } from "@/lib/personal-archive-nav";
+import { STUDIO_SECTION_LABEL_KEYS } from "@/lib/workspace-nav-i18n";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { workspace } from "@/styles/workspace-design";
-
-type ActivityRow = {
-  id: string;
-  message: string;
-  created_at?: string;
-  at?: string;
-};
 
 type ArtistWorkspaceShellLayoutProps = {
   children: React.ReactNode;
   userId: string;
   /** When set (e.g. on /studio), highlights that section in the sidebar */
   activeSection?: StudioSectionId | null;
+  /** Overrides section highlight (e.g. /personal-archive) */
+  activeNavId?: string | null;
   saleSignalCount?: number;
   accountActive?: boolean;
   catalogueActive?: boolean;
@@ -38,72 +37,33 @@ export function ArtistWorkspaceShellLayout({
   children,
   userId,
   activeSection = null,
+  activeNavId = null,
   saleSignalCount = 0,
   accountActive = false,
   catalogueActive = false,
 }: ArtistWorkspaceShellLayoutProps) {
   const router = useRouter();
+  const { t } = useLocalePreferences();
   const sb = useSupabaseBrowserLazy();
-  const [activityFeed, setActivityFeed] = useState<ActivityRow[]>([]);
-
-  const fetchActivity = useCallback(async () => {
-    const supabase = sb();
-    const { data, error } = await supabase
-      .from("activity_events")
-      .select("id, message, created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(10);
-
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-    setActivityFeed((data as ActivityRow[]) || []);
-  }, [sb, userId]);
-
-  useEffect(() => {
-    void fetchActivity();
-  }, [fetchActivity]);
 
   const navItems = useMemo(
     () =>
-      STUDIO_SECTION_IDS.map((id) => ({
-        id,
-        label: id,
-        showDot: id === "Ownership" && saleSignalCount > 0,
-      })),
-    [saleSignalCount]
+      appendPersonalArchiveNavItem(
+        STUDIO_SECTION_IDS.map((id) => ({
+          id,
+          label: t(STUDIO_SECTION_LABEL_KEYS[id]),
+          showDot: id === "Ownership" && saleSignalCount > 0,
+        })),
+        t
+      ),
+    [saleSignalCount, t]
   );
-
-  const sidebarActivity =
-    activityFeed.length === 0 ? (
-      <p className="text-xs text-neutral-500">No recent activity yet.</p>
-    ) : (
-      <div
-        className={
-          activityFeed.length > 3
-            ? "max-h-[14rem] space-y-3 overflow-y-auto overscroll-y-contain pr-1"
-            : "space-y-3"
-        }
-      >
-        {activityFeed.map((item) => (
-          <div key={item.id} className="text-xs text-neutral-600">
-            <p>{item.message}</p>
-            <p className="mt-1 text-[10px] text-neutral-400">
-              {new Date((item.created_at ?? item.at) || Date.now()).toLocaleString()}
-            </p>
-          </div>
-        ))}
-      </div>
-    );
 
   return (
     <WorkspaceShell
       atmosphereClassName={workspace.atmosphere.environment}
       navItems={navItems}
-      activeId={activeSection ?? ""}
+      activeId={activeNavId ?? activeSection ?? ""}
       onSelect={(id) => {
         if (isStudioSectionId(id)) {
           navigateToStudioSection(router, id);
@@ -117,7 +77,7 @@ export function ArtistWorkspaceShellLayout({
           catalogueActive={catalogueActive}
         />
       }
-      sidebarActivity={sidebarActivity}
+      sidebarActivity={<WorkspaceSidebarActivityFeed userId={userId} />}
       onSignOut={async () => {
         await sb().auth.signOut();
         deferredRouterPush(

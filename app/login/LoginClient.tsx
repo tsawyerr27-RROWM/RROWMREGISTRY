@@ -20,6 +20,7 @@ import {
   authPrimaryButtonClass,
   authSecondaryLinkClass,
 } from "@/components/auth/AuthFieldStyles";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 type View = "signin" | "forgot";
 
@@ -27,6 +28,7 @@ export function LoginClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sb = useSupabaseBrowserLazy();
+  const { t } = useLocalePreferences();
   const nextParam = useMemo(
     () => sanitizeAuthReturnPath(searchParams.get("next")),
     [searchParams]
@@ -147,35 +149,35 @@ export function LoginClient() {
 
   return (
     <AuthPageShell
-      title={view === "signin" ? "Sign in" : "Reset password"}
+      title={view === "signin" ? t("auth.signIn") : t("auth.resetPassword")}
       subtitle={
         view === "signin" ? (
           <>
             {artworkAuthFlow ? (
               <span className="block pb-2 text-neutral-600">
-                Sign in to review and authenticate the artwork record on file.
+                {t("auth.artworkAuthHint")}
               </span>
             ) : null}
-            Access your registry with email and password.{" "}
+            {t("auth.accessSubtitle")}{" "}
             <Link
               href={signupHref}
               className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-[0.2em] hover:decoration-neutral-500"
             >
-              Create an account
+              {t("auth.createAccount")}
             </Link>
           </>
         ) : (
-          "Enter the email associated with your account. We will send a secure link to choose a new password."
+          t("auth.resetSubtitle")
         )
       }
       footer={
         <p className="text-[13px] text-neutral-600 sm:text-sm">
-          Need help?{" "}
+          {t("auth.needHelp")}{" "}
           <Link
             href="/get-started"
             className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-[0.2em] hover:decoration-neutral-500"
           >
-            Get started
+            {t("auth.getStarted")}
           </Link>
         </p>
       }
@@ -184,7 +186,7 @@ export function LoginClient() {
         <form onSubmit={handleSignIn} className="space-y-5 sm:space-y-6">
           <div>
             <label htmlFor="login-email" className={authLabelClass}>
-              Email
+              {t("auth.email")}
             </label>
             <input
               id="login-email"
@@ -201,14 +203,14 @@ export function LoginClient() {
           <div>
             <div className="mb-1.5 flex flex-wrap items-end justify-between gap-2">
               <label htmlFor="login-password" className={authLabelClass + " mb-0"}>
-                Password
+                {t("auth.password")}
               </label>
               <button
                 type="button"
                 onClick={switchToForgot}
                 className="text-[12px] font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-[0.2em] hover:text-neutral-900 sm:text-[13px]"
               >
-                Forgot password?
+                {t("auth.forgotPassword")}
               </button>
             </div>
             <input
@@ -230,7 +232,7 @@ export function LoginClient() {
               className="h-4 w-4 rounded border-black/20 text-neutral-950 focus:ring-neutral-900/20"
             />
             <span className="text-[13px] text-neutral-700 sm:text-sm">
-              Remember me
+              {t("auth.rememberMe")}
             </span>
           </label>
           {err ? (
@@ -243,14 +245,14 @@ export function LoginClient() {
             disabled={submitting}
             className={authPrimaryButtonClass}
           >
-            {submitting ? "Signing in…" : "Sign in"}
+            {submitting ? t("auth.signingIn") : t("auth.signIn")}
           </button>
         </form>
       ) : (
         <form onSubmit={handleForgot} className="space-y-5 sm:space-y-6">
           <div>
             <label htmlFor="forgot-email" className={authLabelClass}>
-              Email
+              {t("auth.email")}
             </label>
             <input
               id="forgot-email"
@@ -279,7 +281,7 @@ export function LoginClient() {
             disabled={submitting}
             className={authPrimaryButtonClass}
           >
-            {submitting ? "Sending…" : "Send reset link"}
+            {submitting ? t("auth.sending") : t("auth.sendReset")}
           </button>
           <p className="text-center">
             <button
@@ -287,7 +289,7 @@ export function LoginClient() {
               onClick={switchToSignIn}
               className={authSecondaryLinkClass}
             >
-              Back to sign in
+              {t("auth.backToSignIn")}
             </button>
           </p>
         </form>

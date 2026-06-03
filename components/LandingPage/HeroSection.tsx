@@ -11,12 +11,14 @@ import {
 
 import { HeroPigmentField } from "@/components/LandingPage/HeroPigmentField";
 import { useMaxWidth767 } from "@/hooks/useMaxWidth767";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { narrativeControl } from "@/styles/system-design";
 
 /**
  * Entry: full-viewport hero with local pigment field, typographic watermark, scroll depth.
  */
 export default function HeroSection() {
+  const { t } = useLocalePreferences();
   const sectionRef = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
   const narrow = useMaxWidth767();
@@ -84,12 +86,11 @@ export default function HeroSection() {
             style={{ y: contentY, opacity: contentOpacity }}
           >
             <h1 className="mt-7 max-w-[min(100%,46rem)] font-serif text-[clamp(2.5rem,7.4vw,5.2rem)] font-normal leading-[0.985] tracking-[-0.02em] text-neutral-950 md:mt-8 lg:max-w-[min(100%,52rem)]">
-              Authorship and chronology, on one catalogue record
+              {t("landing.hero.title")}
             </h1>
 
-            <p className="mt-10 max-w-[38rem] text-sm leading-[1.78] text-neutral-600 md:text-base md:leading-[1.75]">
-              Each work keeps one stable registry identity. Chronology and the current
-              record show what participants file. Open a work to watch continuity accrue.
+            <p className="mt-10 max-w-[38rem] text-[15px] leading-[1.85] text-neutral-600 md:text-base md:leading-[1.85]">
+              {t("landing.hero.lede")}
             </p>
 
             <nav
@@ -97,16 +98,16 @@ export default function HeroSection() {
               aria-label="Primary actions"
             >
               <Link href="/registry" className={`${narrativeControl.primary} w-fit`}>
-                Browse catalogue
+                {t("landing.hero.browseCatalogue")}
               </Link>
               <Link href="/get-started" className={`${narrativeControl.secondary} w-fit`}>
-                Take part
+                {t("landing.hero.takePart")}
               </Link>
               <Link
                 href="/about"
                 className={`${narrativeControl.quietLink} w-fit sm:ml-2`}
               >
-                Overview
+                {t("landing.hero.overview")}
               </Link>
             </nav>
           </motion.div>

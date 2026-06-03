@@ -5,12 +5,12 @@ import { useState } from "react";
 
 import { Badge } from "@/components/ui/Badge";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
-import {
-  type ArtworkAuthenticationInviteRow,
-  artworkAuthenticationInviteStatusLabel,
-  buildArtworkAuthenticationInviteUrl,
-} from "@/lib/artwork-authentication-invite";
-import { ARTWORK_AUTH_INVITE_COPY } from "@/lib/artwork-authentication-invite";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import type { ArtworkAuthenticationInviteRow } from "@/lib/artwork-authentication-invite";
+import { buildArtworkAuthenticationInviteUrl } from "@/lib/artwork-authentication-invite";
+import { artworkAuthInviteStatusLabel } from "@/lib/gallery-invitations-i18n";
+import { fillMessage } from "@/lib/locale-messages";
+import { translateCanonicalPhrase } from "@/lib/representation-i18n";
 import { workspace } from "@/styles/workspace-design";
 
 type Props = {
@@ -48,16 +48,18 @@ export function GalleryArtworkAuthenticationInvitesSection({
   message,
   error,
 }: Props) {
+  const { t } = useLocalePreferences();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const sectionDesc = `${t("gallery.artworkAuth.sectionDescIntro")} ${translateCanonicalPhrase("notApprovalWorkflow", t)}`;
 
   return (
     <section
-      aria-label={ARTWORK_AUTH_INVITE_COPY.artworkSectionTitle}
+      aria-label={t("gallery.artworkAuth.sectionTitle")}
       className={workspace.panel.shell}
     >
-      <InfoTooltip text={ARTWORK_AUTH_INVITE_COPY.artworkSectionDesc} />
+      <InfoTooltip text={sectionDesc} />
       <h2 className="font-serif text-lg font-normal text-neutral-950 md:text-xl">
-        {ARTWORK_AUTH_INVITE_COPY.artworkSectionTitle}
+        {t("gallery.artworkAuth.sectionTitle")}
       </h2>
 
       {error ? (
@@ -73,19 +75,18 @@ export function GalleryArtworkAuthenticationInvitesSection({
 
       {invites.length === 0 ? (
         <p className="mt-6 text-[13px] text-neutral-500">
-          No artwork authentication invitations yet. From Works, use{" "}
-          <span className="font-medium text-neutral-700">
-            Invite artist to authenticate
-          </span>{" "}
-          on a registered record.
+          {fillMessage(t("gallery.artworkAuth.emptyBody"), {
+            cta: t("gallery.catalogue.inviteArtistAuthenticate"),
+          })}
         </p>
       ) : (
         <ul className="mt-6 divide-y divide-neutral-900/[0.06]">
           {invites.map((row) => {
             const art = artFromRow(row);
-            const title = art?.title?.trim() || "Untitled work";
+            const title =
+              art?.title?.trim() || t("gallery.participation.untitledWork");
             const reg = art?.registry_id?.trim();
-            const statusLabel = artworkAuthenticationInviteStatusLabel(row);
+            const statusLabel = artworkAuthInviteStatusLabel(row, t);
             const authenticated = row.status === "authenticated";
             const linkUrl = row.invite_token
               ? buildArtworkAuthenticationInviteUrl(
@@ -122,7 +123,8 @@ export function GalleryArtworkAuthenticationInvitesSection({
                       {row.artist_name ? ` · ${row.artist_name}` : ""}
                     </p>
                     <p className="mt-0.5 text-[11px] text-neutral-400">
-                      Sent {formatSent(row.created_at)}
+                      {t("gallery.artworkAuth.sentPrefix")}{" "}
+                      {formatSent(row.created_at)}
                     </p>
                   </div>
                 </div>
@@ -146,7 +148,9 @@ export function GalleryArtworkAuthenticationInvitesSection({
                         onClick={() => onResend(row.id)}
                         className="rounded-lg border border-neutral-900/10 bg-white px-2.5 py-1 text-[10px] font-medium text-neutral-800 hover:bg-neutral-50"
                       >
-                        {resendingId === row.id ? "Sending…" : "Resend"}
+                        {resendingId === row.id
+                          ? t("common.sending")
+                          : t("gallery.artworkAuth.resend")}
                       </button>
                       {linkUrl ? (
                         <button
@@ -162,7 +166,9 @@ export function GalleryArtworkAuthenticationInvitesSection({
                           }}
                           className="rounded-lg border border-neutral-900/10 px-2.5 py-1 text-[10px] text-neutral-600"
                         >
-                          {copiedId === row.id ? "Copied" : "Copy link"}
+                          {copiedId === row.id
+                            ? t("gallery.invitations.copied")
+                            : t("gallery.artworkAuth.copyLink")}
                         </button>
                       ) : null}
                     </>

@@ -33,7 +33,7 @@
   --rrowm-narrative-reveal-duration: 720ms;
   --rrowm-narrative-page-enter-duration: 850ms;
   /* Vertical rhythm — section-scale (spacing as structure) */
-  --rrowm-space-section-y: clamp(2.5rem, 5vw, 4.5rem);
+  --rrowm-space-section-y: clamp(3rem, 6vw, 5.5rem);
   --rrowm-space-block: clamp(1.25rem, 2.5vw, 2rem);
   --rrowm-radius-panel: 1rem;
   /* Role accents (HSL) — use sparingly for borders/focus, not badges */
@@ -892,7 +892,7 @@ html[data-rrowm-invite-signup="1"] [data-rrowm-chrome-suppress-invite-signup] {
 /** Bento / marketing grid tiles — light */
 .liquid-glass-tile {
   border-radius: 0;
-  border: 1px solid rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(15, 23, 42, 0.05);
   background: linear-gradient(
     165deg,
     rgba(255, 255, 255, 0.98) 0%,
@@ -900,8 +900,8 @@ html[data-rrowm-invite-signup="1"] [data-rrowm-chrome-suppress-invite-signup] {
     rgba(248, 250, 252, 0.97) 100%
   );
   box-shadow:
-    0 1px 3px -1px rgba(15, 23, 42, 0.05),
-    0 18px 48px -32px rgba(15, 23, 42, 0.1);
+    0 1px 3px -1px rgba(15, 23, 42, 0.04),
+    0 14px 40px -28px rgba(15, 23, 42, 0.08);
   backdrop-filter: blur(8px) saturate(1.04);
   -webkit-backdrop-filter: blur(8px) saturate(1.04);
 }
@@ -991,12 +991,11 @@ html[data-rrowm-invite-signup="1"] [data-rrowm-chrome-suppress-invite-signup] {
   );
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.65),
-    0 2px 6px -2px rgba(15, 23, 42, 0.1),
-    0 16px 40px -12px rgba(15, 23, 42, 0.16),
-    0 40px 96px -28px rgba(15, 23, 42, 0.22),
-    0 64px 140px -48px rgba(15, 23, 42, 0.14),
+    0 2px 6px -2px rgba(15, 23, 42, 0.08),
+    0 12px 36px -10px rgba(15, 23, 42, 0.1),
+    0 28px 72px -24px rgba(15, 23, 42, 0.12),
     inset 0 1px 0 0 rgba(255, 255, 255, 1),
-    inset 0 -24px 48px -32px rgba(148, 163, 184, 0.1);
+    inset 0 -24px 48px -32px rgba(148, 163, 184, 0.08);
   backdrop-filter: blur(22px) saturate(1.14);
   -webkit-backdrop-filter: blur(22px) saturate(1.14);
 }
@@ -1054,13 +1053,13 @@ html[data-rrowm-invite-signup="1"] [data-rrowm-chrome-suppress-invite-signup] {
 
 .liquid-glass-tile-premium {
   border-radius: 1rem;
-  border: 1px solid rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(15, 23, 42, 0.05);
   background: linear-gradient(
     165deg,
     rgba(255, 255, 255, 0.98) 0%,
     rgba(252, 253, 255, 0.92) 100%
   );
-  box-shadow: 0 20px 56px -36px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 14px 40px -28px rgba(15, 23, 42, 0.08);
   backdrop-filter: blur(10px) saturate(1.05);
   -webkit-backdrop-filter: blur(10px) saturate(1.05);
 }
@@ -1212,6 +1211,13 @@ h1, h2, h3 {
   border: 1px solid rgba(15, 23, 42, 0.07);
   background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 1px 2px -1px rgba(15, 23, 42, 0.05);
+}
+
+/** Body text utility — consistent readable prose */
+.rrowm-text-body {
+  font-size: 15px;
+  line-height: 1.7;
+  color: rgb(82 82 82);
 }
 
 /** Section vertical rhythm — prefer over ad-hoc py-* */

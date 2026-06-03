@@ -14,6 +14,8 @@ import {
   authPrimaryButtonClass,
 } from "@/components/auth/AuthFieldStyles";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fillMessage } from "@/lib/locale-messages";
 
 const allowedRoles = ["artist", "gallery", "collector"] as const;
 type SignupRole = (typeof allowedRoles)[number];
@@ -42,13 +44,11 @@ type InvitePreviewPayload = {
 const authInputDisabledClass =
   "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-neutral-50";
 
-const TRUST_FOOTER_COPY =
-  "This invitation was sent through the RROWM Registry. Your details are used only to establish your profile and what appears on file for represented works.";
-
 function InviteTrustFooter() {
+  const { t } = useLocalePreferences();
   return (
     <p className="mx-auto max-w-md text-[12px] leading-relaxed text-neutral-500 sm:text-[13px]">
-      {TRUST_FOOTER_COPY}
+      {t("signup.invite.trustFooter")}
     </p>
   );
 }
@@ -77,6 +77,7 @@ function resolveInviteSurface(
 
 export function SignupClient() {
   const router = useRouter();
+  const { t } = useLocalePreferences();
   const sb = useSupabaseBrowserLazy();
   const searchParams = useSearchParams();
   const inviteTokenParam = useMemo(
@@ -147,10 +148,10 @@ export function SignupClient() {
   }, [inviteTokenParam]);
 
   const roleLabel = useMemo(() => {
-    if (role === "gallery") return "Gallery";
-    if (role === "artist") return "Artist";
-    return "Collector";
-  }, [role]);
+    if (role === "gallery") return t("signup.role.gallery");
+    if (role === "artist") return t("signup.role.artist");
+    return t("signup.role.collector");
+  }, [role, t]);
 
   const completeQs = useMemo(() => {
     const q = new URLSearchParams();
@@ -235,20 +236,20 @@ export function SignupClient() {
     setInfoMsg(null);
 
     if (inviteTokenParam && !inviteSignupAllowed) {
-      setErr("This invitation cannot be used to complete registration.");
+      setErr(t("signup.err.inviteBlocked"));
       return;
     }
 
     if (!cleanEmail) {
-      setErr("Enter your email address.");
+      setErr(t("signup.err.emailRequired"));
       return;
     }
     if (password.length < 8) {
-      setErr("Password must be at least 8 characters.");
+      setErr(t("signup.err.passwordLength"));
       return;
     }
     if (password !== confirmPassword) {
-      setErr("Passwords do not match.");
+      setErr(t("signup.err.passwordMismatch"));
       return;
     }
 
@@ -309,9 +310,7 @@ export function SignupClient() {
       window.sessionStorage.setItem("rrowm_pending_signup_role", role);
     } catch { /* ignore */ }
 
-    setInfoMsg(
-      "Check your email to confirm your address, then return here in this browser to finish setup."
-    );
+    setInfoMsg(t("signup.checkEmail"));
   };
 
   /* ── Invite flow ── */
@@ -326,10 +325,10 @@ export function SignupClient() {
       return (
         <AuthPageShell
           {...shellCommon}
-          title="Invitation"
+          title={t("signup.invite.title")}
           subtitle={
             <p className="text-[14px] text-neutral-600 sm:text-[15px]">
-              Verifying your invitation…
+              {t("signup.invite.verifying")}
             </p>
           }
         >
@@ -337,7 +336,7 @@ export function SignupClient() {
             className="text-center text-[14px] text-neutral-500"
             role="status"
           >
-            One moment.
+            {t("signup.invite.oneMoment")}
           </p>
         </AuthPageShell>
       );
@@ -350,20 +349,20 @@ export function SignupClient() {
       inviteSurface === "invalid"
     ) {
       const titles: Record<string, string> = {
-        fetch_error: "This invitation could not be verified",
-        expired: "This invitation has expired",
-        used: "This invitation has already been used",
-        invalid: "This invitation is not valid",
+        fetch_error: t("signup.invite.fetchError"),
+        expired: t("signup.invite.expired"),
+        used: t("signup.invite.used"),
+        invalid: t("signup.invite.invalid"),
       };
       return (
         <AuthPageShell
           {...shellCommon}
-          title={titles[inviteSurface] || "Invitation"}
+          title={titles[inviteSurface] || t("signup.invite.title")}
           subtitle={
             <p className="text-[14px] leading-relaxed text-neutral-600 sm:text-[15px]">
               {inviteSurface === "used"
-                ? "If you already have an account, sign in below. Otherwise create a new account to get started."
-                : "You can still join the registry and manage your records. Create an account or sign in if you already have one."}
+                ? t("signup.invite.usedSubtitle")
+                : t("signup.invite.fallbackSubtitle")}
             </p>
           }
         >
@@ -372,13 +371,13 @@ export function SignupClient() {
               href="/signup"
               className={authPrimaryButtonClass + " text-center"}
             >
-              Create account
+              {t("auth.createAccount")}
             </Link>
             <Link
               href="/login"
               className="rounded-xl border border-neutral-900/12 bg-white px-6 py-3 text-center text-sm font-medium text-neutral-800"
             >
-              Sign in
+              {t("auth.signIn")}
             </Link>
           </div>
         </AuthPageShell>
@@ -398,7 +397,7 @@ export function SignupClient() {
             <div className="rounded-2xl border border-black/[0.08] bg-white/95 p-6 shadow-[0_24px_64px_-32px_rgba(15,23,42,0.18)] backdrop-blur-sm sm:p-8">
               <InfoTooltip text="Works associated with your practice are on file. Review the records, then join to authenticate authorship and contribute to the continuity." />
               <h1 className="mt-3 font-serif text-[1.65rem] font-normal leading-tight tracking-tight text-neutral-950 sm:text-3xl">
-                Records associated with your practice
+                {t("signup.invite.recordsTitle")}
               </h1>
             </div>
 
@@ -437,9 +436,7 @@ export function SignupClient() {
             ) : (
               <div className="mt-6 rounded-2xl border border-neutral-900/[0.06] bg-white/60 px-6 py-8 text-center shadow-sm backdrop-blur-sm">
                 <p className="text-sm text-neutral-600">
-                  Records filed by {gName} will appear in your studio once you
-                  join. You can review, authenticate authorship, and deepen each
-                  record.
+                  {fillMessage(t("signup.invite.noArtworks"), { gallery: gName })}
                 </p>
               </div>
             )}
@@ -447,25 +444,12 @@ export function SignupClient() {
             {/* Join / Sign in CTAs */}
             <div className="mt-6 rounded-2xl border border-black/[0.08] bg-white/95 p-6 shadow-[0_24px_64px_-32px_rgba(15,23,42,0.18)] backdrop-blur-sm sm:p-8">
               <p className="text-sm leading-relaxed text-neutral-700">
-                {masked ? (
-                  <>
-                    Join the registry as{" "}
-                    <span className="font-medium text-neutral-900">
-                      {masked}
-                    </span>{" "}
-                    to authenticate authorship, add continuity, and deepen
-                    records on file.
-                  </>
-                ) : (
-                  <>
-                    Join the registry to authenticate authorship, add
-                    continuity, and deepen records on file.
-                  </>
-                )}
+                {masked
+                  ? fillMessage(t("signup.invite.joinMasked"), { email: masked })
+                  : t("signup.invite.joinGeneric")}
               </p>
               <p className="mt-2 text-[12px] text-neutral-500">
-                Layered attestations only, not ownership adjudication or
-                institution approval.
+                {t("signup.invite.attestationNote")}
               </p>
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                 <button
@@ -473,13 +457,13 @@ export function SignupClient() {
                   onClick={() => setShowForm(true)}
                   className={authPrimaryButtonClass + " flex-1 text-center"}
                 >
-                  Join to authenticate
+                  {t("signup.invite.joinToAuthenticate")}
                 </button>
                 <Link
                   href={loginHref}
                   className="flex-1 rounded-xl border border-neutral-900/12 bg-white px-6 py-3 text-center text-sm font-medium text-neutral-800"
                 >
-                  Sign in
+                  {t("auth.signIn")}
                 </Link>
               </div>
             </div>
@@ -497,12 +481,11 @@ export function SignupClient() {
     return (
       <AuthPageShell
         {...shellCommon}
-        title="Create artist profile"
+        title={t("signup.invite.createArtistProfile")}
         subtitle={
           <p className="text-[14px] leading-relaxed text-neutral-600 sm:text-[15px]">
-            <span className="font-medium text-neutral-800">{gName}</span> has
-            invited you to authenticate records on file. After you create your
-            profile, you&apos;ll review and deepen each record.
+            <span className="font-medium text-neutral-800">{gName}</span>{" "}
+            {t("signup.invite.galleryInvited")}
           </p>
         }
       >
@@ -510,14 +493,12 @@ export function SignupClient() {
           <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
             {masked ? (
               <p className="text-[13px] leading-relaxed text-neutral-600 sm:text-sm">
-                This invitation is directed to{" "}
-                <span className="text-neutral-900">{masked}</span>. Use that
-                address when you register.
+                {fillMessage(t("signup.invite.directedTo"), { email: masked })}
               </p>
             ) : null}
             <div>
               <label htmlFor="signup-email" className={authLabelClass}>
-                Email
+                {t("auth.email")}
               </label>
               <input
                 id="signup-email"
@@ -533,7 +514,7 @@ export function SignupClient() {
             </div>
             <div>
               <label htmlFor="signup-password" className={authLabelClass}>
-                Password
+                {t("auth.password")}
               </label>
               <input
                 id="signup-password"
@@ -543,12 +524,12 @@ export function SignupClient() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={`${authInputClass} ${authInputDisabledClass}`}
-                placeholder="At least 8 characters"
+                placeholder={t("signup.passwordPlaceholder")}
               />
             </div>
             <div>
               <label htmlFor="signup-confirm" className={authLabelClass}>
-                Confirm password
+                {t("signup.confirmPassword")}
               </label>
               <input
                 id="signup-confirm"
@@ -558,7 +539,7 @@ export function SignupClient() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className={`${authInputClass} ${authInputDisabledClass}`}
-                placeholder="Re-enter password"
+                placeholder={t("signup.confirmPlaceholder")}
               />
             </div>
             {infoMsg ? (
@@ -576,7 +557,7 @@ export function SignupClient() {
               disabled={submitting}
               className={authPrimaryButtonClass}
             >
-              {submitting ? "Creating profile…" : "Create profile"}
+              {submitting ? t("signup.creatingProfile") : t("signup.createProfile")}
             </button>
           </form>
         </div>
@@ -587,24 +568,24 @@ export function SignupClient() {
   /* ── Standard (non-invite) signup ── */
   return (
     <AuthPageShell
-      title={isArtworkAuthFlow ? "Create artist account" : "Join the registry"}
+      title={
+        isArtworkAuthFlow ? t("signup.createArtistAccount") : t("signup.joinTitle")
+      }
       subtitle={
         <>
           {isArtworkAuthFlow ? (
             <span className="block pb-2 text-neutral-600">
-              After setup you will return to review and authenticate the artwork
-              record on file.
+              {t("signup.subtitleArtworkAuth")}
             </span>
           ) : null}
-          You&apos;re signing up as{" "}
-          <span className="font-medium text-neutral-900">{roleLabel}</span>.
-          Your studio holds represented works, chronology actions, and the
-          current record together. Already registered?{" "}
+          {t("signup.signingUpAs")}{" "}
+          <span className="font-medium text-neutral-900">{roleLabel}</span>.{" "}
+          {t("signup.studioDesc")} {t("signup.alreadyRegistered")}{" "}
           <Link
             href={loginHref}
             className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-[0.2em] hover:decoration-neutral-500"
           >
-            Sign in
+            {t("auth.signIn")}
           </Link>
         </>
       }
@@ -614,7 +595,7 @@ export function SignupClient() {
             href="/get-started"
             className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-[0.2em] hover:decoration-neutral-500"
           >
-            Other entry paths
+            {t("signup.otherEntryPaths")}
           </Link>
         </p>
       }
@@ -622,7 +603,7 @@ export function SignupClient() {
       <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
         <div>
           <label htmlFor="signup-email" className={authLabelClass}>
-            Work email
+            {t("signup.workEmail")}
           </label>
           <input
             id="signup-email"
@@ -638,7 +619,7 @@ export function SignupClient() {
         </div>
         <div>
           <label htmlFor="signup-password" className={authLabelClass}>
-            Password
+            {t("auth.password")}
           </label>
           <input
             id="signup-password"
@@ -648,12 +629,12 @@ export function SignupClient() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={authInputClass}
-            placeholder="At least 8 characters"
+            placeholder={t("signup.passwordPlaceholder")}
           />
         </div>
         <div>
           <label htmlFor="signup-confirm" className={authLabelClass}>
-            Confirm password
+            {t("signup.confirmPassword")}
           </label>
           <input
             id="signup-confirm"
@@ -663,7 +644,7 @@ export function SignupClient() {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             className={authInputClass}
-            placeholder="Re-enter password"
+            placeholder={t("signup.confirmPlaceholder")}
           />
         </div>
         {infoMsg ? (
@@ -681,7 +662,7 @@ export function SignupClient() {
           disabled={submitting}
           className={authPrimaryButtonClass}
         >
-          {submitting ? "Creating profile…" : "Create profile"}
+          {submitting ? t("signup.creatingProfile") : t("signup.createProfile")}
         </button>
       </form>
     </AuthPageShell>

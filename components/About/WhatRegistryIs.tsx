@@ -1,4 +1,7 @@
+"use client";
+
 import { narrativeLayout } from "@/styles/narrative-layout";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 type WhatRegistryIsProps = {
   /** Compact panel for tabbed About digest */
@@ -6,6 +9,7 @@ type WhatRegistryIsProps = {
 };
 
 export function WhatRegistryIs({ density = "default" }: WhatRegistryIsProps) {
+  const { t } = useLocalePreferences();
   const digest = density === "digest";
   const Shell = digest ? "div" : "section";
 
@@ -42,7 +46,7 @@ export function WhatRegistryIs({ density = "default" }: WhatRegistryIsProps) {
         >
           <div className={digest ? "" : "lg:sticky lg:top-32 lg:max-w-[13rem]"}>
             <h2 {...(!digest ? { id: "about-what-heading" } : {})} className={h2Class}>
-              What the registry is
+              {t("about.what.title")}
             </h2>
           </div>
         </div>
@@ -73,20 +77,13 @@ export function WhatRegistryIs({ density = "default" }: WhatRegistryIsProps) {
                   : "max-w-3xl text-base leading-[1.82] text-neutral-700 md:text-lg md:leading-[1.76]"
               }
             >
-              RROWM Registry is a system for recording authorship, provenance,
-              and verification of artworks as durable records. Each work can
-              receive a stable registry identity that persists across transfers
-              and time.
+              {t("about.what.p1")}
             </p>
             <p className={digest ? "max-w-3xl" : "max-w-3xl"}>
-              Certificates and provenance events refer to that identity, so
-              authenticity documents and history stay aligned instead of
-              drifting across disconnected files or claims.
+              {t("about.what.p2")}
             </p>
             <p className={digest ? "max-w-3xl" : "max-w-3xl"}>
-              The registry is designed as infrastructure: neutral in tone,
-              explicit about what is on record, and careful about what remains
-              private.
+              {t("about.what.p3")}
             </p>
           </div>
         </div>

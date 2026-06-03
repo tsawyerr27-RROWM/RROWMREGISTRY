@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 
+import { WorkspaceSidebarActivityFeed } from "@/components/Studio/WorkspaceSidebarActivityFeed";
 import {
   WorkspaceShell,
   WorkspaceShellFooterLinks,
@@ -15,15 +16,9 @@ import {
   navigateToGallerySection,
   type GallerySectionId,
 } from "@/lib/gallery-workspace-nav";
-
-const GALLERY_NAV_LABELS: Record<GallerySectionId, string> = {
-  studio: "Overview",
-  "record-depth": "Record depth",
-  roster: "Artists",
-  catalogue: "Works",
-  verification: "Continuity & certs",
-  invitations: "Invitations",
-};
+import { appendPersonalArchiveNavItem } from "@/lib/personal-archive-nav";
+import { GALLERY_SECTION_LABEL_KEYS } from "@/lib/workspace-nav-i18n";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 type ActivityRow = {
   id: string;
@@ -35,6 +30,7 @@ type GalleryWorkspaceShellLayoutProps = {
   children: React.ReactNode;
   userId: string;
   activeSection?: GallerySectionId | null;
+  activeNavId?: string | null;
   accountActive?: boolean;
   catalogueActive?: boolean;
 };
@@ -43,67 +39,31 @@ export function GalleryWorkspaceShellLayout({
   children,
   userId,
   activeSection = null,
+  activeNavId = null,
   accountActive = false,
   catalogueActive = false,
 }: GalleryWorkspaceShellLayoutProps) {
   const router = useRouter();
+  const { t } = useLocalePreferences();
   const sb = useSupabaseBrowserLazy();
-  const [activityFeed, setActivityFeed] = useState<ActivityRow[]>([]);
-
-  const fetchActivity = useCallback(async () => {
-    const supabase = sb();
-    const { data, error } = await supabase
-      .from("activity_events")
-      .select("id, message, created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(10);
-
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-    setActivityFeed((data as ActivityRow[]) || []);
-  }, [sb, userId]);
-
-  useEffect(() => {
-    void fetchActivity();
-  }, [fetchActivity]);
 
   const navItems = useMemo(
     () =>
-      GALLERY_SECTION_IDS.map((id) => ({
-        id,
-        label: GALLERY_NAV_LABELS[id],
-      })),
-    []
+      appendPersonalArchiveNavItem(
+        GALLERY_SECTION_IDS.map((id) => ({
+          id,
+          label: t(GALLERY_SECTION_LABEL_KEYS[id]),
+        })),
+        t
+      ),
+    [t]
   );
-
-  const sidebarActivity =
-    activityFeed.length === 0 ? (
-      <p className="text-[13px] text-neutral-500">No recent catalogue activity.</p>
-    ) : (
-      <div
-        className={
-          activityFeed.length > 3
-            ? "max-h-[14rem] space-y-3 overflow-y-auto overscroll-y-contain pr-1"
-            : "space-y-3"
-        }
-      >
-        {activityFeed.map((item) => (
-          <div key={item.id} className="text-[13px] leading-snug text-neutral-600">
-            {item.message}
-          </div>
-        ))}
-      </div>
-    );
 
   return (
     <WorkspaceShell
       atmosphereClassName="ds-page-environment"
       navItems={navItems}
-      activeId={activeSection ?? ""}
+      activeId={activeNavId ?? activeSection ?? ""}
       onSelect={(id) => {
         if (isGallerySectionId(id)) {
           navigateToGallerySection(router, id);
@@ -117,7 +77,14 @@ export function GalleryWorkspaceShellLayout({
           catalogueActive={catalogueActive}
         />
       }
-      sidebarActivity={sidebarActivity}
+      sidebarActivity={
+        <WorkspaceSidebarActivityFeed
+          userId={userId}
+          variant="compact"
+          emptyMessage={t("gallery.shell.noCatalogueActivity")}
+        />
+      }
+      activityHeading={t("studio.shell.catalogueActivity")}
       onSignOut={async () => {
         await sb().auth.signOut();
         deferredRouterPush(

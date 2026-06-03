@@ -4,23 +4,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { ArtworkRecordReviewView } from "@/components/artist/ArtworkRecordReviewView";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import {
   persistArtworkAuthInviteToken,
   readPendingArtworkAuthInviteToken,
 } from "@/lib/accept-artwork-auth-invite-client";
 import type { ArtworkAuthenticationInvitePreview } from "@/lib/artwork-authentication-invite";
-
-function formatAcceptError(message: string): string {
-  const m = message.trim();
-  if (!m) return "Could not authenticate authorship on file.";
-  if (m.toLowerCase().includes("different email")) {
-    return "This invitation was sent to a different email address. Sign in with the address that received the invitation, or ask the institution to resend to your current address.";
-  }
-  if (m.toLowerCase().includes("not authorized")) {
-    return "Your account does not match the artist named on this record. Sign in with the invited email, or contact the institution if your registry name differs.";
-  }
-  return m;
-}
 
 function buildReturnPath(token: string, artworkId: string): string {
   if (token) {
@@ -35,6 +24,7 @@ function buildReturnPath(token: string, artworkId: string): string {
 export function AuthenticateArtworkRecordClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t, region } = useLocalePreferences();
   const [token, setToken] = useState("");
   const artworkId = useMemo(
     () => String(searchParams.get("artwork_id") || "").trim(),
@@ -50,6 +40,21 @@ export function AuthenticateArtworkRecordClient() {
   const [contributeOpen, setContributeOpen] = useState(false);
   const [contributeBusy, setContributeBusy] = useState(false);
 
+  const formatAcceptError = useCallback(
+    (message: string): string => {
+      const m = message.trim();
+      if (!m) return t("gallery.artworkAuth.review.authFailed");
+      if (m.toLowerCase().includes("different email")) {
+        return t("gallery.artworkAuth.review.wrongEmail");
+      }
+      if (m.toLowerCase().includes("not authorized")) {
+        return t("gallery.artworkAuth.review.notAuthorized");
+      }
+      return m;
+    },
+    [t]
+  );
+
   useEffect(() => {
     const fromUrl = String(searchParams.get("token") || "").trim();
     if (fromUrl.length >= 32) {
@@ -64,9 +69,7 @@ export function AuthenticateArtworkRecordClient() {
   const loadPreview = useCallback(async () => {
     if (!token && !artworkId) {
       setPreview(null);
-      setErr(
-        "Missing review link. Open this page from your invitation email or artist studio."
-      );
+      setErr(t("gallery.artworkAuth.review.missingLink"));
       setLoading(false);
       return;
     }
@@ -76,6 +79,7 @@ export function AuthenticateArtworkRecordClient() {
       const q = new URLSearchParams();
       if (token) q.set("token", token);
       else if (artworkId) q.set("artwork_id", artworkId);
+      q.set("lang", region.lang);
       const res = await fetch(
         `/api/artwork-authentication/review?${q.toString()}`,
         { credentials: "include" }
@@ -85,17 +89,17 @@ export function AuthenticateArtworkRecordClient() {
         | null;
       if (!j || typeof j.valid !== "boolean") {
         setPreview(null);
-        setErr("Could not load this record review. Please try the link again.");
+        setErr(t("gallery.artworkAuth.review.loadFailed"));
         return;
       }
       setPreview(j);
     } catch {
       setPreview(null);
-      setErr("Could not load this record review. Please try the link again.");
+      setErr(t("gallery.artworkAuth.review.loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [token, artworkId]);
+  }, [token, artworkId, t, region.lang]);
 
   useEffect(() => {
     void loadPreview();
@@ -121,7 +125,7 @@ export function AuthenticateArtworkRecordClient() {
         if (!res.ok) {
           setErr(
             formatAcceptError(
-              j.error || "Could not authenticate authorship on file."
+              j.error || t("gallery.artworkAuth.review.authFailed")
             )
           );
           return;
@@ -137,7 +141,7 @@ export function AuthenticateArtworkRecordClient() {
         if (!res.ok) {
           setErr(
             formatAcceptError(
-              j.error || "Could not authenticate authorship on file."
+              j.error || t("gallery.artworkAuth.review.authFailed")
             )
           );
           return;
@@ -146,7 +150,7 @@ export function AuthenticateArtworkRecordClient() {
       setDone(true);
       void loadPreview();
     } catch {
-      setErr("Network error. Try again.");
+      setErr(t("gallery.artworkAuth.networkError"));
     } finally {
       setBusy(false);
     }
@@ -155,7 +159,7 @@ export function AuthenticateArtworkRecordClient() {
   if (loading) {
     return (
       <p className="text-center text-sm text-neutral-500" role="status">
-        Loading record review…
+        {t("gallery.artworkAuth.review.loading")}
       </p>
     );
   }
@@ -164,30 +168,27 @@ export function AuthenticateArtworkRecordClient() {
     return (
       <div className="space-y-6">
         <div className="rounded-2xl border border-neutral-200 bg-white px-6 py-8 text-sm text-neutral-800">
-          <p>{err || "Could not load this record review."}</p>
+          <p>{err || t("gallery.artworkAuth.review.loadFailed")}</p>
           <p className="mt-3 text-[13px] text-neutral-500">
-            The invitation link may have expired or the record may have moved.
-            If you received an email invitation, try the link again or contact
-            the institution.
+            {t("gallery.artworkAuth.review.loadFailedHint")}
           </p>
         </div>
         <div className="rounded-2xl border border-neutral-900/[0.06] bg-white/55 p-6 shadow-sm backdrop-blur-md space-y-4">
           <p className="text-sm leading-relaxed text-neutral-800">
-            If you are an artist looking to join the registry and manage your
-            records, you can create an account or sign in.
+            {t("gallery.artworkAuth.review.joinPrompt")}
           </p>
           <div className="flex flex-wrap gap-3">
             <a
               href="/signup"
               className="rounded-xl bg-neutral-950 px-5 py-2.5 text-sm font-semibold text-white"
             >
-              Join the registry
+              {t("gallery.artworkAuth.review.joinRegistry")}
             </a>
             <a
               href="/login"
               className="rounded-xl border border-neutral-900/12 bg-white px-5 py-2.5 text-sm font-medium text-neutral-800"
             >
-              Sign in
+              {t("gallery.artworkAuth.review.signIn")}
             </a>
           </div>
         </div>
@@ -226,7 +227,7 @@ export function AuthenticateArtworkRecordClient() {
           );
           const j = (await res.json().catch(() => ({}))) as { error?: string };
           if (!res.ok) {
-            setErr(j.error || "Could not file contribution.");
+            setErr(j.error || t("gallery.artworkAuth.review.contributeFailed"));
             return;
           }
           setContributeOpen(false);

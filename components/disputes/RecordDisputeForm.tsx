@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 
 import type { DisputeTargetType } from "@/lib/disputes";
+import { fetchRegistryCsrfToken } from "@/lib/registry-action-security/fetch-csrf";
 
 type Props = {
   targetType: DisputeTargetType;
@@ -28,9 +29,18 @@ export function RecordDisputeForm({
     setBusy(true);
     setError(null);
     try {
+      const csrfToken = await fetchRegistryCsrfToken();
+      if (!csrfToken) {
+        setError("Could not prepare a secure session. Refresh the page and try again.");
+        return;
+      }
       const res = await fetch("/api/disputes/create", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "x-csrf-token": csrfToken,
+        },
         body: JSON.stringify({
           target_type: targetType,
           target_id: targetId,

@@ -2,25 +2,28 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 
-const STEPS = [
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import type { MessageKey } from "@/lib/locale-messages";
+
+const STEP_KEYS = [
   {
-    title: "Record",
-    subtitle: "A unique registry identity for each work",
+    titleKey: "about.journey.recordTitle" as MessageKey,
+    subtitleKey: "about.journey.recordSubtitle" as MessageKey,
     dot: "bg-violet-500",
   },
   {
-    title: "Verify",
-    subtitle: "Cryptographic proof & immutable timestamps",
+    titleKey: "about.journey.verifyTitle" as MessageKey,
+    subtitleKey: "about.journey.verifySubtitle" as MessageKey,
     dot: "bg-emerald-500",
   },
   {
-    title: "Certify",
-    subtitle: "Authenticity documents tied to the record",
+    titleKey: "about.journey.certifyTitle" as MessageKey,
+    subtitleKey: "about.journey.certifySubtitle" as MessageKey,
     dot: "bg-sky-500",
   },
   {
-    title: "Trace",
-    subtitle: "Ownership & value history over time",
+    titleKey: "about.journey.traceTitle" as MessageKey,
+    subtitleKey: "about.journey.traceSubtitle" as MessageKey,
     dot: "bg-amber-500",
   },
 ] as const;
@@ -28,6 +31,7 @@ const STEPS = [
 type Tone = "default" | "calm";
 
 export function UseCaseJourney({ tone = "default" }: { tone?: Tone }) {
+  const { t } = useLocalePreferences();
   const reduceMotion = useReducedMotion();
   const calm = tone === "calm";
 
@@ -103,9 +107,9 @@ export function UseCaseJourney({ tone = "default" }: { tone?: Tone }) {
           whileInView="visible"
           viewport={{ once: true, margin: "-8% 0px", amount: 0.3 }}
         >
-          {STEPS.map((step, i) => (
+          {STEP_KEYS.map((step, i) => (
             <motion.li
-              key={step.title}
+              key={step.titleKey}
               variants={reduceMotion ? itemInstant : item}
               className={`group relative flex gap-5 pb-10 last:pb-0 ${calm ? "lg:flex-1 lg:flex-col lg:items-center lg:gap-0 lg:pb-0 lg:pt-14 lg:text-center" : ""}`}
             >
@@ -135,10 +139,10 @@ export function UseCaseJourney({ tone = "default" }: { tone?: Tone }) {
                 {calm ? (
                   <div className="pb-5 lg:pb-0">
                     <p className="font-semibold text-neutral-900">
-                      {step.title}
+                      {t(step.titleKey)}
                     </p>
                     <p className="mt-1 text-sm leading-relaxed text-neutral-600 lg:mt-2 lg:max-w-[11.5rem] lg:mx-auto">
-                      {step.subtitle}
+                      {t(step.subtitleKey)}
                     </p>
                   </div>
                 ) : (
@@ -146,16 +150,16 @@ export function UseCaseJourney({ tone = "default" }: { tone?: Tone }) {
                     className="liquid-glass-tile px-5 py-4 transition-[box-shadow,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:opacity-[0.96] group-hover:shadow-[0_18px_48px_-32px_rgba(15,23,42,0.14)]"
                   >
                     <p className="font-semibold text-neutral-900">
-                      {step.title}
+                      {t(step.titleKey)}
                     </p>
                     <p className="mt-1 text-sm leading-relaxed text-neutral-600">
-                      {step.subtitle}
+                      {t(step.subtitleKey)}
                     </p>
                   </motion.div>
                 )}
               </div>
-              {i < STEPS.length - 1 ? (
-                <span className="sr-only">then</span>
+              {i < STEP_KEYS.length - 1 ? (
+                <span className="sr-only">{t("about.journey.then")}</span>
               ) : null}
             </motion.li>
           ))}

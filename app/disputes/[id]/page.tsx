@@ -34,7 +34,7 @@ export default async function DisputeViewPage({
       <main className="relative mx-auto max-w-[min(100%,88rem)] px-4 sm:px-6 lg:px-8">
         <header className="mt-8 max-w-2xl border-b border-neutral-900/[0.06] pb-8">
           <InfoTooltip text="Review status, add file evidence or external links, and keep materials ready for registry staff. This view is private to you." />
-          <h1 className="font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-[1.75rem]">
+          <h1 className="font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950 md:text-[1.85rem]">
             Dispute
           </h1>
         </header>

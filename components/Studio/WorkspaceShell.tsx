@@ -1,13 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { RegistryCatalogueInfoTooltip } from "@/components/Registry/RegistryCatalogueInfoTooltip";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { workspace } from "@/styles/workspace-design";
 
 export type WorkspaceNavItem = {
   id: string;
   label: string;
+  /** When set, navigates to route instead of in-page section */
+  href?: string;
   /** e.g. pending actions */
   showDot?: boolean;
 };
@@ -41,12 +46,41 @@ export function WorkspaceShell({
   isLightChrome = true,
   sidebarFooter,
   sidebarActivity,
-  activityHeading = "Activity",
+  activityHeading,
   onSignOut,
   isTransitioning = false,
   children,
 }: WorkspaceShellProps) {
+  const { t } = useLocalePreferences();
+  const pathname = usePathname();
   const isLight = isLightChrome;
+  const resolvedActivityHeading =
+    activityHeading ?? t("studio.shell.activity");
+
+  const navItemClass = (active: boolean) =>
+    `${workspace.nav.item} rounded-xl px-3 py-2.5 -mx-3 ${
+      active
+        ? isLight
+          ? `${workspace.type.navItemActive} bg-gradient-to-r from-neutral-950/[0.08] via-[#151a24]/[0.06] to-transparent ring-1 ring-neutral-900/[0.06]`
+          : "text-sm font-medium text-white bg-white/[0.08]"
+        : isLight
+          ? `${workspace.type.navItemIdle} hover:bg-neutral-900/[0.03]`
+          : "text-sm font-medium text-white/60 hover:text-white hover:bg-white/[0.04]"
+    } transition-[background-color,color] duration-300`;
+
+  const navLabel = (item: WorkspaceNavItem, active: boolean) => (
+    <>
+      <span className={workspace.nav.label}>
+        <span>{item.label}</span>
+        {item.showDot ? <span className={workspace.nav.dot} aria-hidden /> : null}
+      </span>
+      <span
+        className={`${workspace.nav.underline} ${
+          active ? "w-8 opacity-70" : "w-0 opacity-0 group-hover:w-6 group-hover:opacity-35"
+        } ${isLight ? "bg-neutral-900" : "bg-white"}`}
+      />
+    </>
+  );
 
   return (
     <div
@@ -61,11 +95,25 @@ export function WorkspaceShell({
           isLight ? "text-neutral-800" : "text-white"
         }`}
       >
-        <aside className="hidden w-72 shrink-0 px-6 py-10 lg:block lg:w-80 lg:px-8 xl:px-10 xl:py-12">
+        <aside className="hidden w-[18.5rem] shrink-0 px-6 py-10 lg:block lg:w-[20rem] lg:px-8 xl:px-10 xl:py-12">
           <div className="sticky top-24 py-2 pr-6 transition-colors duration-300 xl:pr-8">
-            <div className="flex flex-col gap-8 text-[13px]">
+            <div className="flex flex-col gap-3 text-[13px]">
               {navItems.map((item) => {
-                const active = activeId === item.id;
+                const active =
+                  activeId === item.id ||
+                  Boolean(item.href && pathname?.startsWith(item.href));
+                if (item.href) {
+                  return (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      className={navItemClass(active)}
+                      aria-current={active ? "page" : undefined}
+                    >
+                      {navLabel(item, active)}
+                    </Link>
+                  );
+                }
                 return (
                   <button
                     key={item.id}
@@ -74,27 +122,9 @@ export function WorkspaceShell({
                       if (item.id === activeId) return;
                       onSelect(item.id);
                     }}
-                    className={`${workspace.nav.item} rounded-xl px-3 py-2 -mx-3 ${
-                      active
-                        ? isLight
-                          ? `${workspace.type.navItemActive} bg-gradient-to-r from-neutral-950/[0.08] via-[#151a24]/[0.06] to-transparent ring-1 ring-neutral-900/[0.06]`
-                          : "text-sm font-medium text-white bg-white/[0.08]"
-                        : isLight
-                          ? `${workspace.type.navItemIdle} hover:bg-neutral-900/[0.03]`
-                          : "text-sm font-medium text-white/60 hover:text-white hover:bg-white/[0.04]"
-                    } transition-[background-color,color] duration-300`}
+                    className={navItemClass(active)}
                   >
-                    <span className={workspace.nav.label}>
-                      <span>{item.label}</span>
-                      {item.showDot ? (
-                        <span className={workspace.nav.dot} aria-hidden />
-                      ) : null}
-                    </span>
-                    <span
-                      className={`${workspace.nav.underline} ${
-                        active ? "w-8 opacity-70" : "w-0 opacity-0 group-hover:w-6 group-hover:opacity-35"
-                      } ${isLight ? "bg-neutral-900" : "bg-white"}`}
-                    />
+                    {navLabel(item, active)}
                   </button>
                 );
               })}
@@ -115,7 +145,7 @@ export function WorkspaceShell({
                     isLight ? "text-neutral-500" : "text-white/70"
                   }`}
                 >
-                  {activityHeading}
+                  {resolvedActivityHeading}
                 </p>
                 <div
                   className={`mt-3 ${
@@ -136,40 +166,61 @@ export function WorkspaceShell({
               }`}
               onClick={() => void onSignOut()}
             >
-              Sign out
+              {t("nav.signOut")}
             </button>
           </div>
         </aside>
 
         <div
-          className={`flex min-h-0 flex-1 flex-col px-5 pb-16 pt-8 transition-all duration-300 md:px-10 md:pt-10 lg:px-14 xl:px-20 xl:pb-24 xl:pt-12 ${
+          className={`flex min-h-0 flex-1 flex-col px-5 pb-16 pt-8 transition-all duration-300 md:px-10 md:pt-10 lg:px-14 xl:px-24 xl:pb-24 xl:pt-12 ${
             isTransitioning ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"
           }`}
         >
           <div className="mb-8 flex gap-6 overflow-x-auto pb-0 [-ms-overflow-style:none] [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onSelect(item.id)}
-                className={`shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition-[background-color,color] duration-200 ${
-                  activeId === item.id
-                    ? isLight
-                      ? "bg-neutral-950/[0.08] text-neutral-950 ring-1 ring-neutral-900/[0.06]"
-                      : "bg-white/[0.1] text-white"
-                    : isLight
-                      ? "text-neutral-500 hover:bg-neutral-900/[0.03] hover:text-neutral-800"
-                      : "text-white/55 hover:bg-white/[0.04] hover:text-white/90"
-                }`}
-              >
+            {navItems.map((item) => {
+              const active =
+                activeId === item.id ||
+                Boolean(item.href && pathname?.startsWith(item.href));
+              const tabClass = `shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition-[background-color,color] duration-200 ${
+                active
+                  ? isLight
+                    ? "bg-neutral-950/[0.08] text-neutral-950 ring-1 ring-neutral-900/[0.06]"
+                    : "bg-white/[0.1] text-white"
+                  : isLight
+                    ? "text-neutral-500 hover:bg-neutral-900/[0.03] hover:text-neutral-800"
+                    : "text-white/55 hover:bg-white/[0.04] hover:text-white/90"
+              }`;
+              const tabInner = (
                 <span className="flex items-center gap-2">
                   <span>{item.label}</span>
                   {item.showDot ? (
                     <span className="inline-flex h-2 w-2 rounded-full bg-amber-300/80" />
                   ) : null}
                 </span>
-              </button>
-            ))}
+              );
+              if (item.href) {
+                return (
+                  <Link
+                    key={item.id}
+                    href={item.href}
+                    className={tabClass}
+                    aria-current={active ? "page" : undefined}
+                  >
+                    {tabInner}
+                  </Link>
+                );
+              }
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onSelect(item.id)}
+                  className={tabClass}
+                >
+                  {tabInner}
+                </button>
+              );
+            })}
           </div>
 
           {children}
@@ -193,6 +244,7 @@ export function WorkspaceShellFooterLinks({
   /** True when the current page is the public catalogue (/registry…) */
   catalogueActive?: boolean;
 }) {
+  const { t } = useLocalePreferences();
   const link =
     isLight
       ? "text-neutral-500 hover:text-neutral-800"
@@ -207,25 +259,28 @@ export function WorkspaceShellFooterLinks({
           className={`mb-4 block text-sm font-medium ${accountClass}`}
           aria-current="page"
         >
-          My account
+          {t("nav.myAccount")}
         </p>
       ) : (
         <Link href="/account" className={`mb-4 block text-sm font-medium transition ${link}`}>
-          My account →
+          {t("nav.myAccount")} →
         </Link>
       )}
-      {catalogueActive ? (
-        <p
-          className={`block text-sm font-medium ${catalogueClass}`}
-          aria-current="page"
-        >
-          Browse catalogue
-        </p>
-      ) : (
-        <Link href="/registry" className={`block text-sm font-medium transition ${link}`}>
-          Browse catalogue →
-        </Link>
-      )}
+      <div className="flex items-center gap-2">
+        <RegistryCatalogueInfoTooltip theme={isLight ? "light" : "dark"} />
+        {catalogueActive ? (
+          <p
+            className={`text-sm font-medium ${catalogueClass}`}
+            aria-current="page"
+          >
+            {t("studio.shell.browseCatalogue")}
+          </p>
+        ) : (
+          <Link href="/registry" className={`text-sm font-medium transition ${link}`}>
+            {t("studio.shell.browseCatalogue")} →
+          </Link>
+        )}
+      </div>
       {extra}
     </>
   );

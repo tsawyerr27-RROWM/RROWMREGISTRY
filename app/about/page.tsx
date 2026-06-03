@@ -27,11 +27,12 @@ import {
 } from "@/styles/narrative-layout";
 import { AboutDigestTabs } from "@/components/About/AboutDigestTabs";
 import { AboutPrinciplesChapter } from "@/components/About/AboutPrinciplesChapter";
-import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 const gutter = narrativeLayout.gutter;
 
 export default function AboutPage() {
+  const { t } = useLocalePreferences();
   const reduceMotion = useReducedMotion();
   const introRef = useRef<HTMLDivElement>(null);
 
@@ -99,10 +100,8 @@ export default function AboutPage() {
                 className="lg:col-span-8 lg:col-start-1"
                 style={{ y: introY, opacity: introOpacity }}
               >
-                <InfoTooltip text="The registry is a shared layer for how artworks are identified, documented, and checked over time, with clear rules for what is visible, what requires access, and what stays private." />
                 <h1 className="max-w-[min(100%,46rem)] font-serif text-[clamp(2.05rem,5.4vw,3.45rem)] font-normal leading-[1.06] tracking-tight text-neutral-950 lg:max-w-[min(100%,50rem)]">
-                  A system for recording authorship, provenance, and
-                  verification
+                  {t("about.hero.title")}
                 </h1>
               </motion.header>
 

@@ -230,7 +230,7 @@ export function CertificateOverviewModal({ registryId, onClose }: Props) {
               <p className="mt-10 text-sm text-red-300/90">{error}</p>
             ) : (
               <>
-                <h2 className="mt-8 font-serif text-2xl font-normal leading-tight tracking-tight text-neutral-950 md:text-3xl">
+                <h2 className="mt-8 font-serif text-[1.75rem] font-normal leading-tight tracking-[-0.01em] text-neutral-950 md:text-3xl">
                   {title || "–"}
                 </h2>
                 {artistName ? (

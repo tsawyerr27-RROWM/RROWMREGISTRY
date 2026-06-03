@@ -1,5 +1,7 @@
 "use client";
 
+import { fetchRegistryCsrfToken } from "@/lib/registry-action-security/fetch-csrf";
+
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -88,16 +90,24 @@ export function ContinueProvenanceFlow() {
     setError(null);
     setMessage(null);
     try {
+      const csrfToken = await fetchRegistryCsrfToken();
+      if (!csrfToken) {
+        setError("Could not prepare a secure session. Refresh and try again.");
+        return;
+      }
       const res = await fetch("/api/provenance-transfer/initiate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "x-csrf-token": csrfToken,
+        },
         body: JSON.stringify({
           artwork_id: artworkId,
           recipient_email: recipientEmail.trim(),
           transfer_type: transferType,
           note: note.trim() || undefined,
         }),
-        credentials: "include",
       });
       const j = (await res.json().catch(() => ({}))) as {
         error?: string;
@@ -148,7 +158,7 @@ export function ContinueProvenanceFlow() {
           href="/collector-studio"
           className="mt-4 inline-block text-[13px] font-medium text-neutral-900 underline"
         >
-          Collector workspace
+          Collector studio
         </Link>
       </div>
     );
@@ -157,7 +167,7 @@ export function ContinueProvenanceFlow() {
   if (loading) {
     return (
       <p className="text-[14px] text-neutral-500">
-        Checking stewardship role for this record…
+        Checking studio access for this record…
       </p>
     );
   }
@@ -192,7 +202,7 @@ export function ContinueProvenanceFlow() {
       <header className="border-b border-neutral-200 pb-8">
         <InfoTooltip text="Invite the next recorded custodian so the historical record of this work can advance. Deliberate, on file, participant-confirmed." />
         <p className="mt-2 font-mono text-[11px] text-neutral-400">{regs}</p>
-        <h1 className="mt-4 font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-3xl">
+        <h1 className="mt-4 font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950 md:text-3xl">
           Continue the chronology
         </h1>
         <p className="mt-3 text-[15px] font-medium text-neutral-900">{title}</p>

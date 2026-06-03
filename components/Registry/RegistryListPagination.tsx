@@ -1,4 +1,9 @@
+"use client";
+
 import Link from "next/link";
+
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fillMessage } from "@/lib/locale-messages";
 
 type Props = {
   /** Base path, e.g. `/registry` */
@@ -21,6 +26,7 @@ export function RegistryListPagination({
   sort,
   status,
 }: Props) {
+  const { t } = useLocalePreferences();
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const end = Math.min(page * pageSize, total);
@@ -46,12 +52,7 @@ export function RegistryListPagination({
   return (
     <div className="mt-14 flex flex-col items-center gap-5 pt-12 sm:flex-row sm:justify-between">
       <p className="text-sm text-neutral-600">
-        Showing{" "}
-        <span className="font-medium text-neutral-900 tabular-nums">
-          {start}–{end}
-        </span>{" "}
-        of{" "}
-        <span className="font-medium text-neutral-900 tabular-nums">{total}</span>
+        {fillMessage(t("registry.pagination.showing"), { start, end, total })}
       </p>
       <div className="flex items-center gap-2">
         <Link
@@ -63,10 +64,10 @@ export function RegistryListPagination({
               : "pointer-events-none cursor-not-allowed rounded-xl border border-transparent bg-neutral-100/80 text-neutral-400"
           }`}
         >
-          Previous
+          {t("registry.pagination.previous")}
         </Link>
         <span className="px-2 text-sm tabular-nums text-neutral-500">
-          Page {page} of {totalPages}
+          {fillMessage(t("registry.pagination.pageOf"), { page, totalPages })}
         </span>
         <Link
           href={hrefForPage(page + 1)}
@@ -77,7 +78,7 @@ export function RegistryListPagination({
               : "pointer-events-none cursor-not-allowed rounded-xl border border-transparent bg-neutral-100/80 text-neutral-400"
           }`}
         >
-          Next
+          {t("registry.pagination.next")}
         </Link>
       </div>
     </div>

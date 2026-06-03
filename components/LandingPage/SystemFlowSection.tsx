@@ -2,7 +2,8 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { useState } from "react";
-import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import type { MessageKey } from "@/lib/locale-messages";
 
 import {
   NARRATIVE_REVEAL_DURATION_S,
@@ -10,36 +11,32 @@ import {
   narrativeLayout,
 } from "@/styles/narrative-layout";
 
-const FLOW = [
+const FLOW_META = [
   {
     step: "01",
-    label: "Name the work",
-    detail:
-      "List it once. The piece gets a lasting identity that artists, galleries, and collectors can return to.",
+    labelKey: "landing.flow.s1Label" as MessageKey,
+    detailKey: "landing.flow.s1Detail" as MessageKey,
     tone: "from-sky-100/70 to-slate-50/40",
     dot: "bg-sky-500/75",
   },
   {
     step: "02",
-    label: "Attach what matters",
-    detail:
-      "Certificates, gallery association, custody notes: everything lands on the same entry instead of scattered files.",
+    labelKey: "landing.flow.s2Label" as MessageKey,
+    detailKey: "landing.flow.s2Detail" as MessageKey,
     tone: "from-indigo-100/60 to-slate-50/35",
     dot: "bg-indigo-500/70",
   },
   {
     step: "03",
-    label: "See the present clearly",
-    detail:
-      "What is public today is easy to read. What you keep private stays behind sign-in until you choose otherwise.",
+    labelKey: "landing.flow.s3Label" as MessageKey,
+    detailKey: "landing.flow.s3Detail" as MessageKey,
     tone: "from-violet-100/55 to-slate-50/30",
     dot: "bg-violet-500/65",
   },
   {
     step: "04",
-    label: "Let the thread grow",
-    detail:
-      "Each sale, transfer, or exhibition adds another line to the same story, in order, as years pass.",
+    labelKey: "landing.flow.s4Label" as MessageKey,
+    detailKey: "landing.flow.s4Detail" as MessageKey,
     tone: "from-amber-100/55 to-stone-50/35",
     dot: "bg-amber-500/70",
   },
@@ -49,6 +46,7 @@ const ease = [0.22, 1, 0.36, 1] as const;
 
 export function SystemFlowSection() {
   const reduce = useReducedMotion();
+  const { t } = useLocalePreferences();
   const [activeStep, setActiveStep] = useState<number | null>(null);
 
   return (
@@ -83,12 +81,11 @@ export function SystemFlowSection() {
           viewport={{ once: true, margin: "-8% 0px", amount: 0.3 }}
           transition={{ duration: reduce ? 0 : NARRATIVE_REVEAL_DURATION_S, ease }}
         >
-          <InfoTooltip text="Whether you make art, show it, or live with it, the idea is simple: stop losing the paper trail. The public side stays readable; the private side stays yours." />
           <h2
             id="landing-system-flow-heading"
             className="max-w-[min(100%,40rem)] font-serif text-[clamp(1.65rem,2.9vw,2.45rem)] font-normal leading-[1.14] tracking-tight text-neutral-950"
           >
-            One thread for the work, from first listing to what comes next
+            {t("landing.flow.title")}
           </h2>
         </motion.div>
 
@@ -103,7 +100,7 @@ export function SystemFlowSection() {
           />
 
           <ol className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 lg:gap-5">
-            {FLOW.map((node, i) => {
+            {FLOW_META.map((node, i) => {
               const dimmed = activeStep !== null && activeStep !== i;
               return (
                 <motion.li
@@ -129,7 +126,7 @@ export function SystemFlowSection() {
                       y: activeStep === i ? -2 : 0,
                     }}
                     transition={{ duration: 0.35, ease }}
-                    className={`group relative h-full overflow-hidden rounded-[1.25rem] border border-[color:var(--rrowm-atmo-rim)] bg-gradient-to-br ${node.tone} p-5 shadow-[0_22px_64px_-48px_rgba(15,23,42,0.18)] backdrop-blur-sm transition-[border-color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] md:p-6 md:hover:border-[color:color-mix(in_srgb,var(--rrowm-atmo-rim)_68%,rgb(55_63_78))] md:hover:shadow-[0_26px_70px_-46px_rgba(15,23,42,0.2)]`}
+                    className={`group relative h-full overflow-hidden rounded-[1.25rem] border border-[color:var(--rrowm-atmo-rim)] bg-gradient-to-br ${node.tone} p-6 shadow-[0_16px_40px_-20px_rgba(15,23,42,0.1)] backdrop-blur-sm transition-[border-color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] md:p-7 md:hover:border-[color:color-mix(in_srgb,var(--rrowm-atmo-rim)_68%,rgb(55_63_78))] md:hover:shadow-[0_20px_48px_-20px_rgba(15,23,42,0.14)]`}
                   >
                     <motion.div
                       className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full blur-2xl"
@@ -160,10 +157,10 @@ export function SystemFlowSection() {
 
                       <motion.div className="min-w-0 flex-1 pt-0.5">
                         <h3 className="text-[15px] font-medium leading-snug text-neutral-950 md:text-base">
-                          {node.label}
+                          {t(node.labelKey)}
                         </h3>
-                        <p className="mt-2.5 text-sm leading-[1.74] text-neutral-600">
-                          {node.detail}
+                        <p className="mt-2.5 text-[15px] leading-[1.74] text-neutral-600">
+                          {t(node.detailKey)}
                         </p>
                       </motion.div>
                     </motion.div>

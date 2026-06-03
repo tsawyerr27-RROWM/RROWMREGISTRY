@@ -5,7 +5,9 @@ import { useMemo, useState } from "react";
 
 import type { BadgeTone } from "@/components/ui/Badge";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
-import { inviteVisibilityStudioLabel } from "@/lib/representation-language";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { inviteVisibilityLabel } from "@/lib/gallery-invitations-i18n";
+import type { MessageKey } from "@/lib/locale-messages";
 import { Badge } from "@/components/ui/Badge";
 import { workspace } from "@/styles/workspace-design";
 
@@ -35,34 +37,39 @@ function isPendingExpired(inv: GalleryInviteRow): boolean {
 }
 
 /** Table status: pending | confirmed | public | expired (plus declined when applicable). */
-function tableStatus(inv: GalleryInviteRow): {
+function tableStatus(
+  inv: GalleryInviteRow,
+  t: (key: MessageKey) => string
+): {
   label: string;
   tone: BadgeTone;
 } {
   const st = norm(inv.status);
-  if (st === "declined") return { label: "Declined", tone: "muted" };
-  if (isPendingExpired(inv)) return { label: "Expired", tone: "muted" };
+  if (st === "declined") return { label: t("gallery.invitations.statusDeclined"), tone: "muted" };
+  if (isPendingExpired(inv)) {
+    return { label: t("gallery.artworkAuth.statusExpired"), tone: "muted" };
+  }
   if (st === "pending") {
     return {
-      label: inviteVisibilityStudioLabel("pending"),
+      label: inviteVisibilityLabel("pending", t),
       tone: "warning",
     };
   }
   const vis = norm(inv.visibility_status);
   if (vis === "public") {
     return {
-      label: inviteVisibilityStudioLabel(vis),
+      label: inviteVisibilityLabel(vis, t),
       tone: "success",
     };
   }
   if (vis === "confirmed") {
     return {
-      label: inviteVisibilityStudioLabel(vis),
+      label: inviteVisibilityLabel(vis, t),
       tone: "neutral",
     };
   }
   return {
-    label: inviteVisibilityStudioLabel("pending"),
+    label: inviteVisibilityLabel("pending", t),
     tone: "warning",
   };
 }
@@ -145,6 +152,7 @@ export function GalleryInvitationsSection({
   sectionEyebrow,
   sectionDescription,
 }: Props) {
+  const { t } = useLocalePreferences();
   const [copiedInviteId, setCopiedInviteId] = useState<string | null>(null);
 
   const sendDisabled = useMemo(
@@ -164,8 +172,8 @@ export function GalleryInvitationsSection({
     >
       {hidePageHeader ? null : (
         <header className={`max-w-2xl ${workspace.panel.shell} !p-6 md:!p-8`}>
-          <InfoTooltip text="Invite artists to authenticate records associated with their practice. The canonical artwork record exists independently; invitations deepen participant attestations, not gallery approval workflows." />
-          <h1 className={workspace.panel.title}>Invitations</h1>
+          <InfoTooltip text={t("gallery.invitations.sectionTooltip")} />
+          <h1 className={workspace.panel.title}>{t("gallery.nav.invitations")}</h1>
         </header>
       )}
 
@@ -180,35 +188,38 @@ export function GalleryInvitationsSection({
         </div>
       ) : null}
 
-      <section aria-label="Send representation invitation" className={workspace.panel.shell}>
+      <section
+        aria-label={t("gallery.invitations.sendRepresentationLabel")}
+        className={workspace.panel.shell}
+      >
         {isAdmin ? (
           <div className="max-w-xl space-y-5">
             <label
               className="block text-[13px] font-medium text-neutral-800"
               htmlFor="gallery-invite-email"
             >
-              Artist email
+              {t("gallery.invitations.artistEmail")}
             </label>
             <input
               id="gallery-invite-email"
               type="email"
               value={inviteEmail}
               onChange={(e) => onInviteEmailChange(e.target.value)}
-              placeholder="artist@example.com"
+              placeholder={t("gallery.invitations.emailPlaceholder")}
               autoComplete="email"
               className={fieldClass}
             />
             <p className="text-[13px] text-neutral-500">
-              Sent as: <span className="font-medium text-neutral-800">{galleryName}</span>
+              {t("gallery.invitations.sentAs")}{" "}
+              <span className="font-medium text-neutral-800">{galleryName}</span>
             </p>
             <p className="text-[13px] leading-relaxed text-neutral-600">
-              The artist receives a formal invitation to review and confirm records on
-              file, referencing your institution.
+              {t("gallery.invitations.representationBody")}
             </p>
 
             {duplicateInviteActive ? (
               <p className="text-[13px] leading-relaxed text-neutral-800" role="status">
-                An invitation is already pending for this address.
+                {t("gallery.invitations.duplicatePending")}
                 {duplicateResendInviteId ? (
                   <>
                     {" "}
@@ -219,8 +230,8 @@ export function GalleryInvitationsSection({
                       className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500 disabled:opacity-50"
                     >
                       {resendingInviteId === duplicateResendInviteId
-                        ? "Resending…"
-                        : "Resend invitation"}
+                        ? t("common.sending")
+                        : t("gallery.invitations.resend")}
                     </button>
                   </>
                 ) : null}
@@ -245,28 +256,32 @@ export function GalleryInvitationsSection({
                 onClick={() => void onSendInvite()}
                 className="rounded-md border border-neutral-900/20 bg-neutral-950 px-5 py-2.5 text-[14px] font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {inviting ? "Sending…" : "Invite to authenticate"}
+                {inviting
+                  ? t("common.sending")
+                  : t("gallery.hero.inviteToAuthenticate")}
               </button>
             </div>
 
             {manualDraft ? (
               <div className="border-t border-neutral-200/90 pt-5">
                 <p className="text-[12px] leading-relaxed text-neutral-500">
-                  If the invitation email could not be sent, you may copy a draft.
+                  {t("gallery.invitations.manualDraftHint")}
                 </p>
                 <button
                   type="button"
                   onClick={() => void onCopyManualDraft()}
                   className="mt-2 text-[12px] font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500"
                 >
-                  {manualDraftCopyDone ? "Copied" : "Copy draft"}
+                  {manualDraftCopyDone
+                    ? t("gallery.invitations.copied")
+                    : t("gallery.invitations.copyDraft")}
                 </button>
               </div>
             ) : null}
           </div>
         ) : (
           <p className="text-[14px] leading-relaxed text-neutral-600">
-            Only administrators may send invitations.
+            {t("gallery.invitations.adminOnly")}
           </p>
         )}
       </section>
@@ -279,7 +294,7 @@ export function GalleryInvitationsSection({
 
       {invites.length === 0 ? (
         <p className="text-[15px] text-neutral-600">
-          No invitations have been sent yet.
+          {t("gallery.invitations.noneSent")}
         </p>
       ) : (
         <div className={`overflow-x-auto ${workspace.panel.shell} !p-0`}>
@@ -287,22 +302,22 @@ export function GalleryInvitationsSection({
             <thead>
               <tr className="border-b border-neutral-900/[0.06] bg-white/60">
                 <th className="px-4 py-3 text-left text-[12px] font-medium text-neutral-500">
-                  Artist
+                  {t("gallery.invitations.colArtist")}
                 </th>
                 <th className="px-4 py-3 text-left text-[12px] font-medium text-neutral-500">
-                  Status
+                  {t("gallery.invitations.colStatus")}
                 </th>
                 <th className="px-4 py-3 text-left text-[12px] font-medium text-neutral-500">
-                  Sent date
+                  {t("gallery.invitations.colSentDate")}
                 </th>
                 <th className="px-4 py-3 text-right text-[12px] font-medium text-neutral-500">
-                  Actions
+                  {t("gallery.invitations.colActions")}
                 </th>
               </tr>
             </thead>
             <tbody>
               {invites.map((inv) => {
-                const st = tableStatus(inv);
+                const st = tableStatus(inv, t);
                 const canResend = isAdmin && norm(inv.status) === "pending";
                 const busy = resendingInviteId === inv.id;
                 const canCopyLink =
@@ -342,7 +357,7 @@ export function GalleryInvitationsSection({
                             onClick={() => void onResendInvite(inv.id)}
                             className="text-[13px] font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500 disabled:opacity-40"
                           >
-                            {busy ? "Sending…" : "Resend invitation"}
+                            {busy ? t("common.sending") : t("gallery.invitations.resend")}
                           </button>
                         ) : null}
                         {canCopyLink && signupUrl ? (
@@ -359,7 +374,9 @@ export function GalleryInvitationsSection({
                             }}
                             className="text-[13px] font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500"
                           >
-                            {copiedInviteId === inv.id ? "Copied" : "Copy invite link"}
+                            {copiedInviteId === inv.id
+                              ? t("gallery.invitations.copied")
+                              : t("gallery.invitations.copyInviteLink")}
                           </button>
                         ) : null}
                         {canPublish ? (
@@ -369,7 +386,9 @@ export function GalleryInvitationsSection({
                             onClick={() => void onMakeInvitePublic(inv.id)}
                             className="text-[13px] font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500 disabled:opacity-40"
                           >
-                            {publishing ? "Publishing…" : "Publish"}
+                            {publishing
+                              ? t("gallery.invitations.publishing")
+                              : t("gallery.invitations.publish")}
                           </button>
                         ) : null}
                         {!canCopyLink && !canResend && !canPublish ? (

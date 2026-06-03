@@ -92,9 +92,9 @@ export const motion = {
 
 /** Vertical rhythm — section-scale spacing */
 export const space = {
-  sectionY: "py-24 md:py-32",
-  sectionYLoose: "py-28 md:py-36",
-  blockGap: "gap-12 md:gap-16",
+  sectionY: "py-28 md:py-36",
+  sectionYLoose: "py-32 md:py-40",
+  blockGap: "gap-14 md:gap-20",
   /** Horizontal gutters when not using `Container` */
   gutter: "px-6 md:px-10",
 } as const;
@@ -103,13 +103,13 @@ export const space = {
 export const type = {
   /** UI chrome — navigation, labels, dense controls */
   uiSans: "text-sm font-normal text-neutral-600",
-  h2: "text-3xl font-semibold tracking-tight text-neutral-950 md:text-4xl md:leading-snug",
+  h2: "text-[1.75rem] font-semibold tracking-[-0.02em] text-neutral-950 md:text-[2rem] md:leading-snug",
   /** Section / page titles — prefer over sans h2 for editorial surfaces */
   titleSerifLg:
     "font-serif text-3xl font-normal leading-[1.1] tracking-tight text-neutral-950 md:text-4xl",
   titleSerifHero:
     "font-serif text-5xl font-normal leading-[1.08] tracking-tight text-neutral-950 md:text-6xl xl:text-7xl",
-  lede: "text-base leading-[1.75] text-neutral-600 md:text-lg md:leading-[1.8]",
+  lede: "text-[15px] leading-[1.8] text-neutral-600 md:text-base md:leading-[1.85]",
   bodyNarrow: "max-w-2xl",
   bodyMeasure: "max-w-xl",
 } as const;

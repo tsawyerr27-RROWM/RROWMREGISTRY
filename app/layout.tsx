@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
 import { Raleway } from "next/font/google";
 import "./globals.css";
 import { Suspense } from "react";
@@ -9,6 +10,7 @@ import { Footer } from "@/components/LandingPage/Footer";
 import { CookieBanner } from "@/components/CookieBanner";
 import { LocalePreferencesProvider } from "@/components/providers/LocalePreferencesProvider";
 import NavigationHistory from "@/components/navigation/NavigationHistory";
+import { parseRegionId, REGION_STORAGE_KEY } from "@/lib/regions";
 
 export const dynamic = "force-dynamic";
 
@@ -23,11 +25,14 @@ export const metadata: Metadata = {
   description: "Cultural registry infrastructure",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const cookieStore = await cookies();
+  const initialRegionId =
+    parseRegionId(cookieStore.get(REGION_STORAGE_KEY)?.value) ?? "gb";
 
   return (
 
@@ -44,7 +49,7 @@ export default function RootLayout({
         <EnvironmentLayer />
 
         {/* Application Layer */}
-        <LocalePreferencesProvider>
+        <LocalePreferencesProvider initialRegionId={initialRegionId}>
           <div className="ds-z-content relative flex min-h-screen flex-col print:min-h-0">
             <Header />
             <main className="flex-1 print:min-h-0">{children}</main>

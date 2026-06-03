@@ -16,7 +16,10 @@ import {
   formatGalleryMonthlyFromGbp,
   getRegion,
   inferRegionId,
+  parseRegionId,
+  writeRegionCookie,
 } from "@/lib/regions";
+import { formatCurrency } from "@/lib/formatCurrency";
 import { translate, type MessageKey } from "@/lib/locale-messages";
 
 type LocalePreferencesContextValue = {
@@ -24,6 +27,7 @@ type LocalePreferencesContextValue = {
   region: Region;
   setRegionId: (id: RegionId) => void;
   formatGalleryMonthlyPrice: () => string;
+  formatMoney: (amount: number, currency: string) => string;
   t: (key: MessageKey) => string;
   hydrated: boolean;
 };
@@ -34,10 +38,7 @@ const LocalePreferencesContext =
 function readStoredRegionId(): RegionId | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(REGION_STORAGE_KEY);
-    if (raw && ["gb", "us", "de", "fr", "jp", "au"].includes(raw)) {
-      return raw as RegionId;
-    }
+    return parseRegionId(window.localStorage.getItem(REGION_STORAGE_KEY));
   } catch {
     /* ignore */
   }
@@ -46,20 +47,35 @@ function readStoredRegionId(): RegionId | null {
 
 export function LocalePreferencesProvider({
   children,
+  initialRegionId = "gb",
 }: {
   children: React.ReactNode;
+  /** From `rrowm_region` cookie — keeps SSR and first client paint aligned. */
+  initialRegionId?: RegionId;
 }) {
-  const [regionId, setRegionIdState] = useState<RegionId>("gb");
+  const [regionId, setRegionIdState] = useState<RegionId>(initialRegionId);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const stored = readStoredRegionId();
-    setRegionIdState(stored ?? inferRegionId());
+    const resolved = stored ?? inferRegionId();
+    if (resolved !== initialRegionId) {
+      setRegionIdState(resolved);
+    }
+    writeRegionCookie(resolved);
+    if (!stored) {
+      try {
+        window.localStorage.setItem(REGION_STORAGE_KEY, resolved);
+      } catch {
+        /* ignore */
+      }
+    }
     setHydrated(true);
-  }, []);
+  }, [initialRegionId]);
 
   const setRegionId = useCallback((id: RegionId) => {
     setRegionIdState(id);
+    writeRegionCookie(id);
     try {
       window.localStorage.setItem(REGION_STORAGE_KEY, id);
     } catch {
@@ -79,6 +95,12 @@ export function LocalePreferencesProvider({
     [region]
   );
 
+  const formatMoney = useCallback(
+    (amount: number, currency: string) =>
+      formatCurrency(amount, currency, region.locale),
+    [region.locale]
+  );
+
   const t = useCallback(
     (key: MessageKey) => translate(key, region.lang),
     [region.lang]
@@ -90,10 +112,19 @@ export function LocalePreferencesProvider({
       region,
       setRegionId,
       formatGalleryMonthlyPrice,
+      formatMoney,
       t,
       hydrated,
     }),
-    [regionId, region, setRegionId, formatGalleryMonthlyPrice, t, hydrated]
+    [
+      regionId,
+      region,
+      setRegionId,
+      formatGalleryMonthlyPrice,
+      formatMoney,
+      t,
+      hydrated,
+    ]
   );
 
   return (

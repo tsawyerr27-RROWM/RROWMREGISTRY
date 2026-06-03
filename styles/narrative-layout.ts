@@ -36,7 +36,7 @@ export const narrativeGutterClass =
   "mx-auto w-full max-w-[min(100%,88rem)] px-6 md:px-14 lg:px-[max(1.5rem,calc((100vw-72rem)/2+1rem))]";
 
 /** Vertical padding for primary narrative sections */
-export const narrativeSectionPadYClass = "py-24 md:py-36";
+export const narrativeSectionPadYClass = "py-28 md:py-40";
 
 /** Landing — even, tighter rhythm between atmospheric bands */
 export const narrativeSectionPadYTightClass = "py-14 md:py-20";
@@ -47,7 +47,7 @@ export const narrativeSectionPadYTightClass = "py-14 md:py-20";
 export const narrativePostHeroTopClass = "pt-14 md:pt-[4.25rem]";
 
 /** Space between About intro block and first narrative section */
-export const narrativeAfterIntroGapClass = "mt-10 md:mt-16";
+export const narrativeAfterIntroGapClass = "mt-14 md:mt-20";
 
 /** About — extra decompression before principles */
 export const narrativeAboutReflectiveGapClass = "mt-14 md:mt-[4.75rem]";

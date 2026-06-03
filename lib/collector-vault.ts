@@ -38,7 +38,7 @@ export function vaultCategoryLabel(cat: CollectorVaultCategory): string {
 }
 
 export const COLLECTOR_VAULT_FRAME =
-  "Private materials support long-term stewardship and provenance continuity. They stay off the public record unless you release them elsewhere.";
+  "Private materials support your studio archive and provenance continuity. They stay off the public record unless you release them elsewhere.";
 
 export const COLLECTOR_VAULT_MAX_BYTES = 20 * 1024 * 1024;
 

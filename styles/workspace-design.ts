@@ -29,13 +29,13 @@ export const workspaceAtmosphere = {
 export const workspaceType = {
   pageTitle: `${type.titleSerifLg}`,
   sectionTitle:
-    "font-serif text-2xl font-normal leading-[1.12] tracking-tight text-neutral-950 md:text-[1.65rem]",
+    "font-serif text-[1.75rem] font-normal leading-[1.12] tracking-[-0.01em] text-neutral-950 md:text-[1.85rem]",
   cardTitle:
-    "font-serif text-lg font-normal leading-snug tracking-tight text-neutral-950 md:text-xl",
-  cardArtist: "text-sm text-neutral-500",
-  label: "text-sm font-medium text-neutral-700",
-  meta: "text-sm text-neutral-500",
-  metaQuiet: "text-xs leading-relaxed text-neutral-500",
+    "font-serif text-lg font-normal leading-snug tracking-[-0.01em] text-neutral-950 md:text-xl",
+  cardArtist: "text-[15px] text-neutral-500",
+  label: "text-[14px] font-medium text-neutral-700",
+  meta: "text-[15px] leading-relaxed text-neutral-500",
+  metaQuiet: "text-[13px] leading-relaxed text-neutral-500",
   registryId: "font-mono text-[10px] tracking-wide text-neutral-400",
   navItem: "text-sm font-medium",
   navItemActive: "text-sm font-medium text-neutral-950",
@@ -43,15 +43,15 @@ export const workspaceType = {
 } as const;
 
 export const workspaceSpace = {
-  sectionY: "py-16 md:py-20",
-  stack: "space-y-10 md:space-y-12",
-  cardPad: "p-5 md:p-6",
-  grid: "grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:gap-10",
+  sectionY: "py-20 md:py-28",
+  stack: "space-y-12 md:space-y-16",
+  cardPad: "p-6 md:p-7",
+  grid: "grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-3",
 } as const;
 
 /** Premium artwork card — image-first, minimal surface */
 export const workspaceCard = {
-  link: "ws-artwork-card group relative block overflow-hidden rounded-2xl border border-neutral-900/[0.06] bg-white/60 shadow-[0_24px_64px_-40px_rgba(15,23,42,0.14)] backdrop-blur-[6px] transition-[transform,box-shadow,border-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-neutral-900/[0.09] hover:shadow-[0_32px_72px_-38px_rgba(15,23,42,0.16)]",
+  link: "ws-artwork-card group relative block overflow-hidden rounded-2xl border border-neutral-900/[0.05] bg-white/60 shadow-[0_16px_40px_-20px_rgba(15,23,42,0.08)] backdrop-blur-[6px] transition-[transform,box-shadow,border-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-neutral-900/[0.08] hover:shadow-[0_20px_48px_-20px_rgba(15,23,42,0.12)]",
   media: "relative aspect-[4/3] w-full overflow-hidden bg-neutral-100/80",
   mediaImg:
     "h-full w-full object-cover transition duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.02]",
@@ -67,10 +67,10 @@ export const workspaceCard = {
 /** Floating panels — account, settings, workspace sections */
 export const workspacePanel = {
   shell:
-    "rounded-2xl border border-neutral-900/[0.06] bg-white/55 p-6 shadow-[0_28px_80px_-52px_rgba(15,23,42,0.12)] backdrop-blur-md sm:p-7 md:p-8",
+    "rounded-2xl border border-neutral-900/[0.05] bg-white/55 p-7 shadow-[0_12px_36px_-18px_rgba(15,23,42,0.07)] backdrop-blur-md sm:p-8 md:p-9",
   title: workspaceType.sectionTitle,
-  description: "mt-2 max-w-2xl text-sm leading-relaxed text-neutral-500",
-  body: "mt-8",
+  description: "mt-3 max-w-2xl text-[15px] leading-relaxed text-neutral-500",
+  body: "mt-10",
 } as const;
 
 /** Modal presets — use with ModalShell `tone` */

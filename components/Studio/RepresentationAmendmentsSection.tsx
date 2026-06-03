@@ -5,7 +5,9 @@ import Link from "next/link";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import ModalShell from "@/components/ui/ModalShell";
 import { GovernanceSectionShell } from "@/components/Studio/GovernanceSectionShell";
-import { REPRESENTATION_PHRASES } from "@/lib/representation-language";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fillMessage } from "@/lib/locale-messages";
+import { translateRepresentationPhrase } from "@/lib/representation-i18n";
 import type { RepresentationAmendmentListItem } from "@/lib/representation-amendments";
 import {
   buildProposedChangesPayload,
@@ -51,16 +53,19 @@ function formatWhen(iso: string | null): string {
   }
 }
 
-function statusLabel(s: RepresentationAmendmentListItem["status"]): string {
+function statusLabel(
+  s: RepresentationAmendmentListItem["status"],
+  t: ReturnType<typeof useLocalePreferences>["t"]
+): string {
   switch (s) {
     case "pending":
-      return REPRESENTATION_PHRASES.amendmentPendingReview;
+      return translateRepresentationPhrase("amendmentPendingReview", t);
     case "accepted":
-      return "Accepted on file";
+      return t("studio.amendments.statusAccepted");
     case "declined":
-      return "Declined";
+      return t("studio.amendments.statusDeclined");
     case "withdrawn":
-      return "Withdrawn";
+      return t("studio.amendments.statusWithdrawn");
     default:
       return s;
   }
@@ -104,6 +109,7 @@ export function RepresentationAmendmentsSection({
   onResolve,
   onWithdraw,
 }: Props) {
+  const { t } = useLocalePreferences();
   const [requestOpen, setRequestOpen] = useState(false);
   const [artworkId, setArtworkId] = useState("");
   const [notes, setNotes] = useState("");
@@ -138,11 +144,11 @@ export function RepresentationAmendmentsSection({
   const submitRequest = async () => {
     setRequestErr(null);
     if (!artworkId.trim()) {
-      setRequestErr("Choose a work.");
+      setRequestErr(t("studio.amendments.chooseWork"));
       return;
     }
     if (!notes.trim()) {
-      setRequestErr("Add a note describing the proposed change.");
+      setRequestErr(t("studio.amendments.noteRequired"));
       return;
     }
     setRequestBusy(true);
@@ -160,7 +166,7 @@ export function RepresentationAmendmentsSection({
       });
       setRequestOpen(false);
     } catch {
-      setRequestErr("Request could not be sent.");
+      setRequestErr(t("studio.amendments.requestFailed"));
     } finally {
       setRequestBusy(false);
     }
@@ -172,37 +178,37 @@ export function RepresentationAmendmentsSection({
     <>
       <GovernanceSectionShell
         id={anchorId}
-        eyebrow="Representation amendments"
-        title="Chronicle updates"
-        description="Proposed catalogue refinements stay tentative until the counterpart accepts them on file. Prior attestations remain visible: accumulative chronology, not replacement."
+        eyebrow={t("studio.amendments.eyebrow")}
+        title={t("studio.amendments.title")}
+        description={t("studio.amendments.description")}
         badge={
           pendingForViewer.length > 0 ? (
             <span className={workspace.card.pill}>
               {pendingForViewer.length === 1
-                ? "1 response needed"
-                : `${pendingForViewer.length} responses needed`}
+                ? t("studio.amendments.responseNeeded")
+                : fillMessage(t("studio.amendments.responsesNeeded"), {
+                    count: String(pendingForViewer.length),
+                  })}
             </span>
           ) : null
         }
         actions={
           showRequestButton && artworkOptions.length > 0 ? (
             <button type="button" onClick={openRequestModal} className={primaryBtn}>
-              New amendment request
+              {t("studio.amendments.newRequest")}
             </button>
           ) : null
         }
       >
         {items.length === 0 ? (
-          <p className="text-sm text-neutral-500">
-            No amendment requests on file yet.
-          </p>
+          <p className="text-sm text-neutral-500">{t("studio.amendments.empty")}</p>
         ) : (
           <ul className="space-y-4">
             {items.map((row) => {
               const art = row.artwork;
-              const title = art?.title?.trim() || "Work";
+              const title = art?.title?.trim() || t("studio.amendments.workFallback");
               const reg = art?.registry_id?.trim();
-              const gname = row.gallery?.name?.trim() || "Institution";
+              const gname = row.gallery?.name?.trim() || t("studio.amendments.institution");
               const busy = busyAmendmentId === row.id;
               const resolver = needsViewerResponse(viewer, row);
               const requester = viewerIsRequester(viewer, row);
@@ -232,10 +238,12 @@ export function RepresentationAmendmentsSection({
                       <p className={`mt-1.5 ${workspace.type.metaQuiet}`}>
                         {viewer === "artist"
                           ? gname
-                          : artistNm || "Represented artist"}
+                          : artistNm || t("studio.amendments.representedArtist")}
                         {" · "}
-                        {row.requester_role === "artist" ? "Artist" : "Institution"}{" "}
-                        initiated · {formatWhen(row.created_at)}
+                        {row.requester_role === "artist"
+                          ? t("studio.amendments.roleArtist")
+                          : t("studio.amendments.roleInstitution")}{" "}
+                        {t("studio.amendments.initiated")} · {formatWhen(row.created_at)}
                       </p>
                       <p className="mt-3 text-sm leading-relaxed text-neutral-700">
                         {row.notes}
@@ -253,11 +261,11 @@ export function RepresentationAmendmentsSection({
                         </ul>
                       ) : null}
                       <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-500">
-                        {statusLabel(row.status)}
+                        {statusLabel(row.status, t)}
                       </p>
                       {row.resolution_notes ? (
                         <p className={`mt-1 ${workspace.type.metaQuiet}`}>
-                          Resolution: {row.resolution_notes}
+                          {t("studio.amendments.resolution")} {row.resolution_notes}
                         </p>
                       ) : null}
                     </div>
@@ -267,17 +275,19 @@ export function RepresentationAmendmentsSection({
                           href={`/artwork/${encodeURIComponent(reg)}`}
                           className="text-xs font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-4 hover:decoration-neutral-500"
                         >
-                          View public record
+                          {t("studio.amendments.viewPublicRecord")}
                         </Link>
                       ) : null}
                       {row.status === "pending" && resolver ? (
                         <>
                           <label className="block w-full">
-                            <span className="sr-only">Response note</span>
+                            <span className="sr-only">
+                              {t("studio.amendments.responseNote")}
+                            </span>
                             <input
                               type="text"
                               value={resNote}
-                              placeholder="Response note (optional)"
+                              placeholder={t("studio.amendments.responsePlaceholder")}
                               onChange={(e) =>
                                 setResolutionDraft((d) => ({
                                   ...d,
@@ -296,7 +306,7 @@ export function RepresentationAmendmentsSection({
                               }
                               className={primaryBtn}
                             >
-                              {busy ? "…" : "Accept on file"}
+                              {busy ? "…" : t("studio.amendments.acceptOnFile")}
                             </button>
                             <button
                               type="button"
@@ -306,7 +316,7 @@ export function RepresentationAmendmentsSection({
                               }
                               className={secondaryBtn}
                             >
-                              Decline
+                              {t("studio.amendments.decline")}
                             </button>
                           </div>
                         </>
@@ -318,7 +328,7 @@ export function RepresentationAmendmentsSection({
                           onClick={() => void onWithdraw(row.id)}
                           className={secondaryBtn}
                         >
-                          Withdraw request
+                          {t("studio.amendments.withdrawRequest")}
                         </button>
                       ) : null}
                     </div>
@@ -330,7 +340,7 @@ export function RepresentationAmendmentsSection({
         )}
 
         <p className={`${workspace.type.metaQuiet} mt-6 border-t border-neutral-900/[0.06] pt-4`}>
-          {REPRESENTATION_PHRASES.priorFilingsRemainVisible}
+          {translateRepresentationPhrase("priorFilingsRemainVisible", t)}
         </p>
       </GovernanceSectionShell>
 
@@ -341,7 +351,7 @@ export function RepresentationAmendmentsSection({
       >
         <div className="max-h-[85vh] overflow-y-auto">
           <h3 className="font-serif text-xl font-normal text-neutral-950">
-            New amendment request
+            {t("studio.amendments.modalTitle")}
           </h3>
           {requestErr ? (
             <p className="mt-3 text-sm text-red-800" role="alert">
@@ -349,7 +359,7 @@ export function RepresentationAmendmentsSection({
             </p>
           ) : null}
           <label className="mt-5 block">
-            <span className={workspace.type.label}>Work</span>
+            <span className={workspace.type.label}>{t("studio.amendments.workFallback")}</span>
             <select
               value={artworkId}
               onChange={(e) => setArtworkId(e.target.value)}
@@ -357,14 +367,16 @@ export function RepresentationAmendmentsSection({
             >
               {artworkOptions.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {(o.title || "Untitled").slice(0, 80)}
+                  {(o.title || t("registry.card.untitled")).slice(0, 80)}
                   {o.registry_id ? ` · ${o.registry_id}` : ""}
                 </option>
               ))}
             </select>
           </label>
           <label className="mt-4 block">
-            <span className={workspace.type.label}>Note (required)</span>
+            <span className={workspace.type.label}>
+              {t("studio.valueEvent.noteOptional")} *
+            </span>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -373,36 +385,36 @@ export function RepresentationAmendmentsSection({
             />
           </label>
           <div className="mt-5">
-            <InfoTooltip text="Describe what should change. Optional catalogue fields apply only if the counterpart accepts. They merge into the record on file." />
+            <InfoTooltip text={t("studio.amendments.noteDescribe")} />
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <input
-              placeholder="Title"
+              placeholder={t("studio.form.title")}
               value={fTitle}
               onChange={(e) => setFTitle(e.target.value)}
               className={workspace.modal.field}
             />
             <input
-              placeholder="Year"
+              placeholder={t("studio.form.year")}
               value={fYear}
               onChange={(e) => setFYear(e.target.value)}
               className={workspace.modal.field}
             />
             <input
-              placeholder="Medium"
+              placeholder={t("studio.form.medium")}
               value={fMedium}
               onChange={(e) => setFMedium(e.target.value)}
               className={workspace.modal.field}
             />
             <input
-              placeholder="Dimensions"
+              placeholder={t("studio.form.dimensions")}
               value={fDimensions}
               onChange={(e) => setFDimensions(e.target.value)}
               className={workspace.modal.field}
             />
           </div>
           <textarea
-            placeholder="Description"
+            placeholder={t("studio.form.description")}
             value={fDescription}
             onChange={(e) => setFDescription(e.target.value)}
             rows={2}
@@ -415,7 +427,7 @@ export function RepresentationAmendmentsSection({
               onClick={() => setRequestOpen(false)}
               className="rounded-xl px-4 py-2.5 text-sm text-neutral-600"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               type="button"
@@ -423,7 +435,7 @@ export function RepresentationAmendmentsSection({
               onClick={() => void submitRequest()}
               className={primaryBtn}
             >
-              {requestBusy ? "Sending…" : "Submit request"}
+              {requestBusy ? t("common.sending") : t("studio.amendments.submitRequest")}
             </button>
           </div>
         </div>
