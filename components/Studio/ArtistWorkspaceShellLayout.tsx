@@ -11,13 +11,11 @@ import {
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { deferredRouterPush } from "@/lib/deferred-app-router";
 import {
-  STUDIO_SECTION_IDS,
-  isStudioSectionId,
-  navigateToStudioSection,
-  type StudioSectionId,
-} from "@/lib/studio-workspace-nav";
-import { appendPersonalArchiveNavItem } from "@/lib/personal-archive-nav";
-import { STUDIO_SECTION_LABEL_KEYS } from "@/lib/workspace-nav-i18n";
+  buildCreativeNavItems,
+  isCreativeSectionId,
+  navigateToCreativeSection,
+  type CreativeSectionId,
+} from "@/lib/studio-nav";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { workspace } from "@/styles/workspace-design";
 
@@ -25,7 +23,7 @@ type ArtistWorkspaceShellLayoutProps = {
   children: React.ReactNode;
   userId: string;
   /** When set (e.g. on /studio), highlights that section in the sidebar */
-  activeSection?: StudioSectionId | null;
+  activeSection?: CreativeSectionId | null;
   /** Overrides section highlight (e.g. /personal-archive) */
   activeNavId?: string | null;
   saleSignalCount?: number;
@@ -48,14 +46,7 @@ export function ArtistWorkspaceShellLayout({
 
   const navItems = useMemo(
     () =>
-      appendPersonalArchiveNavItem(
-        STUDIO_SECTION_IDS.map((id) => ({
-          id,
-          label: t(STUDIO_SECTION_LABEL_KEYS[id]),
-          showDot: id === "Ownership" && saleSignalCount > 0,
-        })),
-        t
-      ),
+      buildCreativeNavItems(t, { ownershipSaleSignalCount: saleSignalCount }),
     [saleSignalCount, t]
   );
 
@@ -65,8 +56,8 @@ export function ArtistWorkspaceShellLayout({
       navItems={navItems}
       activeId={activeNavId ?? activeSection ?? ""}
       onSelect={(id) => {
-        if (isStudioSectionId(id)) {
-          navigateToStudioSection(router, id);
+        if (isCreativeSectionId(id)) {
+          navigateToCreativeSection(router, id);
         }
       }}
       isLightChrome

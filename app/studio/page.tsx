@@ -48,8 +48,10 @@ import {
   WorkspaceShellFooterLinks,
 } from "@/components/Studio/WorkspaceShell";
 import { workspace } from "@/styles/workspace-design";
-import { appendPersonalArchiveNavItem } from "@/lib/personal-archive-nav";
-import { STUDIO_SECTION_LABEL_KEYS } from "@/lib/workspace-nav-i18n";
+import {
+  buildCreativeNavItems,
+  consumePendingStudioSection,
+} from "@/lib/studio-nav";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fillMessage } from "@/lib/locale-messages";
 import {
@@ -76,7 +78,6 @@ import { testModeEnabled } from "@/lib/test-mode";
 import { TestDataControls } from "@/components/Admin/TestDataControls";
 import { getOnboardingRedirectPath } from "@/lib/onboarding";
 import { parseStudioArtworksAccent } from "@/lib/studio-artworks-accent";
-import { consumePendingStudioSection } from "@/lib/studio-workspace-nav";
 import {
   deferredRouterPush,
   deferredRouterReplace,
@@ -1109,18 +1110,10 @@ useEffect(() => {
 
   const studioNavItems = useMemo(
     () =>
-      appendPersonalArchiveNavItem(
-        (["Studio", "Artworks", "Records", "Certificates", "Ownership"] as const).map(
-          (item) => ({
-            id: item,
-            label: t(STUDIO_SECTION_LABEL_KEYS[item]),
-            showDot:
-              (item === "Records" && governanceAttention) ||
-              (item === "Ownership" && Object.keys(saleSignals).length > 0),
-          })
-        ),
-        t
-      ),
+      buildCreativeNavItems(t, {
+        governanceAttention,
+        ownershipSaleSignalCount: Object.keys(saleSignals).length,
+      }),
     [saleSignals, governanceAttention, t]
   );
 

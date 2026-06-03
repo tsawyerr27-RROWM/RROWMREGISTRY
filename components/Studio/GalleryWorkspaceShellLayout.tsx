@@ -11,13 +11,11 @@ import {
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { deferredRouterPush } from "@/lib/deferred-app-router";
 import {
-  GALLERY_SECTION_IDS,
-  isGallerySectionId,
-  navigateToGallerySection,
-  type GallerySectionId,
-} from "@/lib/gallery-workspace-nav";
-import { appendPersonalArchiveNavItem } from "@/lib/personal-archive-nav";
-import { GALLERY_SECTION_LABEL_KEYS } from "@/lib/workspace-nav-i18n";
+  buildOrganisationNavItems,
+  isOrganisationSectionId,
+  navigateToOrganisationSection,
+  type OrganisationSectionId,
+} from "@/lib/studio-nav";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 type ActivityRow = {
@@ -29,7 +27,7 @@ type ActivityRow = {
 type GalleryWorkspaceShellLayoutProps = {
   children: React.ReactNode;
   userId: string;
-  activeSection?: GallerySectionId | null;
+  activeSection?: OrganisationSectionId | null;
   activeNavId?: string | null;
   accountActive?: boolean;
   catalogueActive?: boolean;
@@ -47,17 +45,7 @@ export function GalleryWorkspaceShellLayout({
   const { t } = useLocalePreferences();
   const sb = useSupabaseBrowserLazy();
 
-  const navItems = useMemo(
-    () =>
-      appendPersonalArchiveNavItem(
-        GALLERY_SECTION_IDS.map((id) => ({
-          id,
-          label: t(GALLERY_SECTION_LABEL_KEYS[id]),
-        })),
-        t
-      ),
-    [t]
-  );
+  const navItems = useMemo(() => buildOrganisationNavItems(t), [t]);
 
   return (
     <WorkspaceShell
@@ -65,8 +53,8 @@ export function GalleryWorkspaceShellLayout({
       navItems={navItems}
       activeId={activeNavId ?? activeSection ?? ""}
       onSelect={(id) => {
-        if (isGallerySectionId(id)) {
-          navigateToGallerySection(router, id);
+        if (isOrganisationSectionId(id)) {
+          navigateToOrganisationSection(router, id);
         }
       }}
       isLightChrome

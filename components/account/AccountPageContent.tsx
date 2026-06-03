@@ -20,7 +20,7 @@ import { PrivacyDataSection } from "@/components/account/PrivacyDataSection";
 import { WorkspacePanel } from "@/components/ui/WorkspacePanel";
 import type { PublicPresence } from "@/lib/public-presence";
 import { REPRESENTATION_PHRASES } from "@/lib/representation-language";
-import { navigateToStudioSection } from "@/lib/studio-workspace-nav";
+import { navigateToStudioSection } from "@/lib/studio-nav";
 import type { StudioArtworksAccentId } from "@/lib/studio-artworks-accent";
 
 type Role = "artist" | "collector" | "gallery";

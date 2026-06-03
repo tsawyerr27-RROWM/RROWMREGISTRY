@@ -15,8 +15,10 @@ import {
   WorkspaceShellFooterLinks,
 } from "@/components/Studio/WorkspaceShell";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
-import { appendPersonalArchiveNavItem } from "@/lib/personal-archive-nav";
-import { COLLECTOR_SECTION_LABEL_KEYS } from "@/lib/workspace-nav-i18n";
+import {
+  buildCollectorNavItems,
+  consumePendingCollectorSection,
+} from "@/lib/studio-nav";
 import { fillMessage } from "@/lib/locale-messages";
 import {
   getCollectorOwnedArtworkIds,
@@ -34,7 +36,6 @@ import { testModeEnabled } from "@/lib/test-mode";
 import { TestDataControls } from "@/components/Admin/TestDataControls";
 import { getOnboardingRedirectPath } from "@/lib/onboarding";
 import { CollectorStudioActivityPreview } from "@/components/Studio/CollectorStudioActivityPreview";
-import { consumePendingCollectorSection } from "@/lib/collector-workspace-nav";
 import { CollectorWorkspaceHero } from "@/components/Studio/CollectorWorkspaceHero";
 import {
   certificateStatusMapToCollectorRecord,
@@ -437,18 +438,9 @@ export default function CollectorStudioPage() {
 
   const collectorNavItems = useMemo(
     () =>
-      appendPersonalArchiveNavItem(
-        [
-          { id: "workspace", label: t(COLLECTOR_SECTION_LABEL_KEYS.workspace) },
-          { id: "works", label: t(COLLECTOR_SECTION_LABEL_KEYS.works) },
-          {
-            id: "attention",
-            label: t(COLLECTOR_SECTION_LABEL_KEYS.attention),
-            showDot: intelligenceItems.length > 0,
-          },
-        ],
-        t
-      ),
+      buildCollectorNavItems(t, {
+        attentionItemCount: intelligenceItems.length,
+      }),
     [intelligenceItems.length, t]
   );
 

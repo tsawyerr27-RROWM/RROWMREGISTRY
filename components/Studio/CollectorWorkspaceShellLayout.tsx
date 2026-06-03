@@ -11,13 +11,11 @@ import {
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { deferredRouterPush } from "@/lib/deferred-app-router";
 import {
-  COLLECTOR_SECTION_IDS,
+  buildCollectorNavItems,
   isCollectorSectionId,
   navigateToCollectorSection,
   type CollectorSectionId,
-} from "@/lib/collector-workspace-nav";
-import { appendPersonalArchiveNavItem } from "@/lib/personal-archive-nav";
-import { COLLECTOR_SECTION_LABEL_KEYS } from "@/lib/workspace-nav-i18n";
+} from "@/lib/studio-nav";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 type CollectorWorkspaceShellLayoutProps = {
@@ -41,17 +39,7 @@ export function CollectorWorkspaceShellLayout({
   const { t } = useLocalePreferences();
   const sb = useSupabaseBrowserLazy();
 
-  const navItems = useMemo(
-    () =>
-      appendPersonalArchiveNavItem(
-        COLLECTOR_SECTION_IDS.map((id) => ({
-          id,
-          label: t(COLLECTOR_SECTION_LABEL_KEYS[id]),
-        })),
-        t
-      ),
-    [t]
-  );
+  const navItems = useMemo(() => buildCollectorNavItems(t), [t]);
 
   return (
     <WorkspaceShell

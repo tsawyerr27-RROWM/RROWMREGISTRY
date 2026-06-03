@@ -14,8 +14,11 @@ import { useLocalePreferences } from "@/components/providers/LocalePreferencesPr
 import { WorkspaceSidebarActivityFeed } from "@/components/Studio/WorkspaceSidebarActivityFeed";
 import { useAccountActivityFeed } from "@/hooks/useAccountActivityFeed";
 import { translateActivityMessage } from "@/lib/activity-i18n";
-import { appendPersonalArchiveNavItem } from "@/lib/personal-archive-nav";
-import { GALLERY_SECTION_LABEL_KEYS } from "@/lib/workspace-nav-i18n";
+import {
+  buildOrganisationNavItems,
+  consumePendingGallerySection,
+  ORGANISATION_SECTION_LABEL_KEYS,
+} from "@/lib/studio-nav";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 import { TestDataControls } from "@/components/Admin/TestDataControls";
 import { getOnboardingRedirectPath } from "@/lib/onboarding";
@@ -31,7 +34,6 @@ import { DataInsightModal } from "@/components/Insights/DataInsightModal";
 import { GalleryInstitutionalHero } from "@/components/gallery/GalleryInstitutionalHero";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { ArtistTierBadge } from "@/components/artist/ArtistTierBadge";
-import { consumePendingGallerySection } from "@/lib/gallery-workspace-nav";
 import { GalleryInvitationsHub } from "@/components/gallery/GalleryInvitationsHub";
 import {
   type GalleryInviteRow,
@@ -1947,29 +1949,12 @@ export default function GalleryDashboardPage() {
 
   const galleryNavItems = useMemo(
     () =>
-      appendPersonalArchiveNavItem(
-        [
-          { id: "studio", label: t(GALLERY_SECTION_LABEL_KEYS.studio) },
-          {
-            id: "record-depth",
-            label: t(GALLERY_SECTION_LABEL_KEYS["record-depth"]),
-            showDot: participationAttention,
-          },
-          { id: "roster", label: t(GALLERY_SECTION_LABEL_KEYS.roster) },
-          { id: "catalogue", label: t(GALLERY_SECTION_LABEL_KEYS.catalogue) },
-          {
-            id: "verification",
-            label: t(GALLERY_SECTION_LABEL_KEYS.verification),
-            showDot: Boolean(gallery?.verified) && verifyQueue.length > 0,
-          },
-          {
-            id: "invitations",
-            label: t(GALLERY_SECTION_LABEL_KEYS.invitations),
-            showDot: pendingInviteCount > 0,
-          },
-        ],
-        t
-      ),
+      buildOrganisationNavItems(t, {
+        participationAttention,
+        verificationQueueActive:
+          Boolean(gallery?.verified) && verifyQueue.length > 0,
+        pendingInviteCount,
+      }),
     [
       pendingInviteCount,
       gallery?.verified,
@@ -2375,7 +2360,7 @@ export default function GalleryDashboardPage() {
                   <div>
                     <InfoTooltip text={t("gallery.roster.tooltip")} />
                     <h2 className="font-serif text-[1.35rem] font-normal text-neutral-950 md:text-[1.75rem]">
-                      {t(GALLERY_SECTION_LABEL_KEYS.roster)}
+                      {t(ORGANISATION_SECTION_LABEL_KEYS.roster)}
                     </h2>
                   </div>
                   <span className="inline-flex items-center rounded-full border border-neutral-900/[0.06] bg-white/70 px-3 py-1 text-[12px] tabular-nums text-neutral-700 shadow-[0_1px_0_rgba(15,23,42,0.04)]">
@@ -2549,7 +2534,7 @@ export default function GalleryDashboardPage() {
               <div>
                 <InfoTooltip text={t("gallery.catalogue.tooltip")} />
                 <h2 className="font-serif text-[1.35rem] font-normal text-neutral-950 md:text-[1.75rem]">
-                  {t(GALLERY_SECTION_LABEL_KEYS.catalogue)}
+                  {t(ORGANISATION_SECTION_LABEL_KEYS.catalogue)}
                 </h2>
               </div>
               <button
@@ -2749,7 +2734,7 @@ export default function GalleryDashboardPage() {
             >
               <InfoTooltip text={t("gallery.verification.tooltip")} />
               <h2 className="font-serif text-lg font-normal text-neutral-950 md:text-xl">
-                {t(GALLERY_SECTION_LABEL_KEYS.verification)}
+                {t(ORGANISATION_SECTION_LABEL_KEYS.verification)}
               </h2>
               {!gallery.verified ? (
                 <p className="mt-4 text-[13px] text-neutral-500">
