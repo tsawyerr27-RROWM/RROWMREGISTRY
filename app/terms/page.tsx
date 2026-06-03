@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <LegalPageShell title="Terms of Service" updated="3 April 2026">
+    <LegalPageShell title="Terms of Service" updated="31 May 2026">
       <section className="flex flex-col gap-4">
         <LegalH2>Agreement</LegalH2>
         <LegalP>
@@ -43,6 +43,41 @@ export default function TermsPage() {
           credentials secure. You are responsible for activity under your
           account except where compromise is attributable solely to our
           systems.
+        </LegalP>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <LegalH2>Account deactivation and deletion</LegalH2>
+        <LegalP>
+          You may deactivate or request deletion of your account through{" "}
+          <a
+            href="/account#account-privacy-data"
+            className="text-neutral-900 underline decoration-neutral-300 underline-offset-[0.25em] transition hover:decoration-neutral-500"
+          >
+            My Account → Privacy &amp; data
+          </a>
+          , subject to identity verification and the process described in our{" "}
+          <a
+            href="/privacy"
+            className="text-neutral-900 underline decoration-neutral-300 underline-offset-[0.25em] transition hover:decoration-neutral-500"
+          >
+            Privacy Policy
+          </a>
+          .
+        </LegalP>
+        <LegalP>
+          Account deletion is subject to a recovery period before permanent
+          removal. Registry records, certificates, provenance history, and audit
+          logs required to maintain record integrity may remain preserved in
+          anonymised form after your account is deleted. Deleting your account
+          does not withdraw records you previously submitted to the registry
+          where retention is necessary for provenance continuity or legal
+          compliance.
+        </LegalP>
+        <LegalP>
+          We may suspend or terminate access where required for security, legal
+          compliance, or violations of these terms, independently of any
+          self-service deletion request.
         </LegalP>
       </section>
 

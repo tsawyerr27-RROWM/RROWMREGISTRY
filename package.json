@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "validate:system": "tsx scripts/run-system-validation.ts",
-    "validate:replay": "tsx scripts/run-historical-replay.ts"
+    "validate:replay": "tsx scripts/run-historical-replay.ts",
+    "test:account-lifecycle": "tsx --test lib/account-lifecycle/account-lifecycle.test.ts",
+    "db:apply-personal-archive": "tsx scripts/apply-personal-archive-migration.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.9.0",

@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { ArtworksHeroPreview } from "@/components/Dashboard/ArtworksHeroPreview";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import type { PublicPresence } from "@/lib/public-presence";
+import { RegistryCatalogueInfoTooltip } from "@/components/Registry/RegistryCatalogueInfoTooltip";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 export type AccountHeroPreviewArtwork = {
@@ -210,7 +212,7 @@ function ArtistNarrativeTile({
   return (
     <HeroTile
       title="Public narrative"
-      footer={<AnchorLink href="#account-profile-content">Edit biography & links</AnchorLink>}
+      footer={<AnchorLink href="#account-profile">Edit biography & links</AnchorLink>}
     >
       <CompletenessMeter percent={percent} />
       {bio ? (
@@ -245,7 +247,7 @@ function VisibilityTile({ presence }: { presence: PublicPresence }) {
   return (
     <HeroTile
       title="Layered visibility"
-      footer={<AnchorLink href="#account-privacy">Adjust visibility toggles</AnchorLink>}
+      footer={<AnchorLink href="#account-visibility">Adjust visibility toggles</AnchorLink>}
     >
       <VisibilityChips presence={presence} />
     </HeroTile>
@@ -304,7 +306,7 @@ function CollectorPrivacyTile({
   return (
     <HeroTile
       title="Privacy first"
-      footer={<AnchorLink href="#account-privacy">Privacy & visibility</AnchorLink>}
+      footer={<AnchorLink href="#account-visibility">Privacy & visibility</AnchorLink>}
     >
       <div className="flex items-center gap-4">
         <div
@@ -354,7 +356,7 @@ function CollectorCollectionTile({
   return (
     <HeroTile
       title="Collection signals"
-      footer={<AnchorLink href="#account-privacy">Ownership & value toggles</AnchorLink>}
+      footer={<AnchorLink href="#account-visibility">Ownership & value toggles</AnchorLink>}
     >
       <p className="font-serif text-2xl font-normal tabular-nums text-white">
         {ownedWorkCount}
@@ -393,6 +395,8 @@ function CollectorAccountTile({
   workspaceHref: string;
   workspaceLabel: string;
 }) {
+  const { t } = useLocalePreferences();
+
   return (
     <HeroTile title="One account">
       <div className="flex flex-col gap-2">
@@ -406,7 +410,7 @@ function CollectorAccountTile({
           href="/registry"
           className="rounded-md border border-white/10 px-3 py-2 text-center text-[11px] font-medium text-white/70 transition hover:border-white/20 hover:text-white"
         >
-          Browse catalogue
+          {t("studio.shell.browseCatalogue")}
         </Link>
       </div>
     </HeroTile>
@@ -431,7 +435,7 @@ function GalleryIdentityTile({
   return (
     <HeroTile
       title="Institutional identity"
-      footer={<AnchorLink href="#account-profile-content">Edit institution details</AnchorLink>}
+      footer={<AnchorLink href="#account-profile">Edit institution details</AnchorLink>}
     >
       <CompletenessMeter percent={percent} />
       <FieldChecklist items={items} />
@@ -549,7 +553,14 @@ export function AccountPresenceHero({
                     : "Gallery"}
               </span>
             </div>
-            <InfoTooltip text="Your public presence on the registry is deliberate. These controls shape what visitors see, not your internal records or workspace activity." theme="dark" />
+            <InfoTooltip
+              text={
+                role === "collector"
+                  ? "Your public presence on the registry is deliberate. These controls shape what visitors see, not your internal records or studio activity."
+                  : "Your public presence on the registry is deliberate. These controls shape what visitors see, not your internal records or workspace activity."
+              }
+              theme="dark"
+            />
             <h1 className="mt-5 font-serif text-[2rem] font-normal leading-[1.05] tracking-tight text-white md:text-[2.65rem] lg:text-[2.85rem]">
               {headline}
             </h1>
@@ -592,7 +603,8 @@ export function AccountPresenceHero({
                 Public page when slug is available
               </span>
             )}
-            <div className="ml-auto flex gap-5 text-[12px] text-white/50">
+            <div className="ml-auto flex items-center gap-3 text-[12px] text-white/50">
+              <RegistryCatalogueInfoTooltip theme="dark" />
               <Link href="/registry" className="transition hover:text-white">
                 Registry
               </Link>

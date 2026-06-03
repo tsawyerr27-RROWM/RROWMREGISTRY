@@ -1,145 +1,34 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
-import { summarizeRpcError } from "@/lib/supabase-rpc-error";
-import { getOnboardingRedirectPath } from "@/lib/onboarding";
-import { ArtistWorkspaceShellLayout } from "@/components/Studio/ArtistWorkspaceShellLayout";
-import { CollectorWorkspaceShellLayout } from "@/components/Studio/CollectorWorkspaceShellLayout";
-import { GalleryWorkspaceShellLayout } from "@/components/Studio/GalleryWorkspaceShellLayout";
-import { AccountPresenceHero } from "@/components/account/AccountPresenceHero";
-import {
-  DEFAULT_PUBLIC_PRESENCE,
-  parsePublicPresence,
-  type PublicPresence,
-  toPublicPresenceJson,
-} from "@/lib/public-presence";
-import { getCollectorOwnedArtworkIds } from "@/lib/collector-portfolio";
+import { AccountPageContent } from "@/components/account/AccountPageContent";
+import { normalizeOptionalWebsite } from "@/components/account/account-ui";
 import type {
   AccountHeroPreviewArtwork,
   AccountProfileSnapshot,
 } from "@/components/account/AccountPresenceHero";
+import { ArtistWorkspaceShellLayout } from "@/components/Studio/ArtistWorkspaceShellLayout";
+import { CollectorWorkspaceShellLayout } from "@/components/Studio/CollectorWorkspaceShellLayout";
+import { GalleryWorkspaceShellLayout } from "@/components/Studio/GalleryWorkspaceShellLayout";
+import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
+import { getCollectorOwnedArtworkIds } from "@/lib/collector-portfolio";
+import { deferredRouterReplace } from "@/lib/deferred-app-router";
+import { getOnboardingRedirectPath } from "@/lib/onboarding";
 import {
-  STUDIO_ARTWORKS_ACCENT_OPTIONS,
+  DEFAULT_PUBLIC_PRESENCE,
+  parsePublicPresence,
+  toPublicPresenceJson,
+  type PublicPresence,
+} from "@/lib/public-presence";
+import { parseArtistRepresentationState } from "@/lib/artwork-representation";
+import {
   parseStudioArtworksAccent,
   type StudioArtworksAccentId,
 } from "@/lib/studio-artworks-accent";
-import { deferredRouterReplace } from "@/lib/deferred-app-router";
-import { navigateToStudioSection } from "@/lib/studio-workspace-nav";
-import { parseArtistRepresentationState } from "@/lib/artwork-representation";
-import { REPRESENTATION_PHRASES } from "@/lib/representation-language";
-import { WorkspacePanel } from "@/components/ui/WorkspacePanel";
+import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 
 type Role = "artist" | "collector" | "gallery";
-
-const accountFieldClass =
-  "liquid-glass-inset mt-3 w-full border-0 px-4 py-3.5 text-[15px] text-neutral-900 shadow-none placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-900/15";
-const accountTextareaClass = `${accountFieldClass} resize-none leading-relaxed`;
-
-function normalizeOptionalWebsite(raw: string): string | null {
-  const t = raw.trim();
-  if (!t) return null;
-  if (/^https?:\/\//i.test(t)) return t;
-  return `https://${t}`;
-}
-
-function roleLabel(r: Role): string {
-  switch (r) {
-    case "artist":
-      return "Artist";
-    case "collector":
-      return "Collector";
-    case "gallery":
-      return "Gallery";
-    default:
-      return r;
-  }
-}
-
-function ToggleRow({
-  id,
-  label,
-  hint,
-  checked,
-  onChange,
-  disabled,
-}: {
-  id: string;
-  label: string;
-  hint?: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <div className="flex items-start justify-between gap-6">
-      <div className="min-w-0">
-        <label htmlFor={id} className="text-[15px] font-medium text-neutral-900">
-          {label}
-        </label>
-        {hint ? (
-          <p className="mt-1.5 text-sm leading-relaxed text-neutral-500">{hint}</p>
-        ) : null}
-      </div>
-      <button
-        id={id}
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        disabled={disabled}
-        onClick={() => onChange(!checked)}
-        className={`relative h-8 w-14 shrink-0 rounded-full transition-[background-color] duration-200 ease-out ${
-          checked ? "bg-neutral-950" : "bg-neutral-200/90"
-        } disabled:opacity-45`}
-      >
-        <span
-          className={`absolute left-1 top-1 h-6 w-6 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out ${
-            checked ? "translate-x-6" : "translate-x-0"
-          }`}
-        />
-      </button>
-    </div>
-  );
-}
-
-function AccountPanel({
-  id,
-  title,
-  description,
-  children,
-}: {
-  id?: string;
-  title: string;
-  /** Optional one-line context under the title */
-  description?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section
-      id={id}
-      className={`rounded-2xl border border-neutral-900/[0.06] bg-white/45 p-6 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-sm sm:p-7 ${
-        id ? "scroll-mt-28" : ""
-      }`}
-    >
-      <h2 className="font-serif text-xl font-normal leading-snug tracking-tight text-neutral-950 md:text-2xl">
-        {title}
-      </h2>
-      {description ? (
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-neutral-500">
-          {description}
-        </p>
-      ) : null}
-      <div className="mt-8">{children}</div>
-    </section>
-  );
-}
-
-/** Groups toggles inside a panel (spacing only; no section label). */
-function AccountSubsection({ children }: { children: React.ReactNode }) {
-  return <div className="space-y-8">{children}</div>;
-}
 
 export default function AccountPage() {
   const router = useRouter();
@@ -174,7 +63,28 @@ export default function AccountPage() {
     AccountHeroPreviewArtwork[]
   >([]);
   const [artistRepHistorical, setArtistRepHistorical] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [accountStatus, setAccountStatus] = useState<
+    "active" | "deactivated" | "pending_deletion" | "deleted"
+  >("active");
+  const [deletionScheduledAt, setDeletionScheduledAt] = useState<string | null>(null);
+  const [authProvider, setAuthProvider] = useState("email");
+
+  const refreshAccountStatus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/account/status", { credentials: "include" });
+      if (!res.ok) return;
+      const j = (await res.json()) as {
+        accountStatus?: typeof accountStatus;
+        deletionScheduledAt?: string | null;
+        authProvider?: string;
+      };
+      if (j.accountStatus) setAccountStatus(j.accountStatus);
+      setDeletionScheduledAt(j.deletionScheduledAt ?? null);
+      if (j.authProvider) setAuthProvider(j.authProvider);
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const load = useCallback(async () => {
     setError(null);
@@ -220,23 +130,12 @@ export default function AccountPage() {
     setRole(r);
     setCollectorPreviewArtworks([]);
     setArtistRepHistorical(false);
-    setIsAdmin(false);
     setDisplayName(
       String((actor as { display_name?: string | null }).display_name || "").trim()
     );
     let nextPresence = parsePublicPresence(
       (actor as { public_presence?: unknown }).public_presence
     );
-
-    try {
-      const res = await fetch("/api/admin/check", { credentials: "include" });
-      if (res.ok) {
-        const body = await res.json();
-        if (body?.isAdmin) setIsAdmin(true);
-      }
-    } catch {
-      /* non-critical */
-    }
 
     if (r === "artist") {
       const { data: ar } = await supabase
@@ -301,8 +200,7 @@ export default function AccountPage() {
           .select("id, title, registry_id, image_url")
           .in("id", ownedIds)
           .limit(48);
-        const rows = (aw || []) as AccountHeroPreviewArtwork[];
-        setCollectorPreviewArtworks(rows);
+        setCollectorPreviewArtworks((aw || []) as AccountHeroPreviewArtwork[]);
       }
     }
 
@@ -364,6 +262,10 @@ export default function AccountPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!loading && userId) void refreshAccountStatus();
+  }, [loading, userId, refreshAccountStatus]);
 
   const save = async () => {
     if (!userId || !role) return;
@@ -538,388 +440,57 @@ export default function AccountPage() {
         ? "Collector studio"
         : "Institutional studio";
 
-  const accountBody = (
-    <main className="relative mx-auto w-full max-w-[min(100%,88rem)]">
-        <div className="mt-2">
-          <AccountPresenceHero
-            displayName={displayName}
-            role={role}
-            publicPageHref={publicPageHref}
-            workspaceHref={workspaceHref}
-            workspaceLabel={workspaceLabel}
-            presence={presence}
-            profileSnapshot={profileSnapshot}
-            collectionPreviewArtworks={
-              role === "collector" ? collectorPreviewArtworks : null
-            }
-          />
-        </div>
-
-        {role === "artist" && artistRepHistorical ? (
-          <div className="mt-8" role="status">
-            <WorkspacePanel
-              title="Institution representation"
-              description={`${REPRESENTATION_PHRASES.historicalRepresentation}. ${REPRESENTATION_PHRASES.priorFilingsRemainVisible}.`}
-            >
-              <button
-                type="button"
-                onClick={() => navigateToStudioSection(router, "Records")}
-                className="inline-flex rounded-xl bg-neutral-950 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800"
-              >
-                Authenticate records in studio
-              </button>
-            </WorkspacePanel>
-          </div>
-        ) : null}
-
-        <div className="mt-12 space-y-10 xl:max-w-5xl xl:mx-auto">
-          {/* 1 · Account basics + what you publish (side by side on large screens) */}
-          <div className="grid gap-10 lg:grid-cols-2 lg:items-start lg:gap-8">
-            <AccountPanel
-              title="Identity"
-              description="Core sign-in details and how you appear by name."
-            >
-              <div className="space-y-6">
-                <div>
-                  <label className="text-sm font-medium text-neutral-700">
-                    Display name
-                  </label>
-                  <input
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    className={accountFieldClass}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-neutral-700">
-                    Email
-                  </label>
-                  <p className="mt-3 rounded-2xl border border-neutral-900/[0.06] bg-black/[0.03] px-4 py-3.5 text-[15px] text-neutral-600">
-                    {email || "–"}
-                  </p>
-                  <p className="mt-2 text-xs text-neutral-500">
-                    Managed through your sign-in provider.
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-neutral-700">
-                    Role
-                  </label>
-                  <p className="mt-3 text-[15px] font-medium text-neutral-900">
-                    {roleLabel(role)}
-                  </p>
-                </div>
-              </div>
-            </AccountPanel>
-
-            {role === "artist" ? (
-              <AccountPanel
-                title="Profile content"
-                description="Shown on your artist page when visibility is on."
-              >
-                <div className="space-y-6">
-                  <div>
-                    <label className="text-sm font-medium text-neutral-700">
-                      Biography
-                    </label>
-                    <textarea
-                      value={artistBio}
-                      onChange={(e) => setArtistBio(e.target.value)}
-                      rows={5}
-                      className={accountTextareaClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-neutral-700">
-                      Website
-                    </label>
-                    <input
-                      type="text"
-                      inputMode="url"
-                      value={artistWebsite}
-                      onChange={(e) => setArtistWebsite(e.target.value)}
-                      className={accountFieldClass}
-                      placeholder="https://"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-neutral-700">
-                      Instagram
-                    </label>
-                    <input
-                      value={artistInstagram}
-                      onChange={(e) => setArtistInstagram(e.target.value)}
-                      className={accountFieldClass}
-                      placeholder="@handle or handle"
-                    />
-                  </div>
-                </div>
-              </AccountPanel>
-            ) : null}
-
-            {role === "collector" ? (
-              <AccountPanel
-                id="account-profile-content"
-                title="Profile content"
-                description="Shown on your collector page when visibility is on."
-              >
-                <div className="space-y-6">
-                  <div>
-                    <label className="text-sm font-medium text-neutral-700">
-                      Location
-                    </label>
-                    <input
-                      value={collectorLocation}
-                      onChange={(e) => setCollectorLocation(e.target.value)}
-                      className={accountFieldClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-neutral-700">
-                      Note
-                    </label>
-                    <textarea
-                      value={collectorBio}
-                      onChange={(e) => setCollectorBio(e.target.value)}
-                      rows={4}
-                      className={accountTextareaClass}
-                    />
-                  </div>
-                </div>
-              </AccountPanel>
-            ) : null}
-
-            {role === "gallery" ? (
-              <AccountPanel
-                title="Institution"
-                description="How your gallery reads on its public page."
-              >
-                <div className="space-y-6">
-                  <div>
-                    <label className="text-sm font-medium text-neutral-700">
-                      Location
-                    </label>
-                    <input
-                      value={galleryLocation}
-                      onChange={(e) => setGalleryLocation(e.target.value)}
-                      className={accountFieldClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-neutral-700">
-                      Website
-                    </label>
-                    <input
-                      type="text"
-                      inputMode="url"
-                      value={galleryWebsite}
-                      onChange={(e) => setGalleryWebsite(e.target.value)}
-                      className={accountFieldClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-neutral-700">
-                      Description
-                    </label>
-                    <textarea
-                      value={galleryDescription}
-                      onChange={(e) => setGalleryDescription(e.target.value)}
-                      rows={5}
-                      className={accountTextareaClass}
-                    />
-                  </div>
-                </div>
-              </AccountPanel>
-            ) : null}
-          </div>
-
-          {/* 2 · All visibility in one place */}
-          <AccountPanel
-            id="account-privacy"
-            title="Privacy & visibility"
-            description="Control whether your profile and registry details are visible to visitors."
-          >
-            <div className="liquid-glass-tile flex flex-col gap-10 px-4 py-6 md:px-6">
-              <AccountSubsection>
-                <ToggleRow
-                  id="toggle-profile"
-                  label="Show profile publicly"
-                  hint="When off, your public profile page is not shown to visitors."
-                  checked={presence.profile}
-                  onChange={(v) => setPresence((p) => ({ ...p, profile: v }))}
-                  disabled={saving}
-                />
-                <ToggleRow
-                  id="toggle-location-p"
-                  label="Show location"
-                  hint="City or region visible on your public profile."
-                  checked={presence.location}
-                  onChange={(v) => setPresence((p) => ({ ...p, location: v }))}
-                  disabled={saving}
-                />
-                {role === "collector" ? (
-                  <div className="rounded-xl border border-neutral-900/[0.06] bg-white/35 px-4 py-5 md:px-5">
-                    <ToggleRow
-                      id="toggle-anon"
-                      label="Prefer anonymity on public pages"
-                      hint="Visitors see a neutral label instead of your name."
-                      checked={collectorAnonymous}
-                      onChange={setCollectorAnonymous}
-                      disabled={saving}
-                    />
-                  </div>
-                ) : null}
-              </AccountSubsection>
-
-              <div className="border-t border-neutral-900/[0.06] pt-10">
-                <AccountSubsection>
-                  <ToggleRow
-                    id="toggle-ownership"
-                    label="Show ownership publicly"
-                    hint="Ownership context visible to visitors where applicable."
-                    checked={presence.ownership}
-                    onChange={(v) =>
-                      setPresence((p) => ({ ...p, ownership: v }))
-                    }
-                    disabled={saving}
-                  />
-                  <ToggleRow
-                    id="toggle-values"
-                    label="Show values publicly"
-                    hint="Declared values shown on your public collection where applicable."
-                    checked={presence.values}
-                    onChange={(v) => setPresence((p) => ({ ...p, values: v }))}
-                    disabled={saving}
-                  />
-                </AccountSubsection>
-              </div>
-            </div>
-          </AccountPanel>
-
-          {/* 3 · Private workspace preference (artists) */}
-          {role === "artist" ? (
-            <AccountPanel
-              title="Artworks appearance"
-              description="Only affects your Studio, not public pages. Accent on the Artworks grid cards."
-            >
-              <div
-                className="flex flex-wrap gap-3"
-                role="radiogroup"
-                aria-label="Studio Artworks accent color"
-              >
-                {STUDIO_ARTWORKS_ACCENT_OPTIONS.map((opt) => {
-                  const selected = studioArtworksAccent === opt.id;
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={selected}
-                      disabled={saving}
-                      onClick={() => setStudioArtworksAccent(opt.id)}
-                      className={`group flex min-w-[7.5rem] flex-col items-center gap-2 rounded-xl border px-3 py-3 text-left transition ${
-                        selected
-                          ? "border-neutral-900/25 bg-white/80 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)]"
-                          : "border-neutral-900/[0.08] bg-white/40 hover:border-neutral-900/15"
-                      } disabled:opacity-50`}
-                    >
-                      <span
-                        className={`h-8 w-8 rounded-full ring-2 ring-offset-2 ${opt.swatchClass} ${
-                          selected
-                            ? "ring-neutral-900/30 ring-offset-white"
-                            : "ring-transparent ring-offset-transparent group-hover:ring-neutral-900/15"
-                        }`}
-                        aria-hidden
-                      />
-                      <span className="text-[13px] font-medium text-neutral-900">
-                        {opt.label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </AccountPanel>
-          ) : null}
-
-          {error ? (
-            <p className="text-sm text-red-800" role="alert">
-              {error}
-            </p>
-          ) : null}
-
-          <div className="flex flex-col gap-4 rounded-2xl border border-neutral-900/[0.06] bg-white/35 px-6 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-            <button
-              type="button"
-              disabled={saving}
-              onClick={() => void save()}
-              className="rounded-xl bg-neutral-950 px-8 py-3.5 text-sm font-medium text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)] transition hover:bg-neutral-800 disabled:opacity-50"
-            >
-              {saving ? "Saving…" : "Save changes"}
-            </button>
-            {savedAt ? (
-              <p className="text-sm text-neutral-500" aria-live="polite">
-                Saved
-              </p>
-            ) : null}
-          </div>
-
-          {isAdmin ? (
-            <AccountPanel
-              id="account-admin"
-              title="Administration"
-              description="Registry administration tools. Access is restricted to authorised accounts."
-            >
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Link
-                  href="/internal/verify"
-                  className="group flex items-start gap-4 rounded-xl border border-neutral-900/[0.06] bg-white/50 p-5 transition hover:border-neutral-900/10 hover:bg-white/70"
-                >
-                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
-                      <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" />
-                      <path stroke="currentColor" strokeWidth="2" d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z" />
-                    </svg>
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-[15px] font-medium text-neutral-900 group-hover:text-neutral-950">
-                      Verify artworks
-                    </p>
-                    <p className="mt-1 text-sm leading-relaxed text-neutral-500">
-                      Review and approve pending artwork registrations.
-                    </p>
-                  </div>
-                </Link>
-
-                <Link
-                  href="/internal/replay-debugger"
-                  className="group flex items-start gap-4 rounded-xl border border-neutral-900/[0.06] bg-white/50 p-5 transition hover:border-neutral-900/10 hover:bg-white/70"
-                >
-                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
-                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
-                      <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" />
-                      <path stroke="currentColor" strokeWidth="2" d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z" />
-                    </svg>
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-[15px] font-medium text-neutral-900 group-hover:text-neutral-950">
-                      Replay debugger
-                    </p>
-                    <p className="mt-1 text-sm leading-relaxed text-neutral-500">
-                      Step through ownership, value, and certification events.
-                    </p>
-                  </div>
-                </Link>
-              </div>
-            </AccountPanel>
-          ) : null}
-        </div>
-    </main>
+  const content = (
+    <AccountPageContent
+      role={role}
+      email={email}
+      displayName={displayName}
+      onDisplayNameChange={setDisplayName}
+      presence={presence}
+      onPresenceChange={setPresence}
+      artistBio={artistBio}
+      onArtistBioChange={setArtistBio}
+      artistWebsite={artistWebsite}
+      onArtistWebsiteChange={setArtistWebsite}
+      artistInstagram={artistInstagram}
+      onArtistInstagramChange={setArtistInstagram}
+      collectorLocation={collectorLocation}
+      onCollectorLocationChange={setCollectorLocation}
+      collectorBio={collectorBio}
+      onCollectorBioChange={setCollectorBio}
+      collectorAnonymous={collectorAnonymous}
+      onCollectorAnonymousChange={setCollectorAnonymous}
+      galleryLocation={galleryLocation}
+      onGalleryLocationChange={setGalleryLocation}
+      galleryWebsite={galleryWebsite}
+      onGalleryWebsiteChange={setGalleryWebsite}
+      galleryDescription={galleryDescription}
+      onGalleryDescriptionChange={setGalleryDescription}
+      studioArtworksAccent={studioArtworksAccent}
+      onStudioArtworksAccentChange={setStudioArtworksAccent}
+      publicPageHref={publicPageHref}
+      workspaceHref={workspaceHref}
+      workspaceLabel={workspaceLabel}
+      profileSnapshot={profileSnapshot}
+      collectorPreviewArtworks={
+        role === "collector" ? collectorPreviewArtworks : null
+      }
+      artistRepHistorical={artistRepHistorical}
+      accountStatus={accountStatus}
+      deletionScheduledAt={deletionScheduledAt}
+      authProvider={authProvider}
+      onRefreshAccountStatus={refreshAccountStatus}
+      saving={saving}
+      savedAt={savedAt}
+      error={error}
+      onSave={() => void save()}
+    />
   );
 
   if (role === "artist" && userId) {
     return (
       <ArtistWorkspaceShellLayout userId={userId} accountActive>
-        {accountBody}
+        {content}
       </ArtistWorkspaceShellLayout>
     );
   }
@@ -927,7 +498,7 @@ export default function AccountPage() {
   if (role === "collector" && userId) {
     return (
       <CollectorWorkspaceShellLayout userId={userId} accountActive>
-        {accountBody}
+        {content}
       </CollectorWorkspaceShellLayout>
     );
   }
@@ -935,7 +506,7 @@ export default function AccountPage() {
   if (role === "gallery" && userId) {
     return (
       <GalleryWorkspaceShellLayout userId={userId} accountActive>
-        {accountBody}
+        {content}
       </GalleryWorkspaceShellLayout>
     );
   }
@@ -947,7 +518,7 @@ export default function AccountPage() {
         aria-hidden
       />
       <div className="relative mx-auto max-w-[min(100%,88rem)] px-4 sm:px-6 lg:px-8">
-        {accountBody}
+        {content}
       </div>
     </div>
   );
