@@ -43,10 +43,8 @@ import {
   type CertificatesListFilter,
 } from "@/components/Dashboard/CertificatesSection";
 import ModalShell from "@/components/ui/ModalShell";
-import {
-  WorkspaceShell,
-  WorkspaceShellFooterLinks,
-} from "@/components/Studio/WorkspaceShell";
+import { StudioShell } from "@/components/Studio/StudioShell";
+import { WorkspaceShellFooterLinks } from "@/components/Studio/WorkspaceShell";
 import { workspace } from "@/styles/workspace-design";
 import {
   buildCreativeNavItems,
@@ -1948,7 +1946,9 @@ return (
       </div>
     )}
 
-    <WorkspaceShell
+    <StudioShell
+      role="artist"
+      userId={user.id}
       atmosphereClassName={
         sectionAtmosphere[activeSection as keyof typeof sectionAtmosphere]
       }
@@ -1959,13 +1959,6 @@ return (
       isTransitioning={isTransitioningSection}
       sidebarFooter={<WorkspaceShellFooterLinks isLight={isLightSection} />}
       sidebarActivity={studioSidebarActivity}
-      onSignOut={async () => {
-        await sb().auth.signOut();
-        deferredRouterPush(
-          router,
-          "/login?next=" + encodeURIComponent("/studio")
-        );
-      }}
     >
         {testModeEnabled() ? (
           <div className="mb-6 max-w-2xl">
@@ -2414,7 +2407,7 @@ return (
             saleSignals={saleSignals}
           />
         )}
-    </WorkspaceShell>
+    </StudioShell>
 
     {/* REGISTER MODAL */}
     <RegisterModal

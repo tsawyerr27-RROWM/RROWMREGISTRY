@@ -10,10 +10,8 @@ import {
   deferredRouterReplace,
 } from "@/lib/deferred-app-router";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
-import {
-  WorkspaceShell,
-  WorkspaceShellFooterLinks,
-} from "@/components/Studio/WorkspaceShell";
+import { StudioShell } from "@/components/Studio/StudioShell";
+import { WorkspaceShellFooterLinks } from "@/components/Studio/WorkspaceShell";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import {
   buildCollectorNavItems,
@@ -132,11 +130,6 @@ export default function CollectorStudioPage() {
       setIsTransitioningSection(false);
     }, 180);
   }, [activeSection]);
-
-  const handleSignOut = useCallback(async () => {
-    await sb().auth.signOut();
-    deferredRouterPush(router, "/login");
-  }, [router, sb]);
 
   useEffect(() => {
     let cancelled = false;
@@ -477,16 +470,15 @@ export default function CollectorStudioPage() {
   return (
     <>
     <WelcomeModal role="collector" steps={collectorIntroSteps} />
-    <WorkspaceShell
+    <StudioShell
+      role="collector"
+      userId={userId}
       atmosphereClassName="ds-page-environment"
       navItems={collectorNavItems}
       activeId={activeSection}
       onSelect={selectSection}
-      isLightChrome
       isTransitioning={isTransitioningSection}
-      sidebarFooter={
-        <WorkspaceShellFooterLinks isLight extra={footerExtra} />
-      }
+      footerExtra={footerExtra}
       sidebarActivity={
         <CollectorStudioActivityPreview
           userId={userId}
@@ -497,7 +489,6 @@ export default function CollectorStudioPage() {
         />
       }
       activityHeading={t("studio.shell.recentNotes")}
-      onSignOut={handleSignOut}
     >
       {activeSection === "workspace" ? (
         <>
@@ -735,7 +726,7 @@ export default function CollectorStudioPage() {
           )}
         </section>
       ) : null}
-    </WorkspaceShell>
+    </StudioShell>
     </>
   );
 }

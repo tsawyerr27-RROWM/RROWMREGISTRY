@@ -6,10 +6,7 @@ import { useRouter } from "next/navigation";
 import { WelcomeModal } from "@/components/ui/IntroModal";
 import { galleryIntroSteps } from "@/components/ui/intro-content";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
-import {
-  WorkspaceShell,
-  WorkspaceShellFooterLinks,
-} from "@/components/Studio/WorkspaceShell";
+import { StudioShell } from "@/components/Studio/StudioShell";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { WorkspaceSidebarActivityFeed } from "@/components/Studio/WorkspaceSidebarActivityFeed";
 import { useAccountActivityFeed } from "@/hooks/useAccountActivityFeed";
@@ -1938,11 +1935,6 @@ export default function GalleryDashboardPage() {
     [load, t]
   );
 
-  const handleSignOut = useCallback(async () => {
-    await sb().auth.signOut();
-    deferredRouterPush(router, "/login");
-  }, [router, sb]);
-
   const participationAttention =
     (representationSummary?.participation_pending ?? 0) > 0 ||
     (representationSummary?.amendments_pending ?? 0) > 0;
@@ -2009,7 +2001,7 @@ export default function GalleryDashboardPage() {
     return sortPriorityQueue(items);
   }, [artworks, gallery, integrityContext]);
 
-  if (loading) {
+  if (loading || !userId) {
     return (
       <div className="ds-page-environment min-h-screen pt-24 text-center text-sm text-neutral-500">
         {t("gallery.shell.loading")}
@@ -2058,17 +2050,16 @@ export default function GalleryDashboardPage() {
   return (
     <>
       <WelcomeModal role="gallery" steps={galleryIntroSteps} />
-      <WorkspaceShell
+      <StudioShell
+        role="gallery"
+        userId={userId}
         atmosphereClassName="ds-workspace-environment"
         navItems={galleryNavItems}
         activeId={activeSection}
         onSelect={selectGallerySection}
-        isLightChrome
         isTransitioning={isTransitioningSection}
-        sidebarFooter={<WorkspaceShellFooterLinks isLight />}
         sidebarActivity={sidebarActivityNode}
         activityHeading={t("studio.shell.catalogueActivity")}
-        onSignOut={handleSignOut}
       >
         {activeSection === "studio" ? (
           <>
@@ -2775,7 +2766,7 @@ export default function GalleryDashboardPage() {
               )}
             </section>
         ) : null}
-      </WorkspaceShell>
+      </StudioShell>
 
       <ModalShell
         isOpen={workspaceGuideOpen}

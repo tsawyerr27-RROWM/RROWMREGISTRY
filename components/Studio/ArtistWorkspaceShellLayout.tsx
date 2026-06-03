@@ -1,23 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
-import { useRouter } from "next/navigation";
-
-import { WorkspaceSidebarActivityFeed } from "@/components/Studio/WorkspaceSidebarActivityFeed";
-import {
-  WorkspaceShell,
-  WorkspaceShellFooterLinks,
-} from "@/components/Studio/WorkspaceShell";
-import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
-import { deferredRouterPush } from "@/lib/deferred-app-router";
-import {
-  buildCreativeNavItems,
-  isCreativeSectionId,
-  navigateToCreativeSection,
-  type CreativeSectionId,
-} from "@/lib/studio-nav";
-import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
-import { workspace } from "@/styles/workspace-design";
+import { StudioShell } from "@/components/Studio/StudioShell";
+import type { CreativeSectionId } from "@/lib/studio-nav";
 
 type ArtistWorkspaceShellLayoutProps = {
   children: React.ReactNode;
@@ -40,44 +24,17 @@ export function ArtistWorkspaceShellLayout({
   accountActive = false,
   catalogueActive = false,
 }: ArtistWorkspaceShellLayoutProps) {
-  const router = useRouter();
-  const { t } = useLocalePreferences();
-  const sb = useSupabaseBrowserLazy();
-
-  const navItems = useMemo(
-    () =>
-      buildCreativeNavItems(t, { ownershipSaleSignalCount: saleSignalCount }),
-    [saleSignalCount, t]
-  );
-
   return (
-    <WorkspaceShell
-      atmosphereClassName={workspace.atmosphere.environment}
-      navItems={navItems}
+    <StudioShell
+      role="artist"
+      userId={userId}
       activeId={activeNavId ?? activeSection ?? ""}
-      onSelect={(id) => {
-        if (isCreativeSectionId(id)) {
-          navigateToCreativeSection(router, id);
-        }
-      }}
-      isLightChrome
-      sidebarFooter={
-        <WorkspaceShellFooterLinks
-          isLight
-          accountActive={accountActive}
-          catalogueActive={catalogueActive}
-        />
-      }
-      sidebarActivity={<WorkspaceSidebarActivityFeed userId={userId} />}
-      onSignOut={async () => {
-        await sb().auth.signOut();
-        deferredRouterPush(
-          router,
-          "/login?next=" + encodeURIComponent("/studio")
-        );
-      }}
+      saleSignalCount={saleSignalCount}
+      accountActive={accountActive}
+      catalogueActive={catalogueActive}
+      navigateOnSectionSelect
     >
       {children}
-    </WorkspaceShell>
+    </StudioShell>
   );
 }
