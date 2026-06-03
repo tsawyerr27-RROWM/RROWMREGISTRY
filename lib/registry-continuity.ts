@@ -121,9 +121,9 @@ export function verificationContinuitySummaryLines(
 }
 
 /**
- * Sparse framing for stewardship workspaces — not alerts; derived from continuity signals only.
+ * Sparse framing for studio workspaces — not alerts; derived from continuity signals only.
  */
-export function stewardshipContinuityNotesFromBundle(
+export function studioContinuityNotesFromBundle(
   bundle: ArchivalProvenanceBundle | null | undefined
 ): string[] {
   if (!bundle?.events?.length) return [];
