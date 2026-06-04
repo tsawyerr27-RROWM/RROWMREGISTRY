@@ -110,8 +110,8 @@ export const collectorIntroSteps: IntroStep[] = [
     title: "Ownership and transfers",
     body: (
       <p>
-        When a work is transferred to you (by an artist, gallery, or another
-        collector) you confirm receipt here. Accepting a transfer extends the
+        When a work is transferred to you (by a Creative, Organisation, or another
+        Collector) you confirm receipt here. Accepting a transfer extends the
         provenance chain and generates a certificate to the work&apos;s owner.
       </p>
     ),
@@ -143,22 +143,22 @@ export const collectorIntroSteps: IntroStep[] = [
 
 export const galleryIntroSteps: IntroStep[] = [
   {
-    title: "Your institutional studio",
+    title: "Organisation Studio",
     body: (
       <p>
         This dashboard is where you manage your roster and file works on behalf of
-        represented artists. Records are attributed to your institution on the
+        represented Creatives. Records are attributed to your Organisation on the
         public catalogue.
       </p>
     ),
     icon: ArtworkIcon,
   },
   {
-    title: "Invite and authenticate artists",
+    title: "Invite and authenticate Creatives",
     body: (
       <p>
-        Send representation invitations to artists you work with. Once they join,
-        you can also send per-artwork authentication requests. When an artist
+        Send representation invitations to Creatives you work with. Once they join,
+        you can also send per-artwork authentication requests. When a Creative
         verifies, a certificate is issued automatically.
       </p>
     ),
@@ -176,11 +176,11 @@ export const galleryIntroSteps: IntroStep[] = [
     icon: CertificateIcon,
   },
   {
-    title: "Institutional presence",
+    title: "Organisation presence",
     body: (
       <p>
-        Your gallery has a public page on the registry. Control its visibility,
-        description, and represented artists from <strong>My Account</strong>.
+        Your Organisation has a public page on the Registry. Control its visibility,
+        description, and represented Creatives from <strong>My Account</strong>.
         All activity is logged in the console sidebar.
       </p>
     ),

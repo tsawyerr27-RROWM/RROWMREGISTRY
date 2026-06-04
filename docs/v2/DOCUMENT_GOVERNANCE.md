@@ -12,6 +12,7 @@ This folder holds the **frozen planning stack** for RROWM V2 Studio Foundation (
 | 1 | [Product Blueprint v1.1](./product-blueprint-v1.1.md) | **APPROVED** | Strategic product architecture, object model, V2/V3 sequencing |
 | 2 | [Phase 1 Implementation Specification](./phase-1-studio-foundation-spec.md) | **LOCKED** | What Phase 1 delivers: scope, acceptance criteria, QA, technical spec |
 | 3 | [Phase 1 Feasibility Review](./phase-1-feasibility-review.md) | **IMPLEMENTATION SOURCE OF TRUTH** | How to execute Phase 1: PR breakdown, risks, dependencies, merge hotspots |
+| 4 | [Product Language Freeze](./product-language-freeze.md) | **FROZEN** | Public surfaces (Studio, The Field, Registry) and participant labels (Creative, Organisation, Collector) vs internal system terms |
 
 ## Interpretation rules
 
@@ -42,3 +43,4 @@ To change a frozen document:
 | `phase-1-studio-foundation-spec.md` | LOCKED |
 | `phase-1-feasibility-review.md` | IMPLEMENTATION SOURCE OF TRUTH |
 | `DOCUMENT_GOVERNANCE.md` | This registry |
+| `product-language-freeze.md` | FROZEN |

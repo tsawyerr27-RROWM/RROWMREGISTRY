@@ -27,10 +27,13 @@ import {
   type StudioArtworksAccentId,
 } from "@/lib/studio-artworks-accent";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { productWorkspaceLabel } from "@/lib/studio-terminology";
 
 type Role = "artist" | "collector" | "gallery";
 
 export default function AccountPage() {
+  const { t } = useLocalePreferences();
   const router = useRouter();
   const sb = useSupabaseBrowserLazy();
   const [loading, setLoading] = useState(true);
@@ -434,11 +437,9 @@ export default function AccountPage() {
         ? "/collector-studio"
         : "/institutional-studio-dashboard";
   const workspaceLabel =
-    role === "artist"
-      ? "Studio"
-      : role === "collector"
-        ? "Collector studio"
-        : "Institutional studio";
+    role === "artist" || role === "collector" || role === "gallery"
+      ? productWorkspaceLabel(role, t)
+      : "Studio";
 
   const content = (
     <AccountPageContent

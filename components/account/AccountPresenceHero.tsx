@@ -6,6 +6,7 @@ import { useLocalePreferences } from "@/components/providers/LocalePreferencesPr
 import type { PublicPresence } from "@/lib/public-presence";
 import { RegistryCatalogueInfoTooltip } from "@/components/Registry/RegistryCatalogueInfoTooltip";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { productRoleLabel } from "@/lib/studio-terminology";
 
 export type AccountHeroPreviewArtwork = {
   id: string;
@@ -420,9 +421,11 @@ function CollectorAccountTile({
 function GalleryIdentityTile({
   snapshot,
   displayName,
+  title,
 }: {
   snapshot: AccountProfileSnapshot;
   displayName: string;
+  title: string;
 }) {
   const items = [
     { label: "Display name", done: filled(displayName) },
@@ -453,10 +456,21 @@ function roleTiles(
     presence: PublicPresence;
     snapshot: AccountProfileSnapshot;
     ownedWorkCount: number;
+    participantLabel: string;
+    organisationIdentityTitle: string;
   }
 ): React.ReactNode {
-  const { displayName, publicPageHref, workspaceHref, workspaceLabel, presence, snapshot, ownedWorkCount } =
-    props;
+  const {
+    displayName,
+    publicPageHref,
+    workspaceHref,
+    workspaceLabel,
+    presence,
+    snapshot,
+    ownedWorkCount,
+    participantLabel,
+    organisationIdentityTitle,
+  } = props;
 
   if (role === "artist") {
     return (
@@ -466,7 +480,7 @@ function roleTiles(
         <CanonicalPresenceTile
           publicPageHref={publicPageHref}
           presence={presence}
-          roleLabel="Artist"
+          roleLabel={participantLabel}
         />
       </>
     );
@@ -487,7 +501,11 @@ function roleTiles(
 
   return (
     <>
-      <GalleryIdentityTile snapshot={snapshot} displayName={displayName} />
+      <GalleryIdentityTile
+        snapshot={snapshot}
+        displayName={displayName}
+        title={organisationIdentityTitle}
+      />
       <VisibilityTile presence={presence} />
     </>
   );
@@ -514,6 +532,8 @@ export function AccountPresenceHero({
   profileSnapshot = {},
   collectionPreviewArtworks,
 }: Props) {
+  const { t } = useLocalePreferences();
+  const participantLabel = productRoleLabel(role, t);
   const headline = displayName.trim() || "Your account";
   const previewList = collectionPreviewArtworks ?? [];
   const showCollectionPreview = role === "collector" && previewList.length > 0;
@@ -546,11 +566,7 @@ export function AccountPresenceHero({
           <div>
             <div className="flex flex-wrap items-center gap-3">
               <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-sm font-medium text-white/85">
-                {role === "artist"
-                  ? "Artist"
-                  : role === "collector"
-                    ? "Collector"
-                    : "Gallery"}
+                {participantLabel}
               </span>
             </div>
             <InfoTooltip
@@ -580,6 +596,8 @@ export function AccountPresenceHero({
                 presence,
                 snapshot: profileSnapshot,
                 ownedWorkCount,
+                participantLabel,
+                organisationIdentityTitle: t("account.hero.organisationIdentity"),
               })}
             </ul>
           </div>

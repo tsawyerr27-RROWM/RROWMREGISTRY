@@ -9,6 +9,7 @@ import {
   accountTextareaClass,
   roleLabel,
 } from "@/components/account/account-ui";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 type Role = "artist" | "collector" | "gallery";
 
@@ -37,16 +38,19 @@ type Props = {
 
 export function AccountProfileSection(props: Props) {
   const { role } = props;
+  const { t } = useLocalePreferences();
 
   const profileDescription =
     role === "artist"
-      ? "Biography and links shown on your public artist page."
+      ? t("account.profile.publicProfileHint")
       : role === "collector"
         ? "Location and note shown on your collector page."
-        : "Institution details shown on your public gallery page.";
+        : "Organisation details shown on your public catalogue page.";
 
   const profileTitle =
-    role === "gallery" ? "Institution profile" : "Public profile";
+    role === "gallery"
+      ? t("account.profile.organisationProfile")
+      : "Public profile";
 
   return (
     <AccountPanel
@@ -82,7 +86,7 @@ export function AccountProfileSection(props: Props) {
             </div>
             <div>
               <AccountFieldLabel>Account type</AccountFieldLabel>
-              <AccountReadOnlyValue>{roleLabel(role)}</AccountReadOnlyValue>
+              <AccountReadOnlyValue>{roleLabel(role, t)}</AccountReadOnlyValue>
             </div>
           </div>
         </AccountSubsection>

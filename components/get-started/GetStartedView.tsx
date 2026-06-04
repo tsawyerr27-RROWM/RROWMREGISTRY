@@ -76,7 +76,7 @@ export function GetStartedView() {
 
       <main className="relative z-10 mx-auto w-full max-w-[min(100%,72rem)]">
         <header className="max-w-2xl">
-          <InfoTooltip text="Each path opens the right studio (artist, institutional, or collector). Underneath: one chronology per work, on file." />
+          <InfoTooltip text={t("getStarted.pathTooltip")} />
           <h1 className="font-serif text-[2rem] font-normal leading-[1.1] tracking-tight text-neutral-950 md:text-[2.35rem] md:leading-[1.08]">
             {t("getStarted.title")}
           </h1>

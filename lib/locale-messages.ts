@@ -22,6 +22,18 @@ export type MessageKey =
   | "nav.signOut"
   | "nav.account"
   | "nav.regionLabel"
+  | "ecosystem.role.creative"
+  | "ecosystem.role.organisation"
+  | "ecosystem.role.collector"
+  | "ecosystem.surface.studio"
+  | "ecosystem.surface.field"
+  | "ecosystem.surface.registry"
+  | "ecosystem.workspace.studio"
+  | "ecosystem.workspace.organisationStudio"
+  | "getStarted.pathTooltip"
+  | "account.hero.organisationIdentity"
+  | "account.profile.organisationProfile"
+  | "account.profile.publicProfileHint"
   | "footer.navigate"
   | "footer.access"
   | "footer.legal"
@@ -1278,10 +1290,24 @@ const EN: Record<MessageKey, string> = {
   "nav.signIn": "Sign in",
   "nav.takePart": "Take part",
   "nav.myAccount": "My account",
-  "nav.stewardship": "My studio",
+  "nav.stewardship": "Studio",
   "nav.signOut": "Sign out",
   "nav.account": "Account",
   "nav.regionLabel": "Region & language",
+  "ecosystem.role.creative": "Creative",
+  "ecosystem.role.organisation": "Organisation",
+  "ecosystem.role.collector": "Collector",
+  "ecosystem.surface.studio": "Studio",
+  "ecosystem.surface.field": "The Field",
+  "ecosystem.surface.registry": "Registry",
+  "ecosystem.workspace.studio": "Studio",
+  "ecosystem.workspace.organisationStudio": "Organisation Studio",
+  "getStarted.pathTooltip":
+    "Each path opens the right Studio workspace for your participant type. Underneath: one chronology per work, on file in the Registry.",
+  "account.hero.organisationIdentity": "Organisation identity",
+  "account.profile.organisationProfile": "Organisation profile",
+  "account.profile.publicProfileHint":
+    "Biography and links shown on your public profile.",
   "footer.navigate": "Navigate",
   "footer.access": "Access",
   "footer.legal": "Legal",
@@ -1342,18 +1368,18 @@ const EN: Record<MessageKey, string> = {
   "getStarted.alreadyAccount": "Already have an account?",
   "getStarted.signIn": "Sign in",
   "getStarted.roleNote": "Your role follows your profile, not this page alone.",
-  "getStarted.artistTitle": "I am an Artist",
+  "getStarted.artistTitle": "I am a Creative",
   "getStarted.artistDesc":
-    "Register represented works so your catalogue presence, chronology, and certificates stay on one record.",
-  "getStarted.artistCta": "Continue as artist",
-  "getStarted.galleryTitle": "I run an institutional studio",
+    "Register works so your catalogue presence, chronology, and certificates stay on one Registry record.",
+  "getStarted.artistCta": "Continue as Creative",
+  "getStarted.galleryTitle": "I represent an Organisation",
   "getStarted.galleryDesc":
-    "Verified gallery workflows: participant confirmations and listings on file for represented artists.",
+    "Verified Organisation workflows: participant confirmations and listings on file for represented Creatives.",
   "getStarted.galleryCta": "View plans and continue",
   "getStarted.collectorTitle": "I am a Collector",
   "getStarted.collectorDesc":
     "Browse the public catalogue, read the current record, and file custody when you hold a work.",
-  "getStarted.collectorCta": "Continue as collector",
+  "getStarted.collectorCta": "Continue as Collector",
   "getStarted.catalogueTitle": "On the catalogue",
   "auth.signIn": "Sign in",
   "auth.resetPassword": "Reset password",
@@ -1450,7 +1476,7 @@ const EN: Record<MessageKey, string> = {
   "about.hero.title":
     "A system for recording authorship, provenance, and verification",
   "signup.joinTitle": "Join the registry",
-  "signup.createArtistAccount": "Create artist account",
+  "signup.createArtistAccount": "Create Creative account",
   "signup.subtitleArtworkAuth":
     "After setup you will return to review and authenticate the artwork record on file.",
   "signup.signingUpAs": "You're signing up as",
@@ -1466,8 +1492,8 @@ const EN: Record<MessageKey, string> = {
   "signup.createProfile": "Create profile",
   "signup.checkEmail":
     "Check your email to confirm your address, then return here in this browser to finish setup.",
-  "signup.role.artist": "Artist",
-  "signup.role.gallery": "Gallery",
+  "signup.role.artist": "Creative",
+  "signup.role.gallery": "Organisation",
   "signup.role.collector": "Collector",
   "signup.err.inviteBlocked":
     "This invitation cannot be used to complete registration.",
@@ -1623,9 +1649,9 @@ const EN: Record<MessageKey, string> = {
   "about.audience.collectorsLabel": "Collectors & researchers",
   "about.audience.collectorsBody":
     "using the public layer to verify what is on record before going further through authenticated channels.",
-  "pricing.eyebrow": "Institutional studio · Paid access",
-  "pricing.title": "Choose how your institutional studio uses RROWM",
-  "pricing.pro.title": "Institutional Professional",
+  "pricing.eyebrow": "Organisation Studio · Paid access",
+  "pricing.title": "Choose how your Organisation Studio uses RROWM",
+  "pricing.pro.title": "Organisation Professional",
   "pricing.pro.f1": "Represented artist roster on the registry",
   "pricing.pro.f2": "Register and maintain verified works",
   "pricing.pro.f3": "Issue and support verification records and certificates",
@@ -2802,10 +2828,24 @@ const DE: Record<MessageKey, string> = {
   "nav.signIn": "Anmelden",
   "nav.takePart": "Mitmachen",
   "nav.myAccount": "Mein Konto",
-  "nav.stewardship": "Mein Studio",
+  "nav.stewardship": "Studio",
   "nav.signOut": "Abmelden",
   "nav.account": "Konto",
   "nav.regionLabel": "Region & Sprache",
+  "ecosystem.role.creative": "Creative",
+  "ecosystem.role.organisation": "Organisation",
+  "ecosystem.role.collector": "Sammler",
+  "ecosystem.surface.studio": "Studio",
+  "ecosystem.surface.field": "The Field",
+  "ecosystem.surface.registry": "Register",
+  "ecosystem.workspace.studio": "Studio",
+  "ecosystem.workspace.organisationStudio": "Organisations-Studio",
+  "getStarted.pathTooltip":
+    "Jeder Weg öffnet den passenden Studio-Arbeitsbereich für Ihren Teilnehmertyp. Darunter: eine Chronologie pro Werk, im Register dokumentiert.",
+  "account.hero.organisationIdentity": "Organisationsidentität",
+  "account.profile.organisationProfile": "Organisationsprofil",
+  "account.profile.publicProfileHint":
+    "Biografie und Links auf Ihrem öffentlichen Profil.",
   "footer.navigate": "Navigation",
   "footer.access": "Zugang",
   "footer.legal": "Rechtliches",
@@ -2866,13 +2906,13 @@ const DE: Record<MessageKey, string> = {
   "getStarted.alreadyAccount": "Bereits ein Konto?",
   "getStarted.signIn": "Anmelden",
   "getStarted.roleNote": "Ihre Rolle folgt Ihrem Profil, nicht nur dieser Seite.",
-  "getStarted.artistTitle": "Ich bin Künstlerin / Künstler",
+  "getStarted.artistTitle": "Ich bin Creative",
   "getStarted.artistDesc":
-    "Registrieren Sie vertretene Werke, damit Präsenz, Chronologie und Zertifikate in einem Eintrag bleiben.",
-  "getStarted.artistCta": "Als Künstler fortfahren",
-  "getStarted.galleryTitle": "Ich leite ein institutionelles Studio",
+    "Werke registrieren, damit Präsenz, Chronologie und Zertifikate in einem Register-Eintrag bleiben.",
+  "getStarted.artistCta": "Als Creative fortfahren",
+  "getStarted.galleryTitle": "Ich vertrete eine Organisation",
   "getStarted.galleryDesc":
-    "Verifizierte Galerie-Workflows: Bestätigungen und Listings für vertretene Künstler in der Akte.",
+    "Verifizierte Organisations-Workflows: Bestätigungen und Einträge für vertretene Creatives in der Akte.",
   "getStarted.galleryCta": "Pläne ansehen und fortfahren",
   "getStarted.collectorTitle": "Ich bin Sammlerin / Sammler",
   "getStarted.collectorDesc":
@@ -2974,7 +3014,7 @@ const DE: Record<MessageKey, string> = {
   "about.hero.title":
     "Ein System zur Erfassung von Urheberschaft, Provenienz und Verifikation",
   "signup.joinTitle": "Register beitreten",
-  "signup.createArtistAccount": "Künstlerkonto erstellen",
+  "signup.createArtistAccount": "Creative-Konto erstellen",
   "signup.subtitleArtworkAuth":
     "Nach der Einrichtung kehren Sie zurück, um den Werk-Eintrag zu prüfen und zu authentifizieren.",
   "signup.signingUpAs": "Sie registrieren sich als",
@@ -2990,8 +3030,8 @@ const DE: Record<MessageKey, string> = {
   "signup.createProfile": "Profil erstellen",
   "signup.checkEmail":
     "Prüfen Sie Ihre E-Mail zur Bestätigung und kehren Sie in diesem Browser zurück, um die Einrichtung abzuschließen.",
-  "signup.role.artist": "Künstler",
-  "signup.role.gallery": "Galerie",
+  "signup.role.artist": "Creative",
+  "signup.role.gallery": "Organisation",
   "signup.role.collector": "Sammler",
   "signup.err.inviteBlocked":
     "Diese Einladung kann nicht zur Registrierung verwendet werden.",
@@ -3511,9 +3551,9 @@ const DE: Record<MessageKey, string> = {
   "representation.publicParticipationOnFile": "Öffentliche Teilnahme in der Akte",
   "representation.artistAttestationOnFile": "Künstlerattestierung in der Akte",
   "representation.artistAttestationMayDeepen": "Künstlerattestierung kann vertieft werden",
-  "pricing.eyebrow": "Institutionelles Studio · kostenpflichtig",
-  "pricing.title": "Wählen Sie, wie Ihr institutionelles Studio RROWM nutzt",
-  "pricing.pro.title": "Institutional Professional",
+  "pricing.eyebrow": "Organisations-Studio · kostenpflichtig",
+  "pricing.title": "Wählen Sie, wie Ihr Organisations-Studio RROWM nutzt",
+  "pricing.pro.title": "Organisation Professional",
   "pricing.pro.continue": "Weiter zur Registrierung",
   "pricing.enterprise.title": "Institutional Enterprise",
   "pricing.enterprise.contact": "Register kontaktieren",
@@ -4202,10 +4242,24 @@ const FR: Record<MessageKey, string> = {
   "nav.signIn": "Connexion",
   "nav.takePart": "Participer",
   "nav.myAccount": "Mon compte",
-  "nav.stewardship": "Mon studio",
+  "nav.stewardship": "Studio",
   "nav.signOut": "Déconnexion",
   "nav.account": "Compte",
   "nav.regionLabel": "Région et langue",
+  "ecosystem.role.creative": "Créatif",
+  "ecosystem.role.organisation": "Organisation",
+  "ecosystem.role.collector": "Collectionneur",
+  "ecosystem.surface.studio": "Studio",
+  "ecosystem.surface.field": "The Field",
+  "ecosystem.surface.registry": "Registre",
+  "ecosystem.workspace.studio": "Studio",
+  "ecosystem.workspace.organisationStudio": "Studio Organisation",
+  "getStarted.pathTooltip":
+    "Chaque parcours ouvre le bon espace Studio pour votre type de participant. Sous-jacent : une chronologie par œuvre, au dossier dans le Registre.",
+  "account.hero.organisationIdentity": "Identité organisation",
+  "account.profile.organisationProfile": "Profil organisation",
+  "account.profile.publicProfileHint":
+    "Biographie et liens affichés sur votre profil public.",
   "footer.navigate": "Navigation",
   "footer.access": "Accès",
   "footer.legal": "Mentions légales",
@@ -4266,18 +4320,18 @@ const FR: Record<MessageKey, string> = {
   "getStarted.alreadyAccount": "Vous avez déjà un compte ?",
   "getStarted.signIn": "Connexion",
   "getStarted.roleNote": "Votre rôle suit votre profil, pas cette page seule.",
-  "getStarted.artistTitle": "Je suis artiste",
+  "getStarted.artistTitle": "Je suis un Créatif",
   "getStarted.artistDesc":
-    "Enregistrez les œuvres représentées pour que présence, chronologie et certificats restent sur une fiche.",
-  "getStarted.artistCta": "Continuer en tant qu'artiste",
-  "getStarted.galleryTitle": "Je dirige un studio institutionnel",
+    "Enregistrez les œuvres pour que présence, chronologie et certificats restent sur une fiche du Registre.",
+  "getStarted.artistCta": "Continuer en tant que Créatif",
+  "getStarted.galleryTitle": "Je représente une Organisation",
   "getStarted.galleryDesc":
-    "Flux galerie vérifiés : confirmations et listes au dossier pour les artistes représentés.",
+    "Flux Organisation vérifiés : confirmations et listes au dossier pour les Créatifs représentés.",
   "getStarted.galleryCta": "Voir les offres et continuer",
-  "getStarted.collectorTitle": "Je suis collectionneur",
+  "getStarted.collectorTitle": "Je suis Collectionneur",
   "getStarted.collectorDesc":
     "Parcourez le catalogue public, lisez l'état actuel et déposez la garde lorsque vous détenez une œuvre.",
-  "getStarted.collectorCta": "Continuer en tant que collectionneur",
+  "getStarted.collectorCta": "Continuer en tant que Collectionneur",
   "getStarted.catalogueTitle": "Sur le catalogue",
   "auth.signIn": "Connexion",
   "auth.resetPassword": "Réinitialiser le mot de passe",
@@ -4374,7 +4428,7 @@ const FR: Record<MessageKey, string> = {
   "about.hero.title":
     "Un système pour enregistrer la paternité, la provenance et la vérification",
   "signup.joinTitle": "Rejoindre le registre",
-  "signup.createArtistAccount": "Créer un compte artiste",
+  "signup.createArtistAccount": "Créer un compte Créatif",
   "signup.subtitleArtworkAuth":
     "Après la configuration, vous reviendrez pour examiner et authentifier la fiche de l'œuvre.",
   "signup.signingUpAs": "Vous vous inscrivez en tant que",
@@ -4390,8 +4444,8 @@ const FR: Record<MessageKey, string> = {
   "signup.createProfile": "Créer le profil",
   "signup.checkEmail":
     "Consultez votre e-mail pour confirmer votre adresse, puis revenez ici dans ce navigateur pour terminer.",
-  "signup.role.artist": "Artiste",
-  "signup.role.gallery": "Galerie",
+  "signup.role.artist": "Créatif",
+  "signup.role.gallery": "Organisation",
   "signup.role.collector": "Collectionneur",
   "signup.err.inviteBlocked":
     "Cette invitation ne peut pas être utilisée pour l'inscription.",
@@ -4911,8 +4965,8 @@ const FR: Record<MessageKey, string> = {
   "representation.publicParticipationOnFile": "Participation publique au dossier",
   "representation.artistAttestationOnFile": "Attestation d'artiste au dossier",
   "representation.artistAttestationMayDeepen": "L'attestation d'artiste peut s'approfondir",
-  "pricing.eyebrow": "Studio institutionnel · accès payant",
-  "pricing.title": "Choisissez comment votre studio institutionnel utilise RROWM",
+  "pricing.eyebrow": "Studio Organisation · accès payant",
+  "pricing.title": "Choisissez comment votre Studio Organisation utilise RROWM",
   "pricing.pro.continue": "Continuer vers l'inscription",
   "pricing.enterprise.contact": "Contacter le registre",
   "about.principles.title": "Un registre conçu pour la confiance",
@@ -5605,10 +5659,23 @@ const JA: Record<MessageKey, string> = {
   "nav.signIn": "サインイン",
   "nav.takePart": "参加する",
   "nav.myAccount": "マイアカウント",
-  "nav.stewardship": "マイスタジオ",
+  "nav.stewardship": "Studio",
   "nav.signOut": "サインアウト",
   "nav.account": "アカウント",
   "nav.regionLabel": "地域と言語",
+  "ecosystem.role.creative": "クリエイティブ",
+  "ecosystem.role.organisation": "組織",
+  "ecosystem.role.collector": "コレクター",
+  "ecosystem.surface.studio": "Studio",
+  "ecosystem.surface.field": "The Field",
+  "ecosystem.surface.registry": "レジストリ",
+  "ecosystem.workspace.studio": "Studio",
+  "ecosystem.workspace.organisationStudio": "組織 Studio",
+  "getStarted.pathTooltip":
+    "各パスは参加者タイプに合った Studio ワークスペースを開きます。その下で、作品ごとに一つの年表がレジストリに記録されます。",
+  "account.hero.organisationIdentity": "組織アイデンティティ",
+  "account.profile.organisationProfile": "組織プロフィール",
+  "account.profile.publicProfileHint": "公開プロフィールに表示される略歴とリンク。",
   "footer.navigate": "ナビゲーション",
   "footer.access": "アクセス",
   "footer.legal": "法的情報",
@@ -5666,13 +5733,13 @@ const JA: Record<MessageKey, string> = {
   "getStarted.alreadyAccount": "すでにアカウントをお持ちですか？",
   "getStarted.signIn": "サインイン",
   "getStarted.roleNote": "役割はプロフィールに従い、このページだけでは決まりません。",
-  "getStarted.artistTitle": "アーティストです",
+  "getStarted.artistTitle": "クリエイティブです",
   "getStarted.artistDesc":
-    "代表作品を登録し、カタログ上の存在、年表、証明書を一つの記録に。",
-  "getStarted.artistCta": "アーティストとして続ける",
-  "getStarted.galleryTitle": "機関スタジオを運営しています",
+    "作品を登録し、カタログ上の存在、年表、証明書をレジストリの一記録に。",
+  "getStarted.artistCta": "クリエイティブとして続ける",
+  "getStarted.galleryTitle": "組織を代表しています",
   "getStarted.galleryDesc":
-    "検証済みギャラリーワークフロー。代表アーティストの確認と掲載を記録に。",
+    "検証済み組織ワークフロー。代表クリエイティブの確認と掲載を記録に。",
   "getStarted.galleryCta": "プランを見て続ける",
   "getStarted.collectorTitle": "コレクターです",
   "getStarted.collectorDesc":
@@ -5772,7 +5839,7 @@ const JA: Record<MessageKey, string> = {
   "registry.pagination.pageOf": "{totalPages} ページ中 {page}",
   "about.hero.title": "作者性・来歴・検証を記録するシステム",
   "signup.joinTitle": "レジストリに参加",
-  "signup.createArtistAccount": "アーティストアカウントを作成",
+  "signup.createArtistAccount": "クリエイティブアカウントを作成",
   "signup.subtitleArtworkAuth":
     "設定後、作品記録の確認と認証に戻ります。",
   "signup.signingUpAs": "次の役割で登録：",
@@ -5788,8 +5855,8 @@ const JA: Record<MessageKey, string> = {
   "signup.createProfile": "プロフィールを作成",
   "signup.checkEmail":
     "メールでアドレスを確認し、このブラウザに戻って設定を完了してください。",
-  "signup.role.artist": "アーティスト",
-  "signup.role.gallery": "ギャラリー",
+  "signup.role.artist": "クリエイティブ",
+  "signup.role.gallery": "組織",
   "signup.role.collector": "コレクター",
   "signup.err.inviteBlocked": "この招待では登録を完了できません。",
   "signup.err.emailRequired": "メールアドレスを入力してください。",
@@ -6307,8 +6374,8 @@ const JA: Record<MessageKey, string> = {
   "representation.publicParticipationOnFile": "公開参加が記録済み",
   "representation.artistAttestationOnFile": "アーティスト証明が記録済み",
   "representation.artistAttestationMayDeepen": "アーティスト証明は深められる",
-  "pricing.eyebrow": "機関スタジオ · 有料アクセス",
-  "pricing.title": "機関スタジオでの RROWM の使い方を選ぶ",
+  "pricing.eyebrow": "組織 Studio · 有料アクセス",
+  "pricing.title": "組織 Studio での RROWM の使い方を選ぶ",
   "pricing.pro.continue": "登録に進む",
   "pricing.enterprise.contact": "レジストリに問い合わせ",
   "about.principles.title": "信頼のために設計されたレジストリ",

@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  productRoleLabel,
+  type SystemRole,
+} from "@/lib/studio-terminology";
+import type { MessageKey } from "@/lib/locale-messages";
+
 export const accountFieldClass =
   "liquid-glass-inset mt-2 w-full border-0 px-4 py-3.5 text-[15px] text-neutral-900 shadow-none placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-900/15";
 
@@ -155,17 +161,11 @@ export function ToggleRow({
   );
 }
 
-export function roleLabel(r: "artist" | "collector" | "gallery"): string {
-  switch (r) {
-    case "artist":
-      return "Artist";
-    case "collector":
-      return "Collector";
-    case "gallery":
-      return "Gallery";
-    default:
-      return r;
-  }
+export function roleLabel(
+  r: SystemRole,
+  t: (key: MessageKey) => string
+): string {
+  return productRoleLabel(r, t);
 }
 
 export function normalizeOptionalWebsite(raw: string): string | null {
