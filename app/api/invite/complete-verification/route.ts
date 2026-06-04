@@ -144,7 +144,7 @@ export async function POST() {
     "Artist";
 
   const siteUrl = getSiteUrl();
-  const dashboardUrl = `${siteUrl}/institutional-studio-dashboard`;
+  const dashboardUrl = `${siteUrl}/studio/organisation`;
 
   const admins = await galleryAdminEmails(service, invite.gallery_id);
 

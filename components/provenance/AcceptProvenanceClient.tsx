@@ -91,7 +91,7 @@ export function AcceptProvenanceClient() {
           2400
         );
       } else {
-        window.setTimeout(() => router.push("/account"), 2400);
+        window.setTimeout(() => router.push("/studio/account"), 2400);
       }
     } catch {
       setErr("Network error. Try again.");

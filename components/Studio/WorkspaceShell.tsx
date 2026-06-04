@@ -262,7 +262,7 @@ export function WorkspaceShellFooterLinks({
           {t("nav.myAccount")}
         </p>
       ) : (
-        <Link href="/account" className={`mb-4 block text-sm font-medium transition ${link}`}>
+        <Link href="/studio/account" className={`mb-4 block text-sm font-medium transition ${link}`}>
           {t("nav.myAccount")} →
         </Link>
       )}

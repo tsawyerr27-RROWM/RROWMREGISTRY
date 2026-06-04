@@ -118,7 +118,10 @@ export default function CompleteSignupPage() {
       if (existing) {
         const finished = Boolean(existing.onboarding_complete);
         if (finished && existing.role !== role) {
-          deferredRouterReplace(router, homePathForRole(existing.role) || "/studio");
+          deferredRouterReplace(
+            router,
+            homePathForRole(existing.role) || "/studio/creative"
+          );
           try {
             window.sessionStorage.removeItem("rrowm_pending_signup_role");
           } catch {

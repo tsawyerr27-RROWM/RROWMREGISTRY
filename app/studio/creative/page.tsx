@@ -763,7 +763,7 @@ useEffect(() => {
       if (!sessionData?.session) {
         deferredRouterPush(
           router,
-          "/login?next=" + encodeURIComponent("/studio")
+          "/login?next=" + encodeURIComponent("/studio/creative")
         );
         return;
       }
@@ -787,12 +787,12 @@ useEffect(() => {
         .maybeSingle();
 
       if (!actorError && actorRow?.role === "gallery") {
-        deferredRouterReplace(router, "/institutional-studio-dashboard");
+        deferredRouterReplace(router, "/studio/organisation");
         return;
       }
 
       if (!actorError && actorRow?.role === "collector") {
-        deferredRouterReplace(router, "/collector-studio");
+        deferredRouterReplace(router, "/studio/collector");
         return;
       }
 

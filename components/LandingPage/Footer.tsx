@@ -68,7 +68,7 @@ export function Footer() {
                 {t("footer.access")}
               </span>
               <a
-                href={"/login?next=" + encodeURIComponent("/studio")}
+                href={"/login?next=" + encodeURIComponent("/studio/creative")}
                 className="w-fit transition duration-300 ease-out hover:text-neutral-950"
               >
                 {t("footer.signIn")}

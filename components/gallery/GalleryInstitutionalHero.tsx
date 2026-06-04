@@ -286,7 +286,7 @@ export function GalleryInstitutionalHero({
               >
                 {t("gallery.hero.publicPage")}
               </Link>
-              <Link href="/account" className="transition hover:text-white">
+              <Link href="/studio/account" className="transition hover:text-white">
                 {t("gallery.hero.account")}
               </Link>
             </div>

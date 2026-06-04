@@ -31,7 +31,7 @@ export function PersonalArchiveShell() {
         if (!cancelled) {
           deferredRouterPush(
             router,
-            "/login?next=" + encodeURIComponent(pathname || "/personal-archive")
+            "/login?next=" + encodeURIComponent(pathname || "/studio/archive")
           );
         }
         return;
@@ -54,7 +54,7 @@ export function PersonalArchiveShell() {
       } else if (!cancelled) {
         deferredRouterPush(
           router,
-          "/login?next=" + encodeURIComponent(pathname || "/personal-archive")
+          "/login?next=" + encodeURIComponent(pathname || "/studio/archive")
         );
       }
     })();

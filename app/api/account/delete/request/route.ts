@@ -133,7 +133,7 @@ export async function POST(req: Request) {
 
   await banAuthUser(userId);
 
-  const restoreUrl = `${getSiteUrl()}/account/restore?token=${encodeURIComponent(recoveryToken)}`;
+  const restoreUrl = `${getSiteUrl()}/studio/account/restore?token=${encodeURIComponent(recoveryToken)}`;
 
   if (email && email !== "unknown") {
     const mail = buildDeletionScheduledEmail({ scheduledAt, restoreUrl });

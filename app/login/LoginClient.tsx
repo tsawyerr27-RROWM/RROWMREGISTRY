@@ -95,7 +95,7 @@ export function LoginClient() {
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
     if (!user) {
-      deferredRouterReplace(router, nextParam || "/studio");
+      deferredRouterReplace(router, nextParam || "/studio/creative");
       return;
     }
 

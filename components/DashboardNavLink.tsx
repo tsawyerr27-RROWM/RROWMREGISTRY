@@ -4,12 +4,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getSessionSafe } from "@/lib/supabase";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
+import { homePathForRole } from "@/lib/onboarding";
 
 const LOGIN_WITH_NEXT =
-  "/login?next=" + encodeURIComponent("/studio");
+  "/login?next=" + encodeURIComponent("/studio/creative");
 
 /**
- * Links to `/studio` when signed in, otherwise to sign-in with return URL.
+ * Links to the role home studio when signed in, otherwise sign-in with return URL.
  */
 export function DashboardNavLink({
   className,
@@ -26,13 +27,34 @@ export function DashboardNavLink({
     (async () => {
       const session = await getSessionSafe();
       if (!mounted) return;
-      setHref(session ? "/studio" : LOGIN_WITH_NEXT);
+      if (!session?.user?.id) {
+        setHref(LOGIN_WITH_NEXT);
+        return;
+      }
+      const { data } = await sb()
+        .from("actor_profiles")
+        .select("role")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      const role = data?.role ? String(data.role) : null;
+      setHref(homePathForRole(role) ?? "/studio/creative");
     })();
     const supabase = sb();
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event: unknown, session: unknown) => {
-      setHref(session ? "/studio" : LOGIN_WITH_NEXT);
+    } = supabase.auth.onAuthStateChange(async (_event: unknown, session: unknown) => {
+      const s = session as { user?: { id?: string } } | null;
+      if (!s?.user?.id) {
+        setHref(LOGIN_WITH_NEXT);
+        return;
+      }
+      const { data } = await supabase
+        .from("actor_profiles")
+        .select("role")
+        .eq("user_id", s.user.id)
+        .maybeSingle();
+      const role = data?.role ? String(data.role) : null;
+      setHref(homePathForRole(role) ?? "/studio/creative");
     });
     return () => {
       mounted = false;

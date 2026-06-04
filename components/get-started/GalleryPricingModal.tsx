@@ -139,7 +139,7 @@ export function GalleryPricingModal({ isOpen, onClose }: Props) {
         <p className="mt-8 text-center text-[12px] text-neutral-500">
           {t("pricing.alreadyAccount")}{" "}
           <Link
-            href="/login?next=/institutional-studio-dashboard"
+            href="/login?next=/studio/organisation"
             className="font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-[0.2em] hover:text-neutral-950"
             onClick={onClose}
           >

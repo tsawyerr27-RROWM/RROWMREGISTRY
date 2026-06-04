@@ -108,7 +108,7 @@ export function CollectorWorkspaceHero({
               <HeroTile
                 title={t("collector.hero.privateByDefault")}
                 footer={
-                  <HeroInlineLink href="/account" className="block w-full">
+                  <HeroInlineLink href="/studio/account" className="block w-full">
                     {t("collector.hero.accountPresence")}
                   </HeroInlineLink>
                 }
@@ -195,7 +195,7 @@ export function CollectorWorkspaceHero({
 
           <div className="mt-10 flex flex-wrap items-center gap-3 border-t border-white/10 pt-8">
             <Link
-              href="/account"
+              href="/studio/account"
               className="rounded-lg bg-white px-5 py-2.5 text-[13px] font-semibold text-neutral-950 shadow-lg shadow-black/25 transition [transition-timing-function:var(--rrowm-ease-out)] hover:bg-white/90"
             >
               {t("collector.hero.accountPresence")}

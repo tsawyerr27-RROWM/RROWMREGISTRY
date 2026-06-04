@@ -146,7 +146,7 @@ export function StudioArtworkClient({ registryId }: Props) {
         .eq("user_id", uid)
         .maybeSingle();
       if (actor?.role && actor.role !== "collector") {
-        deferredRouterReplace(router, "/studio");
+        deferredRouterReplace(router, "/studio/creative");
         return;
       }
 

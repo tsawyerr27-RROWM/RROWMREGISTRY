@@ -179,7 +179,7 @@ export function ArtistWorkspaceHero({
                     {t("studio.hero.viewPublicPage")}
                   </HeroInlineLink>
                 ) : (
-                  <HeroInlineLink href="/account" className="block w-full">
+                  <HeroInlineLink href="/studio/account" className="block w-full">
                     {t("studio.hero.setupPresence")}
                   </HeroInlineLink>
                 )}
@@ -201,7 +201,7 @@ export function ArtistWorkspaceHero({
               {t("studio.hero.ownershipLedger")}
             </HeroActionButton>
             <div className="ml-auto flex items-center gap-3 text-[12px] text-white/50">
-              <Link href="/account" className="transition hover:text-white">
+              <Link href="/studio/account" className="transition hover:text-white">
                 {t("nav.account")}
               </Link>
               <RegistryCatalogueInfoTooltip theme="dark" />

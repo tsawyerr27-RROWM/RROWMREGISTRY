@@ -10,7 +10,7 @@ import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { FooterRegionSelector } from "@/components/LandingPage/FooterRegionSelector";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
-const LOGIN_NEXT = "/login?next=" + encodeURIComponent("/studio");
+const LOGIN_NEXT = "/login?next=" + encodeURIComponent("/studio/creative");
 
 /** Scroll distance (px) after which the header is near minimum opacity */
 const FADE_RANGE = 420;
@@ -39,12 +39,14 @@ export default function Header() {
   const isAppShell =
     pathname?.startsWith("/dashboard") ||
     pathname?.startsWith("/gallery-dashboard") ||
-    pathname?.startsWith("/studio") ||
-    pathname?.startsWith("/account") ||
-    pathname?.startsWith("/admin") ||
-    pathname?.startsWith("/collector-studio") ||
-    pathname?.startsWith("/institutional-studio") ||
-    pathname?.startsWith("/personal-archive");
+    pathname?.startsWith("/studio/") ||
+    pathname === "/studio" ||
+    pathname === "/account" ||
+    pathname?.startsWith("/account/") ||
+    pathname === "/collector-studio" ||
+    pathname === "/institutional-studio-dashboard" ||
+    pathname === "/personal-archive" ||
+    pathname?.startsWith("/admin");
 
   const isAuthPage =
     pathname?.startsWith("/login") ||
@@ -110,10 +112,10 @@ export default function Header() {
 
   const studioHref =
     actorRole === "collector"
-      ? "/collector-studio"
+      ? "/studio/collector"
       : actorRole === "gallery"
-        ? "/institutional-studio-dashboard"
-        : "/studio";
+        ? "/studio/organisation"
+        : "/studio/creative";
 
   const fadeT = Math.min(1, scrollY / FADE_RANGE);
   /** Whole header fades out as you scroll; hover brings it back for interaction */
@@ -121,7 +123,9 @@ export default function Header() {
   const shellOpacity = hovered ? Math.max(baseShellOpacity, 0.96) : baseShellOpacity;
 
   const onArtistStudio =
-    pathname === "/studio" || pathname?.startsWith("/dashboard");
+    pathname === "/studio/creative" ||
+    pathname === "/studio" ||
+    pathname?.startsWith("/dashboard");
 
   const onAbout =
     pathname === "/about" || pathname?.startsWith("/about/");
@@ -140,7 +144,11 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    if (!pathname?.startsWith("/studio") && !pathname?.startsWith("/dashboard")) {
+    if (
+      pathname !== "/studio/creative" &&
+      pathname !== "/studio" &&
+      !pathname?.startsWith("/dashboard")
+    ) {
       setDashboardHeaderDark(false);
     }
   }, [pathname]);
@@ -245,7 +253,7 @@ export default function Header() {
             {t("nav.about")}
           </Link>
           {hydrated && session ? (
-            <Link href="/account" className={`${subtleClass} text-xs`}>
+            <Link href="/studio/account" className={`${subtleClass} text-xs`}>
               {t("nav.account")}
             </Link>
           ) : null}
@@ -267,7 +275,7 @@ export default function Header() {
           {hydrated && session ? (
             <>
               <Link
-                href="/account"
+                href="/studio/account"
                 className={`${subtleClass} hidden whitespace-nowrap sm:inline`}
               >
                 {t("nav.myAccount")}

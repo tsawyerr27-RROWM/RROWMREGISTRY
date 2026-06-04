@@ -551,7 +551,7 @@ export function ClaimOwnershipFlow() {
               </p>
             </div>
             <Link
-              href="/collector-studio"
+              href="/studio/collector"
               className="inline-block text-[14px] font-medium text-neutral-700 underline decoration-neutral-300 underline-offset-4 hover:text-neutral-950"
             >
               Return to collection

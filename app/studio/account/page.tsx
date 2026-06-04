@@ -96,7 +96,7 @@ export default function AccountPage() {
     if (!sessionData?.session) {
       deferredRouterReplace(
         router,
-        `/login?next=${encodeURIComponent("/account")}`
+        `/login?next=${encodeURIComponent("/studio/account")}`
       );
       return;
     }
@@ -432,10 +432,10 @@ export default function AccountPage() {
 
   const workspaceHref =
     role === "artist"
-      ? "/studio"
+      ? "/studio/creative"
       : role === "collector"
-        ? "/collector-studio"
-        : "/institutional-studio-dashboard";
+        ? "/studio/collector"
+        : "/studio/organisation";
   const workspaceLabel =
     role === "artist" || role === "collector" || role === "gallery"
       ? productWorkspaceLabel(role, t)

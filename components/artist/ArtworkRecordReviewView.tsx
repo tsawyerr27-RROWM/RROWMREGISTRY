@@ -84,7 +84,7 @@ export function ArtworkRecordReviewView({
                 {t("gallery.artworkAuth.review.contributeAuthorship")}
               </button>
               <Link
-                href="/studio"
+                href="/studio/creative"
                 className="rounded-xl px-5 py-2.5 text-sm text-neutral-600 underline"
               >
                 {t("gallery.artworkAuth.review.artistStudio")}

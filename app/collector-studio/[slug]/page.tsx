@@ -136,7 +136,7 @@ export default async function CollectorProfilePage({
           This page is a private preview. Visitors only see a public collection when
           you enable it in{" "}
           <Link
-            href="/account"
+            href="/studio/account"
             className="font-semibold text-amber-950 underline decoration-amber-900/25 underline-offset-[4px] hover:decoration-amber-900/50"
           >
             Account
@@ -150,13 +150,13 @@ export default async function CollectorProfilePage({
       )}
       <div className="flex flex-wrap gap-2.5">
         <Link
-          href="/collector-studio"
+          href="/studio/collector"
           className="inline-flex items-center rounded-full border border-neutral-900/12 bg-white px-4 py-2 text-sm font-semibold text-neutral-800 shadow-sm transition hover:border-neutral-900/18 hover:bg-neutral-50"
         >
           Collector studio
         </Link>
         <Link
-          href="/account"
+          href="/studio/account"
           className="inline-flex items-center rounded-full border border-transparent bg-neutral-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800"
         >
           Account

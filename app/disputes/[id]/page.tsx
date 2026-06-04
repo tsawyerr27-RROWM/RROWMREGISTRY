@@ -14,7 +14,7 @@ export default async function DisputeViewPage({
   const { id } = await params;
   const disputeId = String(id || "").trim();
   if (!disputeId) {
-    redirect("/account");
+    redirect("/studio/account");
   }
 
   const supabase = await createSupabaseServerClient();

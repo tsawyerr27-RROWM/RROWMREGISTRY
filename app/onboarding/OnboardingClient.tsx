@@ -123,7 +123,7 @@ export function OnboardingClient() {
       .select("role")
       .eq("user_id", uid)
       .maybeSingle();
-    deferredRouterReplace(router, homePathForRole(a?.role) || "/studio");
+    deferredRouterReplace(router, homePathForRole(a?.role) || "/studio/creative");
   }, [router, sb]);
 
   useEffect(() => {
@@ -150,7 +150,7 @@ export function OnboardingClient() {
         const artworkReturn = resolveArtworkAuthenticationReturnPath();
         deferredRouterReplace(
           router,
-          artworkReturn || homePathForRole(actor?.role) || "/studio"
+          artworkReturn || homePathForRole(actor?.role) || "/studio/creative"
         );
         return;
       }
@@ -216,7 +216,7 @@ export function OnboardingClient() {
       sessionStorage.setItem("rrowm_show_welcome", "artist");
     } catch { /* ignore */ }
     const artworkReturn = resolveArtworkAuthenticationReturnPath();
-    deferredRouterReplace(router, artworkReturn || "/studio");
+    deferredRouterReplace(router, artworkReturn || "/studio/creative");
   };
 
   const submitCollector = async (e: React.FormEvent) => {
@@ -240,7 +240,7 @@ export function OnboardingClient() {
     try {
       sessionStorage.setItem("rrowm_show_welcome", "collector");
     } catch { /* ignore */ }
-    deferredRouterReplace(router, "/collector-studio");
+    deferredRouterReplace(router, "/studio/collector");
   };
 
   const submitGallery = async (e: React.FormEvent) => {
@@ -265,7 +265,7 @@ export function OnboardingClient() {
         isPostgresUniqueViolation(rpcErr) ||
         msg.toLowerCase().includes("already exists")
       ) {
-        deferredRouterReplace(router, "/institutional-studio-dashboard");
+        deferredRouterReplace(router, "/studio/organisation");
         return;
       }
       setError(msg || "Could not create gallery.");
@@ -274,7 +274,7 @@ export function OnboardingClient() {
     try {
       sessionStorage.setItem("rrowm_show_welcome", "gallery");
     } catch { /* ignore */ }
-    deferredRouterReplace(router, "/institutional-studio-dashboard");
+    deferredRouterReplace(router, "/studio/organisation");
   };
 
   if (step === "loading") {

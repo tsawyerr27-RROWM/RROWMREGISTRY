@@ -364,7 +364,7 @@ export default function GalleryDashboardPage() {
     if (!sessionData?.session) {
       deferredRouterReplace(
         router,
-        `/login?next=${encodeURIComponent("/institutional-studio-dashboard")}`
+        `/login?next=${encodeURIComponent("/studio/organisation")}`
       );
       return;
     }
@@ -392,7 +392,7 @@ export default function GalleryDashboardPage() {
     if (actor.role !== "gallery") {
       deferredRouterReplace(
         router,
-        actor.role === "collector" ? "/collector-studio" : "/studio"
+        actor.role === "collector" ? "/studio/collector" : "/studio/creative"
       );
       return;
     }

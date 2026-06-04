@@ -155,7 +155,7 @@ export function ContinueProvenanceFlow() {
           <strong>Continue chronology</strong> on the published work or chronology page.
         </p>
         <Link
-          href="/collector-studio"
+          href="/studio/collector"
           className="mt-4 inline-block text-[13px] font-medium text-neutral-900 underline"
         >
           Collector studio

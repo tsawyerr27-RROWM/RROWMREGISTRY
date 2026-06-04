@@ -24,7 +24,7 @@ export default function ReplayDebuggerPage() {
       const uid = sessionData.session.user.id;
       const { data: profileData } = await supabase.from("artists").select("is_admin").eq("id", uid).single();
       if (!profileData?.is_admin) {
-        deferredRouterReplace(router, "/studio");
+        deferredRouterReplace(router, "/studio/creative");
         return;
       }
       setReady(true);

@@ -51,7 +51,7 @@ export default function TermsPage() {
         <LegalP>
           You may deactivate or request deletion of your account through{" "}
           <a
-            href="/account#account-privacy-data"
+            href="/studio/account#account-privacy-data"
             className="text-neutral-900 underline decoration-neutral-300 underline-offset-[0.25em] transition hover:decoration-neutral-500"
           >
             My Account → Privacy &amp; data

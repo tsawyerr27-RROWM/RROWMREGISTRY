@@ -181,7 +181,7 @@ export function StudioActivityFeed({
           detail: String(r.message || ""),
           href: reg
             ? `/collector-studio/artwork/${encodeURIComponent(reg)}`
-            : "/collector-studio",
+            : "/studio/collector",
         });
       }
 

@@ -97,7 +97,7 @@ export default function PrivacyPage() {
         <LegalP>
           You can adjust many visibility preferences from{" "}
           <Link
-            href="/account#account-visibility"
+            href="/studio/account#account-visibility"
             className="text-neutral-900 underline decoration-neutral-300 underline-offset-[0.25em] transition hover:decoration-neutral-500"
           >
             My Account
@@ -112,7 +112,7 @@ export default function PrivacyPage() {
         <LegalP>
           Signed-in users can manage privacy and account data from{" "}
           <Link
-            href="/account#account-privacy-data"
+            href="/studio/account#account-privacy-data"
             className="text-neutral-900 underline decoration-neutral-300 underline-offset-[0.25em] transition hover:decoration-neutral-500"
           >
             My Account → Privacy &amp; data
@@ -250,7 +250,7 @@ export default function PrivacyPage() {
           <li>
             <strong>Access and portability:</strong> use{" "}
             <Link
-              href="/account#account-privacy-data"
+              href="/studio/account#account-privacy-data"
               className="text-neutral-900 underline decoration-neutral-300 underline-offset-[0.25em] transition hover:decoration-neutral-500"
             >
               Download my data
@@ -260,7 +260,7 @@ export default function PrivacyPage() {
           <li>
             <strong>Erasure:</strong> use{" "}
             <Link
-              href="/account#account-privacy-data"
+              href="/studio/account#account-privacy-data"
               className="text-neutral-900 underline decoration-neutral-300 underline-offset-[0.25em] transition hover:decoration-neutral-500"
             >
               Delete account
