@@ -15,6 +15,7 @@ This folder holds the **frozen planning stack** for RROWM V2 Studio Foundation (
 | 4 | [Product Language Freeze](./product-language-freeze.md) | **FROZEN** | Public surfaces (Studio, The Field, Registry) and participant labels (Creative, Organisation, Collector) vs internal system terms |
 | 5 | [Phase 1 Route Migration Matrix](./phase-1-route-migration-matrix.md) | **FROZEN** | PR4 pre-implementation inventory: canonical `/studio/*` routes, redirects, links, post-auth paths, and grep checklist |
 | 6 | [Phase 1 PR4 Execution Package](./phase-1-pr4-execution-package.md) | **FROZEN** | PR4 build steps: phases, file list, move-then-redirect order, validation and reviewer checklists (no substitute for matrix) |
+| 7 | [Phase 1 Acceptance Gate](./phase-1-acceptance-gate.md) | **ACTIVE** | PR6 release candidate: automated gates, staging checklists, sign-off (not a scope document) |
 
 ## Interpretation rules
 

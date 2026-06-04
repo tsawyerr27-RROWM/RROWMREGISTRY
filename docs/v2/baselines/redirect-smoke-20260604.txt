@@ -1,0 +1,19 @@
+Phase 1 redirect smoke — http://127.0.0.1:3000
+--- Legacy stubs (308/307) ---
+PASS /studio: 200 (layout guard SSR; R-01 stub confirmed statically)
+PASS /collector-studio → /studio/collector (HTTP/1.1 308 Permanent Redirect)
+PASS /institutional-studio-dashboard → /studio/organisation (HTTP/1.1 308 Permanent Redirect)
+PASS /account → /studio/account (HTTP/1.1 308 Permanent Redirect)
+PASS /personal-archive → /studio/archive (HTTP/1.1 308 Permanent Redirect)
+PASS /account/restore?token=test → /studio/account/restore?token=test (HTTP/1.1 308 Permanent Redirect)
+--- next.config chains ---
+PASS /dashboard → /studio/creative (HTTP/1.1 308 Permanent Redirect)
+PASS /gallery-dashboard → /studio/organisation (HTTP/1.1 308 Permanent Redirect)
+--- No redirect loop ---
+PASS /personal-archive: ≤1 redirect, final http://127.0.0.1:3000/studio/archive
+PASS /studio/archive: ≤1 redirect, final http://127.0.0.1:3000/studio/archive
+--- Unchanged public paths (must not redirect to /studio) ---
+PASS /artist/test-artist: no studio redirect (HTTP/1.1 404 Not Found)
+PASS /collector-studio/my-slug: no studio redirect (HTTP/1.1 404 Not Found)
+PASS /institutional-studio/my-gallery: no studio redirect (HTTP/1.1 404 Not Found)
+All redirect smoke checks passed.

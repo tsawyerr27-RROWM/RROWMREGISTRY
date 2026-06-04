@@ -1,0 +1,99 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm.
+{
+  "gate": "phase-1-static-acceptance",
+  "pass": true,
+  "passed": 18,
+  "failed": 0,
+  "results": [
+    {
+      "id": "P-06",
+      "pass": true,
+      "detail": "app/studio/layout.tsx wraps StudioRouteGuard"
+    },
+    {
+      "id": "AG-1-3",
+      "pass": true,
+      "detail": "studio-route-access helpers"
+    },
+    {
+      "id": "AC-R3",
+      "pass": true,
+      "detail": "homePathForRole canonical paths"
+    },
+    {
+      "id": "R-stub:app/studio/page.tsx",
+      "pass": true,
+      "detail": "app/studio/page.tsx → /studio/creative"
+    },
+    {
+      "id": "R-stub:app/collector-studio/page.tsx",
+      "pass": true,
+      "detail": "app/collector-studio/page.tsx → /studio/collector"
+    },
+    {
+      "id": "R-stub:app/institutional-studio-dashboard/page.tsx",
+      "pass": true,
+      "detail": "app/institutional-studio-dashboard/page.tsx → /studio/organisation"
+    },
+    {
+      "id": "R-stub:app/account/page.tsx",
+      "pass": true,
+      "detail": "app/account/page.tsx → /studio/account"
+    },
+    {
+      "id": "R-stub:app/personal-archive/page.tsx",
+      "pass": true,
+      "detail": "app/personal-archive/page.tsx → /studio/archive"
+    },
+    {
+      "id": "R-stub:app/account/restore/page.tsx",
+      "pass": true,
+      "detail": "app/account/restore/page.tsx → /studio/account/restore"
+    },
+    {
+      "id": "P-05",
+      "pass": true,
+      "detail": "/studio/archive renders PersonalArchiveShell"
+    },
+    {
+      "id": "R-06-07",
+      "pass": true,
+      "detail": "next.config dashboard redirects"
+    },
+    {
+      "id": "dedupe:app/studio/creative/page.tsx",
+      "pass": true,
+      "detail": "app/studio/creative/page.tsx no duplicated session/onboarding redirects"
+    },
+    {
+      "id": "dedupe:app/studio/collector/page.tsx",
+      "pass": true,
+      "detail": "app/studio/collector/page.tsx no duplicated session/onboarding redirects"
+    },
+    {
+      "id": "dedupe:app/studio/organisation/page.tsx",
+      "pass": true,
+      "detail": "app/studio/organisation/page.tsx no duplicated session/onboarding redirects"
+    },
+    {
+      "id": "dedupe:app/studio/account/page.tsx",
+      "pass": true,
+      "detail": "app/studio/account/page.tsx no duplicated session/onboarding redirects"
+    },
+    {
+      "id": "E-01",
+      "pass": true,
+      "detail": "deletion restore URL canonical"
+    },
+    {
+      "id": "E-02",
+      "pass": true,
+      "detail": "gallery verified email URL canonical"
+    },
+    {
+      "id": "GIT-TAGS",
+      "pass": true,
+      "detail": "Expected tags on main: checkpoint-phase1-routes, checkpoint-phase1-auth (verify with git tag -l)"
+    }
+  ]
+}
