@@ -74,12 +74,7 @@ import {
 import { translateActivityMessage } from "@/lib/activity-i18n";
 import { testModeEnabled } from "@/lib/test-mode";
 import { TestDataControls } from "@/components/Admin/TestDataControls";
-import { getOnboardingRedirectPath } from "@/lib/onboarding";
 import { parseStudioArtworksAccent } from "@/lib/studio-artworks-accent";
-import {
-  deferredRouterPush,
-  deferredRouterReplace,
-} from "@/lib/deferred-app-router";
 import {
   formatOwnershipParty,
   getLatestOwnershipEvent,
@@ -752,7 +747,7 @@ export default function Dashboard() {
     setOwnershipUiBusyId(null);
   };
 
-// 1️ AUTH + INITIAL LOAD
+// Initial load (session/onboarding/role: app/studio/layout StudioRouteGuard)
 useEffect(() => {
   const init = async () => {
     try {
@@ -760,41 +755,10 @@ useEffect(() => {
         await sb().auth.getSession();
       if (sessionError) throw sessionError;
 
-      if (!sessionData?.session) {
-        deferredRouterPush(
-          router,
-          "/login?next=" + encodeURIComponent("/studio/creative")
-        );
-        return;
-      }
+      const currentUser = sessionData?.session?.user;
+      if (!currentUser) return;
 
-      const currentUser = sessionData.session.user;
       setUser(currentUser);
-
-      const onboardingPath = await getOnboardingRedirectPath(
-        sb(),
-        currentUser.id
-      );
-      if (onboardingPath) {
-        deferredRouterReplace(router, onboardingPath);
-        return;
-      }
-
-      const { data: actorRow, error: actorError } = await sb()
-        .from("actor_profiles")
-        .select("role")
-        .eq("user_id", currentUser.id)
-        .maybeSingle();
-
-      if (!actorError && actorRow?.role === "gallery") {
-        deferredRouterReplace(router, "/studio/organisation");
-        return;
-      }
-
-      if (!actorError && actorRow?.role === "collector") {
-        deferredRouterReplace(router, "/studio/collector");
-        return;
-      }
 
       const { data: profileData } = await sb()
         .from("artists")
@@ -838,7 +802,7 @@ useEffect(() => {
   };
 
   init();
-}, [router, sb]);
+}, [sb]);
 
 // 2️ FETCH VALUE + OWNERSHIP EVENTS
 useEffect(() => {

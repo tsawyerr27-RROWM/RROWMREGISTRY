@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { AccountPageContent } from "@/components/account/AccountPageContent";
 import { normalizeOptionalWebsite } from "@/components/account/account-ui";
 import type {
@@ -13,8 +12,6 @@ import { CollectorWorkspaceShellLayout } from "@/components/Studio/CollectorWork
 import { GalleryWorkspaceShellLayout } from "@/components/Studio/GalleryWorkspaceShellLayout";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { getCollectorOwnedArtworkIds } from "@/lib/collector-portfolio";
-import { deferredRouterReplace } from "@/lib/deferred-app-router";
-import { getOnboardingRedirectPath } from "@/lib/onboarding";
 import {
   DEFAULT_PUBLIC_PRESENCE,
   parsePublicPresence,
@@ -34,7 +31,6 @@ type Role = "artist" | "collector" | "gallery";
 
 export default function AccountPage() {
   const { t } = useLocalePreferences();
-  const router = useRouter();
   const sb = useSupabaseBrowserLazy();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -93,24 +89,13 @@ export default function AccountPage() {
     setError(null);
     const supabase = sb();
     const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData?.session) {
-      deferredRouterReplace(
-        router,
-        `/login?next=${encodeURIComponent("/studio/account")}`
-      );
-      return;
-    }
-    const uid = sessionData.session.user.id;
+    const uid = sessionData?.session?.user?.id;
+    if (!uid) return;
+
     setUserId(uid);
-    setEmail(sessionData.session.user.email ?? null);
+    setEmail(sessionData?.session?.user?.email ?? null);
 
     await supabase.auth.refreshSession();
-
-    const needOnboarding = await getOnboardingRedirectPath(supabase, uid);
-    if (needOnboarding) {
-      deferredRouterReplace(router, needOnboarding);
-      return;
-    }
 
     const { data: actor, error: actorErr } = await supabase
       .from("actor_profiles")
@@ -260,7 +245,7 @@ export default function AccountPage() {
 
     setPresence(nextPresence);
     setLoading(false);
-  }, [router, sb]);
+  }, [sb]);
 
   useEffect(() => {
     void load();

@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { WelcomeModal } from "@/components/ui/IntroModal";
 import { galleryIntroSteps } from "@/components/ui/intro-content";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
@@ -18,11 +17,6 @@ import {
 } from "@/lib/studio-nav";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 import { TestDataControls } from "@/components/Admin/TestDataControls";
-import { getOnboardingRedirectPath } from "@/lib/onboarding";
-import {
-  deferredRouterPush,
-  deferredRouterReplace,
-} from "@/lib/deferred-app-router";
 import {
   RegisterModal,
   type RegisterModalArtwork,
@@ -193,7 +187,6 @@ function buildArtistInviteEmailDraft(params: {
 type GalleryRole = "admin" | "staff";
 
 export default function GalleryDashboardPage() {
-  const router = useRouter();
   const { t, region } = useLocalePreferences();
   const sb = useSupabaseBrowserLazy();
   const [loading, setLoading] = useState(true);
@@ -361,41 +354,12 @@ export default function GalleryDashboardPage() {
 
   const load = useCallback(async () => {
     const { data: sessionData } = await sb().auth.getSession();
-    if (!sessionData?.session) {
-      deferredRouterReplace(
-        router,
-        `/login?next=${encodeURIComponent("/studio/organisation")}`
-      );
-      return;
-    }
-    const uid = sessionData.session.user.id;
+    const uid = sessionData?.session?.user?.id;
+    if (!uid) return;
+
     setUserId(uid);
 
     await sb().auth.refreshSession();
-
-    const onboardingPath = await getOnboardingRedirectPath(sb(), uid);
-    if (onboardingPath) {
-      deferredRouterReplace(router, onboardingPath);
-      return;
-    }
-
-    const { data: actor } = await sb()
-      .from("actor_profiles")
-      .select("role")
-      .eq("user_id", uid)
-      .maybeSingle();
-    if (!actor?.role) {
-      deferredRouterReplace(router, "/onboarding");
-      return;
-    }
-
-    if (actor.role !== "gallery") {
-      deferredRouterReplace(
-        router,
-        actor.role === "collector" ? "/studio/collector" : "/studio/creative"
-      );
-      return;
-    }
 
     const { data: memRow, error: memErr } = await sb()
       .from("gallery_users")
@@ -806,7 +770,7 @@ export default function GalleryDashboardPage() {
       isListedByArtworkId,
     });
     setLoading(false);
-  }, [router, sb]);
+  }, [sb]);
 
   useEffect(() => {
     void load();

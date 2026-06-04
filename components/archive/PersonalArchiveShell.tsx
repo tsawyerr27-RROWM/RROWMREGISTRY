@@ -1,21 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
 
 import { PersonalArchivePageContent } from "@/components/archive/PersonalArchivePageContent";
 import { ArtistWorkspaceShellLayout } from "@/components/Studio/ArtistWorkspaceShellLayout";
 import { CollectorWorkspaceShellLayout } from "@/components/Studio/CollectorWorkspaceShellLayout";
 import { GalleryWorkspaceShellLayout } from "@/components/Studio/GalleryWorkspaceShellLayout";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
-import { deferredRouterPush } from "@/lib/deferred-app-router";
 import { PERSONAL_ARCHIVE_NAV_ID } from "@/lib/personal-archive";
 
 type Role = "artist" | "collector" | "gallery";
 
 export function PersonalArchiveShell() {
-  const router = useRouter();
-  const pathname = usePathname();
   const sb = useSupabaseBrowserLazy();
   const [ready, setReady] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -26,18 +22,9 @@ export function PersonalArchiveShell() {
     void (async () => {
       const supabase = sb();
       const { data } = await supabase.auth.getSession();
-      const session = data?.session;
-      if (!session?.user?.id) {
-        if (!cancelled) {
-          deferredRouterPush(
-            router,
-            "/login?next=" + encodeURIComponent(pathname || "/studio/archive")
-          );
-        }
-        return;
-      }
+      const uid = data?.session?.user?.id;
+      if (!uid) return;
 
-      const uid = session.user.id;
       const { data: actor } = await supabase
         .from("actor_profiles")
         .select("role")
@@ -51,17 +38,12 @@ export function PersonalArchiveShell() {
           setRole(r);
           setReady(true);
         }
-      } else if (!cancelled) {
-        deferredRouterPush(
-          router,
-          "/login?next=" + encodeURIComponent(pathname || "/studio/archive")
-        );
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [pathname, router, sb]);
+  }, [sb]);
 
   if (!ready || !userId || !role) {
     return (

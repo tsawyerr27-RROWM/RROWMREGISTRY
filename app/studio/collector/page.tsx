@@ -2,13 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { WelcomeModal } from "@/components/ui/IntroModal";
 import { collectorIntroSteps } from "@/components/ui/intro-content";
-import {
-  deferredRouterPush,
-  deferredRouterReplace,
-} from "@/lib/deferred-app-router";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { StudioShell } from "@/components/Studio/StudioShell";
 import { WorkspaceShellFooterLinks } from "@/components/Studio/WorkspaceShell";
@@ -32,7 +27,6 @@ import { translateOwnershipStatusLabel } from "@/lib/ownership-ledger-i18n";
 import { getUnresolvedSaleSignals } from "@/lib/studio-signals";
 import { testModeEnabled } from "@/lib/test-mode";
 import { TestDataControls } from "@/components/Admin/TestDataControls";
-import { getOnboardingRedirectPath } from "@/lib/onboarding";
 import { CollectorStudioActivityPreview } from "@/components/Studio/CollectorStudioActivityPreview";
 import { CollectorWorkspaceHero } from "@/components/Studio/CollectorWorkspaceHero";
 import {
@@ -72,7 +66,6 @@ type CollectionSnapshot = {
 };
 
 export default function CollectorStudioPage() {
-  const router = useRouter();
   const { t } = useLocalePreferences();
   const sb = useSupabaseBrowserLazy();
   const [loading, setLoading] = useState(true);
@@ -135,40 +128,10 @@ export default function CollectorStudioPage() {
     let cancelled = false;
     void (async () => {
       const { data: sessionData } = await sb().auth.getSession();
-      if (!sessionData?.session) {
-        deferredRouterReplace(
-          router,
-          "/login?next=" + encodeURIComponent("/studio/collector")
-        );
-        return;
-      }
-      const uid = sessionData.session.user.id;
+      const uid = sessionData?.session?.user?.id;
+      if (!uid) return;
+
       setUserId(uid);
-
-      const onboardingPath = await getOnboardingRedirectPath(sb(), uid);
-      if (onboardingPath) {
-        deferredRouterReplace(router, onboardingPath);
-        return;
-      }
-
-      const { data: actor } = await sb()
-        .from("actor_profiles")
-        .select("role")
-        .eq("user_id", uid)
-        .maybeSingle();
-      if (!actor?.role) {
-        deferredRouterReplace(router, "/onboarding");
-        return;
-      }
-      if (actor.role !== "collector") {
-        deferredRouterReplace(
-          router,
-          actor.role === "gallery"
-            ? "/studio/organisation"
-            : "/studio/creative"
-        );
-        return;
-      }
 
       const { data: cp } = await sb()
         .from("collector_profiles")
@@ -357,7 +320,7 @@ export default function CollectorStudioPage() {
     return () => {
       cancelled = true;
     };
-  }, [router, sb]);
+  }, [sb]);
 
   const sorted = useMemo(
     () => sortPortfolioRows(rows, sortMode),
