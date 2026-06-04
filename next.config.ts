@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/gallery-dashboard",
-        destination: "/institutional-studio-dashboard",
+        destination: "/studio/organisation",
         permanent: true,
       },
       {
