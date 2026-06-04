@@ -1,0 +1,11 @@
+{
+  "gate": "validate:system",
+  "pass": false,
+  "blocked": true,
+  "failure_reasons": [
+    "DATABASE_URL or VALIDATION_DATABASE_URL not available in local or Vercel production env pull.",
+    "Set direct Postgres URI and VALIDATION_ARTIST_USER_ID, VALIDATION_GALLERY_USER_ID, VALIDATION_SECOND_OWNER_USER_ID, then re-run: npm run validate:system"
+  ],
+  "substitute_gate": "phase-1-rp-supabase-smoke",
+  "substitute_artifact": "docs/v2/baselines/rp-supabase-smoke-20260604.json"
+}

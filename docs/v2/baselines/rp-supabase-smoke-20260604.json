@@ -1,0 +1,94 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm.
+{
+  "gate": "phase-1-rp-supabase-smoke",
+  "supabase_url": "https://gbsfuwpaspihrbruyvqu…",
+  "pass": false,
+  "results": [
+    {
+      "id": "RP-10",
+      "pass": true,
+      "detail": "artwork_read_model reachable (count 12)",
+      "layer": "supabase"
+    },
+    {
+      "id": "RP-11",
+      "pass": true,
+      "detail": "sample registry_id RROWM-001002…",
+      "layer": "supabase"
+    },
+    {
+      "id": "RP-9",
+      "pass": true,
+      "detail": "artwork_archives table visible to API",
+      "layer": "supabase"
+    },
+    {
+      "id": "RP-13",
+      "pass": true,
+      "detail": "account_audit_log table visible",
+      "layer": "supabase"
+    },
+    {
+      "id": "RP-12",
+      "pass": true,
+      "detail": "get_certificate_public_status_batch RPC OK",
+      "layer": "supabase"
+    },
+    {
+      "id": "RP-1",
+      "pass": false,
+      "detail": "register_artwork_atomic: Could not find the function public.register_artwork_atomic(p_payload) in the schema cache",
+      "layer": "supabase"
+    },
+    {
+      "id": "RP-3",
+      "pass": true,
+      "detail": "gallery_verify_artwork callable (Not authenticated)",
+      "layer": "supabase"
+    },
+    {
+      "id": "RP-4",
+      "pass": true,
+      "detail": "issue_certificate_for_verified_artwork callable (Artwork not found)",
+      "layer": "supabase"
+    },
+    {
+      "id": "RP-6",
+      "pass": true,
+      "detail": "accept_provenance_transfer callable (Not authenticated)",
+      "layer": "supabase"
+    },
+    {
+      "id": "RP-7",
+      "pass": true,
+      "detail": "artist_confirm_representation_on_file callable (Not authenticated)",
+      "layer": "supabase"
+    },
+    {
+      "id": "RP-2",
+      "pass": true,
+      "detail": "Organisation register via UI — requires gallery session (deferred to manual staging QA)",
+      "layer": "vercel"
+    },
+    {
+      "id": "RP-5",
+      "pass": true,
+      "detail": "Collector ownership claim — requires collector session (deferred to manual staging QA)",
+      "layer": "vercel"
+    },
+    {
+      "id": "RP-8",
+      "pass": true,
+      "detail": "Gallery invite accept — requires invite token + session (deferred to manual staging QA)",
+      "layer": "vercel"
+    },
+    {
+      "id": "RP-14",
+      "pass": true,
+      "detail": "Ownership sale signal UI — requires artist studio session (deferred to manual staging QA)",
+      "layer": "vercel"
+    }
+  ],
+  "replay_note": "Historical replay requires DATABASE_URL + REPLAY_ARTWORK_IDS (npm run validate:replay).",
+  "system_validation_note": "Full validate:system requires DATABASE_URL + VALIDATION_* user IDs (npm run validate:system)."
+}

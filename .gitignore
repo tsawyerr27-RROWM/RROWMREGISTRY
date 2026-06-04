@@ -31,6 +31,7 @@ dist/
 .env.development
 .env.production
 .env.test
+.env.vercel.*
 
 # Allow example env template
 !.env.example
@@ -79,4 +80,4 @@ Thumbs.db
 # Misc
 # -----------------------------
 .cache/
-.tmp/
+.tmp/supabase/.temp/

@@ -1,0 +1,19 @@
+Phase 1 redirect smoke — https://rrowm-registry.vercel.app
+--- Legacy stubs (308/307) ---
+PASS /studio: 200 (layout guard SSR; R-01 stub confirmed statically)
+PASS /collector-studio → /studio/collector (HTTP/2 308 )
+PASS /institutional-studio-dashboard → /studio/organisation (HTTP/2 308 )
+PASS /account → /studio/account (HTTP/2 308 )
+PASS /personal-archive → /studio/archive (HTTP/2 308 )
+PASS /account/restore?token=test → /studio/account/restore?token=test (HTTP/2 308 )
+--- next.config chains ---
+PASS /dashboard → /studio/creative (HTTP/2 308 )
+PASS /gallery-dashboard → /studio/organisation (HTTP/2 308 )
+--- No redirect loop ---
+PASS /personal-archive: ≤1 redirect, final https://rrowm-registry.vercel.app/studio/archive
+PASS /studio/archive: ≤1 redirect, final https://rrowm-registry.vercel.app/studio/archive
+--- Unchanged public paths (must not redirect to /studio) ---
+PASS /artist/test-artist: no studio redirect (HTTP/2 500 )
+PASS /collector-studio/my-slug: no studio redirect (HTTP/2 500 )
+PASS /institutional-studio/my-gallery: no studio redirect (HTTP/2 500 )
+All redirect smoke checks passed.

@@ -1,0 +1,73 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm.
+{
+  "staging_url": "https://rrowm-registry.vercel.app",
+  "gate": "phase-1-staging-http-smoke",
+  "pass": false,
+  "results": [
+    {
+      "id": "redirect:/collector-studio",
+      "pass": true,
+      "detail": "308 → /studio/collector"
+    },
+    {
+      "id": "redirect:/institutional-studio-dashboard",
+      "pass": true,
+      "detail": "308 → /studio/organisation"
+    },
+    {
+      "id": "redirect:/account",
+      "pass": true,
+      "detail": "308 → /studio/account"
+    },
+    {
+      "id": "redirect:/personal-archive",
+      "pass": true,
+      "detail": "308 → /studio/archive"
+    },
+    {
+      "id": "redirect:/dashboard",
+      "pass": true,
+      "detail": "308 → /studio/creative"
+    },
+    {
+      "id": "redirect:/gallery-dashboard",
+      "pass": true,
+      "detail": "308 → /studio/organisation"
+    },
+    {
+      "id": "redirect:/studio",
+      "pass": true,
+      "detail": "200 (layout guard SSR; R-01 static)"
+    },
+    {
+      "id": "RP-public:/registry",
+      "pass": false,
+      "detail": "GET 500"
+    },
+    {
+      "id": "RP-public:/login",
+      "pass": true,
+      "detail": "GET 200"
+    },
+    {
+      "id": "RP-public:/about",
+      "pass": true,
+      "detail": "GET 200"
+    },
+    {
+      "id": "RP-public:/collector-studio/test-slug-smoke",
+      "pass": false,
+      "detail": "GET 500"
+    },
+    {
+      "id": "RP-public:/artist/test-artist-smoke",
+      "pass": false,
+      "detail": "GET 500"
+    },
+    {
+      "id": "RP-public:/institutional-studio/test-gallery-smoke",
+      "pass": false,
+      "detail": "GET 500"
+    }
+  ]
+}

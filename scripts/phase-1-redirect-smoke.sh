@@ -11,7 +11,7 @@ check_redirect() {
   local headers
   headers="$(curl -sI "${BASE}${path}")"
   local status location
-  status="$(echo "$headers" | head -1)"
+  status="$(echo "$headers" | grep -E '^HTTP/' | head -1)"
   location="$(echo "$headers" | grep -i '^location:' | tr -d '\r' | awk '{print $2}' | head -1)"
   if [[ "$location" != "$expect_location" ]]; then
     echo "FAIL ${path}: expected Location: ${expect_location}, got: ${location:-<none>} (${status})"
@@ -40,7 +40,7 @@ echo "--- Legacy stubs (308/307) ---"
 headers_studio="$(curl -sI "${BASE}/studio")"
 if echo "$headers_studio" | grep -qi '^location: /studio/creative'; then
   echo "PASS /studio → /studio/creative ($(echo "$headers_studio" | head -1))"
-elif echo "$headers_studio" | grep -q '^HTTP/1.1 200'; then
+elif echo "$headers_studio" | grep -qE '^HTTP/[12](\.[01])? 200'; then
   echo "PASS /studio: 200 (layout guard SSR; R-01 stub confirmed statically)"
 else
   echo "FAIL /studio: unexpected response"

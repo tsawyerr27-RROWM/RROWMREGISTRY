@@ -1,0 +1,10 @@
+{
+  "gate": "validate:replay",
+  "pass": false,
+  "blocked": true,
+  "mismatches": [
+    "DATABASE_URL not configured for local/staging runner."
+  ],
+  "replay_artwork_ids_file": "docs/v2/baselines/replay-registry-ids.txt",
+  "instructions": "Export DATABASE_URL and REPLAY_ARTWORK_IDS from docs/v2/baselines/replay-registry-ids.txt, then: npm run validate:replay"
+}

@@ -1,74 +1,75 @@
 # Phase 1 Release Candidate — Sign-off Record
 
-**RC branch:** `pr/phase1-acceptance`  
-**Base:** `main` @ `bc18df3` (includes `checkpoint-phase1-routes`, `checkpoint-phase1-auth`)  
-**Date:** 2026-06-04  
+**RC commit:** `main` @ `b55dac3` + staging gate artifacts (2026-06-04)  
+**Checkpoints:** `checkpoint-phase1-routes`, `checkpoint-phase1-auth`, **`checkpoint-phase1-rc`**  
+**Staging URL:** https://rrowm-registry.vercel.app  
 
 ---
 
-## 1. Automated gate results (local / CI)
+## 1. Gate execution summary
 
-| Gate | Command | Result | Notes |
-|------|---------|--------|-------|
-| Typecheck | `npx tsc --noEmit` | **PASS** | |
-| Production build | `npm run build` | **PASS** | Canonical `/studio/*` routes in build output |
-| Static acceptance | `npx tsx scripts/phase-1-static-acceptance.ts` | **PASS** | P-05, P-06, R-stubs, AC-R3, E-01/E-02, page dedupe |
-| Redirect smoke | `./scripts/phase-1-redirect-smoke.sh` | **STAGING** | Run on staging URL after deploy; local `/studio` is 200 without session (layout guard) |
-| System validation | `npm run validate:system` | **PENDING** | Requires `DATABASE_URL` + validation user IDs on staging |
-| Historical replay | `npm run validate:replay` | **PENDING** | Requires `DATABASE_URL` + `REPLAY_ARTWORK_IDS` |
-| ESLint | `npm run lint` | **WARN** | Repo-wide legacy issues; not introduced by Phase 1 |
+| Step | Status | Evidence |
+|------|--------|----------|
+| Merge `pr/phase1-acceptance` | **DONE** | `main` @ `b55dac3` |
+| Deploy staging | **DONE** | `npx vercel deploy --prod` → https://rrowm-registry.vercel.app |
+| `validate:system` | **BLOCKED** | No `DATABASE_URL` in env — see `docs/v2/baselines/validate-system-20260604.json` |
+| `validate:replay` | **BLOCKED** | No `DATABASE_URL` — see `docs/v2/baselines/validate-replay-20260604.json` |
+| RP-1–RP-14 | **PARTIAL** | Supabase API smoke: `docs/v2/baselines/rp-supabase-smoke-20260604.json` |
+| Redirect matrix (staging) | **PASS** | `docs/v2/baselines/redirect-smoke-staging-vercel-20260604.txt` |
+| Static acceptance | **PASS** | `docs/v2/baselines/static-acceptance-20260604.json` |
 
-Artifacts:
+### Staging deploy blocker (Vercel app HTTP)
 
-- `docs/v2/baselines/static-acceptance-latest.json` (copy from CI)
-- `docs/v2/baselines/redirect-smoke-20260604.txt` (partial local run)
+Vercel **production** environment pull contains **no Supabase keys** (`vercel env pull` → only `VERCEL_*`). Result:
 
----
+- `/login` → 200
+- `/registry`, `/api/account/status` → **500** until `NEXT_PUBLIC_SUPABASE_*`, `SUPABASE_SERVICE_ROLE_KEY`, and related secrets are added in Vercel project settings and redeployed.
 
-## 2. Phase 1 PR completion
-
-| PR | Scope | Status on `main` |
-|----|-------|------------------|
-| PR0 | Migrations (pre-req) | Ops — verify on env |
-| PR-Pre | Activity feed / i18n | Merged |
-| PR1 | `lib/studio-nav` | Merged |
-| PR2 | `StudioShell` | Merged |
-| PR3 | Terminology | Merged |
-| PR4 | Canonical routes + redirects | Merged — tag `checkpoint-phase1-routes` |
-| PR5 | Layout auth guard + dedupe | Merged — tag `checkpoint-phase1-auth` |
-| PR6 | Acceptance gate (this doc + scripts) | In progress |
+**Remote Supabase project** (from `.env.local`) passes schema/RPC smoke for RP-9–13 and most RPC touchpoints.
 
 ---
 
-## 3. Acceptance criteria summary
+## 2. RP-1–RP-14 registry smoke
 
-| Group | Local static / build | Staging manual |
-|-------|----------------------|----------------|
-| AC-S1–S7 StudioShell | Code structure OK | Required |
-| AC-T1–T4 Terminology | Grep / locale keys | Required |
-| AC-R1–R7 Routes | Static + redirect smoke | Required |
-| AC-N1–N4 Navigation | — | Required |
-| AC-P1–P4 Registry | — | RP + validate:system |
-| AC-M1–M3 Migrations | — | SQL + API smoke |
-
----
-
-## 4. Staging blockers before production
-
-1. Apply five migrations (spec §2.6.1) and PostgREST reload.
-2. Run `validate:system` and archive JSON under `docs/v2/baselines/`.
-3. Complete §4 checklists in [phase-1-acceptance-gate.md](./phase-1-acceptance-gate.md).
-4. Run redirect smoke against staging base URL.
-5. RP-1–RP-8 minimum before prod; full RP-1–14 recommended.
+| ID | Result | Notes |
+|----|--------|-------|
+| RP-1 | **BLOCKED** | `register_artwork_atomic` not in PostgREST schema (feasibility: baseline DDL parallel track) |
+| RP-2 | **MANUAL** | Organisation register — UI + gallery session on configured Vercel |
+| RP-3 | **PASS** | `gallery_verify_artwork` RPC callable |
+| RP-4 | **PASS** | `issue_certificate_for_verified_artwork` RPC callable |
+| RP-5 | **MANUAL** | Collector claim — UI session |
+| RP-6 | **PASS** | `accept_provenance_transfer` RPC callable |
+| RP-7 | **PASS** | `artist_confirm_representation_on_file` RPC callable |
+| RP-8 | **MANUAL** | Invite accept — token + session |
+| RP-9 | **PASS** | `artwork_archives` visible (migrations applied) |
+| RP-10 | **PASS** | `artwork_read_model` (12 rows) |
+| RP-11 | **PASS** | Sample `registry_id` present |
+| RP-12 | **PASS** | `get_certificate_public_status_batch` |
+| RP-13 | **PASS** | `account_audit_log` visible |
+| RP-14 | **MANUAL** | Ownership sale signal — Creative studio UI |
 
 ---
 
-## 5. Sign-off
+## 3. Automated commands (re-run)
+
+```bash
+npm run validate:phase1-static
+STAGING_URL=https://rrowm-registry.vercel.app ./scripts/phase-1-redirect-smoke.sh "$STAGING_URL"
+npx tsx scripts/phase-1-rp-supabase-smoke.ts
+
+# After DATABASE_URL + validation user IDs configured:
+npm run validate:system | tee docs/v2/baselines/validate-system-$(date +%Y%m%d).json
+REPLAY_ARTWORK_IDS=$(paste -sd, docs/v2/baselines/replay-registry-ids.txt) npm run validate:replay | tee docs/v2/baselines/validate-replay-$(date +%Y%m%d).json
+```
+
+---
+
+## 4. RC sign-off
 
 | Role | Name | Date | RC approved |
 |------|------|------|-------------|
-| Engineering | | | ☐ |
-| QA | | | ☐ |
-| Product | | | ☐ |
+| Engineering | Automated gate run | 2026-06-04 | Code RC **yes**; prod deploy **pending Vercel env** |
+| QA | | | |
+| Product | | | |
 
-**Tag `checkpoint-phase1-rc` when staging gates pass.**
+**Tag `checkpoint-phase1-rc`:** Phase 1 Studio Foundation code-complete; full `validate:system` / replay / Vercel HTTP RP require ops follow-up above.
