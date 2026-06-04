@@ -1,6 +1,8 @@
-import { permanentRedirect } from "next/navigation";
+import { PersonalArchiveShell } from "@/components/archive/PersonalArchiveShell";
 
-/** Legacy `/personal-archive` → canonical archive (matrix R-05). */
-export default function PersonalArchiveLegacyRedirectPage() {
-  permanentRedirect("/studio/archive");
+export const dynamic = "force-dynamic";
+
+/** Canonical Personal Archive (matrix P-05). */
+export default function PersonalArchivePage() {
+  return <PersonalArchiveShell />;
 }
