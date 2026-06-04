@@ -6,7 +6,7 @@ import type { StudioNavTranslate } from "@/lib/studio-nav/types";
 export const PERSONAL_ARCHIVE_NAV_ITEM = {
   id: PERSONAL_ARCHIVE_NAV_ID,
   labelKey: "archive.nav.personalArchive" as const,
-  href: "/personal-archive",
+  href: "/studio/archive",
 };
 
 /** Appends Personal Archive link nav item (route, not in-page section). */

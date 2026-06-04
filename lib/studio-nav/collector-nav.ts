@@ -52,7 +52,7 @@ export function navigateToCollectorSection(
   } catch {
     // ignore
   }
-  deferredRouterPush(router, "/collector-studio");
+  deferredRouterPush(router, "/studio/collector");
 }
 
 export function consumePendingCollectorSection(): CollectorSectionId | null {

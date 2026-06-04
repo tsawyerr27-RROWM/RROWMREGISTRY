@@ -63,7 +63,7 @@ export function navigateToCreativeSection(
   } catch {
     // ignore
   }
-  deferredRouterPush(router, "/studio");
+  deferredRouterPush(router, "/studio/creative");
 }
 
 /** @deprecated Use navigateToCreativeSection */

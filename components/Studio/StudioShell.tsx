@@ -31,9 +31,9 @@ import { workspace } from "@/styles/workspace-design";
 export type StudioRole = "artist" | "collector" | "gallery";
 
 const SIGN_OUT_NEXT: Record<StudioRole, string> = {
-  artist: "/studio",
-  collector: "/collector-studio",
-  gallery: "/institutional-studio-dashboard",
+  artist: "/studio/creative",
+  collector: "/studio/collector",
+  gallery: "/studio/organisation",
 };
 
 const DEFAULT_ATMOSPHERE: Record<StudioRole, string> = {

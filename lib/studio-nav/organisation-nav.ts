@@ -72,7 +72,7 @@ export function navigateToOrganisationSection(
   } catch {
     // ignore
   }
-  deferredRouterPush(router, "/institutional-studio-dashboard");
+  deferredRouterPush(router, "/studio/organisation");
 }
 
 /** @deprecated Use navigateToOrganisationSection */

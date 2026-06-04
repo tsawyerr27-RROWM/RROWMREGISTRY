@@ -32,5 +32,5 @@ export async function resolvePostAuthRedirectPath(
     .eq("user_id", userId)
     .maybeSingle();
 
-  return homePathForRole(actor?.role) || "/studio";
+  return homePathForRole(actor?.role) || "/studio/creative";
 }

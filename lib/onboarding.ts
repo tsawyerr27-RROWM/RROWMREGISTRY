@@ -63,11 +63,11 @@ export function homePathForRole(
 ): string | null {
   switch (role) {
     case "gallery":
-      return "/institutional-studio-dashboard";
+      return "/studio/organisation";
     case "collector":
-      return "/collector-studio";
+      return "/studio/collector";
     case "artist":
-      return "/studio";
+      return "/studio/creative";
     default:
       return null;
   }
