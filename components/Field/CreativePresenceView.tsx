@@ -7,6 +7,7 @@ import { RegistryListPagination } from "@/components/Registry/RegistryListPagina
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import type { CreativePresencePageData } from "@/lib/field-creative-presence";
 import { fieldExplorerRecordsHref, fieldRecordHref, fieldVerifyHref, fieldVerifyRecordHref } from "@/lib/field-nav";
+import { registryLedgerHref } from "@/lib/registry-nav";
 import {
   artworkCardParticipationLabel,
 } from "@/lib/representation-language";
@@ -210,8 +211,8 @@ export function CreativePresenceView({ data }: Props) {
                 const yearMedium = [artwork.year, artwork.medium]
                   .filter(Boolean)
                   .join(" · ");
-                const artworkHref = `/artwork/${encodeURIComponent(artwork.registry_id)}`;
                 const recordHref = fieldRecordHref(artwork.registry_id);
+                const ledgerHref = registryLedgerHref(artwork.registry_id);
                 const verifyHref = fieldVerifyRecordHref(artwork.registry_id);
 
                 return (
@@ -270,10 +271,10 @@ export function CreativePresenceView({ data }: Props) {
                             View record
                           </Link>
                           <Link
-                            href={artworkHref}
+                            href={ledgerHref}
                             className="inline-flex flex-1 items-center justify-center rounded-2xl border border-neutral-200 bg-white px-4 py-2.5 text-xs font-medium text-neutral-800 transition hover:bg-neutral-50"
                           >
-                            View artwork
+                            Registry ledger
                           </Link>
                         </div>
                         <Link

@@ -11,9 +11,11 @@ import {
 import {
   fieldCreativeHref,
   fieldOrganisationHref,
+  fieldRecordHref,
   fieldVerifyHref,
   fieldVerifyRecordHref,
 } from "@/lib/field-nav";
+import { registryLedgerHref } from "@/lib/registry-nav";
 import { recordVerificationPendingLabel } from "@/lib/representation-language";
 
 type Props = {
@@ -58,7 +60,8 @@ export function FieldVerifyRecordView({ data }: Props) {
   } = data;
 
   const verifyPath = fieldVerifyRecordHref(artwork.registry_id);
-  const registryHref = `/registry/${encodeURIComponent(artwork.registry_id)}`;
+  const recordHref = fieldRecordHref(artwork.registry_id);
+  const ledgerHref = registryLedgerHref(artwork.registry_id);
 
   return (
     <div className="relative mx-auto w-full max-w-2xl px-4 py-10 sm:px-6 md:py-14 lg:px-8">
@@ -91,10 +94,10 @@ export function FieldVerifyRecordView({ data }: Props) {
             the record reaches verified status on the Registry ledger.
           </p>
           <Link
-            href={registryHref}
+            href={recordHref}
             className="mt-3 inline-block text-sm font-medium underline underline-offset-2"
           >
-            View Registry record
+            View Field record
           </Link>
         </div>
       ) : null}
@@ -191,10 +194,16 @@ export function FieldVerifyRecordView({ data }: Props) {
 
       <div className="mt-8 flex flex-wrap gap-3 text-sm font-medium">
         <Link
-          href={registryHref}
+          href={recordHref}
           className="rounded-xl border border-neutral-200 bg-white px-5 py-2.5 text-neutral-900 transition hover:bg-neutral-50"
         >
-          Registry record
+          Field record
+        </Link>
+        <Link
+          href={ledgerHref}
+          className="rounded-xl border border-neutral-200 bg-white px-5 py-2.5 text-neutral-900 transition hover:bg-neutral-50"
+        >
+          Registry ledger
         </Link>
         {artist?.slug ? (
           <Link

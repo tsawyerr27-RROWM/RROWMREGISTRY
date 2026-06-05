@@ -249,7 +249,6 @@ export function OrganisationPresenceView({ data }: Props) {
               const isVerified =
                 String(artwork.verification_status || "").toLowerCase() === "verified";
               const title = (artwork.title || "").trim() || "Untitled";
-              const artworkHref = `/artwork/${encodeURIComponent(artwork.registry_id)}`;
               const recordHref = fieldRecordHref(artwork.registry_id);
               const verifyHref = fieldVerifyRecordHref(artwork.registry_id);
               const creativeHref =

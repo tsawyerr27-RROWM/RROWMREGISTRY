@@ -62,6 +62,7 @@ export type MessageKey =
   | "field.explorer.records.filtered"
   | "field.explorer.records.verifiedScopeDefault"
   | "field.explorer.records.verifiedScopeAll"
+  | "field.explorer.records.link.verifyHub"
   | "field.explorer.records.filter.search"
   | "field.explorer.records.filter.searchPlaceholder"
   | "field.explorer.records.filter.creative"
@@ -139,6 +140,15 @@ export type MessageKey =
   | "field.presence.organisation.title"
   | "field.presence.collector.title"
   | "field.record.title"
+  | "field.record.discoveryHeading"
+  | "field.record.discoveryLede"
+  | "field.record.link.explorer"
+  | "field.record.link.verify"
+  | "field.record.link.ledger"
+  | "field.record.link.verifyHub"
+  | "field.record.link.creative"
+  | "field.record.link.organisation"
+  | "field.record.ledgerNote"
   | "footer.field"
   | "nav.signIn"
   | "nav.takePart"
@@ -360,6 +370,8 @@ export type MessageKey =
   | "registry.record.trust.unverifiedHeadline"
   | "registry.record.trust.unverifiedSub"
   | "registry.record.verificationBy"
+  | "registry.record.ledgerDiscoveryNote"
+  | "registry.record.openFieldRecord"
   | "registry.record.badge.certificate"
   | "registry.record.badge.noCertificate"
   | "registry.record.badge.locked"
@@ -1482,6 +1494,7 @@ const EN: Record<MessageKey, string> = {
   "field.explorer.records.filtered": "filters applied",
   "field.explorer.records.verifiedScopeDefault": "Verified records on file",
   "field.explorer.records.verifiedScopeAll": "All public records",
+  "field.explorer.records.link.verifyHub": "Verify hub",
   "field.explorer.records.filter.search": "Search",
   "field.explorer.records.filter.searchPlaceholder": "Title or Registry ID…",
   "field.explorer.records.filter.creative": "Creative",
@@ -1578,6 +1591,17 @@ const EN: Record<MessageKey, string> = {
   "field.presence.organisation.title": "Organisation profile",
   "field.presence.collector.title": "Collector profile",
   "field.record.title": "Registry record",
+  "field.record.discoveryHeading": "Continue exploring",
+  "field.record.discoveryLede":
+    "Move between the Record Explorer, public profiles, and verification — deterministic links only, not recommendations.",
+  "field.record.link.explorer": "Record Explorer",
+  "field.record.link.verify": "Check verification",
+  "field.record.link.ledger": "Open Registry ledger",
+  "field.record.link.verifyHub": "Verify hub",
+  "field.record.link.creative": "Creative profile",
+  "field.record.link.organisation": "Organisation profile",
+  "field.record.ledgerNote":
+    "This Field record summary reads from the Registry. The Registry ledger remains the system of record for verification, provenance, and chronology.",
   "ecosystem.workspace.studio": "Studio",
   "ecosystem.workspace.organisationStudio": "Organisation Studio",
   "getStarted.pathTooltip":
@@ -1827,6 +1851,9 @@ const EN: Record<MessageKey, string> = {
   "registry.record.trust.unverifiedHeadline": "Registry record",
   "registry.record.trust.unverifiedSub": "This work is registered but not yet verified.",
   "registry.record.verificationBy": "Verification recorded by {name}",
+  "registry.record.ledgerDiscoveryNote":
+    "This is the authoritative Registry ledger view. For Field discovery, open the public record summary.",
+  "registry.record.openFieldRecord": "Open Field record",
   "registry.record.badge.certificate": "Certificate",
   "registry.record.badge.noCertificate": "No certificate",
   "registry.record.badge.locked": "Locked",
@@ -3174,6 +3201,7 @@ const DE: Record<MessageKey, string> = {
   "field.explorer.records.filtered": "Filter aktiv",
   "field.explorer.records.verifiedScopeDefault": "Verifizierte Einträge auf Datei",
   "field.explorer.records.verifiedScopeAll": "Alle öffentlichen Einträge",
+  "field.explorer.records.link.verifyHub": "Verifizierungs-Hub",
   "field.explorer.records.filter.search": "Suche",
   "field.explorer.records.filter.searchPlaceholder": "Titel oder Registry-ID…",
   "field.explorer.records.filter.creative": "Creative",
@@ -3270,6 +3298,17 @@ const DE: Record<MessageKey, string> = {
   "field.presence.organisation.title": "Organisationsprofil",
   "field.presence.collector.title": "Sammlerprofil",
   "field.record.title": "Register-Eintrag",
+  "field.record.discoveryHeading": "Weiter entdecken",
+  "field.record.discoveryLede":
+    "Wechseln Sie zwischen Record Explorer, öffentlichen Profilen und Verifizierung — nur deterministische Links, keine Empfehlungen.",
+  "field.record.link.explorer": "Record Explorer",
+  "field.record.link.verify": "Verifizierung prüfen",
+  "field.record.link.ledger": "Register-Ledger öffnen",
+  "field.record.link.verifyHub": "Verifizierungs-Hub",
+  "field.record.link.creative": "Creative-Profil",
+  "field.record.link.organisation": "Organisationsprofil",
+  "field.record.ledgerNote":
+    "Diese Field-Zusammenfassung liest aus dem Register. Das Register-Ledger bleibt das System of Record für Verifizierung, Provenienz und Chronologie.",
   "ecosystem.workspace.studio": "Studio",
   "ecosystem.workspace.organisationStudio": "Organisations-Studio",
   "getStarted.pathTooltip":
@@ -3519,6 +3558,9 @@ const DE: Record<MessageKey, string> = {
   "registry.record.trust.unverifiedHeadline": "Registereintrag",
   "registry.record.trust.unverifiedSub": "Werk registriert, noch nicht verifiziert.",
   "registry.record.verificationBy": "Verifikation erfasst von {name}",
+  "registry.record.ledgerDiscoveryNote":
+    "Dies ist die maßgebliche Register-Ledger-Ansicht. Für Field-Entdeckung öffnen Sie die öffentliche Record-Zusammenfassung.",
+  "registry.record.openFieldRecord": "Field Record öffnen",
   "registry.record.badge.certificate": "Zertifikat",
   "registry.record.badge.noCertificate": "Kein Zertifikat",
   "registry.record.badge.locked": "Gesperrt",
@@ -4742,6 +4784,7 @@ const FR: Record<MessageKey, string> = {
   "field.explorer.records.filtered": "filtres actifs",
   "field.explorer.records.verifiedScopeDefault": "Entrées vérifiées au registre",
   "field.explorer.records.verifiedScopeAll": "Toutes les entrées publiques",
+  "field.explorer.records.link.verifyHub": "Hub de vérification",
   "field.explorer.records.filter.search": "Rechercher",
   "field.explorer.records.filter.searchPlaceholder": "Titre ou Registry ID…",
   "field.explorer.records.filter.creative": "Creative",
@@ -4838,6 +4881,17 @@ const FR: Record<MessageKey, string> = {
   "field.presence.organisation.title": "Profil Organisation",
   "field.presence.collector.title": "Profil Collectionneur",
   "field.record.title": "Entrée du Registre",
+  "field.record.discoveryHeading": "Poursuivre l’exploration",
+  "field.record.discoveryLede":
+    "Naviguez entre l’explorateur d’entrées, les profils publics et la vérification — liens déterministes uniquement, pas de recommandations.",
+  "field.record.link.explorer": "Explorateur d’entrées",
+  "field.record.link.verify": "Vérifier le statut",
+  "field.record.link.ledger": "Ouvrir le registre ledger",
+  "field.record.link.verifyHub": "Hub de vérification",
+  "field.record.link.creative": "Profil Creative",
+  "field.record.link.organisation": "Profil Organisation",
+  "field.record.ledgerNote":
+    "Ce résumé Field lit le Registre. Le ledger du Registre reste le système de référence pour la vérification, la provenance et la chronologie.",
   "ecosystem.workspace.studio": "Studio",
   "ecosystem.workspace.organisationStudio": "Studio Organisation",
   "getStarted.pathTooltip":
@@ -5087,6 +5141,9 @@ const FR: Record<MessageKey, string> = {
   "registry.record.trust.unverifiedHeadline": "Fiche registre",
   "registry.record.trust.unverifiedSub": "Œuvre enregistrée, pas encore vérifiée.",
   "registry.record.verificationBy": "Vérification enregistrée par {name}",
+  "registry.record.ledgerDiscoveryNote":
+    "Il s’agit de la vue ledger autoritaire du Registre. Pour la découverte Field, ouvrez le résumé public de l’entrée.",
+  "registry.record.openFieldRecord": "Ouvrir l’entrée Field",
   "registry.record.badge.certificate": "Certificat",
   "registry.record.badge.noCertificate": "Pas de certificat",
   "registry.record.badge.locked": "Verrouillée",
@@ -6313,6 +6370,7 @@ const JA: Record<MessageKey, string> = {
   "field.explorer.records.filtered": "フィルター適用中",
   "field.explorer.records.verifiedScopeDefault": "記録上 verified のレコード",
   "field.explorer.records.verifiedScopeAll": "すべての公開レコード",
+  "field.explorer.records.link.verifyHub": "検証ハブ",
   "field.explorer.records.filter.search": "検索",
   "field.explorer.records.filter.searchPlaceholder": "タイトルまたは Registry ID…",
   "field.explorer.records.filter.creative": "Creative",
@@ -6409,6 +6467,17 @@ const JA: Record<MessageKey, string> = {
   "field.presence.organisation.title": "Organisation プロフィール",
   "field.presence.collector.title": "コレクタープロフィール",
   "field.record.title": "レジストリレコード",
+  "field.record.discoveryHeading": "探索を続ける",
+  "field.record.discoveryLede":
+    "レコードエクスプローラー、公開プロフィール、検証の間を移動 — 決定論的リンクのみ。おすすめはありません。",
+  "field.record.link.explorer": "レコードエクスプローラー",
+  "field.record.link.verify": "検証を確認",
+  "field.record.link.ledger": "レジストリ ledger を開く",
+  "field.record.link.verifyHub": "検証ハブ",
+  "field.record.link.creative": "Creative プロフィール",
+  "field.record.link.organisation": "Organisation プロフィール",
+  "field.record.ledgerNote":
+    "この Field レコード概要はレジストリから読み取ります。レジストリ ledger は検証、来歴、年表の正本です。",
   "ecosystem.workspace.studio": "Studio",
   "ecosystem.workspace.organisationStudio": "組織 Studio",
   "getStarted.pathTooltip":
@@ -6651,6 +6720,9 @@ const JA: Record<MessageKey, string> = {
   "registry.record.trust.unverifiedHeadline": "レジストリ記録",
   "registry.record.trust.unverifiedSub": "登録済みですが、まだ検証されていません。",
   "registry.record.verificationBy": "検証記録：{name}",
+  "registry.record.ledgerDiscoveryNote":
+    "これは正本のレジストリ ledger ビューです。Field での発見には公開レコード概要を開いてください。",
+  "registry.record.openFieldRecord": "Field レコードを開く",
   "registry.record.badge.certificate": "証明書",
   "registry.record.badge.noCertificate": "証明書なし",
   "registry.record.badge.locked": "ロック",

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 
 import {
@@ -8,10 +10,13 @@ import {
 } from "@/lib/field-verify-record";
 import type { FieldRecordPageData } from "@/lib/field-record-page";
 import {
+  fieldExplorerRecordsHref,
   fieldVerifyHref,
   fieldVerifyRecordHref,
 } from "@/lib/field-nav";
+import { registryLedgerHref } from "@/lib/registry-nav";
 import { recordVerificationPendingLabel } from "@/lib/representation-language";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 type Props = {
   data: FieldRecordPageData;
@@ -35,6 +40,7 @@ function TrustBand({
 }
 
 export function FieldRecordView({ data }: Props) {
+  const { t } = useLocalePreferences();
   const {
     artwork,
     recordVerified,
@@ -53,14 +59,14 @@ export function FieldRecordView({ data }: Props) {
   } = data;
 
   const title = artwork.title?.trim() || "Registry record";
-  const registryHref = `/registry/${encodeURIComponent(artwork.registry_id)}`;
+  const ledgerHref = registryLedgerHref(artwork.registry_id);
   const verifyHref = fieldVerifyRecordHref(artwork.registry_id);
   const yearMedium = [year, medium].filter(Boolean).join(" · ");
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 md:py-14 lg:px-8">
       <p className="text-xs font-medium uppercase tracking-[0.14em] text-neutral-500">
-        Registry record
+        {t("field.record.title")}
       </p>
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-start">
@@ -157,22 +163,22 @@ export function FieldRecordView({ data }: Props) {
 
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link
-              href={registryHref}
+              href={verifyHref}
               className="inline-flex items-center justify-center rounded-2xl bg-neutral-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800"
             >
-              Open Registry ledger
+              {t("field.record.link.verify")}
             </Link>
             <Link
-              href={verifyHref}
+              href={ledgerHref}
               className="inline-flex items-center justify-center rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
             >
-              Check verification
+              {t("field.record.link.ledger")}
             </Link>
             <Link
               href={fieldVerifyHref()}
               className="inline-flex items-center justify-center rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
             >
-              Verify hub
+              {t("field.record.link.verifyHub")}
             </Link>
           </div>
         </div>
@@ -193,11 +199,42 @@ export function FieldRecordView({ data }: Props) {
         </section>
       ) : null}
 
-      <section className="mx-auto mt-16 max-w-2xl rounded-3xl border border-black/[0.06] bg-white/70 px-8 py-10 text-center shadow-sm md:mt-20">
+      <section className="mt-14 rounded-[1.25rem] border border-neutral-900/[0.06] bg-white/70 p-6 shadow-sm md:p-8">
+        <h2 className="font-serif text-xl font-normal tracking-tight text-neutral-950">
+          {t("field.record.discoveryHeading")}
+        </h2>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-neutral-600">
+          {t("field.record.discoveryLede")}
+        </p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            href={fieldExplorerRecordsHref()}
+            className="inline-flex rounded-2xl border border-neutral-200 bg-white px-5 py-2.5 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
+          >
+            {t("field.record.link.explorer")}
+          </Link>
+          {creativeHref ? (
+            <Link
+              href={creativeHref}
+              className="inline-flex rounded-2xl border border-neutral-200 bg-white px-5 py-2.5 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
+            >
+              {t("field.record.link.creative")}
+            </Link>
+          ) : null}
+          {organisationHref ? (
+            <Link
+              href={organisationHref}
+              className="inline-flex rounded-2xl border border-neutral-200 bg-white px-5 py-2.5 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
+            >
+              {t("field.record.link.organisation")}
+            </Link>
+          ) : null}
+        </div>
+      </section>
+
+      <section className="mx-auto mt-12 max-w-2xl rounded-3xl border border-black/[0.06] bg-white/70 px-8 py-10 text-center shadow-sm md:mt-16">
         <p className="text-base leading-relaxed text-neutral-700">
-          This Field record summary reads from the Registry. The canonical ledger
-          at the Registry route remains the system of record for verification,
-          provenance, and chronology.
+          {t("field.record.ledgerNote")}
         </p>
       </section>
     </main>

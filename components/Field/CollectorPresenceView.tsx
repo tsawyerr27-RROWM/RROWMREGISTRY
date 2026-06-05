@@ -7,6 +7,7 @@ import {
   fieldVerifyHref,
   fieldVerifyRecordHref,
 } from "@/lib/field-nav";
+import { registryLedgerHref } from "@/lib/registry-nav";
 
 type Props = {
   data: CollectorPresencePageData;
@@ -180,7 +181,7 @@ export function CollectorPresenceView({ data }: Props) {
           <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {works.map((work) => {
               const title = (work.title || "").trim() || "Untitled";
-              const registryHref = `/registry/${encodeURIComponent(work.registry_id)}`;
+              const ledgerHref = registryLedgerHref(work.registry_id);
               const verifyHref = fieldVerifyRecordHref(work.registry_id);
 
               return (
@@ -276,7 +277,7 @@ export function CollectorPresenceView({ data }: Props) {
                           </Link>
                         </div>
                         <Link
-                          href={registryHref}
+                          href={ledgerHref}
                           className="text-center text-[11px] font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500"
                         >
                           Registry ledger

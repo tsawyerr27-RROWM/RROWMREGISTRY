@@ -6,6 +6,7 @@ import {
   fieldVerifyHref,
   fieldVerifyRecordHref,
 } from "@/lib/field-nav";
+import { registryLedgerHref } from "@/lib/registry-nav";
 
 type Props = {
   row: RecordExplorerRow;
@@ -39,7 +40,7 @@ function verificationSummary(row: RecordExplorerRow): string {
 export function RecordExplorerCard({ row }: Props) {
   const title = (row.title || "").trim() || "Untitled";
   const verifyHref = fieldVerifyRecordHref(row.registry_id);
-  const registryHref = `/registry/${encodeURIComponent(row.registry_id)}`;
+  const ledgerHref = registryLedgerHref(row.registry_id);
   const yearMedium = [row.year, row.medium].filter(Boolean).join(" · ");
 
   return (
@@ -159,7 +160,7 @@ export function RecordExplorerCard({ row }: Props) {
           </div>
           <div className="flex flex-wrap justify-center gap-3 text-[11px]">
             <Link
-              href={registryHref}
+              href={ledgerHref}
               className="font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500"
             >
               Registry ledger

@@ -17,6 +17,7 @@ import {
   type OwnershipSystemStatus,
 } from "@/lib/ownership-ledger";
 import { translateProvenanceInsight } from "@/lib/archival-provenance-i18n";
+import { fieldCreativeHref, fieldRecordHref } from "@/lib/field-nav";
 
 export type RegistryTrustKind =
   | "revoked"
@@ -249,6 +250,18 @@ export function PublicRegistryRecordView({
           </div>
         </div>
 
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neutral-900/[0.06] bg-white/70 px-4 py-3 shadow-sm">
+          <p className="text-sm text-neutral-600">
+            {t("registry.record.ledgerDiscoveryNote")}
+          </p>
+          <Link
+            href={fieldRecordHref(artwork.registry_id)}
+            className="inline-flex rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
+          >
+            {t("registry.record.openFieldRecord")}
+          </Link>
+        </div>
+
         <div className="mb-16 grid gap-10 lg:grid-cols-12 lg:gap-14 lg:items-start">
           <div className="lg:col-span-7">
             <div className="liquid-glass-tile overflow-hidden rounded-[1.65rem] shadow-[0_28px_72px_-32px_rgba(15,23,42,0.18)] ring-1 ring-black/[0.06]">
@@ -280,7 +293,7 @@ export function PublicRegistryRecordView({
               <p className="mt-4 text-lg text-neutral-700">
                 {artistSlug ? (
                   <Link
-                    href={`/artist/${artistSlug}`}
+                    href={fieldCreativeHref(artistSlug)}
                     className="transition hover:text-neutral-900 hover:underline"
                   >
                     {artistName}
