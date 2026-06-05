@@ -26,8 +26,9 @@ This folder holds the **planning and certification stack** for RROWM V2. **Phase
 | P2-1 | [Phase 2 Blueprint — The Field](./phase-2-the-field-blueprint.md) | **DRAFT** | Strategic product architecture for The Field as third surface; phase breakdown 2a–2e |
 | P2-2 | [Phase 2 Architecture Decisions](./phase-2-architecture-decisions.md) | **DRAFT** | Founder-level ADRs; must be DECIDED before 2A implementation |
 | P2-3 | [Phase 2A Field Foundations Spec](./phase-2a-field-foundations-spec.md) | **LOCKED DRAFT** | First Field release: public profiles, explorers, verification visibility, URL migration; no opportunities |
+| P2-4 | [Phase 2A Founder Decisions Freeze](./phase-2a-founder-decisions-freeze.md) | **FROZEN** | Settled founder decisions before 2A implementation; supersedes PENDING ADR-13, 15, 17, 27–32 for 2A scope |
 
-**Phase 2 authority chain:** Blueprint v1.1 (APPROVED) → Phase 2 Blueprint (DRAFT) → Phase 2A Spec (LOCKED DRAFT) → ADRs for unresolved founder decisions. Phase 1 freeze remains binding for delivered Studio scope.
+**Phase 2 authority chain:** Blueprint v1.1 (APPROVED) → Phase 2 Blueprint (DRAFT) → Phase 2A Founder Decisions Freeze (FROZEN) → Phase 2A Spec (LOCKED DRAFT). ADR document remains catalogue; 2A-blocking items are **DECIDED** per founder freeze. Phase 1 freeze remains binding for delivered Studio scope.
 
 ## Interpretation rules
 
@@ -40,7 +41,8 @@ This folder holds the **planning and certification stack** for RROWM V2. **Phase
 7. **Post-Certification Remediation (ACTIVE)** is the authoritative backlog for engineering work **after** production certification. It does not expand Phase 1 Spec scope. Waiver lift and harness fixes are tracked in [post-certification-remediation.md](./post-certification-remediation.md); waiver §7 R-1–R-6 defer to that roadmap for prioritization.
 8. **Phase 1 Scope Freeze (FROZEN)** is the delivered-scope snapshot after production certification. It summarizes what shipped at `checkpoint-phase1-production`; it does **not** replace the LOCKED Spec for acceptance criteria detail. Scope expansion or Field delivery requires Spec/Blueprint unlock — not silent edits to the freeze doc.
 9. **Phase 2 Blueprint (DRAFT)** bounds Field work. Does not unlock Briefs, Programmes, Commissions, or production workflows until later Phase 2 sub-specs. Contradictions with Blueprint v1.1 require Blueprint version bump — not silent Phase 2 edits.
-10. **Phase 2A Spec (LOCKED DRAFT)** is the **only** authoritative scope for the first Field implementation release. Engineering must satisfy AC-FC*, AC-FO*, AC-FK*, AC-XC*, AC-XO*, AC-FV*, AC-FL*, AC-FS*, AC-FP*, AC-FM* as written. ADR 27–32 must be DECIDED (or accepted per spec) before promotion to **LOCKED**. Explicit §14 exclusions are non-negotiable in 2A.
+10. **Phase 2A Spec (LOCKED DRAFT)** is the **only** authoritative scope for the first Field implementation release. Engineering must satisfy AC-FC*, AC-FO*, AC-FK*, AC-XC*, AC-XO*, AC-FV*, AC-FL*, AC-FS*, AC-FP*, AC-FM* as written. Explicit §14 exclusions are non-negotiable in 2A.
+11. **Phase 2A Founder Decisions Freeze (FROZEN)** settles product philosophy for 2A (presence, explorers, trust, URLs, search, anti-features). Implementation must not re-litigate frozen §1–§10 without unlock. Conflicts between spec and freeze → **freeze prevails** on philosophy; spec prevails on acceptance criteria detail.
 
 ## Unlock procedure
 
@@ -58,7 +60,8 @@ To change a frozen document:
 | Phase 1 Scope Freeze | Phase 1 Spec unlock + product + engineering lead; documents delivered-scope delta only |
 | Phase 2 Blueprint | Founder/product approval; promote DRAFT → APPROVED with version note |
 | Phase 2 Architecture Decisions | Founder marks ADRs DECIDED; amend recommendations via ADR revision |
-| Phase 2A Field Foundations Spec | Product + engineering lead; LOCKED DRAFT → LOCKED after ADR gate; explicit unlock for scope delta |
+| Phase 2A Field Foundations Spec | Product + engineering lead; LOCKED DRAFT → LOCKED after founder freeze + sign-off; explicit unlock for scope delta |
+| Phase 2A Founder Decisions Freeze | Founder + product; version bump for any §1–§10 change |
 
 ## Related operational docs
 
@@ -66,6 +69,7 @@ To change a frozen document:
 - [Phase 2 Field blueprint](./phase-2-the-field-blueprint.md) — The Field architecture (DRAFT)
 - [Phase 2 architecture decisions](./phase-2-architecture-decisions.md) — Founder ADRs (DRAFT)
 - [Phase 2A Field foundations spec](./phase-2a-field-foundations-spec.md) — First Field release scope (LOCKED DRAFT)
+- [Phase 2A founder decisions freeze](./phase-2a-founder-decisions-freeze.md) — Settled 2A founder decisions (FROZEN)
 - [Post-certification remediation](./post-certification-remediation.md) — Phase 1.1 harness, replay, integrity, and reproducibility backlog
 - [Phase 1 production signoff](./phase-1-production-signoff.md)
 - [Account lifecycle deployment](../account-lifecycle-deployment.md)
@@ -93,3 +97,4 @@ To change a frozen document:
 | `phase-2-the-field-blueprint.md` | DRAFT |
 | `phase-2-architecture-decisions.md` | DRAFT |
 | `phase-2a-field-foundations-spec.md` | LOCKED DRAFT |
+| `phase-2a-founder-decisions-freeze.md` | FROZEN |
