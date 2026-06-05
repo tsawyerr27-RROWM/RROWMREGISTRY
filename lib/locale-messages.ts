@@ -29,6 +29,25 @@ export type MessageKey =
   | "field.explorer.tab.organisations"
   | "field.explorer.tab.records"
   | "field.explorer.hub.title"
+  | "field.explorer.creatives.headline"
+  | "field.explorer.creatives.lede"
+  | "field.explorer.creatives.searching"
+  | "field.explorer.creatives.filtered"
+  | "field.explorer.creatives.filter.search"
+  | "field.explorer.creatives.filter.searchPlaceholder"
+  | "field.explorer.creatives.filter.practice"
+  | "field.explorer.creatives.filter.allPractices"
+  | "field.explorer.creatives.filter.verification"
+  | "field.explorer.creatives.filter.allCreatives"
+  | "field.explorer.creatives.filter.verifiedOnly"
+  | "field.explorer.creatives.filter.sort"
+  | "field.explorer.creatives.filter.apply"
+  | "field.explorer.creatives.sort.nameAsc"
+  | "field.explorer.creatives.sort.nameDesc"
+  | "field.explorer.creatives.sort.recent"
+  | "field.explorer.creatives.empty.none"
+  | "field.explorer.creatives.empty.filtered"
+  | "field.explorer.creatives.empty.clearFilters"
   | "field.stub.preparing"
   | "field.stub.backHome"
   | "field.verify.title"
@@ -1341,6 +1360,28 @@ const EN: Record<MessageKey, string> = {
   "field.explorer.tab.organisations": "Organisations",
   "field.explorer.tab.records": "Records",
   "field.explorer.hub.title": "Explorer",
+  "field.explorer.creatives.headline": "Discover Creatives",
+  "field.explorer.creatives.lede":
+    "Browse public Creative profiles on The Field — practice, verification on file, and registry footprint. Discovery only; not a marketplace or recruitment surface.",
+  "field.explorer.creatives.searching": "searching",
+  "field.explorer.creatives.filtered": "filters applied",
+  "field.explorer.creatives.filter.search": "Search by name",
+  "field.explorer.creatives.filter.searchPlaceholder": "Creative name…",
+  "field.explorer.creatives.filter.practice": "Practice",
+  "field.explorer.creatives.filter.allPractices": "All practices",
+  "field.explorer.creatives.filter.verification": "Verification",
+  "field.explorer.creatives.filter.allCreatives": "All Creatives",
+  "field.explorer.creatives.filter.verifiedOnly": "Verified on file",
+  "field.explorer.creatives.filter.sort": "Sort",
+  "field.explorer.creatives.filter.apply": "Apply",
+  "field.explorer.creatives.sort.nameAsc": "Name A–Z",
+  "field.explorer.creatives.sort.nameDesc": "Name Z–A",
+  "field.explorer.creatives.sort.recent": "Recently updated",
+  "field.explorer.creatives.empty.none":
+    "No public Creatives yet. Participants can enable a public profile in Studio.",
+  "field.explorer.creatives.empty.filtered":
+    "No Creatives match your search or filters. Try clearing filters or choosing a different practice.",
+  "field.explorer.creatives.empty.clearFilters": "Clear filters",
   "field.stub.preparing":
     "This route is scaffolded for Phase 2A. Content and data will ship in the next PR1 steps.",
   "field.stub.backHome": "Back to The Field",
@@ -2907,6 +2948,28 @@ const DE: Record<MessageKey, string> = {
   "field.explorer.tab.organisations": "Organisationen",
   "field.explorer.tab.records": "Einträge",
   "field.explorer.hub.title": "Explorer",
+  "field.explorer.creatives.headline": "Creatives entdecken",
+  "field.explorer.creatives.lede":
+    "Öffentliche Creative-Profile auf The Field — Praxis, Verifizierung und Register-Footprint. Nur Entdeckung; kein Marktplatz.",
+  "field.explorer.creatives.searching": "Suche",
+  "field.explorer.creatives.filtered": "Filter aktiv",
+  "field.explorer.creatives.filter.search": "Nach Name suchen",
+  "field.explorer.creatives.filter.searchPlaceholder": "Name…",
+  "field.explorer.creatives.filter.practice": "Praxis",
+  "field.explorer.creatives.filter.allPractices": "Alle Praktiken",
+  "field.explorer.creatives.filter.verification": "Verifizierung",
+  "field.explorer.creatives.filter.allCreatives": "Alle Creatives",
+  "field.explorer.creatives.filter.verifiedOnly": "Verifiziert auf Datei",
+  "field.explorer.creatives.filter.sort": "Sortierung",
+  "field.explorer.creatives.filter.apply": "Anwenden",
+  "field.explorer.creatives.sort.nameAsc": "Name A–Z",
+  "field.explorer.creatives.sort.nameDesc": "Name Z–A",
+  "field.explorer.creatives.sort.recent": "Zuletzt aktualisiert",
+  "field.explorer.creatives.empty.none":
+    "Noch keine öffentlichen Creatives. Profile können im Studio aktiviert werden.",
+  "field.explorer.creatives.empty.filtered":
+    "Keine Creatives entsprechen der Suche oder den Filtern.",
+  "field.explorer.creatives.empty.clearFilters": "Filter zurücksetzen",
   "field.stub.preparing":
     "Diese Route ist für Phase 2A vorbereitet. Inhalte und Daten folgen in den nächsten PR1-Schritten.",
   "field.stub.backHome": "Zurück zu The Field",
@@ -4349,6 +4412,28 @@ const FR: Record<MessageKey, string> = {
   "field.explorer.tab.organisations": "Organisations",
   "field.explorer.tab.records": "Entrées",
   "field.explorer.hub.title": "Explorateur",
+  "field.explorer.creatives.headline": "Découvrir les Creatives",
+  "field.explorer.creatives.lede":
+    "Parcourez les profils Creative publics sur The Field — pratique, vérification et empreinte registre. Découverte uniquement.",
+  "field.explorer.creatives.searching": "recherche",
+  "field.explorer.creatives.filtered": "filtres actifs",
+  "field.explorer.creatives.filter.search": "Rechercher par nom",
+  "field.explorer.creatives.filter.searchPlaceholder": "Nom…",
+  "field.explorer.creatives.filter.practice": "Pratique",
+  "field.explorer.creatives.filter.allPractices": "Toutes les pratiques",
+  "field.explorer.creatives.filter.verification": "Vérification",
+  "field.explorer.creatives.filter.allCreatives": "Tous les Creatives",
+  "field.explorer.creatives.filter.verifiedOnly": "Vérifié au registre",
+  "field.explorer.creatives.filter.sort": "Tri",
+  "field.explorer.creatives.filter.apply": "Appliquer",
+  "field.explorer.creatives.sort.nameAsc": "Nom A–Z",
+  "field.explorer.creatives.sort.nameDesc": "Nom Z–A",
+  "field.explorer.creatives.sort.recent": "Récemment mis à jour",
+  "field.explorer.creatives.empty.none":
+    "Aucun Creative public pour le moment. Activez un profil dans le Studio.",
+  "field.explorer.creatives.empty.filtered":
+    "Aucun Creative ne correspond à votre recherche ou filtres.",
+  "field.explorer.creatives.empty.clearFilters": "Effacer les filtres",
   "field.stub.preparing":
     "Cette route est préparée pour la Phase 2A. Le contenu et les données suivront dans les prochaines étapes PR1.",
   "field.stub.backHome": "Retour à The Field",
@@ -5794,6 +5879,28 @@ const JA: Record<MessageKey, string> = {
   "field.explorer.tab.organisations": "Organisations",
   "field.explorer.tab.records": "Records",
   "field.explorer.hub.title": "エクスプローラー",
+  "field.explorer.creatives.headline": "Creative を探す",
+  "field.explorer.creatives.lede":
+    "The Field 上の公開 Creative プロフィールを閲覧 — プラクティス、検証、レジストリの footprint。発見のみ。",
+  "field.explorer.creatives.searching": "検索",
+  "field.explorer.creatives.filtered": "フィルター適用中",
+  "field.explorer.creatives.filter.search": "名前で検索",
+  "field.explorer.creatives.filter.searchPlaceholder": "名前…",
+  "field.explorer.creatives.filter.practice": "プラクティス",
+  "field.explorer.creatives.filter.allPractices": "すべて",
+  "field.explorer.creatives.filter.verification": "検証",
+  "field.explorer.creatives.filter.allCreatives": "すべての Creative",
+  "field.explorer.creatives.filter.verifiedOnly": "記録上 verified",
+  "field.explorer.creatives.filter.sort": "並び替え",
+  "field.explorer.creatives.filter.apply": "適用",
+  "field.explorer.creatives.sort.nameAsc": "名前 A–Z",
+  "field.explorer.creatives.sort.nameDesc": "名前 Z–A",
+  "field.explorer.creatives.sort.recent": "最近更新",
+  "field.explorer.creatives.empty.none":
+    "公開 Creative はまだありません。Studio でプロフィールを有効にできます。",
+  "field.explorer.creatives.empty.filtered":
+    "条件に一致する Creative がありません。",
+  "field.explorer.creatives.empty.clearFilters": "フィルターをクリア",
   "field.stub.preparing":
     "このルートは Phase 2A 向けに用意されています。コンテンツとデータは次の PR1 ステップで提供されます。",
   "field.stub.backHome": "The Field に戻る",
