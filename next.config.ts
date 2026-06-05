@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/gallery/:slug",
-        destination: "/institutional-studio/:slug",
+        destination: "/field/organisation/:slug",
         permanent: true,
       },
       {
