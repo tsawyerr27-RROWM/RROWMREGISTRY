@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { OrganisationExplorerFilters } from "@/components/Field/OrganisationExplorerFilters";
+import { FieldExplorerDiscoveryStrip } from "@/components/Field/FieldExplorerDiscoveryStrip";
 import { OrganisationExplorerPagination } from "@/components/Field/OrganisationExplorerPagination";
 import { OrganisationPresenceCard } from "@/components/Field/OrganisationPresenceCard";
 import type { OrganisationExplorerRow } from "@/lib/fetch-organisation-explorer-list";
@@ -110,6 +111,8 @@ export function OrganisationExplorerContent({
           />
         </>
       )}
+
+      <FieldExplorerDiscoveryStrip activeTab="organisations" />
     </div>
   );
 }

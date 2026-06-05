@@ -36,6 +36,13 @@ export type MessageKey =
   | "field.explorer.hub.searchHint"
   | "field.explorer.hub.searchRequired"
   | "field.explorer.hub.recordsCard"
+  | "field.explorer.link.verifyHub"
+  | "field.explorer.wayfinding.heading"
+  | "field.explorer.wayfinding.lede"
+  | "field.explorer.wayfinding.hub"
+  | "field.explorer.records.orientation"
+  | "field.explorer.creatives.orientation"
+  | "field.explorer.organisations.orientation"
   | "field.explorer.organisations.headline"
   | "field.explorer.organisations.lede"
   | "field.explorer.organisations.searching"
@@ -105,6 +112,7 @@ export type MessageKey =
   | "field.explorer.creatives.empty.none"
   | "field.explorer.creatives.empty.filtered"
   | "field.explorer.creatives.empty.clearFilters"
+  | "field.explorer.creatives.empty.browseAll"
   | "field.stub.preparing"
   | "field.stub.backHome"
   | "field.verify.title"
@@ -1511,7 +1519,7 @@ const EN: Record<MessageKey, string> = {
   "field.explorer.tab.records": "Records",
   "field.explorer.hub.title": "Explorer",
   "field.explorer.hub.lede":
-    "Browse public Creatives, Organisations, and Registry records. Discovery follows alphabetical order and your filters — not recommendations or paid placement.",
+    "Browse Registry records, public Creatives, and Organisations. Discovery follows your filters and alphabetical order — not recommendations or paid placement.",
   "field.explorer.hub.searchLabel": "Search The Field",
   "field.explorer.hub.searchPlaceholder": "Registry ID, title, or name…",
   "field.explorer.hub.searchSubmit": "Search",
@@ -1519,6 +1527,14 @@ const EN: Record<MessageKey, string> = {
     "Registry IDs open the Field Record. Other terms search Registry records.",
   "field.explorer.hub.searchRequired": "Enter a Registry ID or search term.",
   "field.explorer.hub.recordsCard": "Browse Registry records",
+  "field.explorer.link.verifyHub": "Verify hub",
+  "field.explorer.wayfinding.heading": "Continue exploring",
+  "field.explorer.wayfinding.lede":
+    "Move between Registry records, public profiles, and verification — deterministic links only, not recommendations.",
+  "field.explorer.wayfinding.hub": "Explorer hub",
+  "field.explorer.records.orientation": "Browse Registry records on file.",
+  "field.explorer.creatives.orientation": "Discover Creatives and how they work.",
+  "field.explorer.organisations.orientation": "Browse public Organisations.",
   "field.explorer.organisations.headline": "Discover Organisations",
   "field.explorer.organisations.lede":
     "Public Organisation profiles with registry footprint, verification status, and represented Creatives. No rankings or sponsored placement.",
@@ -1663,6 +1679,7 @@ const EN: Record<MessageKey, string> = {
   "field.explorer.creatives.empty.filtered":
     "No Creatives match your search or filters. Try clearing filters or choosing a different practice.",
   "field.explorer.creatives.empty.clearFilters": "Clear filters",
+  "field.explorer.creatives.empty.browseAll": "Browse all Creatives",
   "field.stub.preparing":
     "This route is scaffolded for Phase 2A. Content and data will ship in the next PR1 steps.",
   "field.stub.backHome": "Back to The Field",
@@ -3284,7 +3301,7 @@ const DE: Record<MessageKey, string> = {
   "field.explorer.tab.records": "Einträge",
   "field.explorer.hub.title": "Explorer",
   "field.explorer.hub.lede":
-    "Öffentliche Creatives, Organisationen und Register-Einträge durchsuchen. Entdeckung folgt alphabetischer Reihenfolge und Ihren Filtern — keine Empfehlungen oder bezahlte Platzierung.",
+    "Register-Einträge, öffentliche Creatives und Organisationen durchsuchen. Entdeckung folgt Ihren Filtern und alphabetischer Reihenfolge — keine Empfehlungen oder bezahlte Platzierung.",
   "field.explorer.hub.searchLabel": "The Field durchsuchen",
   "field.explorer.hub.searchPlaceholder": "Register-ID, Titel oder Name…",
   "field.explorer.hub.searchSubmit": "Suchen",
@@ -3292,6 +3309,14 @@ const DE: Record<MessageKey, string> = {
     "Register-IDs öffnen den Field Record. Andere Begriffe durchsuchen Register-Einträge.",
   "field.explorer.hub.searchRequired": "Register-ID oder Suchbegriff eingeben.",
   "field.explorer.hub.recordsCard": "Register-Einträge durchsuchen",
+  "field.explorer.link.verifyHub": "Verifizierungs-Hub",
+  "field.explorer.wayfinding.heading": "Weiter erkunden",
+  "field.explorer.wayfinding.lede":
+    "Wechseln Sie zwischen Register-Einträgen, öffentlichen Profilen und Verifizierung — nur deterministische Links, keine Empfehlungen.",
+  "field.explorer.wayfinding.hub": "Explorer-Hub",
+  "field.explorer.records.orientation": "Register-Einträge auf Datei durchsuchen.",
+  "field.explorer.creatives.orientation": "Creatives und ihre Arbeitsweise entdecken.",
+  "field.explorer.organisations.orientation": "Öffentliche Organisationen durchsuchen.",
   "field.explorer.organisations.headline": "Organisationen entdecken",
   "field.explorer.organisations.lede":
     "Öffentliche Organisationsprofile mit Register-Footprint, Verifizierungsstatus und vertretenen Creatives. Keine Rankings oder gesponserte Platzierung.",
@@ -3436,6 +3461,7 @@ const DE: Record<MessageKey, string> = {
   "field.explorer.creatives.empty.filtered":
     "Keine Creatives entsprechen der Suche oder den Filtern.",
   "field.explorer.creatives.empty.clearFilters": "Filter zurücksetzen",
+  "field.explorer.creatives.empty.browseAll": "Alle Creatives durchsuchen",
   "field.stub.preparing":
     "Diese Route ist für Phase 2A vorbereitet. Inhalte und Daten folgen in den nächsten PR1-Schritten.",
   "field.stub.backHome": "Zurück zu The Field",
@@ -4933,7 +4959,7 @@ const FR: Record<MessageKey, string> = {
   "field.explorer.tab.records": "Entrées",
   "field.explorer.hub.title": "Explorateur",
   "field.explorer.hub.lede":
-    "Parcourez les Creatives, Organisations et entrées du registre publics. La découverte suit l’ordre alphabétique et vos filtres — pas de recommandations ni de placement payant.",
+    "Parcourez les entrées du Registre, les Creatives publics et les Organisations. La découverte suit vos filtres et l’ordre alphabétique — pas de recommandations ni de placement payant.",
   "field.explorer.hub.searchLabel": "Rechercher dans The Field",
   "field.explorer.hub.searchPlaceholder": "ID registre, titre ou nom…",
   "field.explorer.hub.searchSubmit": "Rechercher",
@@ -4941,6 +4967,14 @@ const FR: Record<MessageKey, string> = {
     "Les ID registre ouvrent l’entrée Field Record. Les autres termes recherchent dans les entrées du registre.",
   "field.explorer.hub.searchRequired": "Saisissez un ID registre ou un terme de recherche.",
   "field.explorer.hub.recordsCard": "Parcourir les entrées du registre",
+  "field.explorer.link.verifyHub": "Hub de vérification",
+  "field.explorer.wayfinding.heading": "Continuer l’exploration",
+  "field.explorer.wayfinding.lede":
+    "Naviguez entre entrées du Registre, profils publics et vérification — liens déterministes uniquement, pas de recommandations.",
+  "field.explorer.wayfinding.hub": "Hub explorateur",
+  "field.explorer.records.orientation": "Parcourir les entrées du Registre au dossier.",
+  "field.explorer.creatives.orientation": "Découvrir les Creatives et leur pratique.",
+  "field.explorer.organisations.orientation": "Parcourir les Organisations publiques.",
   "field.explorer.organisations.headline": "Découvrir les Organisations",
   "field.explorer.organisations.lede":
     "Profils Organisation publics avec empreinte registre, statut de vérification et Creatives représentés. Pas de classement ni de placement sponsorisé.",
@@ -5085,6 +5119,7 @@ const FR: Record<MessageKey, string> = {
   "field.explorer.creatives.empty.filtered":
     "Aucun Creative ne correspond à votre recherche ou filtres.",
   "field.explorer.creatives.empty.clearFilters": "Effacer les filtres",
+  "field.explorer.creatives.empty.browseAll": "Parcourir tous les Creatives",
   "field.stub.preparing":
     "Cette route est préparée pour la Phase 2A. Le contenu et les données suivront dans les prochaines étapes PR1.",
   "field.stub.backHome": "Retour à The Field",
@@ -6585,7 +6620,7 @@ const JA: Record<MessageKey, string> = {
   "field.explorer.tab.records": "Records",
   "field.explorer.hub.title": "エクスプローラー",
   "field.explorer.hub.lede":
-    "公開 Creative、Organisation、レジストリレコードを閲覧。発見はアルファベット順とフィルタに従います — おすすめや有料掲載はありません。",
+    "レジストリレコード、公開 Creative、Organisation を閲覧。発見はフィルターとアルファベット順に従います — おすすめや有料掲載はありません。",
   "field.explorer.hub.searchLabel": "The Field を検索",
   "field.explorer.hub.searchPlaceholder": "レジストリ ID、タイトル、名前…",
   "field.explorer.hub.searchSubmit": "検索",
@@ -6593,6 +6628,14 @@ const JA: Record<MessageKey, string> = {
     "レジストリ ID は Field Record を開きます。その他の語句はレジストリレコードを検索します。",
   "field.explorer.hub.searchRequired": "レジストリ ID または検索語を入力してください。",
   "field.explorer.hub.recordsCard": "レジストリレコードを閲覧",
+  "field.explorer.link.verifyHub": "検証ハブ",
+  "field.explorer.wayfinding.heading": "探索を続ける",
+  "field.explorer.wayfinding.lede":
+    "レジストリレコード、公開プロフィール、検証の間を移動 — 決定論的リンクのみ、おすすめなし。",
+  "field.explorer.wayfinding.hub": "Explorer ハブ",
+  "field.explorer.records.orientation": "記録上のレジストリレコードを閲覧。",
+  "field.explorer.creatives.orientation": "Creative とその practice を発見。",
+  "field.explorer.organisations.orientation": "公開 Organisation を閲覧。",
   "field.explorer.organisations.headline": "Organisation を探す",
   "field.explorer.organisations.lede":
     "レジストリ footprint、検証状態、代表 Creative を備えた公開 Organisation プロフィール。ランキングやスポンサー掲載はありません。",
@@ -6736,6 +6779,7 @@ const JA: Record<MessageKey, string> = {
   "field.explorer.creatives.empty.filtered":
     "条件に一致する Creative がありません。",
   "field.explorer.creatives.empty.clearFilters": "フィルターをクリア",
+  "field.explorer.creatives.empty.browseAll": "すべての Creative を閲覧",
   "field.stub.preparing":
     "このルートは Phase 2A 向けに用意されています。コンテンツとデータは次の PR1 ステップで提供されます。",
   "field.stub.backHome": "The Field に戻る",

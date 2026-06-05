@@ -54,10 +54,14 @@ export function RecordExplorerHero({
         <p className="mt-6 max-w-2xl text-base leading-relaxed text-neutral-600">
           {t("field.explorer.records.lede")}
         </p>
-        {total > 0 ? (
+        {total > 0 || hasFilters || trimmedQ ? (
           <p className="mt-8 text-[12px] text-neutral-500">
-            {total} {total === 1 ? "record" : "records"}
-            {" · "}
+            {total > 0 ? (
+              <>
+                {total} {total === 1 ? "record" : "records"}
+                {" · "}
+              </>
+            ) : null}
             {verified === "all"
               ? t("field.explorer.records.verifiedScopeAll")
               : t("field.explorer.records.verifiedScopeDefault")}
@@ -75,7 +79,7 @@ export function RecordExplorerHero({
             href={fieldVerifyHref()}
             className="inline-flex rounded-2xl border border-neutral-200 bg-white px-5 py-2.5 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
           >
-            {t("field.explorer.records.link.verifyHub")}
+            {t("field.explorer.link.verifyHub")}
           </Link>
         </div>
       </div>

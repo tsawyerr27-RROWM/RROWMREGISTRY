@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { RecordExplorerCard } from "@/components/Field/RecordExplorerCard";
+import { FieldExplorerDiscoveryStrip } from "@/components/Field/FieldExplorerDiscoveryStrip";
 import { RecordExplorerFilters } from "@/components/Field/RecordExplorerFilters";
 import { RecordExplorerPagination } from "@/components/Field/RecordExplorerPagination";
 import type { RecordExplorerRow } from "@/lib/fetch-record-explorer-list";
@@ -135,6 +136,8 @@ export function RecordExplorerContent({
           />
         </>
       )}
+
+      <FieldExplorerDiscoveryStrip activeTab="records" />
     </div>
   );
 }

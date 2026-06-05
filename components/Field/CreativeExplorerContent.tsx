@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { CreativeExplorerFilters } from "@/components/Field/CreativeExplorerFilters";
+import { FieldExplorerDiscoveryStrip } from "@/components/Field/FieldExplorerDiscoveryStrip";
 import { CreativePresenceCard } from "@/components/Field/CreativePresenceCard";
 import { FieldExplorerPagination } from "@/components/Field/FieldExplorerPagination";
 import type { CreativeExplorerRow } from "@/lib/fetch-creative-explorer-list";
@@ -58,12 +59,20 @@ export function CreativeExplorerContent({
               : t("field.explorer.creatives.empty.none")}
           </p>
           {hasActiveFilters ? (
-            <Link
-              href={basePath}
-              className="mt-6 inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
-            >
-              {t("field.explorer.creatives.empty.clearFilters")}
-            </Link>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <Link
+                href={basePath}
+                className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
+              >
+                {t("field.explorer.creatives.empty.clearFilters")}
+              </Link>
+              <Link
+                href={basePath}
+                className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
+              >
+                {t("field.explorer.creatives.empty.browseAll")}
+              </Link>
+            </div>
           ) : (
             <Link
               href="/get-started"
@@ -92,6 +101,8 @@ export function CreativeExplorerContent({
           />
         </>
       )}
+
+      <FieldExplorerDiscoveryStrip activeTab="creatives" />
     </div>
   );
 }
