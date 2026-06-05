@@ -1,10 +1,5 @@
-import { FieldRouteStub } from "@/components/Field/FieldRouteStub";
+import { FieldExplorerHubContent } from "@/components/Field/FieldExplorerHubContent";
 
 export default function FieldExplorerHubPage() {
-  return (
-    <FieldRouteStub
-      titleKey="field.explorer.hub.title"
-      descriptionKey="field.stub.preparing"
-    />
-  );
+  return <FieldExplorerHubContent />;
 }

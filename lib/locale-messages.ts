@@ -29,6 +29,28 @@ export type MessageKey =
   | "field.explorer.tab.organisations"
   | "field.explorer.tab.records"
   | "field.explorer.hub.title"
+  | "field.explorer.hub.lede"
+  | "field.explorer.hub.recordsCard"
+  | "field.explorer.organisations.headline"
+  | "field.explorer.organisations.lede"
+  | "field.explorer.organisations.searching"
+  | "field.explorer.organisations.filtered"
+  | "field.explorer.organisations.filter.search"
+  | "field.explorer.organisations.filter.searchPlaceholder"
+  | "field.explorer.organisations.filter.location"
+  | "field.explorer.organisations.filter.locationPlaceholder"
+  | "field.explorer.organisations.filter.verification"
+  | "field.explorer.organisations.filter.allOrganisations"
+  | "field.explorer.organisations.filter.verifiedOnly"
+  | "field.explorer.organisations.filter.representation"
+  | "field.explorer.organisations.filter.allParticipation"
+  | "field.explorer.organisations.filter.withRepresented"
+  | "field.explorer.organisations.filter.sort"
+  | "field.explorer.organisations.filter.apply"
+  | "field.explorer.organisations.empty.none"
+  | "field.explorer.organisations.empty.filtered"
+  | "field.explorer.organisations.empty.clearFilters"
+  | "field.explorer.organisations.empty.browseAll"
   | "field.explorer.creatives.headline"
   | "field.explorer.creatives.lede"
   | "field.explorer.creatives.searching"
@@ -1389,6 +1411,32 @@ const EN: Record<MessageKey, string> = {
   "field.explorer.tab.organisations": "Organisations",
   "field.explorer.tab.records": "Records",
   "field.explorer.hub.title": "Explorer",
+  "field.explorer.hub.lede":
+    "Browse public Creatives, Organisations, and Registry records. Discovery follows alphabetical order and your filters — not recommendations or paid placement.",
+  "field.explorer.hub.recordsCard": "Browse Registry records",
+  "field.explorer.organisations.headline": "Discover Organisations",
+  "field.explorer.organisations.lede":
+    "Public Organisation profiles with registry footprint, verification status, and represented Creatives. No rankings or sponsored placement.",
+  "field.explorer.organisations.searching": "searching",
+  "field.explorer.organisations.filtered": "filters applied",
+  "field.explorer.organisations.filter.search": "Search by name",
+  "field.explorer.organisations.filter.searchPlaceholder": "Organisation name…",
+  "field.explorer.organisations.filter.location": "Location",
+  "field.explorer.organisations.filter.locationPlaceholder": "City or region…",
+  "field.explorer.organisations.filter.verification": "Verification",
+  "field.explorer.organisations.filter.allOrganisations": "All Organisations",
+  "field.explorer.organisations.filter.verifiedOnly": "Verified on file",
+  "field.explorer.organisations.filter.representation": "Representation",
+  "field.explorer.organisations.filter.allParticipation": "All participation",
+  "field.explorer.organisations.filter.withRepresented": "With represented Creatives",
+  "field.explorer.organisations.filter.sort": "Sort",
+  "field.explorer.organisations.filter.apply": "Apply",
+  "field.explorer.organisations.empty.none":
+    "No public Organisation profiles are available yet.",
+  "field.explorer.organisations.empty.filtered":
+    "No Organisations match your search or filters. Try clearing filters or browsing all Organisations.",
+  "field.explorer.organisations.empty.clearFilters": "Clear filters",
+  "field.explorer.organisations.empty.browseAll": "Browse all Organisations",
   "field.explorer.creatives.headline": "Discover Creatives",
   "field.explorer.creatives.lede":
     "Browse public Creative profiles on The Field — practice, verification on file, and registry footprint. Discovery only; not a marketplace or recruitment surface.",
@@ -3019,6 +3067,32 @@ const DE: Record<MessageKey, string> = {
   "field.explorer.tab.organisations": "Organisationen",
   "field.explorer.tab.records": "Einträge",
   "field.explorer.hub.title": "Explorer",
+  "field.explorer.hub.lede":
+    "Öffentliche Creatives, Organisationen und Register-Einträge durchsuchen. Entdeckung folgt alphabetischer Reihenfolge und Ihren Filtern — keine Empfehlungen oder bezahlte Platzierung.",
+  "field.explorer.hub.recordsCard": "Register-Einträge durchsuchen",
+  "field.explorer.organisations.headline": "Organisationen entdecken",
+  "field.explorer.organisations.lede":
+    "Öffentliche Organisationsprofile mit Register-Footprint, Verifizierungsstatus und vertretenen Creatives. Keine Rankings oder gesponserte Platzierung.",
+  "field.explorer.organisations.searching": "Suche",
+  "field.explorer.organisations.filtered": "Filter aktiv",
+  "field.explorer.organisations.filter.search": "Nach Name suchen",
+  "field.explorer.organisations.filter.searchPlaceholder": "Organisationsname…",
+  "field.explorer.organisations.filter.location": "Standort",
+  "field.explorer.organisations.filter.locationPlaceholder": "Stadt oder Region…",
+  "field.explorer.organisations.filter.verification": "Verifizierung",
+  "field.explorer.organisations.filter.allOrganisations": "Alle Organisationen",
+  "field.explorer.organisations.filter.verifiedOnly": "Verifiziert auf Datei",
+  "field.explorer.organisations.filter.representation": "Vertretung",
+  "field.explorer.organisations.filter.allParticipation": "Alle Beteiligungen",
+  "field.explorer.organisations.filter.withRepresented": "Mit vertretenen Creatives",
+  "field.explorer.organisations.filter.sort": "Sortierung",
+  "field.explorer.organisations.filter.apply": "Anwenden",
+  "field.explorer.organisations.empty.none":
+    "Noch keine öffentlichen Organisationsprofile verfügbar.",
+  "field.explorer.organisations.empty.filtered":
+    "Keine Organisationen entsprechen Ihrer Suche oder den Filtern. Filter zurücksetzen oder alle Organisationen durchsuchen.",
+  "field.explorer.organisations.empty.clearFilters": "Filter zurücksetzen",
+  "field.explorer.organisations.empty.browseAll": "Alle Organisationen durchsuchen",
   "field.explorer.creatives.headline": "Creatives entdecken",
   "field.explorer.creatives.lede":
     "Öffentliche Creative-Profile auf The Field — Praxis, Verifizierung und Register-Footprint. Nur Entdeckung; kein Marktplatz.",
@@ -4525,6 +4599,32 @@ const FR: Record<MessageKey, string> = {
   "field.explorer.tab.organisations": "Organisations",
   "field.explorer.tab.records": "Entrées",
   "field.explorer.hub.title": "Explorateur",
+  "field.explorer.hub.lede":
+    "Parcourez les Creatives, Organisations et entrées du registre publics. La découverte suit l’ordre alphabétique et vos filtres — pas de recommandations ni de placement payant.",
+  "field.explorer.hub.recordsCard": "Parcourir les entrées du registre",
+  "field.explorer.organisations.headline": "Découvrir les Organisations",
+  "field.explorer.organisations.lede":
+    "Profils Organisation publics avec empreinte registre, statut de vérification et Creatives représentés. Pas de classement ni de placement sponsorisé.",
+  "field.explorer.organisations.searching": "recherche",
+  "field.explorer.organisations.filtered": "filtres actifs",
+  "field.explorer.organisations.filter.search": "Rechercher par nom",
+  "field.explorer.organisations.filter.searchPlaceholder": "Nom de l’Organisation…",
+  "field.explorer.organisations.filter.location": "Lieu",
+  "field.explorer.organisations.filter.locationPlaceholder": "Ville ou région…",
+  "field.explorer.organisations.filter.verification": "Vérification",
+  "field.explorer.organisations.filter.allOrganisations": "Toutes les Organisations",
+  "field.explorer.organisations.filter.verifiedOnly": "Vérifié au registre",
+  "field.explorer.organisations.filter.representation": "Représentation",
+  "field.explorer.organisations.filter.allParticipation": "Toute participation",
+  "field.explorer.organisations.filter.withRepresented": "Avec Creatives représentés",
+  "field.explorer.organisations.filter.sort": "Tri",
+  "field.explorer.organisations.filter.apply": "Appliquer",
+  "field.explorer.organisations.empty.none":
+    "Aucun profil Organisation public n’est disponible pour l’instant.",
+  "field.explorer.organisations.empty.filtered":
+    "Aucune Organisation ne correspond à votre recherche ou aux filtres. Effacez les filtres ou parcourez toutes les Organisations.",
+  "field.explorer.organisations.empty.clearFilters": "Effacer les filtres",
+  "field.explorer.organisations.empty.browseAll": "Parcourir toutes les Organisations",
   "field.explorer.creatives.headline": "Découvrir les Creatives",
   "field.explorer.creatives.lede":
     "Parcourez les profils Creative publics sur The Field — pratique, vérification et empreinte registre. Découverte uniquement.",
@@ -6034,6 +6134,32 @@ const JA: Record<MessageKey, string> = {
   "field.explorer.tab.organisations": "Organisations",
   "field.explorer.tab.records": "Records",
   "field.explorer.hub.title": "エクスプローラー",
+  "field.explorer.hub.lede":
+    "公開 Creative、Organisation、レジストリレコードを閲覧。発見はアルファベット順とフィルタに従います — おすすめや有料掲載はありません。",
+  "field.explorer.hub.recordsCard": "レジストリレコードを閲覧",
+  "field.explorer.organisations.headline": "Organisation を探す",
+  "field.explorer.organisations.lede":
+    "レジストリ footprint、検証状態、代表 Creative を備えた公開 Organisation プロフィール。ランキングやスポンサー掲載はありません。",
+  "field.explorer.organisations.searching": "検索",
+  "field.explorer.organisations.filtered": "フィルター適用中",
+  "field.explorer.organisations.filter.search": "名前で検索",
+  "field.explorer.organisations.filter.searchPlaceholder": "Organisation 名…",
+  "field.explorer.organisations.filter.location": "所在地",
+  "field.explorer.organisations.filter.locationPlaceholder": "都市または地域…",
+  "field.explorer.organisations.filter.verification": "検証",
+  "field.explorer.organisations.filter.allOrganisations": "すべての Organisation",
+  "field.explorer.organisations.filter.verifiedOnly": "記録上 verified",
+  "field.explorer.organisations.filter.representation": "代表",
+  "field.explorer.organisations.filter.allParticipation": "すべての参加",
+  "field.explorer.organisations.filter.withRepresented": "代表 Creative あり",
+  "field.explorer.organisations.filter.sort": "並び替え",
+  "field.explorer.organisations.filter.apply": "適用",
+  "field.explorer.organisations.empty.none":
+    "公開 Organisation プロフィールはまだありません。",
+  "field.explorer.organisations.empty.filtered":
+    "検索またはフィルターに一致する Organisation がありません。フィルターを解除するか、すべての Organisation を閲覧してください。",
+  "field.explorer.organisations.empty.clearFilters": "フィルターを解除",
+  "field.explorer.organisations.empty.browseAll": "すべての Organisation を閲覧",
   "field.explorer.creatives.headline": "Creative を探す",
   "field.explorer.creatives.lede":
     "The Field 上の公開 Creative プロフィールを閲覧 — プラクティス、検証、レジストリの footprint。発見のみ。",
