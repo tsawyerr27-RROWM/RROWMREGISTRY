@@ -18,6 +18,10 @@ import {
 import { fieldCreativeHref, fieldExplorerCreativesHref, fieldOrganisationHref } from "@/lib/field-nav";
 import type { MessageKey } from "@/lib/locale-messages";
 import { loadCreativePracticeChips, partitionCreativePracticeChips, parseDeclaredPracticeSlugs, parsePrimaryPracticeSlug } from "@/lib/practices";
+import {
+  buildCreativeRelationshipContextPanels,
+  type FieldRelationshipContextPanelData,
+} from "@/lib/field-relationship-context";
 
 export type CreativePresenceGallery = {
   name: string;
@@ -67,6 +71,7 @@ export type CreativePresencePageData = {
   isProfileOwner: boolean;
   showOwnerPracticeGuidance: boolean;
   stewardshipItems: Array<{ id: string; labelKey: MessageKey; complete: boolean }>;
+  contextPanels: FieldRelationshipContextPanelData[];
 };
 
 type ArtistRow = {
@@ -305,6 +310,12 @@ export async function loadCreativePresencePageData(
     isProfileOwner,
     showOwnerPracticeGuidance,
     stewardshipItems,
+    contextPanels: buildCreativeRelationshipContextPanels({
+      gallery,
+      showOrganisationSection: presence.ownership && Boolean(gallery),
+      practiceExplorerHref,
+      primaryPracticeSlug: primaryPractice,
+    }),
   };
 }
 

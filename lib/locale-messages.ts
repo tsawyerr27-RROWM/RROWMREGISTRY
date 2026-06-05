@@ -212,6 +212,33 @@ export type MessageKey =
   | "field.record.link.creative"
   | "field.record.link.organisation"
   | "field.record.ledgerNote"
+  | "field.context.sectionHeading"
+  | "field.context.sectionLede"
+  | "field.context.record.sameCreative.heading"
+  | "field.context.record.sameCreative.lede"
+  | "field.context.record.sameOrganisation.heading"
+  | "field.context.record.sameOrganisation.lede"
+  | "field.context.record.sharedMedium.heading"
+  | "field.context.record.sharedMedium.lede"
+  | "field.context.record.practice.heading"
+  | "field.context.record.practice.lede"
+  | "field.context.record.registryContinuity.heading"
+  | "field.context.record.registryContinuity.lede"
+  | "field.context.creative.organisation.heading"
+  | "field.context.creative.organisation.lede"
+  | "field.context.creative.practice.heading"
+  | "field.context.creative.practice.lede"
+  | "field.context.organisation.roster.heading"
+  | "field.context.organisation.roster.lede"
+  | "field.context.organisation.records.heading"
+  | "field.context.organisation.records.lede"
+  | "field.context.viewAllRecords"
+  | "field.context.viewAllCreatives"
+  | "field.context.viewAllInExplorer"
+  | "field.context.link.verify"
+  | "field.context.link.ledger"
+  | "field.context.meta.verified"
+  | "field.context.meta.workCount"
   | "footer.field"
   | "nav.signIn"
   | "nav.takePart"
@@ -1740,6 +1767,43 @@ const EN: Record<MessageKey, string> = {
   "field.record.link.organisation": "Organisation profile",
   "field.record.ledgerNote":
     "This Field record summary reads from the Registry. The Registry ledger remains the system of record for verification, provenance, and chronology.",
+  "field.context.sectionHeading": "Relationship context",
+  "field.context.sectionLede":
+    "Connections below are derived from Registry evidence — not recommendations, rankings, or social links.",
+  "field.context.record.sameCreative.heading": "More works by {name}",
+  "field.context.record.sameCreative.lede":
+    "Other Registry records filed to the same Creative, ordered by verification status then recency.",
+  "field.context.record.sameOrganisation.heading": "More from {name}",
+  "field.context.record.sameOrganisation.lede":
+    "Other records linked to {name} through representation or filing on file in the Registry.",
+  "field.context.record.sharedMedium.heading": "Records with this medium on file",
+  "field.context.record.sharedMedium.lede":
+    "Other records sharing the exact medium string “{medium}” — not algorithmic similarity.",
+  "field.context.record.practice.heading": "Practice context",
+  "field.context.record.practice.lede":
+    "Browse Creatives working in {practice} via the Creative Explorer practice filter.",
+  "field.context.record.registryContinuity.heading": "Registry continuity",
+  "field.context.record.registryContinuity.lede":
+    "Verification status and the authoritative ledger view for this record.",
+  "field.context.creative.organisation.heading": "Organisation representation",
+  "field.context.creative.organisation.lede":
+    "Institution-linked representation on file connects this Creative to {name}.",
+  "field.context.creative.practice.heading": "Practice discovery",
+  "field.context.creative.practice.lede":
+    "Explore other Creatives declared or inferred in {practice} — filtered in the Creative Explorer.",
+  "field.context.organisation.roster.heading": "Represented Creatives",
+  "field.context.organisation.roster.lede":
+    "Registry-linked roster entries for {name} with public Creative profiles.",
+  "field.context.organisation.records.heading": "Registry catalogue",
+  "field.context.organisation.records.lede":
+    "Records on file for artists linked to {name}, ordered by verification then recency.",
+  "field.context.viewAllRecords": "View all in Record Explorer",
+  "field.context.viewAllCreatives": "View full roster",
+  "field.context.viewAllInExplorer": "Open in Creative Explorer",
+  "field.context.link.verify": "Check verification",
+  "field.context.link.ledger": "Open Registry ledger",
+  "field.context.meta.verified": "Verified",
+  "field.context.meta.workCount": "{count} works on file",
   "ecosystem.workspace.studio": "Studio",
   "ecosystem.workspace.organisationStudio": "Organisation Studio",
   "getStarted.pathTooltip":
@@ -3522,6 +3586,43 @@ const DE: Record<MessageKey, string> = {
   "field.record.link.organisation": "Organisationsprofil",
   "field.record.ledgerNote":
     "Diese Field-Zusammenfassung liest aus dem Register. Das Register-Ledger bleibt das System of Record für Verifizierung, Provenienz und Chronologie.",
+  "field.context.sectionHeading": "Beziehungskontext",
+  "field.context.sectionLede":
+    "Verbindungen unten stammen aus Register-Belegen — keine Empfehlungen, Rankings oder sozialen Links.",
+  "field.context.record.sameCreative.heading": "Weitere Werke von {name}",
+  "field.context.record.sameCreative.lede":
+    "Weitere Register-Einträge desselben Creatives, sortiert nach Verifizierung und Aktualität.",
+  "field.context.record.sameOrganisation.heading": "Mehr von {name}",
+  "field.context.record.sameOrganisation.lede":
+    "Weitere Einträge mit Verbindung zu {name} über Vertretung oder Ablage im Register.",
+  "field.context.record.sharedMedium.heading": "Einträge mit diesem Medium",
+  "field.context.record.sharedMedium.lede":
+    "Weitere Einträge mit exakt dem Medium „{medium}“ — keine algorithmische Ähnlichkeit.",
+  "field.context.record.practice.heading": "Praxis-Kontext",
+  "field.context.record.practice.lede":
+    "Creatives in {practice} über den Creative Explorer filtern.",
+  "field.context.record.registryContinuity.heading": "Register-Kontinuität",
+  "field.context.record.registryContinuity.lede":
+    "Verifizierungsstatus und autoritative Ledger-Ansicht für diesen Eintrag.",
+  "field.context.creative.organisation.heading": "Organisationsvertretung",
+  "field.context.creative.organisation.lede":
+    "Institutionsbezogene Vertretung verbindet dieses Creative mit {name}.",
+  "field.context.creative.practice.heading": "Praxis-Entdeckung",
+  "field.context.creative.practice.lede":
+    "Weitere Creatives in {practice} — gefiltert im Creative Explorer.",
+  "field.context.organisation.roster.heading": "Vertretene Creatives",
+  "field.context.organisation.roster.lede":
+    "Register-verknüpfte Roster-Einträge für {name} mit öffentlichen Profilen.",
+  "field.context.organisation.records.heading": "Register-Katalog",
+  "field.context.organisation.records.lede":
+    "Einträge für mit {name} verknüpfte Künstler, sortiert nach Verifizierung und Aktualität.",
+  "field.context.viewAllRecords": "Alle im Record Explorer",
+  "field.context.viewAllCreatives": "Vollständiges Roster",
+  "field.context.viewAllInExplorer": "Im Creative Explorer öffnen",
+  "field.context.link.verify": "Verifizierung prüfen",
+  "field.context.link.ledger": "Register-Ledger öffnen",
+  "field.context.meta.verified": "Verifiziert",
+  "field.context.meta.workCount": "{count} Werke on file",
   "ecosystem.workspace.studio": "Studio",
   "ecosystem.workspace.organisationStudio": "Organisations-Studio",
   "getStarted.pathTooltip":
@@ -5180,6 +5281,43 @@ const FR: Record<MessageKey, string> = {
   "field.record.link.organisation": "Profil Organisation",
   "field.record.ledgerNote":
     "Ce résumé Field lit le Registre. Le ledger du Registre reste le système de référence pour la vérification, la provenance et la chronologie.",
+  "field.context.sectionHeading": "Contexte relationnel",
+  "field.context.sectionLede":
+    "Les liens ci-dessous proviennent de preuves du Registre — pas de recommandations, classements ou liens sociaux.",
+  "field.context.record.sameCreative.heading": "Autres œuvres de {name}",
+  "field.context.record.sameCreative.lede":
+    "Autres entrées du Registre du même Creative, triées par vérification puis récence.",
+  "field.context.record.sameOrganisation.heading": "Plus de {name}",
+  "field.context.record.sameOrganisation.lede":
+    "Autres entrées liées à {name} via représentation ou dépôt au Registre.",
+  "field.context.record.sharedMedium.heading": "Entrées avec ce medium",
+  "field.context.record.sharedMedium.lede":
+    "Autres entrées partageant exactement le medium « {medium} » — pas de similarité algorithmique.",
+  "field.context.record.practice.heading": "Contexte de pratique",
+  "field.context.record.practice.lede":
+    "Parcourir les Creatives en {practice} via le filtre pratique de l’Explorer.",
+  "field.context.record.registryContinuity.heading": "Continuité du Registre",
+  "field.context.record.registryContinuity.lede":
+    "Statut de vérification et vue ledger authoritative pour cette entrée.",
+  "field.context.creative.organisation.heading": "Représentation organisationnelle",
+  "field.context.creative.organisation.lede":
+    "La représentation institutionnelle relie ce Creative à {name}.",
+  "field.context.creative.practice.heading": "Découverte par pratique",
+  "field.context.creative.practice.lede":
+    "Explorer d’autres Creatives en {practice} — filtrés dans l’Explorer Creative.",
+  "field.context.organisation.roster.heading": "Creatives représentés",
+  "field.context.organisation.roster.lede":
+    "Entrées de roster liées au Registre pour {name} avec profils publics.",
+  "field.context.organisation.records.heading": "Catalogue Registre",
+  "field.context.organisation.records.lede":
+    "Entrées pour les artistes liés à {name}, triées par vérification puis récence.",
+  "field.context.viewAllRecords": "Tout voir dans l’Explorer d’entrées",
+  "field.context.viewAllCreatives": "Voir le roster complet",
+  "field.context.viewAllInExplorer": "Ouvrir dans l’Explorer Creative",
+  "field.context.link.verify": "Vérifier",
+  "field.context.link.ledger": "Ouvrir le ledger Registre",
+  "field.context.meta.verified": "Vérifié",
+  "field.context.meta.workCount": "{count} œuvres on file",
   "ecosystem.workspace.studio": "Studio",
   "ecosystem.workspace.organisationStudio": "Studio Organisation",
   "getStarted.pathTooltip":
@@ -6840,6 +6978,43 @@ const JA: Record<MessageKey, string> = {
   "field.record.link.organisation": "Organisation プロフィール",
   "field.record.ledgerNote":
     "この Field レコード概要はレジストリから読み取ります。レジストリ ledger は検証、来歴、年表の正本です。",
+  "field.context.sectionHeading": "関係コンテキスト",
+  "field.context.sectionLede":
+    "以下のつながりはレジストリの証拠に基づきます — おすすめ、ランキング、ソーシャルリンクではありません。",
+  "field.context.record.sameCreative.heading": "{name} の他の作品",
+  "field.context.record.sameCreative.lede":
+    "同じ Creative に登録された他のレコード。検証状態、更新順で並べています。",
+  "field.context.record.sameOrganisation.heading": "{name} の他の作品",
+  "field.context.record.sameOrganisation.lede":
+    "代表または登録により {name} とつながる他のレコード。",
+  "field.context.record.sharedMedium.heading": "同じ medium のレコード",
+  "field.context.record.sharedMedium.lede":
+    "medium 文字列「{medium}」が完全一致する他のレコード — アルゴリズムによる類似ではありません。",
+  "field.context.record.practice.heading": "プラクティスコンテキスト",
+  "field.context.record.practice.lede":
+    "Creative Explorer の practice フィルターで {practice} の Creative を閲覧。",
+  "field.context.record.registryContinuity.heading": "レジストリの連続性",
+  "field.context.record.registryContinuity.lede":
+    "このレコードの検証状態と正本 ledger ビュー。",
+  "field.context.creative.organisation.heading": "Organisation との関係",
+  "field.context.creative.organisation.lede":
+    "機関との代表関係により、この Creative は {name} とつながっています。",
+  "field.context.creative.practice.heading": "プラクティス探索",
+  "field.context.creative.practice.lede":
+    "{practice} の他の Creative — Creative Explorer でフィルター。",
+  "field.context.organisation.roster.heading": "代表 Creative",
+  "field.context.organisation.roster.lede":
+    "{name} のレジストリ連携 roster（公開プロフィールあり）。",
+  "field.context.organisation.records.heading": "レジストリカタログ",
+  "field.context.organisation.records.lede":
+    "{name} に関連するアーティストのレコード。検証、更新順。",
+  "field.context.viewAllRecords": "Record Explorer ですべて表示",
+  "field.context.viewAllCreatives": "roster 全体を表示",
+  "field.context.viewAllInExplorer": "Creative Explorer で開く",
+  "field.context.link.verify": "検証を確認",
+  "field.context.link.ledger": "レジストリ ledger を開く",
+  "field.context.meta.verified": "検証済み",
+  "field.context.meta.workCount": "on file {count} 件",
   "ecosystem.workspace.studio": "Studio",
   "ecosystem.workspace.organisationStudio": "組織 Studio",
   "getStarted.pathTooltip":
