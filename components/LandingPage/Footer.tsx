@@ -43,6 +43,12 @@ export function Footer() {
               <span className="text-sm font-medium text-neutral-700">
                 {t("footer.navigate")}
               </span>
+              <Link
+                href="/field"
+                className="w-fit transition duration-300 ease-out hover:text-neutral-950"
+              >
+                {t("footer.field")}
+              </Link>
               <a
                 href="/registry"
                 className="w-fit transition duration-300 ease-out hover:text-neutral-950"

@@ -29,12 +29,17 @@ export default function Header() {
   const [actorRole, setActorRole] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
+  const isFieldSurface =
+    pathname === "/field" || pathname?.startsWith("/field/");
+
   const isRegistrySurface =
     pathname?.startsWith("/registry") ||
     pathname?.startsWith("/artist") ||
     pathname?.startsWith("/artwork") ||
     pathname?.startsWith("/verify") ||
     pathname?.startsWith("/certificate");
+
+  const isPublicDiscoverySurface = isFieldSurface || isRegistrySurface;
 
   const isAppShell =
     pathname?.startsWith("/dashboard") ||
@@ -130,6 +135,8 @@ export default function Header() {
   const onAbout =
     pathname === "/about" || pathname?.startsWith("/about/");
 
+  const onField = isFieldSurface;
+
   /** Certificates / Ownership studio uses a dark bg — dashboard page dispatches this */
   const [dashboardHeaderDark, setDashboardHeaderDark] = useState(false);
 
@@ -167,7 +174,7 @@ export default function Header() {
   /** Slightly richer frost on registry-style routes; still light enough for dark nav text */
   const glassTint = headerOnDarkStudio
     ? "from-black/55 via-black/30 to-black/12"
-    : isRegistrySurface
+    : isPublicDiscoverySurface
       ? "from-white/[0.42] via-white/[0.14] to-white/[0.02]"
       : isAppShell
         ? "from-white/[0.38] via-white/[0.16] to-white/[0.04]"
@@ -221,6 +228,18 @@ export default function Header() {
         </Link>
 
         <div className="relative z-10 hidden min-w-0 flex-1 items-center justify-center gap-8 md:flex md:gap-10">
+          <Link
+            href="/field"
+            className={
+              onField
+                ? `${linkClass} font-semibold underline decoration-neutral-400 underline-offset-4 ${
+                    headerOnDarkStudio ? "decoration-white/40" : ""
+                  }`
+                : linkClass
+            }
+          >
+            {t("nav.field")}
+          </Link>
           <Link href="/registry" className={linkClass}>
             {t("nav.registry")}
           </Link>
@@ -239,6 +258,16 @@ export default function Header() {
         </div>
 
         <div className="relative z-10 flex min-w-0 flex-1 items-center gap-3 overflow-x-auto px-1 [-ms-overflow-style:none] [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden">
+          <Link
+            href="/field"
+            className={
+              onField
+                ? `${linkClass} text-xs font-semibold underline decoration-neutral-400 underline-offset-4`
+                : `${linkClass} text-xs`
+            }
+          >
+            {t("nav.field")}
+          </Link>
           <Link href="/registry" className={`${linkClass} text-xs`}>
             {t("nav.registry")}
           </Link>

@@ -14,7 +14,30 @@ export type MessageKey =
   | "common.sending"
   | "common.ending"
   | "nav.registry"
+  | "nav.field"
   | "nav.about"
+  | "field.home.title"
+  | "field.home.lede"
+  | "field.home.explorerHeading"
+  | "field.home.explorerBody"
+  | "field.home.verifyHeading"
+  | "field.home.verifyBody"
+  | "field.home.verifyLink"
+  | "field.home.registryNote"
+  | "field.explorer.subNavLabel"
+  | "field.explorer.tab.creatives"
+  | "field.explorer.tab.organisations"
+  | "field.explorer.tab.records"
+  | "field.explorer.hub.title"
+  | "field.stub.preparing"
+  | "field.stub.backHome"
+  | "field.verify.title"
+  | "field.verify.record.title"
+  | "field.presence.creative.title"
+  | "field.presence.organisation.title"
+  | "field.presence.collector.title"
+  | "field.record.title"
+  | "footer.field"
   | "nav.signIn"
   | "nav.takePart"
   | "nav.myAccount"
@@ -1286,6 +1309,7 @@ const EN: Record<MessageKey, string> = {
   "common.sending": "Sending…",
   "common.ending": "Ending…",
   "nav.registry": "Registry",
+  "nav.field": "The Field",
   "nav.about": "About",
   "nav.signIn": "Sign in",
   "nav.takePart": "Take part",
@@ -1300,6 +1324,32 @@ const EN: Record<MessageKey, string> = {
   "ecosystem.surface.studio": "Studio",
   "ecosystem.surface.field": "The Field",
   "ecosystem.surface.registry": "Registry",
+  "field.home.title": "Public discovery and presence",
+  "field.home.lede":
+    "The Field is where you browse Creatives, Organisations, and Registry records — read-only surfaces that reflect what participants choose to make public. Studio remains where identity and stewardship are edited.",
+  "field.home.explorerHeading": "Explorer",
+  "field.home.explorerBody":
+    "Three index views — Creatives, Organisations, and Registry records — with filters and pagination. No recommendations or paid ranking.",
+  "field.home.verifyHeading": "Verify",
+  "field.home.verifyBody":
+    "Check verification and certificate status for a Registry record by its Registry ID.",
+  "field.home.verifyLink": "Open verify entry",
+  "field.home.registryNote":
+    "The Registry remains the system of record. The Field reads from it; Studio is where records and profiles are stewarded.",
+  "field.explorer.subNavLabel": "Field explorer",
+  "field.explorer.tab.creatives": "Creatives",
+  "field.explorer.tab.organisations": "Organisations",
+  "field.explorer.tab.records": "Records",
+  "field.explorer.hub.title": "Explorer",
+  "field.stub.preparing":
+    "This route is scaffolded for Phase 2A. Content and data will ship in the next PR1 steps.",
+  "field.stub.backHome": "Back to The Field",
+  "field.verify.title": "Verify",
+  "field.verify.record.title": "Record verification",
+  "field.presence.creative.title": "Creative profile",
+  "field.presence.organisation.title": "Organisation profile",
+  "field.presence.collector.title": "Collector profile",
+  "field.record.title": "Registry record",
   "ecosystem.workspace.studio": "Studio",
   "ecosystem.workspace.organisationStudio": "Organisation Studio",
   "getStarted.pathTooltip":
@@ -1313,6 +1363,7 @@ const EN: Record<MessageKey, string> = {
   "footer.legal": "Legal",
   "footer.social": "Social",
   "footer.registry": "Registry",
+  "footer.field": "The Field",
   "footer.about": "About",
   "footer.contact": "Contact",
   "footer.signIn": "Sign in",
@@ -2824,6 +2875,7 @@ const DE: Record<MessageKey, string> = {
   ...EN,
   "common.perMonth": "pro Monat",
   "nav.registry": "Register",
+  "nav.field": "The Field",
   "nav.about": "Über uns",
   "nav.signIn": "Anmelden",
   "nav.takePart": "Mitmachen",
@@ -2838,6 +2890,32 @@ const DE: Record<MessageKey, string> = {
   "ecosystem.surface.studio": "Studio",
   "ecosystem.surface.field": "The Field",
   "ecosystem.surface.registry": "Register",
+  "field.home.title": "Öffentliche Entdeckung und Präsenz",
+  "field.home.lede":
+    "The Field ist der Ort, an dem Sie Creatives, Organisationen und Register-Einträge durchsuchen — schreibgeschützte Oberflächen, die widerspiegeln, was Teilnehmende öffentlich machen. Im Studio werden Identität und Verwaltung bearbeitet.",
+  "field.home.explorerHeading": "Explorer",
+  "field.home.explorerBody":
+    "Drei Indexansichten — Creatives, Organisationen und Register-Einträge — mit Filtern und Paginierung. Keine Empfehlungen oder bezahltes Ranking.",
+  "field.home.verifyHeading": "Verifizieren",
+  "field.home.verifyBody":
+    "Verifizierungs- und Zertifikatsstatus für einen Register-Eintrag anhand der Registry-ID prüfen.",
+  "field.home.verifyLink": "Verifizierung öffnen",
+  "field.home.registryNote":
+    "Das Register bleibt das System of Record. The Field liest daraus; im Studio werden Einträge und Profile verwaltet.",
+  "field.explorer.subNavLabel": "Field-Explorer",
+  "field.explorer.tab.creatives": "Creatives",
+  "field.explorer.tab.organisations": "Organisationen",
+  "field.explorer.tab.records": "Einträge",
+  "field.explorer.hub.title": "Explorer",
+  "field.stub.preparing":
+    "Diese Route ist für Phase 2A vorbereitet. Inhalte und Daten folgen in den nächsten PR1-Schritten.",
+  "field.stub.backHome": "Zurück zu The Field",
+  "field.verify.title": "Verifizieren",
+  "field.verify.record.title": "Eintragsverifizierung",
+  "field.presence.creative.title": "Creative-Profil",
+  "field.presence.organisation.title": "Organisationsprofil",
+  "field.presence.collector.title": "Sammlerprofil",
+  "field.record.title": "Register-Eintrag",
   "ecosystem.workspace.studio": "Studio",
   "ecosystem.workspace.organisationStudio": "Organisations-Studio",
   "getStarted.pathTooltip":
@@ -2851,6 +2929,7 @@ const DE: Record<MessageKey, string> = {
   "footer.legal": "Rechtliches",
   "footer.social": "Social Media",
   "footer.registry": "Register",
+  "footer.field": "The Field",
   "footer.about": "Über uns",
   "footer.contact": "Kontakt",
   "footer.signIn": "Anmelden",
@@ -4238,6 +4317,7 @@ const DE: Record<MessageKey, string> = {
 const FR: Record<MessageKey, string> = {
   ...EN,
   "nav.registry": "Registre",
+  "nav.field": "The Field",
   "nav.about": "À propos",
   "nav.signIn": "Connexion",
   "nav.takePart": "Participer",
@@ -4252,6 +4332,32 @@ const FR: Record<MessageKey, string> = {
   "ecosystem.surface.studio": "Studio",
   "ecosystem.surface.field": "The Field",
   "ecosystem.surface.registry": "Registre",
+  "field.home.title": "Découverte et présence publiques",
+  "field.home.lede":
+    "The Field est l’endroit où parcourir les Creatives, les Organisations et les entrées du Registre — des surfaces en lecture seule qui reflètent ce que les participants choisissent de rendre public. Le Studio reste l’espace d’édition de l’identité et de la gestion.",
+  "field.home.explorerHeading": "Explorateur",
+  "field.home.explorerBody":
+    "Trois vues index — Creatives, Organisations et entrées du Registre — avec filtres et pagination. Pas de recommandations ni de classement payant.",
+  "field.home.verifyHeading": "Vérifier",
+  "field.home.verifyBody":
+    "Consulter le statut de vérification et de certificat d’une entrée du Registre via son identifiant Registry.",
+  "field.home.verifyLink": "Ouvrir la vérification",
+  "field.home.registryNote":
+    "Le Registre reste le système de référence. The Field s’y connecte en lecture ; le Studio est l’espace de gestion des entrées et profils.",
+  "field.explorer.subNavLabel": "Explorateur Field",
+  "field.explorer.tab.creatives": "Creatives",
+  "field.explorer.tab.organisations": "Organisations",
+  "field.explorer.tab.records": "Entrées",
+  "field.explorer.hub.title": "Explorateur",
+  "field.stub.preparing":
+    "Cette route est préparée pour la Phase 2A. Le contenu et les données suivront dans les prochaines étapes PR1.",
+  "field.stub.backHome": "Retour à The Field",
+  "field.verify.title": "Vérifier",
+  "field.verify.record.title": "Vérification d’entrée",
+  "field.presence.creative.title": "Profil Creative",
+  "field.presence.organisation.title": "Profil Organisation",
+  "field.presence.collector.title": "Profil Collectionneur",
+  "field.record.title": "Entrée du Registre",
   "ecosystem.workspace.studio": "Studio",
   "ecosystem.workspace.organisationStudio": "Studio Organisation",
   "getStarted.pathTooltip":
@@ -4265,6 +4371,7 @@ const FR: Record<MessageKey, string> = {
   "footer.legal": "Mentions légales",
   "footer.social": "Réseaux",
   "footer.registry": "Registre",
+  "footer.field": "The Field",
   "footer.about": "À propos",
   "footer.contact": "Contact",
   "footer.signIn": "Connexion",
@@ -5655,6 +5762,7 @@ const JA: Record<MessageKey, string> = {
   ...EN,
   "common.perMonth": "月額",
   "nav.registry": "レジストリ",
+  "nav.field": "The Field",
   "nav.about": "概要",
   "nav.signIn": "サインイン",
   "nav.takePart": "参加する",
@@ -5669,6 +5777,32 @@ const JA: Record<MessageKey, string> = {
   "ecosystem.surface.studio": "Studio",
   "ecosystem.surface.field": "The Field",
   "ecosystem.surface.registry": "レジストリ",
+  "field.home.title": "公開の発見とプレゼンス",
+  "field.home.lede":
+    "The Field は、Creative、Organisation、レジストリレコードを閲覧する公開レイヤーです。参加者が公開を選んだ内容を読み取り専用で表示します。編集と管理は Studio で行います。",
+  "field.home.explorerHeading": "エクスプローラー",
+  "field.home.explorerBody":
+    "Creative、Organisation、レジストリレコードの3つの索引ビュー。フィルターとページネーション付き。おすすめや有料ランキングはありません。",
+  "field.home.verifyHeading": "検証",
+  "field.home.verifyBody":
+    "レジストリ ID から、レコードの検証および証明書ステータスを確認できます。",
+  "field.home.verifyLink": "検証入口を開く",
+  "field.home.registryNote":
+    "レジストリは記録の正本です。The Field は読み取り専用で参照し、Studio でレコードとプロフィールを管理します。",
+  "field.explorer.subNavLabel": "Field エクスプローラー",
+  "field.explorer.tab.creatives": "Creatives",
+  "field.explorer.tab.organisations": "Organisations",
+  "field.explorer.tab.records": "Records",
+  "field.explorer.hub.title": "エクスプローラー",
+  "field.stub.preparing":
+    "このルートは Phase 2A 向けに用意されています。コンテンツとデータは次の PR1 ステップで提供されます。",
+  "field.stub.backHome": "The Field に戻る",
+  "field.verify.title": "検証",
+  "field.verify.record.title": "レコード検証",
+  "field.presence.creative.title": "Creative プロフィール",
+  "field.presence.organisation.title": "Organisation プロフィール",
+  "field.presence.collector.title": "コレクタープロフィール",
+  "field.record.title": "レジストリレコード",
   "ecosystem.workspace.studio": "Studio",
   "ecosystem.workspace.organisationStudio": "組織 Studio",
   "getStarted.pathTooltip":
@@ -5681,6 +5815,7 @@ const JA: Record<MessageKey, string> = {
   "footer.legal": "法的情報",
   "footer.social": "ソーシャル",
   "footer.registry": "レジストリ",
+  "footer.field": "The Field",
   "footer.about": "概要",
   "footer.contact": "お問い合わせ",
   "footer.signIn": "サインイン",
