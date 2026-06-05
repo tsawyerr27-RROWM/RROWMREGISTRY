@@ -28,8 +28,13 @@ This folder holds the **planning and certification stack** for RROWM V2. **Phase
 | P2-3 | [Phase 2A Field Foundations Spec](./phase-2a-field-foundations-spec.md) | **LOCKED DRAFT** | First Field release: public profiles, explorers, verification visibility, URL migration; no opportunities |
 | P2-4 | [Phase 2A Founder Decisions Freeze](./phase-2a-founder-decisions-freeze.md) | **FROZEN** | Settled founder decisions before 2A implementation; supersedes PENDING ADR-13, 15, 17, 27–32 for 2A scope |
 | P2-5 | [Phase 2A PR1 — Field Surface Foundation Plan](./phase-2a-pr1-field-foundation-plan.md) | **IMPLEMENTATION SOURCE OF TRUTH** | How to execute 2A PR1: `/field/*` routes, nav, presence mapping, move-then-redirect, rollout phases |
+| P2-6 | [Phase 2A PR1 Signoff](./phase-2a-pr1-signoff.md) | **ACCEPTANCE SIGNOFF** | 2A PR1 acceptance matrix and checkpoint recommendation |
+| P2-7 | [Phase 2B Discovery Expansion Spec](./phase-2b-discovery-expansion-spec.md) | **LOCKED DRAFT** | Second Field release: search, practice, graph, completeness; discovery only |
+| P2-8 | [Phase 2B Discovery Expansion Plan](./phase-2b-discovery-expansion-plan.md) | **DRAFT** | Full 2B rollout sequence and acceptance gate |
+| P2-9 | [Phase 2B Founder Decisions Freeze](./phase-2b-founder-decisions-freeze.md) | **FROZEN** | Settled founder decisions before 2B implementation; supersedes PENDING ADR-18, 19, 20 for 2B scope |
+| P2-10 | [Phase 2B PR1 — Search and Discovery Plan](./phase-2b-pr1-search-and-discovery-plan.md) | **IMPLEMENTATION SOURCE OF TRUTH** | How to execute 2B PR1: search contract, record redirects, verified-default, hub IA |
 
-**Phase 2 authority chain:** Blueprint v1.1 (APPROVED) → Phase 2 Blueprint (DRAFT) → Phase 2A Founder Decisions Freeze (FROZEN) → Phase 2A Spec (LOCKED DRAFT) → **Phase 2A PR1 Plan (IMPLEMENTATION SOURCE OF TRUTH)** for PR1 execution. ADR document remains catalogue; 2A-blocking items are **DECIDED** per founder freeze. Phase 1 freeze remains binding for delivered Studio scope.
+**Phase 2 authority chain:** Blueprint v1.1 (APPROVED) → Phase 2 Blueprint (DRAFT) → Phase 2A Founder Decisions Freeze (FROZEN) → Phase 2A Spec (LOCKED DRAFT) → **Phase 2A PR1 Plan (IMPLEMENTATION SOURCE OF TRUTH)** for 2A PR1 execution → Phase 2B Founder Decisions Freeze (FROZEN) → Phase 2B Spec (LOCKED DRAFT) → **Phase 2B PR1 Plan (IMPLEMENTATION SOURCE OF TRUTH)** for 2B PR1 execution. ADR document remains catalogue; 2A-blocking items are **DECIDED** per 2A founder freeze; 2B search/matching/recommendation items are **DECIDED** per 2B founder freeze. Phase 1 freeze remains binding for delivered Studio scope.
 
 ## Interpretation rules
 
@@ -44,7 +49,10 @@ This folder holds the **planning and certification stack** for RROWM V2. **Phase
 9. **Phase 2 Blueprint (DRAFT)** bounds Field work. Does not unlock Briefs, Programmes, Commissions, or production workflows until later Phase 2 sub-specs. Contradictions with Blueprint v1.1 require Blueprint version bump — not silent Phase 2 edits.
 10. **Phase 2A Spec (LOCKED DRAFT)** is the **only** authoritative scope for the first Field implementation release. Engineering must satisfy AC-FC*, AC-FO*, AC-FK*, AC-XC*, AC-XO*, AC-FV*, AC-FL*, AC-FS*, AC-FP*, AC-FM* as written. Explicit §14 exclusions are non-negotiable in 2A.
 11. **Phase 2A Founder Decisions Freeze (FROZEN)** settles product philosophy for 2A (presence, explorers, trust, URLs, search, anti-features). Implementation must not re-litigate frozen §1–§10 without unlock. Conflicts between spec and freeze → **freeze prevails** on philosophy; spec prevails on acceptance criteria detail.
-12. **Phase 2A PR1 Plan (IMPLEMENTATION SOURCE OF TRUTH)** governs PR1 execution order, route moves, redirect stubs, and link grep. **Move, then redirect** — same discipline as Phase 1 PR4. Does not expand beyond 2A spec §14 exclusions; `/field/record/[registry_id]` full move is PR2 per plan §5.3.
+12. **Phase 2A PR1 Plan (IMPLEMENTATION SOURCE OF TRUTH)** governs 2A PR1 execution order, route moves, redirect stubs, and link grep. **Move, then redirect** — same discipline as Phase 1 PR4. Does not expand beyond 2A spec §14 exclusions; `/field/record/[registry_id]` full move is PR2 per plan §5.3.
+13. **Phase 2B Discovery Expansion Spec (LOCKED DRAFT)** is the authoritative scope for the second Field release. Engineering must satisfy AC-SR*, AC-PR*, AC-DC*, AC-DO*, AC-DR*, AC-GN*, AC-PC*, AC-VT*, AC-IA* as written. Explicit §13 exclusions are non-negotiable in 2B.
+14. **Phase 2B Founder Decisions Freeze (FROZEN)** settles product philosophy for 2B (search, practice, record default, graph, completeness, anti-features). Inherits 2A freeze where not superseded. Implementation must not re-litigate frozen §1–§11 without unlock. Conflicts between spec and freeze → **freeze prevails** on philosophy; spec prevails on acceptance criteria detail.
+15. **Phase 2B PR1 Search and Discovery Plan (IMPLEMENTATION SOURCE OF TRUTH)** governs 2B PR1 only: record detail redirects, Field Search Contract, verified-default Record Explorer, hub search IA, partial graph link grep. **Move, then redirect** for `/registry/[id]` and `/artwork/[id]`. Does not expand into PR2 practice, PR3 graph panels, or 2C opportunities.
 
 ## Unlock procedure
 
@@ -65,6 +73,10 @@ To change a frozen document:
 | Phase 2A Field Foundations Spec | Product + engineering lead; LOCKED DRAFT → LOCKED after founder freeze + sign-off; explicit unlock for scope delta |
 | Phase 2A Founder Decisions Freeze | Founder + product; version bump for any §1–§10 change |
 | Phase 2A PR1 Field Foundation Plan | Engineering lead update; must stay aligned with 2A spec and founder freeze; no scope expansion without spec unlock |
+| Phase 2B Discovery Expansion Spec | Product + engineering lead; LOCKED DRAFT → LOCKED after 2B founder freeze + sign-off; explicit unlock for scope delta |
+| Phase 2B Discovery Expansion Plan | Product update; must stay aligned with 2B spec and founder freeze |
+| Phase 2B Founder Decisions Freeze | Founder + product; version bump for any §1–§11 change |
+| Phase 2B PR1 Search and Discovery Plan | Engineering lead update; must stay aligned with 2B spec and founder freeze; no scope expansion without spec unlock |
 
 ## Related operational docs
 
@@ -73,7 +85,12 @@ To change a frozen document:
 - [Phase 2 architecture decisions](./phase-2-architecture-decisions.md) — Founder ADRs (DRAFT)
 - [Phase 2A Field foundations spec](./phase-2a-field-foundations-spec.md) — First Field release scope (LOCKED DRAFT)
 - [Phase 2A founder decisions freeze](./phase-2a-founder-decisions-freeze.md) — Settled 2A founder decisions (FROZEN)
-- [Phase 2A PR1 field foundation plan](./phase-2a-pr1-field-foundation-plan.md) — PR1 execution (IMPLEMENTATION SOURCE OF TRUTH)
+- [Phase 2A PR1 field foundation plan](./phase-2a-pr1-field-foundation-plan.md) — 2A PR1 execution (IMPLEMENTATION SOURCE OF TRUTH)
+- [Phase 2A PR1 signoff](./phase-2a-pr1-signoff.md) — 2A PR1 acceptance
+- [Phase 2B discovery expansion spec](./phase-2b-discovery-expansion-spec.md) — Second Field release scope (LOCKED DRAFT)
+- [Phase 2B discovery expansion plan](./phase-2b-discovery-expansion-plan.md) — Full 2B rollout (DRAFT)
+- [Phase 2B founder decisions freeze](./phase-2b-founder-decisions-freeze.md) — Settled 2B founder decisions (FROZEN)
+- [Phase 2B PR1 search and discovery plan](./phase-2b-pr1-search-and-discovery-plan.md) — 2B PR1 execution (IMPLEMENTATION SOURCE OF TRUTH)
 - [Post-certification remediation](./post-certification-remediation.md) — Phase 1.1 harness, replay, integrity, and reproducibility backlog
 - [Phase 1 production signoff](./phase-1-production-signoff.md)
 - [Account lifecycle deployment](../account-lifecycle-deployment.md)
@@ -103,3 +120,9 @@ To change a frozen document:
 | `phase-2a-field-foundations-spec.md` | LOCKED DRAFT |
 | `phase-2a-founder-decisions-freeze.md` | FROZEN |
 | `phase-2a-pr1-field-foundation-plan.md` | IMPLEMENTATION SOURCE OF TRUTH |
+| `phase-2a-pr1-signoff.md` | ACCEPTANCE SIGNOFF |
+| `phase-2a-pr1-completion-review.md` | IMPLEMENTATION REVIEW |
+| `phase-2b-discovery-expansion-spec.md` | LOCKED DRAFT |
+| `phase-2b-discovery-expansion-plan.md` | DRAFT |
+| `phase-2b-founder-decisions-freeze.md` | FROZEN |
+| `phase-2b-pr1-search-and-discovery-plan.md` | IMPLEMENTATION SOURCE OF TRUTH |
