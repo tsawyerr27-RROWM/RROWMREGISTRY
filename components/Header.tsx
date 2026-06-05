@@ -9,6 +9,7 @@ import { getSessionSafe } from "@/lib/supabase";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { FooterRegionSelector } from "@/components/LandingPage/FooterRegionSelector";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 
 const LOGIN_NEXT = "/login?next=" + encodeURIComponent("/studio/creative");
 
@@ -240,7 +241,7 @@ export default function Header() {
           >
             {t("nav.field")}
           </Link>
-          <Link href="/registry" className={linkClass}>
+          <Link href={fieldExplorerRecordsHref()} className={linkClass}>
             {t("nav.registry")}
           </Link>
           <Link
@@ -268,7 +269,7 @@ export default function Header() {
           >
             {t("nav.field")}
           </Link>
-          <Link href="/registry" className={`${linkClass} text-xs`}>
+          <Link href={fieldExplorerRecordsHref()} className={`${linkClass} text-xs`}>
             {t("nav.registry")}
           </Link>
           <Link

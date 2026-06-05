@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ParticipationLayersStrip } from "@/components/Registry/ParticipationLayersStrip";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import type { OrganisationPresencePageData } from "@/lib/field-organisation-presence";
-import { fieldVerifyHref, fieldVerifyRecordHref } from "@/lib/field-nav";
+import { fieldExplorerRecordsHref, fieldRecordHref, fieldVerifyHref, fieldVerifyRecordHref } from "@/lib/field-nav";
 import { artworkCardParticipationLabel } from "@/lib/representation-language";
 
 type Props = {
@@ -237,7 +237,7 @@ export function OrganisationPresenceView({ data }: Props) {
               No Registry records are on file for represented Creatives yet.
             </p>
             <Link
-              href="/registry"
+              href={fieldExplorerRecordsHref()}
               className="mt-6 inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
             >
               Browse the registry
@@ -250,7 +250,7 @@ export function OrganisationPresenceView({ data }: Props) {
                 String(artwork.verification_status || "").toLowerCase() === "verified";
               const title = (artwork.title || "").trim() || "Untitled";
               const artworkHref = `/artwork/${encodeURIComponent(artwork.registry_id)}`;
-              const registryHref = `/registry/${encodeURIComponent(artwork.registry_id)}`;
+              const recordHref = fieldRecordHref(artwork.registry_id);
               const verifyHref = fieldVerifyRecordHref(artwork.registry_id);
               const creativeHref =
                 artwork.artist_id &&
@@ -260,7 +260,7 @@ export function OrganisationPresenceView({ data }: Props) {
                 <li key={artwork.id}>
                   <article className="group flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-black/[0.06] bg-white/90 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.2)] transition duration-300 hover:-translate-y-1 hover:border-black/[0.08]">
                     <Link
-                      href={artworkHref}
+                      href={recordHref}
                       className="relative block aspect-[4/3] overflow-hidden bg-neutral-100"
                     >
                       {artwork.image_url ? (
@@ -303,7 +303,7 @@ export function OrganisationPresenceView({ data }: Props) {
                     <div className="flex flex-1 flex-col p-6">
                       <h3 className="font-serif text-xl font-normal leading-snug text-neutral-950">
                         <Link
-                          href={artworkHref}
+                          href={recordHref}
                           className="transition hover:text-neutral-600"
                         >
                           {title}
@@ -330,10 +330,10 @@ export function OrganisationPresenceView({ data }: Props) {
                       <div className="mt-auto flex flex-col gap-2 border-t border-black/[0.05] pt-5">
                         <div className="flex flex-wrap gap-2">
                           <Link
-                            href={registryHref}
+                            href={recordHref}
                             className="inline-flex flex-1 items-center justify-center rounded-2xl bg-neutral-950 px-4 py-2.5 text-center text-xs font-semibold text-white transition hover:bg-neutral-800"
                           >
-                            Registry record
+                            View record
                           </Link>
                           <Link
                             href={verifyHref}
@@ -390,7 +390,7 @@ export function OrganisationPresenceView({ data }: Props) {
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link
-            href="/registry"
+            href={fieldExplorerRecordsHref()}
             className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
           >
             Browse registry

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 
 export type GalleryPublicHeroProps = {
   name: string;
@@ -101,7 +102,7 @@ export function GalleryPublicHero({
             </a>
           ) : null}
           <Link
-            href="/registry"
+            href={fieldExplorerRecordsHref()}
             className="text-[13px] font-medium text-white/45 transition hover:text-white/75"
           >
             Browse registry

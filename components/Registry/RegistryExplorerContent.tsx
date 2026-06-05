@@ -6,6 +6,12 @@ import { RegistryListFilters } from "@/components/Registry/RegistryListFilters";
 import { RegistryListPagination } from "@/components/Registry/RegistryListPagination";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import {
+  fieldCreativeHref,
+  fieldExplorerRecordsHref,
+  fieldRecordHref,
+  fieldVerifyRecordHref,
+} from "@/lib/field-nav";
 import { fillMessage } from "@/lib/locale-messages";
 import type { RegistrySort } from "@/lib/registry-list-params";
 import { REGISTRY_PAGE_SIZE } from "@/lib/registry-list-params";
@@ -58,7 +64,7 @@ export function RegistryExplorerContent({
     <>
       <div className="mt-10">
         <RegistryListFilters
-          action="/registry"
+          action={fieldExplorerRecordsHref()}
           q={q}
           sort={sort}
           formKey={formKey}
@@ -81,7 +87,7 @@ export function RegistryExplorerContent({
           </p>
           {trimmedQ ? (
             <Link
-              href="/registry"
+              href={fieldExplorerRecordsHref()}
               className="mt-8 inline-flex items-center rounded-full border border-neutral-900/12 bg-white px-5 py-2.5 text-sm font-semibold text-neutral-800 shadow-sm transition hover:bg-neutral-50"
             >
               {t("registry.hero.clearSearch")}
@@ -137,7 +143,7 @@ export function RegistryExplorerContent({
                         </h3>
                         {artwork.artist_slug ? (
                           <Link
-                            href={`/artist/${artwork.artist_slug}`}
+                            href={fieldCreativeHref(artwork.artist_slug)}
                             className="mt-2 text-sm text-neutral-600 transition hover:text-neutral-900 hover:underline"
                           >
                             {artwork.artist_display_name}
@@ -161,14 +167,14 @@ export function RegistryExplorerContent({
                         </p>
                         <div className="mt-6 flex flex-col gap-2">
                           <Link
-                            href={`/registry/${encodeURIComponent(artwork.registry_id)}`}
+                            href={fieldRecordHref(artwork.registry_id)}
                             className="rounded-xl bg-neutral-950 px-4 py-3 text-center text-sm font-medium text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)] transition hover:bg-neutral-800"
                           >
                             {t("registry.card.viewRecord")}
                           </Link>
                           <div className="flex flex-wrap gap-x-5 gap-y-2 pt-2 text-xs">
                             <Link
-                              href={`/verify/${encodeURIComponent(artwork.registry_id)}`}
+                              href={fieldVerifyRecordHref(artwork.registry_id)}
                               className="font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-[0.35em] transition hover:text-neutral-900 hover:decoration-neutral-500"
                             >
                               {t("registry.card.verifyCert")}
@@ -196,7 +202,7 @@ export function RegistryExplorerContent({
           </section>
 
           <RegistryListPagination
-            basePath="/registry"
+            basePath={fieldExplorerRecordsHref()}
             page={page}
             pageSize={REGISTRY_PAGE_SIZE}
             total={total}

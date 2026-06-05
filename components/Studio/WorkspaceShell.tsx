@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 
 import { RegistryCatalogueInfoTooltip } from "@/components/Registry/RegistryCatalogueInfoTooltip";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 import { workspace } from "@/styles/workspace-design";
 
 export type WorkspaceNavItem = {
@@ -276,7 +277,7 @@ export function WorkspaceShellFooterLinks({
             {t("studio.shell.browseCatalogue")}
           </p>
         ) : (
-          <Link href="/registry" className={`text-sm font-medium transition ${link}`}>
+          <Link href={fieldExplorerRecordsHref()} className={`text-sm font-medium transition ${link}`}>
             {t("studio.shell.browseCatalogue")} →
           </Link>
         )}

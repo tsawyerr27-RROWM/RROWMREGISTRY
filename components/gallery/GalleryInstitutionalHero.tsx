@@ -4,6 +4,7 @@ import Link from "next/link";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { ArtworksHeroPreview } from "@/components/Dashboard/ArtworksHeroPreview";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fieldOrganisationHref } from "@/lib/field-nav";
 import { fillMessage } from "@/lib/locale-messages";
 import type { MessageKey } from "@/lib/locale-messages";
 import {
@@ -281,7 +282,7 @@ export function GalleryInstitutionalHero({
                 </button>
               ) : null}
               <Link
-                href={`/institutional-studio/${encodeURIComponent(slug)}`}
+                href={fieldOrganisationHref(slug)}
                 className="transition hover:text-white"
               >
                 {t("gallery.hero.publicPage")}

@@ -5,6 +5,7 @@ import { RegistryCatalogueInfoTooltip } from "@/components/Registry/RegistryCata
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { ArtworksHeroPreview } from "@/components/Dashboard/ArtworksHeroPreview";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 import { fillMessage } from "@/lib/locale-messages";
 import {
   CompletenessMeter,
@@ -214,7 +215,7 @@ export function CollectorWorkspaceHero({
             )}
             <div className="ml-auto flex items-center gap-3 text-[12px] text-white/50">
               <RegistryCatalogueInfoTooltip theme="dark" />
-              <Link href="/registry" className="transition hover:text-white">
+              <Link href={fieldExplorerRecordsHref()} className="transition hover:text-white">
                 {t("collector.hero.registry")}
               </Link>
             </div>

@@ -12,6 +12,7 @@ import {
 import { HeroPigmentField } from "@/components/LandingPage/HeroPigmentField";
 import { useMaxWidth767 } from "@/hooks/useMaxWidth767";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 import { narrativeControl } from "@/styles/system-design";
 
 /**
@@ -97,7 +98,7 @@ export default function HeroSection() {
               className="mt-14 flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6 md:mt-16"
               aria-label="Primary actions"
             >
-              <Link href="/registry" className={`${narrativeControl.primary} w-fit`}>
+              <Link href={fieldExplorerRecordsHref()} className={`${narrativeControl.primary} w-fit`}>
                 {t("landing.hero.browseCatalogue")}
               </Link>
               <Link href="/get-started" className={`${narrativeControl.secondary} w-fit`}>

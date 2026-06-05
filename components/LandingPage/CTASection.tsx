@@ -5,6 +5,7 @@ import Link from "next/link";
 import { narrativeLayout } from "@/styles/narrative-layout";
 import { narrativeControl } from "@/styles/system-design";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 
 /**
  * Closing band — same light surface rhythm as thesis / system flow.
@@ -40,7 +41,7 @@ export function CTASection() {
           >
             {t("landing.cta.takePart")}
           </Link>
-          <Link href="/registry" className={narrativeControl.ctaMuted}>
+          <Link href={fieldExplorerRecordsHref()} className={narrativeControl.ctaMuted}>
             {t("landing.cta.browseRegistry")}
           </Link>
         </nav>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { fieldVerifyHref } from "@/lib/field-nav";
+import { fieldExplorerRecordsHref, fieldVerifyHref } from "@/lib/field-nav";
 
 export default function FieldVerifyRecordNotFound() {
   return (
@@ -23,7 +23,7 @@ export default function FieldVerifyRecordNotFound() {
           Back to verify hub
         </Link>
         <Link
-          href="/registry"
+          href={fieldExplorerRecordsHref()}
           className="rounded-xl border border-neutral-200 bg-white px-5 py-2.5 text-neutral-900 transition hover:bg-neutral-50"
         >
           Browse Registry

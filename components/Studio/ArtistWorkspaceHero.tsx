@@ -5,6 +5,7 @@ import { RegistryCatalogueInfoTooltip } from "@/components/Registry/RegistryCata
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { ArtworksHeroPreview } from "@/components/Dashboard/ArtworksHeroPreview";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 import { fillMessage } from "@/lib/locale-messages";
 import {
   HeroActionButton,
@@ -205,7 +206,7 @@ export function ArtistWorkspaceHero({
                 {t("nav.account")}
               </Link>
               <RegistryCatalogueInfoTooltip theme="dark" />
-              <Link href="/registry" className="transition hover:text-white">
+              <Link href={fieldExplorerRecordsHref()} className="transition hover:text-white">
                 {t("nav.registry")}
               </Link>
             </div>

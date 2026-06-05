@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { DashboardNavLink } from "@/components/DashboardNavLink";
 import { FooterRegionSelector } from "@/components/LandingPage/FooterRegionSelector";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 
 export function Footer() {
   const { regionId, setRegionId, t } = useLocalePreferences();
@@ -50,7 +51,7 @@ export function Footer() {
                 {t("footer.field")}
               </Link>
               <a
-                href="/registry"
+                href={fieldExplorerRecordsHref()}
                 className="w-fit transition duration-300 ease-out hover:text-neutral-950"
               >
                 {t("footer.registry")}

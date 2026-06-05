@@ -6,7 +6,7 @@ import { RegistryListFilters } from "@/components/Registry/RegistryListFilters";
 import { RegistryListPagination } from "@/components/Registry/RegistryListPagination";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import type { CreativePresencePageData } from "@/lib/field-creative-presence";
-import { fieldVerifyHref, fieldVerifyRecordHref } from "@/lib/field-nav";
+import { fieldExplorerRecordsHref, fieldRecordHref, fieldVerifyHref, fieldVerifyRecordHref } from "@/lib/field-nav";
 import {
   artworkCardParticipationLabel,
 } from "@/lib/representation-language";
@@ -196,7 +196,7 @@ export function CreativePresenceView({ data }: Props) {
                 : "No registered works are on file for this Creative yet."}
             </p>
             <Link
-              href="/registry"
+              href={fieldExplorerRecordsHref()}
               className="mt-6 inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
             >
               Browse the registry
@@ -211,7 +211,7 @@ export function CreativePresenceView({ data }: Props) {
                   .filter(Boolean)
                   .join(" · ");
                 const artworkHref = `/artwork/${encodeURIComponent(artwork.registry_id)}`;
-                const registryHref = `/registry/${encodeURIComponent(artwork.registry_id)}`;
+                const recordHref = fieldRecordHref(artwork.registry_id);
                 const verifyHref = fieldVerifyRecordHref(artwork.registry_id);
 
                 return (
@@ -220,7 +220,7 @@ export function CreativePresenceView({ data }: Props) {
                     className="group flex flex-col overflow-hidden rounded-[1.75rem] border border-black/[0.06] bg-white/90 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.2)] transition duration-300 hover:-translate-y-1 hover:border-black/[0.08] hover:shadow-[0_28px_70px_-36px_rgba(0,0,0,0.25)]"
                   >
                     <Link
-                      href={artworkHref}
+                      href={recordHref}
                       className="relative block aspect-[4/5] overflow-hidden bg-neutral-100"
                     >
                       {artwork.image_url ? (
@@ -248,7 +248,7 @@ export function CreativePresenceView({ data }: Props) {
                     <div className="flex flex-1 flex-col p-6 md:p-7">
                       <h3 className="font-serif text-xl font-normal leading-snug text-neutral-950">
                         <Link
-                          href={artworkHref}
+                          href={recordHref}
                           className="transition hover:text-neutral-600"
                         >
                           {artwork.title}
@@ -264,10 +264,10 @@ export function CreativePresenceView({ data }: Props) {
                       <div className="mt-6 flex flex-col gap-2 border-t border-black/[0.05] pt-5">
                         <div className="flex flex-wrap items-center gap-3">
                           <Link
-                            href={registryHref}
+                            href={recordHref}
                             className="inline-flex flex-1 items-center justify-center rounded-2xl bg-neutral-950 px-4 py-2.5 text-center text-xs font-semibold text-white transition hover:bg-neutral-800"
                           >
-                            Registry record
+                            View record
                           </Link>
                           <Link
                             href={artworkHref}
@@ -309,7 +309,7 @@ export function CreativePresenceView({ data }: Props) {
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link
-            href="/registry"
+            href={fieldExplorerRecordsHref()}
             className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
           >
             Browse registry

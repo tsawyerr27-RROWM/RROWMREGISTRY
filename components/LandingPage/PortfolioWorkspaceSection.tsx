@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FullBleed } from "@/components/LandingPage/FullBleed";
 import { control } from "@/styles/system-design";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 
 /** Workspace snapshot — calm, institutional (no “dashboard confetti”). */
 function PortfolioCommandDeck() {
@@ -79,7 +80,7 @@ export function PortfolioWorkspaceSection() {
                 <Link href="/get-started" className={`${control.secondary} w-fit`}>
                   {t("landing.workspace.takePart")}
                 </Link>
-                <Link href="/registry" className={`${control.quietLink} w-fit`}>
+                <Link href={fieldExplorerRecordsHref()} className={`${control.quietLink} w-fit`}>
                   {t("landing.workspace.viewPublic")}
                 </Link>
               </div>

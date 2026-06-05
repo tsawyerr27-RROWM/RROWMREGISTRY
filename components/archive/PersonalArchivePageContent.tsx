@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { ArchivedArtworkRow } from "@/lib/personal-archive";
 import { fillMessage } from "@/lib/locale-messages";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 
 function recordStatusLabel(status: string, t: (k: import("@/lib/locale-messages").MessageKey) => string) {
   const s = status.toLowerCase();
@@ -76,7 +77,7 @@ export function PersonalArchivePageContent() {
           {t("archive.empty.body")}
         </p>
         <Link
-          href="/registry"
+          href={fieldExplorerRecordsHref()}
           className="mt-8 inline-flex rounded-full border border-neutral-900/12 bg-white px-5 py-2.5 text-sm font-semibold text-neutral-800 shadow-sm transition hover:bg-neutral-50"
         >
           {t("archive.empty.cta")}

@@ -8,6 +8,7 @@ import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { StudioShell } from "@/components/Studio/StudioShell";
 import { WorkspaceShellFooterLinks } from "@/components/Studio/WorkspaceShell";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 import {
   buildCollectorNavItems,
   consumePendingCollectorSection,
@@ -598,7 +599,7 @@ export default function CollectorStudioPage() {
             <p className="mt-10 text-sm leading-relaxed text-neutral-500">
               {t("collector.works.emptyPrefix")}{" "}
               <Link
-                href="/registry"
+                href={fieldExplorerRecordsHref()}
                 className="text-neutral-800 underline decoration-neutral-300 underline-offset-[5px] hover:decoration-neutral-500"
               >
                 {t("collector.works.emptyLink")}

@@ -1,4 +1,5 @@
 export default function Navbar() {
+  const registryHref = "/field/explorer/records";
 
   return (
 
@@ -20,7 +21,7 @@ export default function Navbar() {
         <div className="flex gap-10 text-sm text-white/70">
 
           <a
-            href="/registry"
+            href={registryHref}
             className="hover:text-white"
           >
             Registry

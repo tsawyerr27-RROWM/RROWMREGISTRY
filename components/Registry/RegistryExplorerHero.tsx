@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { RegistryCatalogueInfoTooltip } from "@/components/Registry/RegistryCatalogueInfoTooltip";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 
 type Props = {
   /** Active search query, if any */
@@ -36,7 +37,7 @@ export function RegistryExplorerHero({ searchQuery }: Props) {
             {t("registry.hero.searching")}:{" "}
             <span className="font-medium text-neutral-700">“{trimmedQ}”</span> ·{" "}
             <Link
-              href="/registry"
+              href={fieldExplorerRecordsHref()}
               className="font-medium text-emerald-900 underline decoration-emerald-900/20 underline-offset-[3px] hover:decoration-emerald-900/45"
             >
               {t("registry.hero.clearSearch")}
