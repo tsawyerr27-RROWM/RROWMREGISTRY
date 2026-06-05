@@ -1,0 +1,4 @@
+
+> rrowm-registry@0.1.0 validate:system
+> tsx scripts/run-system-validation.ts
+

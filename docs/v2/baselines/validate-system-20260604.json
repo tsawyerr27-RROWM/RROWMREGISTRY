@@ -1,11 +1,168 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm.
+
+> rrowm-registry@0.1.0 validate:system
+> tsx scripts/run-system-validation.ts
+
 {
-  "gate": "validate:system",
-  "pass": false,
-  "blocked": true,
-  "failure_reasons": [
-    "DATABASE_URL or VALIDATION_DATABASE_URL not available in local or Vercel production env pull.",
-    "Set direct Postgres URI and VALIDATION_ARTIST_USER_ID, VALIDATION_GALLERY_USER_ID, VALIDATION_SECOND_OWNER_USER_ID, then re-run: npm run validate:system"
+  "warnings": [
+    "HIGH RISK: RPC(s) not found in supabase/migrations/*.sql (environment may be unreproducible): register_artwork_atomic, add_value_event",
+    "hardening: current database role bypasses RLS — galleries UPDATE and ownership_events INSERT probes were not exercised"
   ],
-  "substitute_gate": "phase-1-rp-supabase-smoke",
-  "substitute_artifact": "docs/v2/baselines/rp-supabase-smoke-20260604.json"
+  "rpc_defined_in_repo": {
+    "register_artwork_atomic": false,
+    "add_value_event": false,
+    "gallery_verify_artwork": true,
+    "issue_certificate_for_verified_artwork": true,
+    "compute_artwork_verification_status": true,
+    "get_current_owner": true,
+    "generate_certificate_hash": true,
+    "verify_certificate": true
+  },
+  "rpc_reproducibility_pass": true,
+  "rpc_check": {
+    "pass": true,
+    "missing": [],
+    "present": [
+      "register_artwork_atomic",
+      "add_value_event",
+      "gallery_verify_artwork",
+      "issue_certificate_for_verified_artwork",
+      "compute_artwork_verification_status",
+      "get_current_owner",
+      "generate_certificate_hash",
+      "verify_certificate"
+    ]
+  },
+  "schema_check": {
+    "pass": true,
+    "issues": []
+  },
+  "flows": {
+    "artwork_lifecycle": {
+      "name": "artwork_lifecycle",
+      "pass": false,
+      "errors": [
+        "exception: Not authorized"
+      ]
+    },
+    "idempotency_register": {
+      "name": "idempotency_register",
+      "pass": true,
+      "errors": []
+    },
+    "concurrency": {
+      "name": "concurrency",
+      "pass": false,
+      "errors": [
+        "not run"
+      ]
+    },
+    "ownership_chain": {
+      "name": "ownership_chain",
+      "pass": false,
+      "errors": [
+        "skipped because artwork_lifecycle failed"
+      ]
+    }
+  },
+  "integrity": {
+    "pass": false,
+    "report": {
+      "unresolved_sales": [],
+      "invalid_certificates": [],
+      "ownership_mismatches": [
+        {
+          "artwork_id": "f584f548-8719-455c-9d84-d378568e7a6d",
+          "registry_id": "RROWM-MN5V2O4L-53860EF0",
+          "cached_current_owner_id": null,
+          "computed_current_owner_id": "6dce01f2-e304-42ab-8c0c-b75b293621ed"
+        },
+        {
+          "artwork_id": "941634be-2e85-44b7-a5bc-38aefa8705a3",
+          "registry_id": "RROWM-001004",
+          "cached_current_owner_id": "6dce01f2-e304-42ab-8c0c-b75b293621ed",
+          "computed_current_owner_id": null
+        },
+        {
+          "artwork_id": "5fe3ed3d-b182-4158-9b0e-d99dea89f0b7",
+          "registry_id": "RROWM-001002",
+          "cached_current_owner_id": "6dce01f2-e304-42ab-8c0c-b75b293621ed",
+          "computed_current_owner_id": null
+        },
+        {
+          "artwork_id": "5d2737f8-0e78-4adb-8e5e-324d41c8ac39",
+          "registry_id": "RROWM-001000",
+          "cached_current_owner_id": "6dce01f2-e304-42ab-8c0c-b75b293621ed",
+          "computed_current_owner_id": null
+        }
+      ],
+      "verification_mismatches": [
+        {
+          "artwork_id": "941634be-2e85-44b7-a5bc-38aefa8705a3",
+          "registry_id": "RROWM-001004",
+          "stored_status": "unverified",
+          "expected_status": "verified"
+        },
+        {
+          "artwork_id": "5fe3ed3d-b182-4158-9b0e-d99dea89f0b7",
+          "registry_id": "RROWM-001002",
+          "stored_status": "unverified",
+          "expected_status": "verified"
+        },
+        {
+          "artwork_id": "5d2737f8-0e78-4adb-8e5e-324d41c8ac39",
+          "registry_id": "RROWM-001000",
+          "stored_status": "unverified",
+          "expected_status": "verified"
+        },
+        {
+          "artwork_id": "bebf2346-b151-4832-ae4f-a2938f8962a1",
+          "registry_id": "RROWM-001003",
+          "stored_status": "unverified",
+          "expected_status": "verified"
+        }
+      ]
+    },
+    "errors": [
+      "report.ownership_mismatches has 4 issue(s): [{\"artwork_id\":\"f584f548-8719-455c-9d84-d378568e7a6d\",\"registry_id\":\"RROWM-MN5V2O4L-53860EF0\",\"cached_current_owner_id\":null,\"computed_current_owner_id\":\"6dce01f2-e304-42ab-8c0c-b75b293621ed\"},{\"artwork_id\":\"941634be-2e85-44b7-a5bc-38aefa8705a3\",\"registry_id\":\"RROWM-001004\",\"cached_current_owner_id\":\"6dce01f2-e304-42ab-8c0c-b75b293621ed\",\"computed_current_owner_id\":null},{\"artwork_id\":\"5fe3ed3d-b182-4158-9b0e-d99dea89f0b7\",\"registry_id\":\"RROWM-001002\",\"cached_current_owner_id\":\"6dce01f2-e304-42a",
+      "report.verification_mismatches has 4 issue(s): [{\"artwork_id\":\"941634be-2e85-44b7-a5bc-38aefa8705a3\",\"registry_id\":\"RROWM-001004\",\"stored_status\":\"unverified\",\"expected_status\":\"verified\"},{\"artwork_id\":\"5fe3ed3d-b182-4158-9b0e-d99dea89f0b7\",\"registry_id\":\"RROWM-001002\",\"stored_status\":\"unverified\",\"expected_status\":\"verified\"},{\"artwork_id\":\"5d2737f8-0e78-4adb-8e5e-324d41c8ac39\",\"registry_id\":\"RROWM-001000\",\"stored_status\":\"unverified\",\"expected_status\":\"verified\"},{\"artwork_id\":\"bebf2346-b151-4832-ae4f-a2938f8962a1\",\"registry_id\":\"RROWM-00"
+    ]
+  },
+  "hardening": {
+    "event_ordering": {
+      "pass": true,
+      "errors": []
+    },
+    "ownership_duplication": {
+      "pass": true,
+      "errors": []
+    },
+    "certificate_immutability": {
+      "pass": true,
+      "errors": []
+    },
+    "registry_guarantees": {
+      "pass": true,
+      "errors": []
+    },
+    "rls_permissions": {
+      "pass": true,
+      "errors": [],
+      "skipped": true,
+      "skip_reason": "RLS bypass role"
+    },
+    "atomicity_register": {
+      "pass": true,
+      "errors": []
+    },
+    "pass": true
+  },
+  "pass": false,
+  "failure_reasons": [
+    "FAIL flow artwork_lifecycle: exception: Not authorized",
+    "FAIL flow concurrency: not run",
+    "FAIL flow ownership_chain: skipped because artwork_lifecycle failed",
+    "FAIL integrity: report.ownership_mismatches has 4 issue(s): [{\"artwork_id\":\"f584f548-8719-455c-9d84-d378568e7a6d\",\"registry_id\":\"RROWM-MN5V2O4L-53860EF0\",\"cached_current_owner_id\":null,\"computed_current_owner_id\":\"6dce01f2-e304-42ab-8c0c-b75b293621ed\"},{\"artwork_id\":\"941634be-2e85-44b7-a5bc-38aefa8705a3\",\"registry_id\":\"RROWM-001004\",\"cached_current_owner_id\":\"6dce01f2-e304-42ab-8c0c-b75b293621ed\",\"computed_current_owner_id\":null},{\"artwork_id\":\"5fe3ed3d-b182-4158-9b0e-d99dea89f0b7\",\"registry_id\":\"RROWM-001002\",\"cached_current_owner_id\":\"6dce01f2-e304-42a",
+    "FAIL integrity: report.verification_mismatches has 4 issue(s): [{\"artwork_id\":\"941634be-2e85-44b7-a5bc-38aefa8705a3\",\"registry_id\":\"RROWM-001004\",\"stored_status\":\"unverified\",\"expected_status\":\"verified\"},{\"artwork_id\":\"5fe3ed3d-b182-4158-9b0e-d99dea89f0b7\",\"registry_id\":\"RROWM-001002\",\"stored_status\":\"unverified\",\"expected_status\":\"verified\"},{\"artwork_id\":\"5d2737f8-0e78-4adb-8e5e-324d41c8ac39\",\"registry_id\":\"RROWM-001000\",\"stored_status\":\"unverified\",\"expected_status\":\"verified\"},{\"artwork_id\":\"bebf2346-b151-4832-ae4f-a2938f8962a1\",\"registry_id\":\"RROWM-00"
+  ]
 }
