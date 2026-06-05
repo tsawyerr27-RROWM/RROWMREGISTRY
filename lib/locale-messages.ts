@@ -51,6 +51,31 @@ export type MessageKey =
   | "field.explorer.organisations.empty.filtered"
   | "field.explorer.organisations.empty.clearFilters"
   | "field.explorer.organisations.empty.browseAll"
+  | "field.explorer.records.headline"
+  | "field.explorer.records.lede"
+  | "field.explorer.records.searching"
+  | "field.explorer.records.filtered"
+  | "field.explorer.records.filter.search"
+  | "field.explorer.records.filter.searchPlaceholder"
+  | "field.explorer.records.filter.creative"
+  | "field.explorer.records.filter.creativePlaceholder"
+  | "field.explorer.records.filter.organisation"
+  | "field.explorer.records.filter.organisationPlaceholder"
+  | "field.explorer.records.filter.practice"
+  | "field.explorer.records.filter.allPractices"
+  | "field.explorer.records.filter.verification"
+  | "field.explorer.records.filter.allRecords"
+  | "field.explorer.records.filter.verifiedOnly"
+  | "field.explorer.records.filter.certificate"
+  | "field.explorer.records.filter.allCertificates"
+  | "field.explorer.records.filter.certificateOnly"
+  | "field.explorer.records.filter.sort"
+  | "field.explorer.records.filter.apply"
+  | "field.explorer.records.sort.recent"
+  | "field.explorer.records.empty.none"
+  | "field.explorer.records.empty.filtered"
+  | "field.explorer.records.empty.clearFilters"
+  | "field.explorer.records.empty.browseAll"
   | "field.explorer.creatives.headline"
   | "field.explorer.creatives.lede"
   | "field.explorer.creatives.searching"
@@ -1437,6 +1462,34 @@ const EN: Record<MessageKey, string> = {
     "No Organisations match your search or filters. Try clearing filters or browsing all Organisations.",
   "field.explorer.organisations.empty.clearFilters": "Clear filters",
   "field.explorer.organisations.empty.browseAll": "Browse all Organisations",
+  "field.explorer.records.headline": "Discover Registry records",
+  "field.explorer.records.lede":
+    "Browse Registry records with verification status, certificates, and links to Creatives and Organisations. No recommendations or paid ranking.",
+  "field.explorer.records.searching": "searching",
+  "field.explorer.records.filtered": "filters applied",
+  "field.explorer.records.filter.search": "Search",
+  "field.explorer.records.filter.searchPlaceholder": "Title or Registry ID…",
+  "field.explorer.records.filter.creative": "Creative",
+  "field.explorer.records.filter.creativePlaceholder": "Creative slug…",
+  "field.explorer.records.filter.organisation": "Organisation",
+  "field.explorer.records.filter.organisationPlaceholder": "Organisation slug…",
+  "field.explorer.records.filter.practice": "Practice",
+  "field.explorer.records.filter.allPractices": "All practices",
+  "field.explorer.records.filter.verification": "Verification",
+  "field.explorer.records.filter.allRecords": "All records",
+  "field.explorer.records.filter.verifiedOnly": "Verified on file",
+  "field.explorer.records.filter.certificate": "Certificate",
+  "field.explorer.records.filter.allCertificates": "All records",
+  "field.explorer.records.filter.certificateOnly": "Certificate on file",
+  "field.explorer.records.filter.sort": "Sort",
+  "field.explorer.records.filter.apply": "Apply",
+  "field.explorer.records.sort.recent": "Most recent",
+  "field.explorer.records.empty.none":
+    "No Registry records are available to browse yet.",
+  "field.explorer.records.empty.filtered":
+    "No records match your search or filters. Try clearing filters or browsing all records.",
+  "field.explorer.records.empty.clearFilters": "Clear filters",
+  "field.explorer.records.empty.browseAll": "Browse all records",
   "field.explorer.creatives.headline": "Discover Creatives",
   "field.explorer.creatives.lede":
     "Browse public Creative profiles on The Field — practice, verification on file, and registry footprint. Discovery only; not a marketplace or recruitment surface.",
@@ -3093,6 +3146,34 @@ const DE: Record<MessageKey, string> = {
     "Keine Organisationen entsprechen Ihrer Suche oder den Filtern. Filter zurücksetzen oder alle Organisationen durchsuchen.",
   "field.explorer.organisations.empty.clearFilters": "Filter zurücksetzen",
   "field.explorer.organisations.empty.browseAll": "Alle Organisationen durchsuchen",
+  "field.explorer.records.headline": "Register-Einträge entdecken",
+  "field.explorer.records.lede":
+    "Register-Einträge mit Verifizierungsstatus, Zertifikaten und Links zu Creatives und Organisationen. Keine Empfehlungen oder bezahlte Platzierung.",
+  "field.explorer.records.searching": "Suche",
+  "field.explorer.records.filtered": "Filter aktiv",
+  "field.explorer.records.filter.search": "Suche",
+  "field.explorer.records.filter.searchPlaceholder": "Titel oder Registry-ID…",
+  "field.explorer.records.filter.creative": "Creative",
+  "field.explorer.records.filter.creativePlaceholder": "Creative-Slug…",
+  "field.explorer.records.filter.organisation": "Organisation",
+  "field.explorer.records.filter.organisationPlaceholder": "Organisations-Slug…",
+  "field.explorer.records.filter.practice": "Praxis",
+  "field.explorer.records.filter.allPractices": "Alle Praktiken",
+  "field.explorer.records.filter.verification": "Verifizierung",
+  "field.explorer.records.filter.allRecords": "Alle Einträge",
+  "field.explorer.records.filter.verifiedOnly": "Verifiziert auf Datei",
+  "field.explorer.records.filter.certificate": "Zertifikat",
+  "field.explorer.records.filter.allCertificates": "Alle Einträge",
+  "field.explorer.records.filter.certificateOnly": "Zertifikat auf Datei",
+  "field.explorer.records.filter.sort": "Sortierung",
+  "field.explorer.records.filter.apply": "Anwenden",
+  "field.explorer.records.sort.recent": "Neueste",
+  "field.explorer.records.empty.none":
+    "Noch keine Register-Einträge zum Durchsuchen verfügbar.",
+  "field.explorer.records.empty.filtered":
+    "Keine Einträge entsprechen Ihrer Suche oder den Filtern. Filter zurücksetzen oder alle Einträge durchsuchen.",
+  "field.explorer.records.empty.clearFilters": "Filter zurücksetzen",
+  "field.explorer.records.empty.browseAll": "Alle Einträge durchsuchen",
   "field.explorer.creatives.headline": "Creatives entdecken",
   "field.explorer.creatives.lede":
     "Öffentliche Creative-Profile auf The Field — Praxis, Verifizierung und Register-Footprint. Nur Entdeckung; kein Marktplatz.",
@@ -4625,6 +4706,34 @@ const FR: Record<MessageKey, string> = {
     "Aucune Organisation ne correspond à votre recherche ou aux filtres. Effacez les filtres ou parcourez toutes les Organisations.",
   "field.explorer.organisations.empty.clearFilters": "Effacer les filtres",
   "field.explorer.organisations.empty.browseAll": "Parcourir toutes les Organisations",
+  "field.explorer.records.headline": "Découvrir les entrées du Registre",
+  "field.explorer.records.lede":
+    "Parcourez les entrées du Registre avec statut de vérification, certificats et liens vers Creatives et Organisations. Pas de recommandations ni de placement payant.",
+  "field.explorer.records.searching": "recherche",
+  "field.explorer.records.filtered": "filtres actifs",
+  "field.explorer.records.filter.search": "Rechercher",
+  "field.explorer.records.filter.searchPlaceholder": "Titre ou Registry ID…",
+  "field.explorer.records.filter.creative": "Creative",
+  "field.explorer.records.filter.creativePlaceholder": "Slug Creative…",
+  "field.explorer.records.filter.organisation": "Organisation",
+  "field.explorer.records.filter.organisationPlaceholder": "Slug Organisation…",
+  "field.explorer.records.filter.practice": "Pratique",
+  "field.explorer.records.filter.allPractices": "Toutes les pratiques",
+  "field.explorer.records.filter.verification": "Vérification",
+  "field.explorer.records.filter.allRecords": "Toutes les entrées",
+  "field.explorer.records.filter.verifiedOnly": "Vérifié au registre",
+  "field.explorer.records.filter.certificate": "Certificat",
+  "field.explorer.records.filter.allCertificates": "Toutes les entrées",
+  "field.explorer.records.filter.certificateOnly": "Certificat au registre",
+  "field.explorer.records.filter.sort": "Tri",
+  "field.explorer.records.filter.apply": "Appliquer",
+  "field.explorer.records.sort.recent": "Plus récent",
+  "field.explorer.records.empty.none":
+    "Aucune entrée du Registre n’est disponible pour l’instant.",
+  "field.explorer.records.empty.filtered":
+    "Aucune entrée ne correspond à votre recherche ou aux filtres. Effacez les filtres ou parcourez toutes les entrées.",
+  "field.explorer.records.empty.clearFilters": "Effacer les filtres",
+  "field.explorer.records.empty.browseAll": "Parcourir toutes les entrées",
   "field.explorer.creatives.headline": "Découvrir les Creatives",
   "field.explorer.creatives.lede":
     "Parcourez les profils Creative publics sur The Field — pratique, vérification et empreinte registre. Découverte uniquement.",
@@ -6160,6 +6269,34 @@ const JA: Record<MessageKey, string> = {
     "検索またはフィルターに一致する Organisation がありません。フィルターを解除するか、すべての Organisation を閲覧してください。",
   "field.explorer.organisations.empty.clearFilters": "フィルターを解除",
   "field.explorer.organisations.empty.browseAll": "すべての Organisation を閲覧",
+  "field.explorer.records.headline": "レジストリレコードを探す",
+  "field.explorer.records.lede":
+    "検証状態、証明書、Creative・Organisation へのリンク付きでレジストリレコードを閲覧。おすすめや有料掲載はありません。",
+  "field.explorer.records.searching": "検索",
+  "field.explorer.records.filtered": "フィルター適用中",
+  "field.explorer.records.filter.search": "検索",
+  "field.explorer.records.filter.searchPlaceholder": "タイトルまたは Registry ID…",
+  "field.explorer.records.filter.creative": "Creative",
+  "field.explorer.records.filter.creativePlaceholder": "Creative スラッグ…",
+  "field.explorer.records.filter.organisation": "Organisation",
+  "field.explorer.records.filter.organisationPlaceholder": "Organisation スラッグ…",
+  "field.explorer.records.filter.practice": "プラクティス",
+  "field.explorer.records.filter.allPractices": "すべて",
+  "field.explorer.records.filter.verification": "検証",
+  "field.explorer.records.filter.allRecords": "すべてのレコード",
+  "field.explorer.records.filter.verifiedOnly": "記録上 verified",
+  "field.explorer.records.filter.certificate": "証明書",
+  "field.explorer.records.filter.allCertificates": "すべてのレコード",
+  "field.explorer.records.filter.certificateOnly": "証明書あり",
+  "field.explorer.records.filter.sort": "並び替え",
+  "field.explorer.records.filter.apply": "適用",
+  "field.explorer.records.sort.recent": "最新",
+  "field.explorer.records.empty.none":
+    "閲覧可能なレジストリレコードはまだありません。",
+  "field.explorer.records.empty.filtered":
+    "検索またはフィルターに一致するレコードがありません。フィルターを解除するか、すべてのレコードを閲覧してください。",
+  "field.explorer.records.empty.clearFilters": "フィルターを解除",
+  "field.explorer.records.empty.browseAll": "すべてのレコードを閲覧",
   "field.explorer.creatives.headline": "Creative を探す",
   "field.explorer.creatives.lede":
     "The Field 上の公開 Creative プロフィールを閲覧 — プラクティス、検証、レジストリの footprint。発見のみ。",

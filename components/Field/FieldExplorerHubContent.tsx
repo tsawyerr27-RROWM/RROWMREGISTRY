@@ -62,7 +62,7 @@ export function FieldExplorerHubContent() {
             {t("field.explorer.tab.records")}
           </p>
           <p className="mt-3 font-serif text-2xl text-neutral-950 transition group-hover:text-neutral-700">
-            {t("field.explorer.hub.recordsCard")}
+            {t("field.explorer.records.headline")}
           </p>
         </Link>
       </div>
