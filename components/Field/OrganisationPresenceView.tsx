@@ -1,9 +1,17 @@
 import Link from "next/link";
 
-import { ParticipationLayersStrip } from "@/components/Registry/ParticipationLayersStrip";
+import { OrganisationPresenceDiscoverySection } from "@/components/Field/OrganisationPresenceDiscoverySection";
+import { OrganisationPresenceOwnerStewardship } from "@/components/Field/OrganisationPresenceOwnerStewardship";
+import { OrganisationPresenceRegistryEvidence } from "@/components/Field/OrganisationPresenceRegistryEvidence";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import type { OrganisationPresencePageData } from "@/lib/field-organisation-presence";
-import { fieldExplorerRecordsHref, fieldRecordHref, fieldVerifyHref, fieldVerifyRecordHref } from "@/lib/field-nav";
+import {
+  fieldExplorerRecordsHref,
+  fieldRecordHref,
+  fieldVerifyHref,
+  fieldVerifyRecordHref,
+} from "@/lib/field-nav";
+import { registryLedgerHref } from "@/lib/registry-nav";
 import { artworkCardParticipationLabel } from "@/lib/representation-language";
 
 type Props = {
@@ -25,6 +33,8 @@ export function OrganisationPresenceView({ data }: Props) {
     representedCreatives,
     artworks,
     footprint,
+    isProfileOwner,
+    stewardshipItems,
   } = data;
 
   return (
@@ -44,100 +54,36 @@ export function OrganisationPresenceView({ data }: Props) {
             <h1 className="font-serif text-4xl font-normal leading-[1.08] tracking-tight text-neutral-950 md:text-5xl lg:text-[3.25rem]">
               {organisation.name}
             </h1>
-            {showLocation && organisation.location ? (
-              <p className="mt-3 text-base text-neutral-600">{organisation.location}</p>
-            ) : null}
-            {organisation.websiteHref ? (
-              <a
-                href={organisation.websiteHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 inline-flex text-sm font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-4 transition hover:decoration-neutral-500"
-              >
-                Website
-              </a>
-            ) : null}
           </div>
         </div>
+
+        <OrganisationPresenceRegistryEvidence
+          verified={organisation.verified}
+          footprint={footprint}
+          representedCreativesCount={representedCreatives.length}
+          participationLayers={participationLayers}
+        />
+
+        {isProfileOwner ? (
+          <OrganisationPresenceOwnerStewardship items={stewardshipItems} />
+        ) : null}
+
+        {showLocation && organisation.location ? (
+          <p className="mt-8 text-base text-neutral-600">{organisation.location}</p>
+        ) : null}
+        {organisation.websiteHref ? (
+          <a
+            href={organisation.websiteHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex text-sm font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-4 transition hover:decoration-neutral-500"
+          >
+            Website
+          </a>
+        ) : null}
       </section>
 
-      <section className="mt-10 max-w-3xl">
-        <div className="rounded-2xl border border-neutral-900/[0.06] bg-white/75 p-5 shadow-sm md:p-6">
-          <p className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
-            Verification
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span
-              className={`rounded-full px-3 py-1 text-[11px] font-medium ${
-                organisation.verified
-                  ? "border border-emerald-900/15 bg-emerald-50 text-emerald-950"
-                  : "border border-neutral-200 bg-neutral-50 text-neutral-700"
-              }`}
-            >
-              {organisation.verified
-                ? "Organisation verification on file"
-                : "Registry participant"}
-            </span>
-          </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-xl border border-neutral-900/[0.05] bg-neutral-50/80 px-4 py-3">
-              <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-500">
-                Verified works
-              </p>
-              <p className="mt-1 text-lg font-medium tabular-nums text-neutral-950">
-                {footprint.verifiedRecords}
-              </p>
-            </div>
-            <div className="rounded-xl border border-neutral-900/[0.05] bg-neutral-50/80 px-4 py-3">
-              <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-500">
-                Registry participation
-              </p>
-              <p className="mt-1 text-sm text-neutral-800">
-                {representedCreatives.length}{" "}
-                {representedCreatives.length === 1 ? "Creative" : "Creatives"} ·{" "}
-                {footprint.totalRecords}{" "}
-                {footprint.totalRecords === 1 ? "record" : "records"}
-              </p>
-            </div>
-            <div className="rounded-xl border border-neutral-900/[0.05] bg-neutral-50/80 px-4 py-3 sm:col-span-2">
-              <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-500">
-                Certificates
-              </p>
-              <p className="mt-1 text-sm text-neutral-800">
-                {footprint.certificateCount > 0 ? (
-                  <>
-                    <span className="font-medium tabular-nums">
-                      {footprint.certificateCount}
-                    </span>{" "}
-                    {footprint.certificateCount === 1 ? "certificate" : "certificates"}{" "}
-                    recorded on file
-                    {footprint.revokedCertificateCount > 0 ? (
-                      <>
-                        {" "}
-                        ·{" "}
-                        <span className="text-neutral-600">
-                          {footprint.revokedCertificateCount} revoked
-                        </span>
-                      </>
-                    ) : null}
-                  </>
-                ) : (
-                  "No certificates recorded yet for represented works"
-                )}
-              </p>
-            </div>
-          </div>
-          {participationLayers.length > 0 ? (
-            <div className="mt-5 border-t border-neutral-900/[0.05] pt-5">
-              <ParticipationLayersStrip
-                layers={participationLayers}
-                variant="light"
-                showFootnote={false}
-              />
-            </div>
-          ) : null}
-        </div>
-      </section>
+      <OrganisationPresenceDiscoverySection />
 
       {showRoster ? (
         <section className="mt-14 md:mt-16" aria-labelledby="org-roster-heading">
@@ -197,6 +143,22 @@ export function OrganisationPresenceView({ data }: Props) {
                             : "Profile not yet on file"}
                         {creative.artistVerified ? " · Artist confirmation on file" : null}
                       </p>
+                      {creative.totalWorkCount > 0 ? (
+                        <p className="mt-2 text-[11px] font-medium text-neutral-700">
+                          {creative.verifiedWorkCount > 0 ? (
+                            <>
+                              {creative.verifiedWorkCount} verified ·{" "}
+                              {creative.totalWorkCount}{" "}
+                              {creative.totalWorkCount === 1 ? "work" : "works"} on file
+                            </>
+                          ) : (
+                            <>
+                              {creative.totalWorkCount}{" "}
+                              {creative.totalWorkCount === 1 ? "work" : "works"} registered
+                            </>
+                          )}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                 </li>
@@ -209,7 +171,7 @@ export function OrganisationPresenceView({ data }: Props) {
       <section className="mt-16 md:mt-20" aria-labelledby="org-footprint-heading">
         <div className="flex flex-wrap items-end justify-between gap-4 border-b border-black/[0.06] pb-6">
           <div>
-            <InfoTooltip text="Registry records attributed to represented Creatives. Each record carries its own verification status and chronology." />
+            <InfoTooltip text="Open a piece for the Field record summary; use the registry ledger link for the continuity record on file." />
             <h2
               id="org-footprint-heading"
               className="font-serif text-3xl font-normal tracking-tight text-neutral-950 md:text-4xl"
@@ -250,6 +212,7 @@ export function OrganisationPresenceView({ data }: Props) {
                 String(artwork.verification_status || "").toLowerCase() === "verified";
               const title = (artwork.title || "").trim() || "Untitled";
               const recordHref = fieldRecordHref(artwork.registry_id);
+              const ledgerHref = registryLedgerHref(artwork.registry_id);
               const verifyHref = fieldVerifyRecordHref(artwork.registry_id);
               const creativeHref =
                 artwork.artist_id &&
@@ -341,6 +304,12 @@ export function OrganisationPresenceView({ data }: Props) {
                             Check verification
                           </Link>
                         </div>
+                        <Link
+                          href={ledgerHref}
+                          className="text-center text-[11px] font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500"
+                        >
+                          Registry ledger
+                        </Link>
                       </div>
                     </div>
                   </article>

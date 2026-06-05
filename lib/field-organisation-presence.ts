@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { fetchCertificatePublicStatusByArtworkIds } from "@/lib/fetch-certificate-public-status-map";
 import { fieldCreativeHref } from "@/lib/field-nav";
+import type { MessageKey } from "@/lib/locale-messages";
 import type { ParticipationLayer } from "@/lib/get-artwork-participation-layers";
 import { parsePublicPresence } from "@/lib/public-presence";
 import { REPRESENTATION_PHRASES } from "@/lib/representation-language";
@@ -13,6 +14,8 @@ export type OrganisationPresenceCreative = {
   slug: string | null;
   href: string | null;
   artistVerified: boolean;
+  verifiedWorkCount: number;
+  totalWorkCount: number;
 };
 
 export type OrganisationPresenceArtwork = {
@@ -51,6 +54,8 @@ export type OrganisationPresencePageData = {
   representedCreatives: OrganisationPresenceCreative[];
   artworks: OrganisationPresenceArtwork[];
   footprint: OrganisationPresenceFootprint;
+  isProfileOwner: boolean;
+  stewardshipItems: Array<{ id: string; labelKey: MessageKey; complete: boolean }>;
 };
 
 type GalleryRow = {
@@ -134,7 +139,8 @@ function buildOrganisationParticipationLayers(
 
 export async function loadOrganisationPresencePageData(
   supabase: SupabaseClient,
-  slug: string
+  slug: string,
+  sessionUserId?: string | null
 ): Promise<OrganisationPresencePageData | null> {
   const clean = slug.trim();
   if (!clean) return null;
@@ -187,6 +193,8 @@ export async function loadOrganisationPresencePageData(
             slug: artistSlug,
             href: profilePublic && artistSlug ? fieldCreativeHref(artistSlug) : null,
             artistVerified: artist.verification_status === "verified",
+            verifiedWorkCount: 0,
+            totalWorkCount: 0,
           };
         })
         .sort((a, b) => a.displayName.localeCompare(b.displayName))
@@ -246,6 +254,23 @@ export async function loadOrganisationPresencePageData(
     (row) => String(row.verification_status || "").toLowerCase() === "verified"
   ).length;
 
+  const worksByArtist = new Map<string, { verified: number; total: number }>();
+  for (const row of artworks) {
+    if (!row.artist_id) continue;
+    const current = worksByArtist.get(row.artist_id) ?? { verified: 0, total: 0 };
+    current.total += 1;
+    if (String(row.verification_status || "").toLowerCase() === "verified") {
+      current.verified += 1;
+    }
+    worksByArtist.set(row.artist_id, current);
+  }
+
+  for (const creative of representedCreatives) {
+    const stats = worksByArtist.get(creative.id);
+    creative.verifiedWorkCount = stats?.verified ?? 0;
+    creative.totalWorkCount = stats?.total ?? 0;
+  }
+
   const footprint: OrganisationPresenceFootprint = {
     totalRecords: artworks.length,
     verifiedRecords,
@@ -260,6 +285,48 @@ export async function loadOrganisationPresencePageData(
     presence.values && gallery.description?.trim()
       ? gallery.description.trim()
       : null;
+
+  let isProfileOwner = false;
+  if (sessionUserId) {
+    const { data: membership } = await supabase
+      .from("gallery_users")
+      .select("user_id")
+      .eq("gallery_id", gallery.id)
+      .eq("user_id", sessionUserId)
+      .maybeSingle();
+    isProfileOwner = Boolean(membership);
+  }
+
+  const stewardshipItems: OrganisationPresencePageData["stewardshipItems"] =
+    isProfileOwner
+      ? [
+          {
+            id: "description",
+            labelKey: "field.organisation.stewardship.item.description",
+            complete: Boolean(description),
+          },
+          {
+            id: "location",
+            labelKey: "field.organisation.stewardship.item.location",
+            complete: Boolean(locationLine),
+          },
+          {
+            id: "website",
+            labelKey: "field.organisation.stewardship.item.website",
+            complete: Boolean(resolveWebsiteHref(gallery.website_url)),
+          },
+          {
+            id: "roster",
+            labelKey: "field.organisation.stewardship.item.roster",
+            complete: representedCreatives.length > 0,
+          },
+          {
+            id: "verified_works",
+            labelKey: "field.organisation.stewardship.item.verifiedWorks",
+            complete: footprint.verifiedRecords > 0,
+          },
+        ]
+      : [];
 
   return {
     organisation: {
@@ -281,6 +348,8 @@ export async function loadOrganisationPresencePageData(
     representedCreatives,
     artworks,
     footprint,
+    isProfileOwner,
+    stewardshipItems,
   };
 }
 

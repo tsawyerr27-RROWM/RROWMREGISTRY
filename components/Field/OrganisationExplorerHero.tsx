@@ -1,6 +1,9 @@
 "use client";
 
+import Link from "next/link";
+
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fieldVerifyHref } from "@/lib/field-nav";
 
 type Props = {
   searchQuery: string;
@@ -53,6 +56,14 @@ export function OrganisationExplorerHero({
             {hasFilters ? ` · ${t("field.explorer.organisations.filtered")}` : null}
           </p>
         ) : null}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            href={fieldVerifyHref()}
+            className="inline-flex rounded-2xl border border-neutral-200 bg-white px-5 py-2.5 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
+          >
+            {t("field.organisation.link.verifyHub")}
+          </Link>
+        </div>
       </div>
     </section>
   );

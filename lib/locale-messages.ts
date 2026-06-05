@@ -50,6 +50,8 @@ export type MessageKey =
   | "field.explorer.organisations.filter.representation"
   | "field.explorer.organisations.filter.allParticipation"
   | "field.explorer.organisations.filter.withRepresented"
+  | "field.explorer.organisations.filter.verifiedHint"
+  | "field.explorer.organisations.filter.representationHint"
   | "field.explorer.organisations.filter.sort"
   | "field.explorer.organisations.filter.apply"
   | "field.explorer.organisations.empty.none"
@@ -162,6 +164,33 @@ export type MessageKey =
   | "field.creative.stewardship.item.declaredPractice"
   | "field.creative.stewardship.item.links"
   | "field.creative.stewardship.item.verifiedWork"
+  | "field.organisation.registryEvidence"
+  | "field.organisation.verification.onFile"
+  | "field.organisation.verification.participant"
+  | "field.organisation.verifiedRecordsLine"
+  | "field.organisation.totalRecordsLine"
+  | "field.organisation.noRecordsOnFile"
+  | "field.organisation.representedCreatives"
+  | "field.organisation.certificates"
+  | "field.organisation.certificatesLine"
+  | "field.organisation.certificatesRevokedLine"
+  | "field.organisation.noCertificates"
+  | "field.organisation.participationHeading"
+  | "field.organisation.discoveryHeading"
+  | "field.organisation.discoveryLede"
+  | "field.organisation.link.recordExplorer"
+  | "field.organisation.link.organisationExplorer"
+  | "field.organisation.link.creativeExplorer"
+  | "field.organisation.link.verifyHub"
+  | "field.organisation.viewProfile"
+  | "field.organisation.stewardship.heading"
+  | "field.organisation.stewardship.lede"
+  | "field.organisation.stewardship.studioLink"
+  | "field.organisation.stewardship.item.description"
+  | "field.organisation.stewardship.item.location"
+  | "field.organisation.stewardship.item.website"
+  | "field.organisation.stewardship.item.roster"
+  | "field.organisation.stewardship.item.verifiedWorks"
   | "field.presence.creative.title"
   | "field.presence.organisation.title"
   | "field.presence.collector.title"
@@ -1505,6 +1534,10 @@ const EN: Record<MessageKey, string> = {
   "field.explorer.organisations.filter.representation": "Representation",
   "field.explorer.organisations.filter.allParticipation": "All participation",
   "field.explorer.organisations.filter.withRepresented": "With represented Creatives",
+  "field.explorer.organisations.filter.verifiedHint":
+    "Organisations with verification on file at the institution level.",
+  "field.explorer.organisations.filter.representationHint":
+    "Organisations with at least one Creative opted in to their public roster.",
   "field.explorer.organisations.filter.sort": "Sort",
   "field.explorer.organisations.filter.apply": "Apply",
   "field.explorer.organisations.empty.none":
@@ -1588,6 +1621,38 @@ const EN: Record<MessageKey, string> = {
   "field.creative.stewardship.item.declaredPractice": "Declare at least one practice",
   "field.creative.stewardship.item.links": "Add a website or social link",
   "field.creative.stewardship.item.verifiedWork": "Register a verified work on file",
+  "field.organisation.registryEvidence": "Registry evidence",
+  "field.organisation.verification.onFile": "Organisation verification on file",
+  "field.organisation.verification.participant": "Registry participant",
+  "field.organisation.verifiedRecordsLine": "{count} verified records on file",
+  "field.organisation.totalRecordsLine": "{count} records in public footprint",
+  "field.organisation.noRecordsOnFile":
+    "No Registry records are on file for represented Creatives yet.",
+  "field.organisation.representedCreatives": "Represented Creatives",
+  "field.organisation.certificates": "Certificates",
+  "field.organisation.certificatesLine": "{count} certificates recorded on file",
+  "field.organisation.certificatesRevokedLine": "{count} revoked",
+  "field.organisation.noCertificates":
+    "No certificates recorded yet for represented works",
+  "field.organisation.participationHeading": "Registry participation",
+  "field.organisation.discoveryHeading": "Continue exploring",
+  "field.organisation.discoveryLede":
+    "Move between Registry records, public profiles, and verification — deterministic links only, not recommendations.",
+  "field.organisation.link.recordExplorer": "Record Explorer",
+  "field.organisation.link.organisationExplorer": "Organisation Explorer",
+  "field.organisation.link.creativeExplorer": "Creative Explorer",
+  "field.organisation.link.verifyHub": "Verify hub",
+  "field.organisation.viewProfile": "View profile",
+  "field.organisation.stewardship.heading": "Stewardship checklist",
+  "field.organisation.stewardship.lede":
+    "Visible to you only — improve public discoverability from Studio. No public score or ranking.",
+  "field.organisation.stewardship.studioLink": "Open Studio",
+  "field.organisation.stewardship.item.description": "Add a public description",
+  "field.organisation.stewardship.item.location": "Add a public location",
+  "field.organisation.stewardship.item.website": "Add a website link",
+  "field.organisation.stewardship.item.roster": "List at least one represented Creative",
+  "field.organisation.stewardship.item.verifiedWorks":
+    "Register a verified work for a represented Creative",
   "field.explorer.creatives.filter.sort": "Sort",
   "field.explorer.creatives.filter.apply": "Apply",
   "field.explorer.creatives.sort.nameAsc": "Name A–Z",
@@ -3242,6 +3307,10 @@ const DE: Record<MessageKey, string> = {
   "field.explorer.organisations.filter.representation": "Vertretung",
   "field.explorer.organisations.filter.allParticipation": "Alle Beteiligungen",
   "field.explorer.organisations.filter.withRepresented": "Mit vertretenen Creatives",
+  "field.explorer.organisations.filter.verifiedHint":
+    "Organisationen mit Verifizierung auf Datei auf Institutionsebene.",
+  "field.explorer.organisations.filter.representationHint":
+    "Organisationen mit mindestens einem Creative in der öffentlichen Liste.",
   "field.explorer.organisations.filter.sort": "Sortierung",
   "field.explorer.organisations.filter.apply": "Anwenden",
   "field.explorer.organisations.empty.none":
@@ -3325,6 +3394,38 @@ const DE: Record<MessageKey, string> = {
   "field.creative.stewardship.item.declaredPractice": "Mindestens eine Praxis deklarieren",
   "field.creative.stewardship.item.links": "Website oder Social-Link hinzufügen",
   "field.creative.stewardship.item.verifiedWork": "Verifiziertes Werk auf Datei registrieren",
+  "field.organisation.registryEvidence": "Register-Belege",
+  "field.organisation.verification.onFile": "Organisationsverifizierung auf Datei",
+  "field.organisation.verification.participant": "Register-Teilnehmer",
+  "field.organisation.verifiedRecordsLine": "{count} verifizierte Einträge auf Datei",
+  "field.organisation.totalRecordsLine": "{count} Einträge im öffentlichen Footprint",
+  "field.organisation.noRecordsOnFile":
+    "Noch keine Register-Einträge für vertretene Creatives auf Datei.",
+  "field.organisation.representedCreatives": "Vertretene Creatives",
+  "field.organisation.certificates": "Zertifikate",
+  "field.organisation.certificatesLine": "{count} Zertifikate auf Datei",
+  "field.organisation.certificatesRevokedLine": "{count} widerrufen",
+  "field.organisation.noCertificates":
+    "Noch keine Zertifikate für vertretene Werke auf Datei",
+  "field.organisation.participationHeading": "Register-Beteiligung",
+  "field.organisation.discoveryHeading": "Weiter erkunden",
+  "field.organisation.discoveryLede":
+    "Wechseln Sie zwischen Register-Einträgen, öffentlichen Profilen und Verifizierung — nur deterministische Links, keine Empfehlungen.",
+  "field.organisation.link.recordExplorer": "Eintrags-Explorer",
+  "field.organisation.link.organisationExplorer": "Organisations-Explorer",
+  "field.organisation.link.creativeExplorer": "Creative-Explorer",
+  "field.organisation.link.verifyHub": "Verifizierungs-Hub",
+  "field.organisation.viewProfile": "Profil ansehen",
+  "field.organisation.stewardship.heading": "Stewardship-Checkliste",
+  "field.organisation.stewardship.lede":
+    "Nur für Sie sichtbar — verbessern Sie die Auffindbarkeit im Studio. Kein öffentlicher Score.",
+  "field.organisation.stewardship.studioLink": "Studio öffnen",
+  "field.organisation.stewardship.item.description": "Öffentliche Beschreibung hinzufügen",
+  "field.organisation.stewardship.item.location": "Öffentlichen Standort hinzufügen",
+  "field.organisation.stewardship.item.website": "Website-Link hinzufügen",
+  "field.organisation.stewardship.item.roster": "Mindestens ein vertretenes Creative listen",
+  "field.organisation.stewardship.item.verifiedWorks":
+    "Verifiziertes Werk für ein vertretenes Creative registrieren",
   "field.explorer.creatives.filter.sort": "Sortierung",
   "field.explorer.creatives.filter.apply": "Anwenden",
   "field.explorer.creatives.sort.nameAsc": "Name A–Z",
@@ -4855,6 +4956,10 @@ const FR: Record<MessageKey, string> = {
   "field.explorer.organisations.filter.representation": "Représentation",
   "field.explorer.organisations.filter.allParticipation": "Toute participation",
   "field.explorer.organisations.filter.withRepresented": "Avec Creatives représentés",
+  "field.explorer.organisations.filter.verifiedHint":
+    "Organisations avec vérification au registre au niveau institutionnel.",
+  "field.explorer.organisations.filter.representationHint":
+    "Organisations avec au moins un Creative inscrit sur leur liste publique.",
   "field.explorer.organisations.filter.sort": "Tri",
   "field.explorer.organisations.filter.apply": "Appliquer",
   "field.explorer.organisations.empty.none":
@@ -4938,6 +5043,38 @@ const FR: Record<MessageKey, string> = {
   "field.creative.stewardship.item.declaredPractice": "Déclarer au moins une pratique",
   "field.creative.stewardship.item.links": "Ajouter un site ou un lien social",
   "field.creative.stewardship.item.verifiedWork": "Enregistrer une œuvre vérifiée au dossier",
+  "field.organisation.registryEvidence": "Preuves du registre",
+  "field.organisation.verification.onFile": "Vérification Organisation au registre",
+  "field.organisation.verification.participant": "Participant au registre",
+  "field.organisation.verifiedRecordsLine": "{count} entrées vérifiées au registre",
+  "field.organisation.totalRecordsLine": "{count} entrées dans l’empreinte publique",
+  "field.organisation.noRecordsOnFile":
+    "Aucune entrée du Registre au dossier pour les Creatives représentés.",
+  "field.organisation.representedCreatives": "Creatives représentés",
+  "field.organisation.certificates": "Certificats",
+  "field.organisation.certificatesLine": "{count} certificats enregistrés au dossier",
+  "field.organisation.certificatesRevokedLine": "{count} révoqués",
+  "field.organisation.noCertificates":
+    "Aucun certificat enregistré pour les œuvres représentées",
+  "field.organisation.participationHeading": "Participation au registre",
+  "field.organisation.discoveryHeading": "Continuer l’exploration",
+  "field.organisation.discoveryLede":
+    "Naviguez entre entrées du Registre, profils publics et vérification — liens déterministes uniquement, pas de recommandations.",
+  "field.organisation.link.recordExplorer": "Explorateur d’entrées",
+  "field.organisation.link.organisationExplorer": "Explorateur d’Organisations",
+  "field.organisation.link.creativeExplorer": "Explorateur de Creatives",
+  "field.organisation.link.verifyHub": "Hub de vérification",
+  "field.organisation.viewProfile": "Voir le profil",
+  "field.organisation.stewardship.heading": "Liste de stewardship",
+  "field.organisation.stewardship.lede":
+    "Visible par vous seul — améliorez la découvrabilité depuis le Studio. Aucun score public.",
+  "field.organisation.stewardship.studioLink": "Ouvrir le Studio",
+  "field.organisation.stewardship.item.description": "Ajouter une description publique",
+  "field.organisation.stewardship.item.location": "Ajouter un lieu public",
+  "field.organisation.stewardship.item.website": "Ajouter un lien de site web",
+  "field.organisation.stewardship.item.roster": "Lister au moins un Creative représenté",
+  "field.organisation.stewardship.item.verifiedWorks":
+    "Enregistrer une œuvre vérifiée pour un Creative représenté",
   "field.explorer.creatives.filter.sort": "Tri",
   "field.explorer.creatives.filter.apply": "Appliquer",
   "field.explorer.creatives.sort.nameAsc": "Nom A–Z",
@@ -6471,6 +6608,10 @@ const JA: Record<MessageKey, string> = {
   "field.explorer.organisations.filter.representation": "代表",
   "field.explorer.organisations.filter.allParticipation": "すべての参加",
   "field.explorer.organisations.filter.withRepresented": "代表 Creative あり",
+  "field.explorer.organisations.filter.verifiedHint":
+    "機関レベルで記録上 verified の Organisation。",
+  "field.explorer.organisations.filter.representationHint":
+    "公開 roster に opt-in した Creative が 1 人以上いる Organisation。",
   "field.explorer.organisations.filter.sort": "並び替え",
   "field.explorer.organisations.filter.apply": "適用",
   "field.explorer.organisations.empty.none":
@@ -6554,6 +6695,37 @@ const JA: Record<MessageKey, string> = {
   "field.creative.stewardship.item.declaredPractice": "practice を 1 つ以上宣言",
   "field.creative.stewardship.item.links": "Web サイトまたは SNS リンクを追加",
   "field.creative.stewardship.item.verifiedWork": "verified 作品を記録上に登録",
+  "field.organisation.registryEvidence": "レジストリ根拠",
+  "field.organisation.verification.onFile": "Organisation 検証が記録上にあり",
+  "field.organisation.verification.participant": "レジストリ参加者",
+  "field.organisation.verifiedRecordsLine": "記録上 verified {count} 件",
+  "field.organisation.totalRecordsLine": "公開 footprint {count} 件",
+  "field.organisation.noRecordsOnFile":
+    "代表 Creative のレジストリレコードはまだ記録上にありません。",
+  "field.organisation.representedCreatives": "代表 Creative",
+  "field.organisation.certificates": "証明書",
+  "field.organisation.certificatesLine": "記録上 {count} 件の証明書",
+  "field.organisation.certificatesRevokedLine": "{count} 件 revoked",
+  "field.organisation.noCertificates": "代表作品の証明書はまだ記録されていません",
+  "field.organisation.participationHeading": "レジストリ参加",
+  "field.organisation.discoveryHeading": "探索を続ける",
+  "field.organisation.discoveryLede":
+    "レジストリレコード、公開プロフィール、検証の間を移動 — 決定論的リンクのみ、おすすめなし。",
+  "field.organisation.link.recordExplorer": "レコード Explorer",
+  "field.organisation.link.organisationExplorer": "Organisation Explorer",
+  "field.organisation.link.creativeExplorer": "Creative Explorer",
+  "field.organisation.link.verifyHub": "検証ハブ",
+  "field.organisation.viewProfile": "プロフィールを見る",
+  "field.organisation.stewardship.heading": "Stewardship チェックリスト",
+  "field.organisation.stewardship.lede":
+    "あなたにのみ表示 — Studio から公開 discoverability を改善。公開スコアなし。",
+  "field.organisation.stewardship.studioLink": "Studio を開く",
+  "field.organisation.stewardship.item.description": "公開説明を追加",
+  "field.organisation.stewardship.item.location": "公開所在地を追加",
+  "field.organisation.stewardship.item.website": "Web サイトリンクを追加",
+  "field.organisation.stewardship.item.roster": "代表 Creative を 1 人以上掲載",
+  "field.organisation.stewardship.item.verifiedWorks":
+    "代表 Creative の verified 作品を登録",
   "field.explorer.creatives.filter.sort": "並び替え",
   "field.explorer.creatives.filter.apply": "適用",
   "field.explorer.creatives.sort.nameAsc": "名前 A–Z",
