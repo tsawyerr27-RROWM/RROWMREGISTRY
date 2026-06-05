@@ -1,9 +1,9 @@
-# V2 Phase 1 — Document Governance
+# V2 Document Governance
 
 **Effective:** 31 May 2026  
 **Status:** Active freeze registry
 
-This folder holds the **frozen planning stack** for RROWM V2 Studio Foundation (Phase 1). Documents are authoritative in the order below.
+This folder holds the **planning and certification stack** for RROWM V2. **Phase 1** (Studio Foundation) is frozen and production-certified. **Phase 2** (The Field) planning is in progress. Documents are authoritative in the order below within each phase.
 
 ## Document hierarchy
 
@@ -19,6 +19,16 @@ This folder holds the **frozen planning stack** for RROWM V2 Studio Foundation (
 | 8 | [Phase 1 Validation Waiver](./phase-1-validation-waiver.md) | **ACTIVE** | Production certification waiver for `validate:system` and `validate:replay` (harness defects); authorizes `checkpoint-phase1-production` with documented sign-off |
 | 9 | [Phase 1 Scope Freeze](./phase-1-freeze.md) | **FROZEN** | Post-certification record of exact scope delivered: architecture, routes, Registry, terminology, auth, account, tag reference, deferred items; The Field explicitly out of scope |
 
+### Phase 2 — The Field (planning)
+
+| Priority | Document | Status | Role |
+|----------|----------|--------|------|
+| P2-1 | [Phase 2 Blueprint — The Field](./phase-2-the-field-blueprint.md) | **DRAFT** | Strategic product architecture for The Field as third surface; phase breakdown 2a–2e |
+| P2-2 | [Phase 2 Architecture Decisions](./phase-2-architecture-decisions.md) | **DRAFT** | Founder-level ADRs; must be DECIDED before 2A implementation |
+| P2-3 | [Phase 2A Field Foundations Spec](./phase-2a-field-foundations-spec.md) | **LOCKED DRAFT** | First Field release: public profiles, explorers, verification visibility, URL migration; no opportunities |
+
+**Phase 2 authority chain:** Blueprint v1.1 (APPROVED) → Phase 2 Blueprint (DRAFT) → Phase 2A Spec (LOCKED DRAFT) → ADRs for unresolved founder decisions. Phase 1 freeze remains binding for delivered Studio scope.
+
 ## Interpretation rules
 
 1. **Blueprint v1.1 (APPROVED)** bounds all product and architectural decisions. No Phase 1 work may introduce Field Opportunities, Practice objects, Sector taxonomy, Projects, Briefs, or Programmes.
@@ -29,6 +39,8 @@ This folder holds the **frozen planning stack** for RROWM V2 Studio Foundation (
 6. **Phase 1 Validation Waiver (ACTIVE)** supersedes acceptance gate §2 **only** for the question “may Phase 1 operate on production?” and “may `checkpoint-phase1-production` be tagged?” It does **not** unlock Phase 1 Spec scope, waive manual QA in acceptance gate §4, or remove follow-up harness remediation in waiver §7. When R-1–R4 in the waiver are satisfied, waiver status becomes **SUPERSEDED** and acceptance gate §2 applies in full again.
 7. **Post-Certification Remediation (ACTIVE)** is the authoritative backlog for engineering work **after** production certification. It does not expand Phase 1 Spec scope. Waiver lift and harness fixes are tracked in [post-certification-remediation.md](./post-certification-remediation.md); waiver §7 R-1–R-6 defer to that roadmap for prioritization.
 8. **Phase 1 Scope Freeze (FROZEN)** is the delivered-scope snapshot after production certification. It summarizes what shipped at `checkpoint-phase1-production`; it does **not** replace the LOCKED Spec for acceptance criteria detail. Scope expansion or Field delivery requires Spec/Blueprint unlock — not silent edits to the freeze doc.
+9. **Phase 2 Blueprint (DRAFT)** bounds Field work. Does not unlock Briefs, Programmes, Commissions, or production workflows until later Phase 2 sub-specs. Contradictions with Blueprint v1.1 require Blueprint version bump — not silent Phase 2 edits.
+10. **Phase 2A Spec (LOCKED DRAFT)** is the **only** authoritative scope for the first Field implementation release. Engineering must satisfy AC-FC*, AC-FO*, AC-FK*, AC-XC*, AC-XO*, AC-FV*, AC-FL*, AC-FS*, AC-FP*, AC-FM* as written. ADR 27–32 must be DECIDED (or accepted per spec) before promotion to **LOCKED**. Explicit §14 exclusions are non-negotiable in 2A.
 
 ## Unlock procedure
 
@@ -44,10 +56,16 @@ To change a frozen document:
 | PR4 Execution Package | Engineering lead update; must stay aligned with Route Migration Matrix |
 | Phase 1 Validation Waiver | Product + engineering lead sign-off; supersede when harness remediation complete (waiver §7) |
 | Phase 1 Scope Freeze | Phase 1 Spec unlock + product + engineering lead; documents delivered-scope delta only |
+| Phase 2 Blueprint | Founder/product approval; promote DRAFT → APPROVED with version note |
+| Phase 2 Architecture Decisions | Founder marks ADRs DECIDED; amend recommendations via ADR revision |
+| Phase 2A Field Foundations Spec | Product + engineering lead; LOCKED DRAFT → LOCKED after ADR gate; explicit unlock for scope delta |
 
 ## Related operational docs
 
 - [Phase 1 scope freeze](./phase-1-freeze.md) — delivered scope snapshot (FROZEN)
+- [Phase 2 Field blueprint](./phase-2-the-field-blueprint.md) — The Field architecture (DRAFT)
+- [Phase 2 architecture decisions](./phase-2-architecture-decisions.md) — Founder ADRs (DRAFT)
+- [Phase 2A Field foundations spec](./phase-2a-field-foundations-spec.md) — First Field release scope (LOCKED DRAFT)
 - [Post-certification remediation](./post-certification-remediation.md) — Phase 1.1 harness, replay, integrity, and reproducibility backlog
 - [Phase 1 production signoff](./phase-1-production-signoff.md)
 - [Account lifecycle deployment](../account-lifecycle-deployment.md)
@@ -72,3 +90,6 @@ To change a frozen document:
 | `phase-1-rc-signoff.md` | ACTIVE |
 | `production-readiness-execution.md` | ACTIVE |
 | `environment-variable-inventory.md` | ACTIVE |
+| `phase-2-the-field-blueprint.md` | DRAFT |
+| `phase-2-architecture-decisions.md` | DRAFT |
+| `phase-2a-field-foundations-spec.md` | LOCKED DRAFT |
