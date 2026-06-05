@@ -1,6 +1,9 @@
 "use client";
 
+import Link from "next/link";
+
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fieldVerifyHref } from "@/lib/field-nav";
 
 type Props = {
   searchQuery: string;
@@ -17,7 +20,8 @@ export function CreativeExplorerHero({
 }: Props) {
   const { t } = useLocalePreferences();
   const trimmedQ = searchQuery.trim();
-  const hasFilters = Boolean(practice || verified === "verified");
+  const hasFilters =
+    Boolean(trimmedQ) || Boolean(practice) || verified === "verified";
 
   return (
     <section className="relative mt-2 overflow-hidden rounded-[1.25rem] border border-neutral-900/[0.05] bg-gradient-to-br from-[#f8faf9] via-white to-emerald-50/35 shadow-[0_16px_40px_-20px_rgba(15,23,42,0.08),inset_0_1px_0_0_rgba(255,255,255,0.9)]">
@@ -47,6 +51,14 @@ export function CreativeExplorerHero({
             {hasFilters ? ` · ${t("field.explorer.creatives.filtered")}` : null}
           </p>
         ) : null}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            href={fieldVerifyHref()}
+            className="inline-flex rounded-2xl border border-neutral-200 bg-white px-5 py-2.5 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
+          >
+            {t("field.creative.link.verifyHub")}
+          </Link>
+        </div>
       </div>
     </section>
   );

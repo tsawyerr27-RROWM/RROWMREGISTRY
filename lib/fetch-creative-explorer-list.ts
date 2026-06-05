@@ -13,6 +13,8 @@ import {
   inferRegistryPracticeSlugs,
   mergeCreativePracticeChips,
   parseDeclaredPracticeSlugs,
+  parsePrimaryPracticeSlug,
+  parsePracticeVisibility,
   type CreativePracticeChip,
 } from "@/lib/practices";
 
@@ -27,6 +29,7 @@ export type CreativeExplorerRow = {
   artistVerified: boolean;
   institutionLinked: boolean;
   institutionVerified: boolean;
+  organisationName: string | null;
   href: string;
 };
 
@@ -38,8 +41,8 @@ type ArtistCandidate = {
   verification_status: string | null;
   public_presence: unknown;
   galleries:
-    | { verified: boolean | null }
-    | { verified: boolean | null }[]
+    | { verified: boolean | null; name: string | null }
+    | { verified: boolean | null; name: string | null }[]
     | null;
 };
 
@@ -56,9 +59,10 @@ function bioExcerpt(bio: string | null, max = 160): string | null {
   return `${trimmed.slice(0, max - 1).trim()}…`;
 }
 
-function resolveGalleryVerified(row: ArtistCandidate): {
+function resolveGallery(row: ArtistCandidate): {
   institutionLinked: boolean;
   institutionVerified: boolean;
+  organisationName: string | null;
 } {
   const gallery = Array.isArray(row.galleries)
     ? row.galleries[0]
@@ -66,6 +70,7 @@ function resolveGalleryVerified(row: ArtistCandidate): {
   return {
     institutionLinked: Boolean(gallery),
     institutionVerified: Boolean(gallery?.verified),
+    organisationName: gallery?.name?.trim() || null,
   };
 }
 
@@ -137,7 +142,8 @@ export async function fetchCreativeExplorerList(
       verification_status,
       public_presence,
       galleries(
-        verified
+        verified,
+        name
       )
     `);
 
@@ -199,20 +205,25 @@ export async function fetchCreativeExplorerList(
     };
     const declared = parseDeclaredPracticeSlugs(artist.public_presence);
     const registry = inferRegistryPracticeSlugs(stats.verifiedMediums);
-    const { institutionLinked, institutionVerified } =
-      resolveGalleryVerified(artist);
+    const primary = parsePrimaryPracticeSlug(artist.public_presence);
+    const { institutionLinked, institutionVerified, organisationName } =
+      resolveGallery(artist);
+    const practices = parsePracticeVisibility(artist.public_presence)
+      ? mergeCreativePracticeChips(declared, registry, primary)
+      : [];
 
     return {
       id: artist.id,
       slug: artist.slug,
       displayName: artist.display_name?.trim() || "Creative",
       bioExcerpt: bioExcerpt(artist.bio),
-      practices: mergeCreativePracticeChips(declared, registry),
+      practices,
       verifiedWorkCount: stats.verifiedCount,
       totalWorkCount: stats.totalCount,
       artistVerified: artist.verification_status === "verified",
       institutionLinked,
       institutionVerified,
+      organisationName,
       href: fieldCreativeHref(artist.slug),
     };
   });

@@ -1,16 +1,20 @@
 import Link from "next/link";
 
-import { FieldCreativePracticeChips } from "@/components/Field/FieldCreativePracticeChips";
-import { ParticipationLayersStrip } from "@/components/Registry/ParticipationLayersStrip";
+import { CreativePresenceDiscoverySection } from "@/components/Field/CreativePresenceDiscoverySection";
+import { CreativePresenceOwnerStewardship } from "@/components/Field/CreativePresenceOwnerStewardship";
+import { CreativePresenceRegistryEvidence } from "@/components/Field/CreativePresenceRegistryEvidence";
 import { RegistryListFilters } from "@/components/Registry/RegistryListFilters";
 import { RegistryListPagination } from "@/components/Registry/RegistryListPagination";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import type { CreativePresencePageData } from "@/lib/field-creative-presence";
-import { fieldExplorerRecordsHref, fieldRecordHref, fieldVerifyHref, fieldVerifyRecordHref } from "@/lib/field-nav";
-import { registryLedgerHref } from "@/lib/registry-nav";
 import {
-  artworkCardParticipationLabel,
-} from "@/lib/representation-language";
+  fieldExplorerRecordsHref,
+  fieldRecordHref,
+  fieldVerifyHref,
+  fieldVerifyRecordHref,
+} from "@/lib/field-nav";
+import { registryLedgerHref } from "@/lib/registry-nav";
+import { artworkCardParticipationLabel } from "@/lib/representation-language";
 import { REGISTRY_PAGE_SIZE } from "@/lib/registry-list-params";
 
 type Props = {
@@ -33,7 +37,12 @@ export function CreativePresenceView({ data }: Props) {
     formKey,
     filterHint,
     showOrganisationSection,
-    practices,
+    declaredPractices,
+    registryPractices,
+    practiceExplorerHref,
+    isProfileOwner,
+    showOwnerPracticeGuidance,
+    stewardshipItems,
   } = data;
 
   return (
@@ -46,46 +55,18 @@ export function CreativePresenceView({ data }: Props) {
           {artist.display_name}
         </h1>
 
-        <div className="mt-8 max-w-2xl rounded-2xl border border-neutral-900/[0.06] bg-white/75 p-5 shadow-sm md:p-6">
-          <p className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
-            Registry evidence
-          </p>
-          {verifiedWorkCount > 0 || total > 0 ? (
-            <p className="mt-2 text-sm text-neutral-700">
-              {verifiedWorkCount > 0 ? (
-                <>
-                  <span className="font-medium">{verifiedWorkCount}</span> verified{" "}
-                  {verifiedWorkCount === 1 ? "work" : "works"} on file
-                </>
-              ) : null}
-              {verifiedWorkCount > 0 && total > 0 ? " · " : null}
-              {total > 0 ? (
-                <>
-                  <span className="font-medium">{total}</span>{" "}
-                  {total === 1 ? "work" : "works"} in public footprint
-                </>
-              ) : null}
-            </p>
-          ) : (
-            <p className="mt-2 text-sm text-neutral-600">
-              No registered works are on file for this Creative yet.
-            </p>
-          )}
-          {practices.length > 0 ? (
-            <div className="mt-4">
-              <FieldCreativePracticeChips practices={practices} />
-            </div>
-          ) : null}
-          {participationLayers.length > 0 ? (
-            <div className="mt-5 border-t border-neutral-900/[0.05] pt-5">
-              <ParticipationLayersStrip
-                layers={participationLayers}
-                variant="light"
-                showFootnote={false}
-              />
-            </div>
-          ) : null}
-        </div>
+        <CreativePresenceRegistryEvidence
+          verifiedWorkCount={verifiedWorkCount}
+          totalWorkCount={total}
+          participationLayers={participationLayers}
+          declaredPractices={declaredPractices}
+          registryPractices={registryPractices}
+          showOwnerPracticeGuidance={showOwnerPracticeGuidance}
+        />
+
+        {isProfileOwner ? (
+          <CreativePresenceOwnerStewardship items={stewardshipItems} />
+        ) : null}
 
         {artist.bio ? (
           <div className="mt-10 space-y-6 text-lg leading-[1.75] text-neutral-700">
@@ -150,10 +131,16 @@ export function CreativePresenceView({ data }: Props) {
         </section>
       ) : null}
 
+      <CreativePresenceDiscoverySection
+        gallery={gallery}
+        showOrganisationSection={showOrganisationSection}
+        practiceExplorerHref={practiceExplorerHref}
+      />
+
       <section className="mt-20 md:mt-24">
         <div className="flex flex-col gap-4 border-b border-black/[0.06] pb-8 md:flex-row md:items-end md:justify-between">
           <div>
-            <InfoTooltip text="Open a piece for the curated view; use the registry link for the continuity record on file." />
+            <InfoTooltip text="Open a piece for the Field record summary; use the registry ledger link for the continuity record on file." />
             <h2 className="font-serif text-3xl font-normal tracking-tight text-neutral-950 md:text-4xl">
               Registry footprint
             </h2>
@@ -200,7 +187,7 @@ export function CreativePresenceView({ data }: Props) {
               href={fieldExplorerRecordsHref()}
               className="mt-6 inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
             >
-              Browse the registry
+              Browse Registry records
             </Link>
           </div>
         ) : (
@@ -271,17 +258,17 @@ export function CreativePresenceView({ data }: Props) {
                             View record
                           </Link>
                           <Link
-                            href={ledgerHref}
+                            href={verifyHref}
                             className="inline-flex flex-1 items-center justify-center rounded-2xl border border-neutral-200 bg-white px-4 py-2.5 text-xs font-medium text-neutral-800 transition hover:bg-neutral-50"
                           >
-                            Registry ledger
+                            Check verification
                           </Link>
                         </div>
                         <Link
-                          href={verifyHref}
-                          className="text-center text-[11px] font-medium text-emerald-900 underline decoration-emerald-900/25 underline-offset-2 hover:decoration-emerald-900/50"
+                          href={ledgerHref}
+                          className="text-center text-[11px] font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500"
                         >
-                          Check verification
+                          Registry ledger
                         </Link>
                       </div>
                     </div>
@@ -313,7 +300,7 @@ export function CreativePresenceView({ data }: Props) {
             href={fieldExplorerRecordsHref()}
             className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
           >
-            Browse registry
+            Browse Registry records
           </Link>
           <Link
             href={fieldVerifyHref()}

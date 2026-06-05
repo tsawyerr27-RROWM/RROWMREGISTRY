@@ -136,6 +136,32 @@ export type MessageKey =
   | "field.verify.hub.section.certificates.body"
   | "field.verify.hub.linkRecords"
   | "field.explorer.creatives.filter.verifiedHint"
+  | "field.explorer.creatives.filter.practiceHint"
+  | "field.creative.registryEvidence"
+  | "field.creative.verifiedWorksLine"
+  | "field.creative.publicFootprintLine"
+  | "field.creative.noWorksOnFile"
+  | "field.creative.participationHeading"
+  | "field.creative.practice.declaredHeading"
+  | "field.creative.practice.registryHeading"
+  | "field.creative.practice.legend.declared"
+  | "field.creative.practice.legend.registry"
+  | "field.creative.practice.ownerGuidance"
+  | "field.creative.discoveryHeading"
+  | "field.creative.discoveryLede"
+  | "field.creative.link.recordExplorer"
+  | "field.creative.link.creativeExplorer"
+  | "field.creative.link.organisation"
+  | "field.creative.link.practiceExplorer"
+  | "field.creative.link.verifyHub"
+  | "field.creative.viewProfile"
+  | "field.creative.stewardship.heading"
+  | "field.creative.stewardship.lede"
+  | "field.creative.stewardship.studioLink"
+  | "field.creative.stewardship.item.bio"
+  | "field.creative.stewardship.item.declaredPractice"
+  | "field.creative.stewardship.item.links"
+  | "field.creative.stewardship.item.verifiedWork"
   | "field.presence.creative.title"
   | "field.presence.organisation.title"
   | "field.presence.collector.title"
@@ -1532,6 +1558,36 @@ const EN: Record<MessageKey, string> = {
   "field.explorer.creatives.filter.verifiedOnly": "Verified on file",
   "field.explorer.creatives.filter.verifiedHint":
     "Creatives with verified Registry records or artist confirmation on file.",
+  "field.explorer.creatives.filter.practiceHint":
+    "Matches declared practices or practices inferred from verified Registry records.",
+  "field.creative.registryEvidence": "Registry evidence",
+  "field.creative.verifiedWorksLine": "{count} verified works on file",
+  "field.creative.publicFootprintLine": "{count} works in public footprint",
+  "field.creative.noWorksOnFile": "No registered works are on file for this Creative yet.",
+  "field.creative.participationHeading": "Registry participation",
+  "field.creative.practice.declaredHeading": "Declared practices",
+  "field.creative.practice.registryHeading": "From verified Registry records",
+  "field.creative.practice.legend.declared": "Neutral chip — declared in Studio",
+  "field.creative.practice.legend.registry": "Green chip — inferred from verified records",
+  "field.creative.practice.ownerGuidance":
+    "Practices inferred from verified Registry records. Add declared practices in Studio to describe how you work.",
+  "field.creative.discoveryHeading": "Continue exploring",
+  "field.creative.discoveryLede":
+    "Move between Registry records, public profiles, and verification — deterministic links only, not recommendations.",
+  "field.creative.link.recordExplorer": "Record Explorer",
+  "field.creative.link.creativeExplorer": "Creative Explorer",
+  "field.creative.link.organisation": "Organisation profile",
+  "field.creative.link.practiceExplorer": "Creatives in this practice",
+  "field.creative.link.verifyHub": "Verify hub",
+  "field.creative.viewProfile": "View profile",
+  "field.creative.stewardship.heading": "Stewardship checklist",
+  "field.creative.stewardship.lede":
+    "Visible to you only — improve public discoverability from Studio. No public score or ranking.",
+  "field.creative.stewardship.studioLink": "Open Studio",
+  "field.creative.stewardship.item.bio": "Add a public bio",
+  "field.creative.stewardship.item.declaredPractice": "Declare at least one practice",
+  "field.creative.stewardship.item.links": "Add a website or social link",
+  "field.creative.stewardship.item.verifiedWork": "Register a verified work on file",
   "field.explorer.creatives.filter.sort": "Sort",
   "field.explorer.creatives.filter.apply": "Apply",
   "field.explorer.creatives.sort.nameAsc": "Name A–Z",
@@ -3239,6 +3295,36 @@ const DE: Record<MessageKey, string> = {
   "field.explorer.creatives.filter.verifiedOnly": "Verifiziert auf Datei",
   "field.explorer.creatives.filter.verifiedHint":
     "Creatives mit verifizierten Register-Einträgen oder Künstlerbestätigung auf Datei.",
+  "field.explorer.creatives.filter.practiceHint":
+    "Entspricht deklarierten Praktiken oder aus verifizierten Register-Einträgen abgeleiteten Praktiken.",
+  "field.creative.registryEvidence": "Register-Belege",
+  "field.creative.verifiedWorksLine": "{count} verifizierte Werke auf Datei",
+  "field.creative.publicFootprintLine": "{count} Werke im öffentlichen Footprint",
+  "field.creative.noWorksOnFile": "Noch keine registrierten Werke für dieses Creative auf Datei.",
+  "field.creative.participationHeading": "Register-Beteiligung",
+  "field.creative.practice.declaredHeading": "Deklarierte Praktiken",
+  "field.creative.practice.registryHeading": "Aus verifizierten Register-Einträgen",
+  "field.creative.practice.legend.declared": "Neutral — im Studio deklariert",
+  "field.creative.practice.legend.registry": "Grün — aus verifizierten Einträgen abgeleitet",
+  "field.creative.practice.ownerGuidance":
+    "Praktiken aus verifizierten Register-Einträgen abgeleitet. Deklarieren Sie Praktiken im Studio.",
+  "field.creative.discoveryHeading": "Weiter entdecken",
+  "field.creative.discoveryLede":
+    "Zwischen Register-Einträgen, Profilen und Verifizierung navigieren — nur deterministische Links.",
+  "field.creative.link.recordExplorer": "Record Explorer",
+  "field.creative.link.creativeExplorer": "Creative Explorer",
+  "field.creative.link.organisation": "Organisationsprofil",
+  "field.creative.link.practiceExplorer": "Creatives in dieser Praxis",
+  "field.creative.link.verifyHub": "Verifizierungs-Hub",
+  "field.creative.viewProfile": "Profil ansehen",
+  "field.creative.stewardship.heading": "Stewardship-Checkliste",
+  "field.creative.stewardship.lede":
+    "Nur für Sie sichtbar — verbessern Sie die Auffindbarkeit im Studio. Kein öffentlicher Score.",
+  "field.creative.stewardship.studioLink": "Studio öffnen",
+  "field.creative.stewardship.item.bio": "Öffentliche Bio hinzufügen",
+  "field.creative.stewardship.item.declaredPractice": "Mindestens eine Praxis deklarieren",
+  "field.creative.stewardship.item.links": "Website oder Social-Link hinzufügen",
+  "field.creative.stewardship.item.verifiedWork": "Verifiziertes Werk auf Datei registrieren",
   "field.explorer.creatives.filter.sort": "Sortierung",
   "field.explorer.creatives.filter.apply": "Anwenden",
   "field.explorer.creatives.sort.nameAsc": "Name A–Z",
@@ -4822,6 +4908,36 @@ const FR: Record<MessageKey, string> = {
   "field.explorer.creatives.filter.verifiedOnly": "Vérifié au registre",
   "field.explorer.creatives.filter.verifiedHint":
     "Creatives avec entrées vérifiées au registre ou confirmation d’artiste sur dossier.",
+  "field.explorer.creatives.filter.practiceHint":
+    "Correspond aux pratiques déclarées ou inférées depuis des entrées vérifiées du registre.",
+  "field.creative.registryEvidence": "Preuves du registre",
+  "field.creative.verifiedWorksLine": "{count} œuvres vérifiées au dossier",
+  "field.creative.publicFootprintLine": "{count} œuvres dans l’empreinte publique",
+  "field.creative.noWorksOnFile": "Aucune œuvre enregistrée au dossier pour ce Creative.",
+  "field.creative.participationHeading": "Participation au registre",
+  "field.creative.practice.declaredHeading": "Pratiques déclarées",
+  "field.creative.practice.registryHeading": "Depuis des entrées vérifiées",
+  "field.creative.practice.legend.declared": "Puce neutre — déclarée dans le Studio",
+  "field.creative.practice.legend.registry": "Puce verte — inférée des entrées vérifiées",
+  "field.creative.practice.ownerGuidance":
+    "Pratiques inférées des entrées vérifiées. Ajoutez des pratiques déclarées dans le Studio.",
+  "field.creative.discoveryHeading": "Poursuivre l’exploration",
+  "field.creative.discoveryLede":
+    "Naviguez entre entrées, profils et vérification — liens déterministes uniquement.",
+  "field.creative.link.recordExplorer": "Explorateur d’entrées",
+  "field.creative.link.creativeExplorer": "Explorateur Creatives",
+  "field.creative.link.organisation": "Profil Organisation",
+  "field.creative.link.practiceExplorer": "Creatives dans cette pratique",
+  "field.creative.link.verifyHub": "Hub de vérification",
+  "field.creative.viewProfile": "Voir le profil",
+  "field.creative.stewardship.heading": "Liste de stewardship",
+  "field.creative.stewardship.lede":
+    "Visible par vous seul — améliorez la découvrabilité depuis le Studio. Aucun score public.",
+  "field.creative.stewardship.studioLink": "Ouvrir le Studio",
+  "field.creative.stewardship.item.bio": "Ajouter une bio publique",
+  "field.creative.stewardship.item.declaredPractice": "Déclarer au moins une pratique",
+  "field.creative.stewardship.item.links": "Ajouter un site ou un lien social",
+  "field.creative.stewardship.item.verifiedWork": "Enregistrer une œuvre vérifiée au dossier",
   "field.explorer.creatives.filter.sort": "Tri",
   "field.explorer.creatives.filter.apply": "Appliquer",
   "field.explorer.creatives.sort.nameAsc": "Nom A–Z",
@@ -6408,6 +6524,36 @@ const JA: Record<MessageKey, string> = {
   "field.explorer.creatives.filter.verifiedOnly": "記録上 verified",
   "field.explorer.creatives.filter.verifiedHint":
     "検証済みレジストリレコードまたは artist 確認が記録上にある Creative。",
+  "field.explorer.creatives.filter.practiceHint":
+    "Studio で宣言された practice、または verified レコードから推論された practice に一致。",
+  "field.creative.registryEvidence": "レジストリ証拠",
+  "field.creative.verifiedWorksLine": "記録上 verified な作品 {count} 件",
+  "field.creative.publicFootprintLine": "公開 footprint の作品 {count} 件",
+  "field.creative.noWorksOnFile": "この Creative の登録作品はまだありません。",
+  "field.creative.participationHeading": "レジストリ参加",
+  "field.creative.practice.declaredHeading": "宣言された practice",
+  "field.creative.practice.registryHeading": "verified レコードから",
+  "field.creative.practice.legend.declared": "中立 — Studio で宣言",
+  "field.creative.practice.legend.registry": "緑 — verified レコードから推論",
+  "field.creative.practice.ownerGuidance":
+    "verified レコードから推論された practice です。Studio で宣言してください。",
+  "field.creative.discoveryHeading": "探索を続ける",
+  "field.creative.discoveryLede":
+    "レコード、プロフィール、検証の間を移動 — 決定論的リンクのみ。",
+  "field.creative.link.recordExplorer": "レコードエクスプローラー",
+  "field.creative.link.creativeExplorer": "Creative エクスプローラー",
+  "field.creative.link.organisation": "Organisation プロフィール",
+  "field.creative.link.practiceExplorer": "この practice の Creatives",
+  "field.creative.link.verifyHub": "検証ハブ",
+  "field.creative.viewProfile": "プロフィールを見る",
+  "field.creative.stewardship.heading": "Stewardship チェックリスト",
+  "field.creative.stewardship.lede":
+    "あなたにのみ表示 — Studio から公開 discoverability を改善。公開スコアなし。",
+  "field.creative.stewardship.studioLink": "Studio を開く",
+  "field.creative.stewardship.item.bio": "公開 bio を追加",
+  "field.creative.stewardship.item.declaredPractice": "practice を 1 つ以上宣言",
+  "field.creative.stewardship.item.links": "Web サイトまたは SNS リンクを追加",
+  "field.creative.stewardship.item.verifiedWork": "verified 作品を記録上に登録",
   "field.explorer.creatives.filter.sort": "並び替え",
   "field.explorer.creatives.filter.apply": "適用",
   "field.explorer.creatives.sort.nameAsc": "名前 A–Z",
