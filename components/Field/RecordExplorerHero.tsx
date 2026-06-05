@@ -1,6 +1,9 @@
 "use client";
 
+import Link from "next/link";
+
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fieldVerifyHref } from "@/lib/field-nav";
 import type {
   RecordExplorerCertificateFilter,
   RecordExplorerVerifiedFilter,
@@ -32,7 +35,7 @@ export function RecordExplorerHero({
     Boolean(creative) ||
     Boolean(organisation) ||
     Boolean(practice) ||
-    verified === "verified" ||
+    verified === "all" ||
     certificate === "present";
 
   return (
@@ -51,9 +54,17 @@ export function RecordExplorerHero({
         <p className="mt-6 max-w-2xl text-base leading-relaxed text-neutral-600">
           {t("field.explorer.records.lede")}
         </p>
-        {total > 0 ? (
+        {total > 0 || hasFilters || trimmedQ ? (
           <p className="mt-8 text-[12px] text-neutral-500">
-            {total} {total === 1 ? "record" : "records"}
+            {total > 0 ? (
+              <>
+                {total} {total === 1 ? "record" : "records"}
+                {" · "}
+              </>
+            ) : null}
+            {verified === "all"
+              ? t("field.explorer.records.verifiedScopeAll")
+              : t("field.explorer.records.verifiedScopeDefault")}
             {trimmedQ ? (
               <>
                 {" "}
@@ -63,6 +74,14 @@ export function RecordExplorerHero({
             {hasFilters ? ` · ${t("field.explorer.records.filtered")}` : null}
           </p>
         ) : null}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            href={fieldVerifyHref()}
+            className="inline-flex rounded-2xl border border-neutral-200 bg-white px-5 py-2.5 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
+          >
+            {t("field.explorer.link.verifyHub")}
+          </Link>
+        </div>
       </div>
     </section>
   );

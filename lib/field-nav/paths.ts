@@ -43,6 +43,6 @@ export function fieldExplorerTabFromPath(
   ) {
     return "records";
   }
-  if (pathname === FIELD_EXPLORER) return "creatives";
+  if (pathname === FIELD_EXPLORER) return null;
   return null;
 }

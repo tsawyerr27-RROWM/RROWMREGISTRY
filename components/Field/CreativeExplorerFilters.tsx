@@ -71,6 +71,9 @@ export function CreativeExplorerFilters({
               </option>
             ))}
           </select>
+          <p className="mt-2 text-xs text-neutral-500">
+            {t("field.explorer.creatives.filter.practiceHint")}
+          </p>
         </div>
 
         <div className="lg:col-span-2">

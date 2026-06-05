@@ -51,10 +51,12 @@ export default async function FieldCreativePresencePage({
   const { slug } = await params;
   const sp = await searchParams;
   const supabase = await createSupabaseServerClient();
+  const { data: authData } = await supabase.auth.getUser();
 
   const data = await loadCreativePresencePageData(supabase, {
     slug,
     searchParams: sp,
+    sessionUserId: authData?.user?.id ?? null,
   });
 
   if (!data) notFound();

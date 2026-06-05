@@ -15,8 +15,9 @@ import {
   type ArtworkStatusFilter,
   type RegistrySort,
 } from "@/lib/registry-list-params";
-import { fieldCreativeHref, fieldOrganisationHref } from "@/lib/field-nav";
-import { loadCreativePracticeChips } from "@/lib/practices";
+import { fieldCreativeHref, fieldExplorerCreativesHref, fieldOrganisationHref } from "@/lib/field-nav";
+import type { MessageKey } from "@/lib/locale-messages";
+import { loadCreativePracticeChips, partitionCreativePracticeChips, parseDeclaredPracticeSlugs, parsePrimaryPracticeSlug } from "@/lib/practices";
 
 export type CreativePresenceGallery = {
   name: string;
@@ -60,6 +61,12 @@ export type CreativePresencePageData = {
   filterHint: string | null;
   showOrganisationSection: boolean;
   practices: CreativePracticeChip[];
+  declaredPractices: CreativePracticeChip[];
+  registryPractices: CreativePracticeChip[];
+  practiceExplorerHref: string | null;
+  isProfileOwner: boolean;
+  showOwnerPracticeGuidance: boolean;
+  stewardshipItems: Array<{ id: string; labelKey: MessageKey; complete: boolean }>;
 };
 
 type ArtistRow = {
@@ -149,6 +156,7 @@ export async function loadCreativePresencePageData(
   args: {
     slug: string;
     searchParams: Record<string, string | string[] | undefined>;
+    sessionUserId?: string | null;
   }
 ): Promise<CreativePresencePageData | null> {
   const slugParam = args.slug.trim();
@@ -216,6 +224,49 @@ export async function loadCreativePresencePageData(
     artist.id,
     artist.public_presence
   );
+  const { declared: declaredPractices, registry: registryPractices } =
+    partitionCreativePracticeChips(practices);
+
+  const primaryPractice = parsePrimaryPracticeSlug(artist.public_presence);
+  const practiceExplorerHref = primaryPractice
+    ? `${fieldExplorerCreativesHref()}?practice=${encodeURIComponent(primaryPractice)}`
+    : declaredPractices[0]
+      ? `${fieldExplorerCreativesHref()}?practice=${encodeURIComponent(declaredPractices[0].slug)}`
+      : registryPractices[0]
+        ? `${fieldExplorerCreativesHref()}?practice=${encodeURIComponent(registryPractices[0].slug)}`
+        : null;
+
+  const isProfileOwner = Boolean(
+    args.sessionUserId && args.sessionUserId === artist.id
+  );
+  const declaredSlugs = parseDeclaredPracticeSlugs(artist.public_presence);
+  const showOwnerPracticeGuidance =
+    isProfileOwner && declaredSlugs.length === 0 && registryPractices.length > 0;
+
+  const stewardshipItems: CreativePresencePageData["stewardshipItems"] = isProfileOwner
+    ? [
+        {
+          id: "bio",
+          labelKey: "field.creative.stewardship.item.bio",
+          complete: Boolean(artist.bio?.trim()),
+        },
+        {
+          id: "declared_practice",
+          labelKey: "field.creative.stewardship.item.declaredPractice",
+          complete: declaredSlugs.length > 0,
+        },
+        {
+          id: "links",
+          labelKey: "field.creative.stewardship.item.links",
+          complete: Boolean(artist.website?.trim() || artist.instagram?.trim()),
+        },
+        {
+          id: "verified_work",
+          labelKey: "field.creative.stewardship.item.verifiedWork",
+          complete: (verifiedWorkCount ?? 0) > 0,
+        },
+      ]
+    : [];
 
   const filterHint =
     status === "verified"
@@ -248,6 +299,12 @@ export async function loadCreativePresencePageData(
     filterHint,
     showOrganisationSection: presence.ownership && Boolean(gallery),
     practices,
+    declaredPractices,
+    registryPractices,
+    practiceExplorerHref,
+    isProfileOwner,
+    showOwnerPracticeGuidance,
+    stewardshipItems,
   };
 }
 

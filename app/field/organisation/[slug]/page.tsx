@@ -51,8 +51,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function FieldOrganisationPresencePage({ params }: Props) {
   const { slug } = await params;
   const supabase = await createSupabaseServerClient();
+  const { data: authData } = await supabase.auth.getUser();
 
-  const data = await loadOrganisationPresencePageData(supabase, slug);
+  const data = await loadOrganisationPresencePageData(
+    supabase,
+    slug,
+    authData?.user?.id ?? null
+  );
   if (!data) notFound();
 
   return <OrganisationPresenceView data={data} />;

@@ -88,6 +88,9 @@ export function OrganisationExplorerFilters({
               {t("field.explorer.organisations.filter.verifiedOnly")}
             </option>
           </select>
+          <p className="mt-2 text-xs text-neutral-500">
+            {t("field.explorer.organisations.filter.verifiedHint")}
+          </p>
         </div>
 
         <div className="lg:col-span-2">
@@ -107,6 +110,9 @@ export function OrganisationExplorerFilters({
               {t("field.explorer.organisations.filter.withRepresented")}
             </option>
           </select>
+          <p className="mt-2 text-xs text-neutral-500">
+            {t("field.explorer.organisations.filter.representationHint")}
+          </p>
         </div>
 
         <div className="lg:col-span-3">

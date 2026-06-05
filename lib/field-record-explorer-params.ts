@@ -8,6 +8,23 @@ export type RecordExplorerVerifiedFilter = "all" | "verified";
 
 export type RecordExplorerCertificateFilter = "all" | "present";
 
+/** Verified-only is the default when `verified` is absent (Phase 2B founder freeze §2). */
+export function parseRecordExplorerVerifiedParam(
+  sp: Record<string, string | string[] | undefined>
+): { verified: RecordExplorerVerifiedFilter; verifiedScopeExplicit: boolean } {
+  if (!Object.prototype.hasOwnProperty.call(sp, "verified")) {
+    return { verified: "verified", verifiedScopeExplicit: false };
+  }
+
+  const verifiedRaw = typeof sp.verified === "string" ? sp.verified.trim().toLowerCase() : "";
+
+  if (verifiedRaw === "0" || verifiedRaw === "all" || verifiedRaw === "false") {
+    return { verified: "all", verifiedScopeExplicit: true };
+  }
+
+  return { verified: "verified", verifiedScopeExplicit: true };
+}
+
 export function parseRecordExplorerParams(
   sp: Record<string, string | string[] | undefined>
 ) {
@@ -31,16 +48,24 @@ export function parseRecordExplorerParams(
   const practiceRaw = typeof sp.practice === "string" ? sp.practice.trim() : "";
   const practice = practiceRaw ? practiceRaw.toLowerCase() : "";
 
-  const verifiedRaw = typeof sp.verified === "string" ? sp.verified : "all";
-  const verified: RecordExplorerVerifiedFilter =
-    verifiedRaw === "1" || verifiedRaw === "true" ? "verified" : "all";
+  const { verified, verifiedScopeExplicit } = parseRecordExplorerVerifiedParam(sp);
 
   const certificateRaw =
     typeof sp.certificate === "string" ? sp.certificate : "all";
   const certificate: RecordExplorerCertificateFilter =
     certificateRaw === "1" || certificateRaw === "true" ? "present" : "all";
 
-  return { q, sort, page, creative, organisation, practice, verified, certificate };
+  return {
+    q,
+    sort,
+    page,
+    creative,
+    organisation,
+    practice,
+    verified,
+    verifiedScopeExplicit,
+    certificate,
+  };
 }
 
 export function recordExplorerQueryString(args: {
@@ -60,7 +85,7 @@ export function recordExplorerQueryString(args: {
   if (args.organisation) params.set("organisation", args.organisation);
   if (args.practice) params.set("practice", args.practice);
   if (args.sort !== "recent") params.set("sort", args.sort);
-  if (args.verified === "verified") params.set("verified", "1");
+  if (args.verified === "all") params.set("verified", "0");
   if (args.certificate === "present") params.set("certificate", "1");
   if (args.page > 1) params.set("page", String(args.page));
   return params.toString();

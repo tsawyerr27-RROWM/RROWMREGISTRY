@@ -133,11 +133,11 @@ export function RecordExplorerFilters({
           <select
             id="field-record-verified"
             name="verified"
-            defaultValue={verified === "verified" ? "1" : ""}
+            defaultValue={verified === "all" ? "0" : ""}
             className={selectClass}
           >
-            <option value="">{t("field.explorer.records.filter.allRecords")}</option>
-            <option value="1">{t("field.explorer.records.filter.verifiedOnly")}</option>
+            <option value="">{t("field.explorer.records.filter.verifiedOnly")}</option>
+            <option value="0">{t("field.explorer.records.filter.allRecords")}</option>
           </select>
         </div>
 

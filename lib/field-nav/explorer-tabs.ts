@@ -12,8 +12,13 @@ export type FieldExplorerTab = {
   labelKey: MessageKey;
 };
 
-/** Creatives first during PR1 rollout (phase-2a-pr1-field-foundation-plan §7). */
+/** Records first — Registry default tab (phase-2b-discovery-expansion-spec §9.1). */
 export const FIELD_EXPLORER_TABS: readonly FieldExplorerTab[] = [
+  {
+    id: "records",
+    href: FIELD_EXPLORER_RECORDS,
+    labelKey: "field.explorer.tab.records",
+  },
   {
     id: "creatives",
     href: FIELD_EXPLORER_CREATIVES,
@@ -23,10 +28,5 @@ export const FIELD_EXPLORER_TABS: readonly FieldExplorerTab[] = [
     id: "organisations",
     href: FIELD_EXPLORER_ORGANISATIONS,
     labelKey: "field.explorer.tab.organisations",
-  },
-  {
-    id: "records",
-    href: FIELD_EXPLORER_RECORDS,
-    labelKey: "field.explorer.tab.records",
   },
 ] as const;

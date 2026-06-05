@@ -1,6 +1,9 @@
 "use client";
 
+import Link from "next/link";
+
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fieldVerifyHref } from "@/lib/field-nav";
 
 type Props = {
   searchQuery: string;
@@ -41,18 +44,30 @@ export function OrganisationExplorerHero({
         <p className="mt-6 max-w-2xl text-base leading-relaxed text-neutral-600">
           {t("field.explorer.organisations.lede")}
         </p>
-        {total > 0 ? (
+        {total > 0 || hasFilters || trimmedQ ? (
           <p className="mt-8 text-[12px] text-neutral-500">
-            {total} {total === 1 ? "Organisation" : "Organisations"}
+            {total > 0 ? (
+              <>
+                {total} {total === 1 ? "Organisation" : "Organisations"}
+              </>
+            ) : null}
             {trimmedQ ? (
               <>
-                {" "}
-                · {t("field.explorer.organisations.searching")} “{trimmedQ}”
+                {total > 0 ? " · " : null}
+                {t("field.explorer.organisations.searching")} “{trimmedQ}”
               </>
             ) : null}
             {hasFilters ? ` · ${t("field.explorer.organisations.filtered")}` : null}
           </p>
         ) : null}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            href={fieldVerifyHref()}
+            className="inline-flex rounded-2xl border border-neutral-200 bg-white px-5 py-2.5 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
+          >
+            {t("field.explorer.link.verifyHub")}
+          </Link>
+        </div>
       </div>
     </section>
   );
