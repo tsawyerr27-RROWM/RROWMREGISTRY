@@ -163,12 +163,9 @@ This document **formally waives** `validate:system` and `validate:replay` as req
 
 **Do** treat harness remediation (§7) as **Phase 1.1 ops debt** before lifting waivers.
 
-### Tag command (after sign-off)
+### Tag (applied)
 
-```bash
-git tag -a checkpoint-phase1-production -m "Phase 1 Studio Foundation: production-certified with validation waivers (see docs/v2/phase-1-validation-waiver.md)"
-git push origin checkpoint-phase1-production
-```
+**`checkpoint-phase1-production`** on `main` @ `d5e6c4e` (31 May 2026), message: *Phase 1 Studio Foundation: production-certified with validation waivers (see docs/v2/phase-1-validation-waiver.md)*. Pushed to `origin`.
 
 ---
 
@@ -176,13 +173,13 @@ git push origin checkpoint-phase1-production
 
 | Role | Name | Date | Production certified | Waiver approved |
 |------|------|------|----------------------|-----------------|
-| Engineering | | | ☐ | ☐ |
-| QA | | | ☐ | ☐ |
-| Product | | | ☐ | ☐ |
+| Engineering | Timi BTZ | 2026-05-31 | ☑ | ☑ |
+| QA | Timi BTZ (operator attestation) | 2026-05-31 | ☑ | ☑ |
+| Product | Timi BTZ | 2026-05-31 | ☑ | ☑ |
 
-**Certification statement (when signed):**
+**Certification statement (signed):**
 
-> Phase 1 Studio Foundation is **production-certified** as of __________. Automated `validate:system` and `validate:replay` are **waived** per [phase-1-validation-waiver.md](./phase-1-validation-waiver.md). Production validation: Studio **PASS**, Registry **PASS**, Creative registration **PASS**. **`checkpoint-phase1-production`** is authorized.
+> Phase 1 Studio Foundation is **production-certified** as of **31 May 2026**. Automated `validate:system` and `validate:replay` are **waived** per [phase-1-validation-waiver.md](./phase-1-validation-waiver.md). Production validation: Studio **PASS**, Registry **PASS**, Creative registration **PASS**. **`checkpoint-phase1-production`** tagged on `main` @ `d5e6c4e`.
 
 ---
 
