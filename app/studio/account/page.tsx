@@ -12,6 +12,7 @@ import { CollectorWorkspaceShellLayout } from "@/components/Studio/CollectorWork
 import { GalleryWorkspaceShellLayout } from "@/components/Studio/GalleryWorkspaceShellLayout";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { getCollectorOwnedArtworkIds } from "@/lib/collector-portfolio";
+import { fieldCreativeHref } from "@/lib/field-nav";
 import {
   DEFAULT_PUBLIC_PRESENCE,
   parsePublicPresence,
@@ -348,7 +349,7 @@ export default function AccountPage() {
     if (role === "gallery" && gallerySlug)
       return `/institutional-studio/${encodeURIComponent(gallerySlug)}`;
     if (role === "artist" && artistSlug)
-      return `/artist/${encodeURIComponent(artistSlug)}`;
+      return fieldCreativeHref(artistSlug);
     if (role === "collector" && collectorSlug)
       return `/collector-studio/${encodeURIComponent(collectorSlug)}`;
     return null;

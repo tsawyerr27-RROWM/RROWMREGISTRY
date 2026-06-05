@@ -66,6 +66,7 @@ import { AddValueEventModal } from "@/components/Dashboard/AddValueEventModal";
 import { DataInsightModal } from "@/components/Insights/DataInsightModal";
 import { resolveArtworkOwnerId } from "@/lib/resolve-artwork-owner-id";
 import { formatCurrency } from "@/lib/formatCurrency";
+import { fieldCreativeHref } from "@/lib/field-nav";
 import { getDashboardInsights } from "@/lib/insights";
 import {
   translateInsightBarCategory,
@@ -1946,7 +1947,7 @@ return (
               previewArtworks={artworks}
               publicPageHref={
                 profile?.slug
-                  ? `/artist/${encodeURIComponent(String(profile.slug))}`
+                  ? fieldCreativeHref(String(profile.slug))
                   : null
               }
               onGoToSection={(section) => selectStudioSection(section)}
