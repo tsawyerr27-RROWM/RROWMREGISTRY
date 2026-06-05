@@ -52,6 +52,35 @@ export type MessageKey =
   | "field.stub.backHome"
   | "field.verify.title"
   | "field.verify.record.title"
+  | "field.verify.hub.title"
+  | "field.verify.hub.lede"
+  | "field.verify.hub.lookupHeading"
+  | "field.verify.hub.lookupIntro"
+  | "field.verify.hub.lookupLabel"
+  | "field.verify.hub.lookupPlaceholder"
+  | "field.verify.hub.lookupSubmit"
+  | "field.verify.hub.lookupHint"
+  | "field.verify.hub.lookupRequired"
+  | "field.verify.hub.hierarchyTitle"
+  | "field.verify.hub.hierarchyIntro"
+  | "field.verify.hub.tier1.label"
+  | "field.verify.hub.tier1.body"
+  | "field.verify.hub.tier2.label"
+  | "field.verify.hub.tier2.body"
+  | "field.verify.hub.tier3.label"
+  | "field.verify.hub.tier3.body"
+  | "field.verify.hub.section.verification.title"
+  | "field.verify.hub.section.verification.body"
+  | "field.verify.hub.section.provenance.title"
+  | "field.verify.hub.section.provenance.body"
+  | "field.verify.hub.section.registryRecord.title"
+  | "field.verify.hub.section.registryRecord.body"
+  | "field.verify.hub.section.howVerification.title"
+  | "field.verify.hub.section.howVerification.body"
+  | "field.verify.hub.section.certificates.title"
+  | "field.verify.hub.section.certificates.body"
+  | "field.verify.hub.linkRecords"
+  | "field.explorer.creatives.filter.verifiedHint"
   | "field.presence.creative.title"
   | "field.presence.organisation.title"
   | "field.presence.collector.title"
@@ -1372,6 +1401,8 @@ const EN: Record<MessageKey, string> = {
   "field.explorer.creatives.filter.verification": "Verification",
   "field.explorer.creatives.filter.allCreatives": "All Creatives",
   "field.explorer.creatives.filter.verifiedOnly": "Verified on file",
+  "field.explorer.creatives.filter.verifiedHint":
+    "Creatives with verified Registry records or artist confirmation on file.",
   "field.explorer.creatives.filter.sort": "Sort",
   "field.explorer.creatives.filter.apply": "Apply",
   "field.explorer.creatives.sort.nameAsc": "Name A–Z",
@@ -1387,6 +1418,46 @@ const EN: Record<MessageKey, string> = {
   "field.stub.backHome": "Back to The Field",
   "field.verify.title": "Verify",
   "field.verify.record.title": "Record verification",
+  "field.verify.hub.title": "Verify a Registry record",
+  "field.verify.hub.lede":
+    "The Field shows trust from the Registry ledger — verification status, participation on file, and certificate state. The Field does not issue verification; it reads Registry truth.",
+  "field.verify.hub.lookupHeading": "Check by Registry ID",
+  "field.verify.hub.lookupIntro":
+    "Enter the Registry ID printed on a record or certificate to view its public verification status.",
+  "field.verify.hub.lookupLabel": "Registry ID",
+  "field.verify.hub.lookupPlaceholder": "e.g. RROWM-…",
+  "field.verify.hub.lookupSubmit": "Check status",
+  "field.verify.hub.lookupHint":
+    "Public status only. Full certificate documents require sign-in.",
+  "field.verify.hub.lookupRequired": "Enter a Registry ID to continue.",
+  "field.verify.hub.hierarchyTitle": "How trust is ordered",
+  "field.verify.hub.hierarchyIntro":
+    "When reading a Creative or record on The Field, interpret signals in this order. Registry-backed facts outrank profile narrative.",
+  "field.verify.hub.tier1.label": "Tier 1 — Registry record",
+  "field.verify.hub.tier1.body":
+    "Registry ID, record verification status, and artist confirmation on the ledger.",
+  "field.verify.hub.tier2.label": "Tier 2 — Organisation & verified works",
+  "field.verify.hub.tier2.body":
+    "Organisation verification badges and factual counts of verified works — not popularity scores.",
+  "field.verify.hub.tier3.label": "Tier 3 — Certificate",
+  "field.verify.hub.tier3.body":
+    "Whether a certificate is recorded or revoked for a verified record. Certificate verification applies after record verification.",
+  "field.verify.hub.section.verification.title": "What verification means",
+  "field.verify.hub.section.verification.body":
+    "Verification is the Registry’s attestation that a record has passed defined confirmation on file. It is ledger-backed — not a social endorsement or paid badge.",
+  "field.verify.hub.section.provenance.title": "What provenance means",
+  "field.verify.hub.section.provenance.body":
+    "Provenance is the chronological continuity of a Registry record — authorship, institution filing, representation, and ownership events confirmed on file.",
+  "field.verify.hub.section.registryRecord.title": "What Registry records are",
+  "field.verify.hub.section.registryRecord.body":
+    "A Registry record is the canonical continuity entry for a work. The Field is a public read surface; the Registry remains the system of record.",
+  "field.verify.hub.section.howVerification.title": "How verification works",
+  "field.verify.hub.section.howVerification.body":
+    "Participants steward records in Studio. Confirmation events and verification status are written to the Registry. The Field displays that state read-only.",
+  "field.verify.hub.section.certificates.title": "How certificates work",
+  "field.verify.hub.section.certificates.body":
+    "After a record is verified, a certificate may be recorded. Public verify shows certificate status; the full certificate document is available to signed-in participants only.",
+  "field.verify.hub.linkRecords": "Browse Registry records",
   "field.presence.creative.title": "Creative profile",
   "field.presence.organisation.title": "Organisation profile",
   "field.presence.collector.title": "Collector profile",
@@ -2960,6 +3031,8 @@ const DE: Record<MessageKey, string> = {
   "field.explorer.creatives.filter.verification": "Verifizierung",
   "field.explorer.creatives.filter.allCreatives": "Alle Creatives",
   "field.explorer.creatives.filter.verifiedOnly": "Verifiziert auf Datei",
+  "field.explorer.creatives.filter.verifiedHint":
+    "Creatives mit verifizierten Register-Einträgen oder Künstlerbestätigung auf Datei.",
   "field.explorer.creatives.filter.sort": "Sortierung",
   "field.explorer.creatives.filter.apply": "Anwenden",
   "field.explorer.creatives.sort.nameAsc": "Name A–Z",
@@ -2975,6 +3048,46 @@ const DE: Record<MessageKey, string> = {
   "field.stub.backHome": "Zurück zu The Field",
   "field.verify.title": "Verifizieren",
   "field.verify.record.title": "Eintragsverifizierung",
+  "field.verify.hub.title": "Register-Eintrag verifizieren",
+  "field.verify.hub.lede":
+    "The Field zeigt Vertrauen aus dem Register — Verifizierungsstatus, Beteiligung und Zertifikatsstatus. The Field erteilt keine Verifizierung; es liest Register-Wahrheit.",
+  "field.verify.hub.lookupHeading": "Per Register-ID prüfen",
+  "field.verify.hub.lookupIntro":
+    "Geben Sie die Registry ID eines Eintrags ein, um den öffentlichen Verifizierungsstatus anzuzeigen.",
+  "field.verify.hub.lookupLabel": "Registry ID",
+  "field.verify.hub.lookupPlaceholder": "z. B. RROWM-…",
+  "field.verify.hub.lookupSubmit": "Status prüfen",
+  "field.verify.hub.lookupHint":
+    "Nur öffentlicher Status. Vollständige Zertifikate erfordern Anmeldung.",
+  "field.verify.hub.lookupRequired": "Bitte eine Registry ID eingeben.",
+  "field.verify.hub.hierarchyTitle": "Reihenfolge der Vertrauenssignale",
+  "field.verify.hub.hierarchyIntro":
+    "Lesen Sie Signale auf The Field in dieser Reihenfolge. Register-Fakten haben Vorrang vor Profiltext.",
+  "field.verify.hub.tier1.label": "Stufe 1 — Register-Eintrag",
+  "field.verify.hub.tier1.body":
+    "Registry ID, Verifizierungsstatus des Eintrags und Künstlerbestätigung im Register.",
+  "field.verify.hub.tier2.label": "Stufe 2 — Organisation & verifizierte Werke",
+  "field.verify.hub.tier2.body":
+    "Organisations-Verifizierung und sachliche Zähler verifizierter Werke — keine Popularitätswerte.",
+  "field.verify.hub.tier3.label": "Stufe 3 — Zertifikat",
+  "field.verify.hub.tier3.body":
+    "Ob ein Zertifikat für einen verifizierten Eintrag auf Datei ist oder widerrufen wurde.",
+  "field.verify.hub.section.verification.title": "Was Verifizierung bedeutet",
+  "field.verify.hub.section.verification.body":
+    "Verifizierung ist die Bestätigung des Registers, dass ein Eintrag definierte Bestätigungen auf Datei hat — ledger-gestützt, kein Social-Badge.",
+  "field.verify.hub.section.provenance.title": "Was Provenienz bedeutet",
+  "field.verify.hub.section.provenance.body":
+    "Provenienz ist die chronologische Kontinuität eines Register-Eintrags — bestätigte Ereignisse auf Datei.",
+  "field.verify.hub.section.registryRecord.title": "Was Register-Einträge sind",
+  "field.verify.hub.section.registryRecord.body":
+    "Ein Register-Eintrag ist der kanonische Kontinuitätseintrag für ein Werk. The Field liest; das Register bleibt System of Record.",
+  "field.verify.hub.section.howVerification.title": "Wie Verifizierung funktioniert",
+  "field.verify.hub.section.howVerification.body":
+    "Teilnehmende verwalten Einträge im Studio. Status wird im Register geschrieben. The Field zeigt read-only.",
+  "field.verify.hub.section.certificates.title": "Wie Zertifikate funktionieren",
+  "field.verify.hub.section.certificates.body":
+    "Nach Verifizierung kann ein Zertifikat auf Datei sein. Öffentliche Prüfung zeigt den Status; das Dokument erfordert Anmeldung.",
+  "field.verify.hub.linkRecords": "Register-Einträge durchsuchen",
   "field.presence.creative.title": "Creative-Profil",
   "field.presence.organisation.title": "Organisationsprofil",
   "field.presence.collector.title": "Sammlerprofil",
@@ -4424,6 +4537,8 @@ const FR: Record<MessageKey, string> = {
   "field.explorer.creatives.filter.verification": "Vérification",
   "field.explorer.creatives.filter.allCreatives": "Tous les Creatives",
   "field.explorer.creatives.filter.verifiedOnly": "Vérifié au registre",
+  "field.explorer.creatives.filter.verifiedHint":
+    "Creatives avec entrées vérifiées au registre ou confirmation d’artiste sur dossier.",
   "field.explorer.creatives.filter.sort": "Tri",
   "field.explorer.creatives.filter.apply": "Appliquer",
   "field.explorer.creatives.sort.nameAsc": "Nom A–Z",
@@ -4439,6 +4554,46 @@ const FR: Record<MessageKey, string> = {
   "field.stub.backHome": "Retour à The Field",
   "field.verify.title": "Vérifier",
   "field.verify.record.title": "Vérification d’entrée",
+  "field.verify.hub.title": "Vérifier une entrée du Registre",
+  "field.verify.hub.lede":
+    "The Field affiche la confiance du registre — statut de vérification, participation et certificat. The Field ne vérifie pas ; il lit le registre.",
+  "field.verify.hub.lookupHeading": "Vérifier par Registry ID",
+  "field.verify.hub.lookupIntro":
+    "Saisissez l’identifiant Registry d’une entrée pour voir son statut public.",
+  "field.verify.hub.lookupLabel": "Registry ID",
+  "field.verify.hub.lookupPlaceholder": "ex. RROWM-…",
+  "field.verify.hub.lookupSubmit": "Vérifier le statut",
+  "field.verify.hub.lookupHint":
+    "Statut public uniquement. Le certificat complet nécessite une connexion.",
+  "field.verify.hub.lookupRequired": "Saisissez une Registry ID.",
+  "field.verify.hub.hierarchyTitle": "Ordre des signaux de confiance",
+  "field.verify.hub.hierarchyIntro":
+    "Interprétez les signaux dans cet ordre sur The Field. Les faits du registre priment sur le récit du profil.",
+  "field.verify.hub.tier1.label": "Niveau 1 — Entrée du registre",
+  "field.verify.hub.tier1.body":
+    "Registry ID, statut de vérification de l’entrée et confirmation de l’artiste.",
+  "field.verify.hub.tier2.label": "Niveau 2 — Organisation et œuvres vérifiées",
+  "field.verify.hub.tier2.body":
+    "Badge d’organisation vérifiée et nombre d’œuvres vérifiées — pas un score de popularité.",
+  "field.verify.hub.tier3.label": "Niveau 3 — Certificat",
+  "field.verify.hub.tier3.body":
+    "Certificat enregistré ou révoqué pour une entrée vérifiée.",
+  "field.verify.hub.section.verification.title": "Ce que signifie la vérification",
+  "field.verify.hub.section.verification.body":
+    "La vérification est l’attestation du registre qu’une entrée a des confirmations sur dossier — fondée sur le registre.",
+  "field.verify.hub.section.provenance.title": "Ce que signifie la provenance",
+  "field.verify.hub.section.provenance.body":
+    "La provenance est la continuité chronologique d’une entrée — événements confirmés sur dossier.",
+  "field.verify.hub.section.registryRecord.title": "Ce que sont les entrées du registre",
+  "field.verify.hub.section.registryRecord.body":
+    "Une entrée du registre est l’enregistrement canonique d’une œuvre. The Field lit ; le registre reste la source de vérité.",
+  "field.verify.hub.section.howVerification.title": "Comment fonctionne la vérification",
+  "field.verify.hub.section.howVerification.body":
+    "Les participants gèrent les entrées dans le Studio. Le statut est écrit dans le registre. The Field affiche en lecture seule.",
+  "field.verify.hub.section.certificates.title": "Comment fonctionnent les certificats",
+  "field.verify.hub.section.certificates.body":
+    "Après vérification, un certificat peut être enregistré. La vérification publique montre le statut ; le document complet exige une connexion.",
+  "field.verify.hub.linkRecords": "Parcourir les entrées du registre",
   "field.presence.creative.title": "Profil Creative",
   "field.presence.organisation.title": "Profil Organisation",
   "field.presence.collector.title": "Profil Collectionneur",
@@ -5891,6 +6046,8 @@ const JA: Record<MessageKey, string> = {
   "field.explorer.creatives.filter.verification": "検証",
   "field.explorer.creatives.filter.allCreatives": "すべての Creative",
   "field.explorer.creatives.filter.verifiedOnly": "記録上 verified",
+  "field.explorer.creatives.filter.verifiedHint":
+    "検証済みレジストリレコードまたは artist 確認が記録上にある Creative。",
   "field.explorer.creatives.filter.sort": "並び替え",
   "field.explorer.creatives.filter.apply": "適用",
   "field.explorer.creatives.sort.nameAsc": "名前 A–Z",
@@ -5906,6 +6063,46 @@ const JA: Record<MessageKey, string> = {
   "field.stub.backHome": "The Field に戻る",
   "field.verify.title": "検証",
   "field.verify.record.title": "レコード検証",
+  "field.verify.hub.title": "レジストリレコードを検証",
+  "field.verify.hub.lede":
+    "The Field はレジストリ台帳から信頼を表示します。The Field は検証を発行せず、レジストリの真実を読み取ります。",
+  "field.verify.hub.lookupHeading": "Registry ID で確認",
+  "field.verify.hub.lookupIntro":
+    "レコードまたは証明書の Registry ID を入力して、公開検証ステータスを表示します。",
+  "field.verify.hub.lookupLabel": "Registry ID",
+  "field.verify.hub.lookupPlaceholder": "例: RROWM-…",
+  "field.verify.hub.lookupSubmit": "ステータスを確認",
+  "field.verify.hub.lookupHint":
+    "公開ステータスのみ。完全な証明書はサインインが必要です。",
+  "field.verify.hub.lookupRequired": "Registry ID を入力してください。",
+  "field.verify.hub.hierarchyTitle": "信頼シグナルの順序",
+  "field.verify.hub.hierarchyIntro":
+    "The Field ではこの順序でシグナルを読みます。台帳の事実がプロフィール叙述より優先されます。",
+  "field.verify.hub.tier1.label": "第1層 — レジストリレコード",
+  "field.verify.hub.tier1.body":
+    "Registry ID、レコード検証ステータス、artist 確認。",
+  "field.verify.hub.tier2.label": "第2層 — Organisation と verified 作品",
+  "field.verify.hub.tier2.body":
+    "Organisation の verified バッジと verified 作品数 — 人気スコアではありません。",
+  "field.verify.hub.tier3.label": "第3層 — 証明書",
+  "field.verify.hub.tier3.body":
+    "verified レコードに対する証明書の記録または失効。",
+  "field.verify.hub.section.verification.title": "検証とは",
+  "field.verify.hub.section.verification.body":
+    "検証は、定義された確認が記録上にあるというレジストリの証明です — 台帳に基づきます。",
+  "field.verify.hub.section.provenance.title": "来歴（provenance）とは",
+  "field.verify.hub.section.provenance.body":
+    "来歴はレコードの時系列の連続性 — 記録上で確認されたイベントです。",
+  "field.verify.hub.section.registryRecord.title": "レジストリレコードとは",
+  "field.verify.hub.section.registryRecord.body":
+    "レジストリレコードは作品の正規の連続性エントリです。The Field は読み取り専用の表面です。",
+  "field.verify.hub.section.howVerification.title": "検証の仕組み",
+  "field.verify.hub.section.howVerification.body":
+    "参加者は Studio で管理し、ステータスはレジストリに書き込まれます。The Field は read-only で表示します。",
+  "field.verify.hub.section.certificates.title": "証明書の仕組み",
+  "field.verify.hub.section.certificates.body":
+    "レコード verified 後、証明書が記録される場合があります。公開検証はステータスのみ。文書はサインイン後。",
+  "field.verify.hub.linkRecords": "レジストリレコードを閲覧",
   "field.presence.creative.title": "Creative プロフィール",
   "field.presence.organisation.title": "Organisation プロフィール",
   "field.presence.collector.title": "コレクタープロフィール",

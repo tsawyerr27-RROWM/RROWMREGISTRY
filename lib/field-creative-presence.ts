@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { fetchArtistArtworkList } from "@/lib/fetch-artist-artwork-list";
 import type { ParticipationLayer } from "@/lib/get-artwork-participation-layers";
+import type { CreativePracticeChip } from "@/lib/practices";
 import { parsePublicPresence } from "@/lib/public-presence";
 import { parseArtistRepresentationState } from "@/lib/artwork-representation";
 import {
@@ -15,6 +16,7 @@ import {
   type RegistrySort,
 } from "@/lib/registry-list-params";
 import { fieldCreativeHref, fieldOrganisationHref } from "@/lib/field-nav";
+import { loadCreativePracticeChips } from "@/lib/practices";
 
 export type CreativePresenceGallery = {
   name: string;
@@ -57,6 +59,7 @@ export type CreativePresencePageData = {
   formKey: string;
   filterHint: string | null;
   showOrganisationSection: boolean;
+  practices: CreativePracticeChip[];
 };
 
 type ArtistRow = {
@@ -208,6 +211,12 @@ export async function loadCreativePresencePageData(
     artist.verification_status
   );
 
+  const practices = await loadCreativePracticeChips(
+    supabase,
+    artist.id,
+    artist.public_presence
+  );
+
   const filterHint =
     status === "verified"
       ? REGISTRY_FILTER_LABELS.verifiedOnly
@@ -238,6 +247,7 @@ export async function loadCreativePresencePageData(
     formKey: `${q}|${sort}|${status}`,
     filterHint,
     showOrganisationSection: presence.ownership && Boolean(gallery),
+    practices,
   };
 }
 

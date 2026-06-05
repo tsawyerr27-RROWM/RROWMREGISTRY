@@ -86,6 +86,9 @@ export function CreativeExplorerFilters({
             <option value="">{t("field.explorer.creatives.filter.allCreatives")}</option>
             <option value="1">{t("field.explorer.creatives.filter.verifiedOnly")}</option>
           </select>
+          <p className="mt-2 text-xs text-neutral-500">
+            {t("field.explorer.creatives.filter.verifiedHint")}
+          </p>
         </div>
 
         <div className="lg:col-span-3">

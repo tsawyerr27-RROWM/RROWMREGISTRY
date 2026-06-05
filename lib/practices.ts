@@ -1,3 +1,5 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import {
   isPracticeSlug,
   practiceLabel,
@@ -88,4 +90,27 @@ export function creativeMatchesPracticeFilter(
   const slug = filterSlug.trim().toLowerCase();
   if (!slug) return true;
   return declaredSlugs.includes(slug) || registrySlugs.includes(slug);
+}
+
+export async function loadCreativePracticeChips(
+  supabase: SupabaseClient,
+  artistId: string,
+  publicPresenceRaw: unknown
+): Promise<CreativePracticeChip[]> {
+  const declared = parseDeclaredPracticeSlugs(publicPresenceRaw);
+
+  const { data: artworkRows } = await supabase
+    .from("artworks")
+    .select("medium")
+    .eq("artist_id", artistId)
+    .eq("verification_status", "verified");
+
+  const mediums = (artworkRows ?? [])
+    .map((row) => (row as { medium?: string | null }).medium)
+    .filter((m): m is string => Boolean(m?.trim()));
+
+  return mergeCreativePracticeChips(
+    declared,
+    inferRegistryPracticeSlugs(mediums)
+  );
 }

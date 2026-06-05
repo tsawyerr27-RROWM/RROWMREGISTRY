@@ -1,11 +1,12 @@
 import Link from "next/link";
 
+import { FieldCreativePracticeChips } from "@/components/Field/FieldCreativePracticeChips";
 import { ParticipationLayersStrip } from "@/components/Registry/ParticipationLayersStrip";
 import { RegistryListFilters } from "@/components/Registry/RegistryListFilters";
 import { RegistryListPagination } from "@/components/Registry/RegistryListPagination";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import type { CreativePresencePageData } from "@/lib/field-creative-presence";
-import { fieldCreativeHref, fieldOrganisationHref } from "@/lib/field-nav";
+import { fieldVerifyHref, fieldVerifyRecordHref } from "@/lib/field-nav";
 import {
   artworkCardParticipationLabel,
 } from "@/lib/representation-language";
@@ -31,6 +32,7 @@ export function CreativePresenceView({ data }: Props) {
     formKey,
     filterHint,
     showOrganisationSection,
+    practices,
   } = data;
 
   return (
@@ -43,14 +45,46 @@ export function CreativePresenceView({ data }: Props) {
           {artist.display_name}
         </h1>
 
-        {participationLayers.length > 0 ? (
-          <div className="mt-8 max-w-xl">
-            <ParticipationLayersStrip
-              layers={participationLayers}
-              variant="light"
-            />
-          </div>
-        ) : null}
+        <div className="mt-8 max-w-2xl rounded-2xl border border-neutral-900/[0.06] bg-white/75 p-5 shadow-sm md:p-6">
+          <p className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
+            Registry evidence
+          </p>
+          {verifiedWorkCount > 0 || total > 0 ? (
+            <p className="mt-2 text-sm text-neutral-700">
+              {verifiedWorkCount > 0 ? (
+                <>
+                  <span className="font-medium">{verifiedWorkCount}</span> verified{" "}
+                  {verifiedWorkCount === 1 ? "work" : "works"} on file
+                </>
+              ) : null}
+              {verifiedWorkCount > 0 && total > 0 ? " · " : null}
+              {total > 0 ? (
+                <>
+                  <span className="font-medium">{total}</span>{" "}
+                  {total === 1 ? "work" : "works"} in public footprint
+                </>
+              ) : null}
+            </p>
+          ) : (
+            <p className="mt-2 text-sm text-neutral-600">
+              No registered works are on file for this Creative yet.
+            </p>
+          )}
+          {practices.length > 0 ? (
+            <div className="mt-4">
+              <FieldCreativePracticeChips practices={practices} />
+            </div>
+          ) : null}
+          {participationLayers.length > 0 ? (
+            <div className="mt-5 border-t border-neutral-900/[0.05] pt-5">
+              <ParticipationLayersStrip
+                layers={participationLayers}
+                variant="light"
+                showFootnote={false}
+              />
+            </div>
+          ) : null}
+        </div>
 
         {artist.bio ? (
           <div className="mt-10 space-y-6 text-lg leading-[1.75] text-neutral-700">
@@ -178,6 +212,7 @@ export function CreativePresenceView({ data }: Props) {
                   .join(" · ");
                 const artworkHref = `/artwork/${encodeURIComponent(artwork.registry_id)}`;
                 const registryHref = `/registry/${encodeURIComponent(artwork.registry_id)}`;
+                const verifyHref = fieldVerifyRecordHref(artwork.registry_id);
 
                 return (
                   <article
@@ -226,18 +261,26 @@ export function CreativePresenceView({ data }: Props) {
                         {artwork.registry_id}
                       </p>
 
-                      <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-black/[0.05] pt-5">
+                      <div className="mt-6 flex flex-col gap-2 border-t border-black/[0.05] pt-5">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <Link
+                            href={registryHref}
+                            className="inline-flex flex-1 items-center justify-center rounded-2xl bg-neutral-950 px-4 py-2.5 text-center text-xs font-semibold text-white transition hover:bg-neutral-800"
+                          >
+                            Registry record
+                          </Link>
+                          <Link
+                            href={artworkHref}
+                            className="inline-flex flex-1 items-center justify-center rounded-2xl border border-neutral-200 bg-white px-4 py-2.5 text-xs font-medium text-neutral-800 transition hover:bg-neutral-50"
+                          >
+                            View artwork
+                          </Link>
+                        </div>
                         <Link
-                          href={artworkHref}
-                          className="inline-flex flex-1 items-center justify-center rounded-2xl bg-neutral-950 px-4 py-2.5 text-center text-xs font-semibold text-white transition hover:bg-neutral-800"
+                          href={verifyHref}
+                          className="text-center text-[11px] font-medium text-emerald-900 underline decoration-emerald-900/25 underline-offset-2 hover:decoration-emerald-900/50"
                         >
-                          View artwork
-                        </Link>
-                        <Link
-                          href={registryHref}
-                          className="inline-flex items-center justify-center rounded-2xl border border-neutral-200 bg-white px-4 py-2.5 text-xs font-medium text-neutral-800 transition hover:bg-neutral-50"
-                        >
-                          Registry record
+                          Check verification
                         </Link>
                       </div>
                     </div>
@@ -272,10 +315,10 @@ export function CreativePresenceView({ data }: Props) {
             Browse registry
           </Link>
           <Link
-            href="/field/verify"
+            href={fieldVerifyHref()}
             className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
           >
-            Verify a record
+            Verify a Registry record
           </Link>
         </div>
       </section>
