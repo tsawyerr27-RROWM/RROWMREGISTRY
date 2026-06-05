@@ -32,7 +32,7 @@ export function RecordExplorerHero({
     Boolean(creative) ||
     Boolean(organisation) ||
     Boolean(practice) ||
-    verified === "verified" ||
+    verified === "all" ||
     certificate === "present";
 
   return (
@@ -54,6 +54,10 @@ export function RecordExplorerHero({
         {total > 0 ? (
           <p className="mt-8 text-[12px] text-neutral-500">
             {total} {total === 1 ? "record" : "records"}
+            {" · "}
+            {verified === "all"
+              ? t("field.explorer.records.verifiedScopeAll")
+              : t("field.explorer.records.verifiedScopeDefault")}
             {trimmedQ ? (
               <>
                 {" "}

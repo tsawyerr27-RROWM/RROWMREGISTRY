@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { FieldExplorerHubSearch } from "@/components/Field/FieldExplorerHubSearch";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import {
   fieldExplorerCreativesHref,
@@ -27,6 +28,7 @@ export function FieldExplorerHubContent() {
         <p className="mt-8 max-w-2xl text-lg leading-relaxed text-neutral-600">
           {t("field.explorer.hub.lede")}
         </p>
+        <FieldExplorerHubSearch />
       </header>
 
       <div className="mt-14 grid gap-6 md:grid-cols-3">

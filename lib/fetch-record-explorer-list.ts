@@ -13,6 +13,7 @@ import {
   fieldOrganisationHref,
   fieldRecordHref,
 } from "@/lib/field-nav";
+import { fieldSearchIlikePattern } from "@/lib/field-search-contract";
 import { parsePublicPresence } from "@/lib/public-presence";
 import {
   creativeMatchesPracticeFilter,
@@ -220,24 +221,104 @@ export async function fetchRecordExplorerList(
       )
     `);
 
-  const term = args.q.trim().replace(/,/g, " ");
-  if (term) {
-    const p = `%${term}%`;
-    query = query.or(`title.ilike.${p},registry_id.ilike.${p}`);
+  const term = args.q.trim();
+  const ilikePattern = fieldSearchIlikePattern(term);
+  let candidates: ArtworkCandidate[] = [];
+
+  if (ilikePattern) {
+    let titleQuery = query;
+    if (artistIdFilter) {
+      titleQuery = titleQuery.eq("artist_id", artistIdFilter);
+    }
+    titleQuery = titleQuery.or(
+      `title.ilike.${ilikePattern},registry_id.ilike.${ilikePattern}`
+    );
+
+    const { data: titleRows, error: titleError } = await titleQuery;
+    if (titleError) {
+      console.error("[fetchRecordExplorerList]", titleError.message);
+      return { rows: [], total: 0, basePath };
+    }
+
+    const byId = new Map<string, ArtworkCandidate>();
+    for (const row of (titleRows ?? []) as ArtworkCandidate[]) {
+      byId.set(row.id, row);
+    }
+
+    let artistQuery = supabase
+      .from("artists")
+      .select("id")
+      .or(`display_name.ilike.${ilikePattern},full_name.ilike.${ilikePattern}`);
+
+    if (artistIdFilter) {
+      artistQuery = artistQuery.eq("id", artistIdFilter);
+    }
+
+    const { data: artistMatches } = await artistQuery;
+    const matchedArtistIds = (artistMatches ?? []).map((row) => row.id).filter(Boolean);
+
+    if (matchedArtistIds.length > 0) {
+      let artworkByArtistQuery = supabase.from("artworks").select(`
+          id,
+          title,
+          registry_id,
+          image_url,
+          created_at,
+          year,
+          medium,
+          verification_status,
+          filing_gallery_id,
+          artist_id,
+          artists!artworks_artist_id_fkey(
+            id,
+            display_name,
+            full_name,
+            slug,
+            verification_status,
+            public_presence,
+            gallery_id,
+            galleries(
+              slug,
+              name,
+              verified,
+              public_presence
+            )
+          )
+        `)
+        .in("artist_id", matchedArtistIds);
+
+      if (artistIdFilter) {
+        artworkByArtistQuery = artworkByArtistQuery.eq("artist_id", artistIdFilter);
+      }
+
+      const { data: artistArtworkRows, error: artistArtworkError } =
+        await artworkByArtistQuery;
+
+      if (artistArtworkError) {
+        console.error("[fetchRecordExplorerList]", artistArtworkError.message);
+      } else {
+        for (const row of (artistArtworkRows ?? []) as ArtworkCandidate[]) {
+          byId.set(row.id, row);
+        }
+      }
+    }
+
+    candidates = [...byId.values()];
+  } else {
+    if (artistIdFilter) {
+      query = query.eq("artist_id", artistIdFilter);
+    }
+
+    const { data: rawRows, error } = await query;
+
+    if (error) {
+      console.error("[fetchRecordExplorerList]", error.message);
+      return { rows: [], total: 0, basePath };
+    }
+
+    candidates = (rawRows ?? []) as ArtworkCandidate[];
   }
 
-  if (artistIdFilter) {
-    query = query.eq("artist_id", artistIdFilter);
-  }
-
-  const { data: rawRows, error } = await query;
-
-  if (error) {
-    console.error("[fetchRecordExplorerList]", error.message);
-    return { rows: [], total: 0, basePath };
-  }
-
-  const candidates = (rawRows ?? []) as ArtworkCandidate[];
   if (candidates.length === 0) {
     return { rows: [], total: 0, basePath };
   }

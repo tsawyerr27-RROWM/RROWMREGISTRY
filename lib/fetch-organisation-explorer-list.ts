@@ -8,6 +8,7 @@ import {
   type OrganisationExplorerVerifiedFilter,
 } from "@/lib/field-organisation-explorer-params";
 import { fieldExplorerOrganisationsHref, fieldOrganisationHref } from "@/lib/field-nav";
+import { fieldSearchIlikePattern } from "@/lib/field-search-contract";
 import { parsePublicPresence } from "@/lib/public-presence";
 
 export type OrganisationExplorerRow = {
@@ -110,10 +111,11 @@ export async function fetchOrganisationExplorerList(
       "id, name, slug, location, description, verified, public_presence, created_at"
     );
 
-  const term = args.q.trim().replace(/,/g, " ");
-  if (term) {
-    const p = `%${term}%`;
-    query = query.or(`name.ilike.${p},description.ilike.${p}`);
+  const ilikePattern = fieldSearchIlikePattern(args.q);
+  if (ilikePattern) {
+    query = query.or(
+      `name.ilike.${ilikePattern},description.ilike.${ilikePattern},location.ilike.${ilikePattern}`
+    );
   }
 
   const { data: rawGalleries, error } = await query;

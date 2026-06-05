@@ -6,6 +6,7 @@ import {
   type CreativeExplorerVerifiedFilter,
 } from "@/lib/field-creative-explorer-params";
 import { fieldCreativeHref, fieldExplorerCreativesHref } from "@/lib/field-nav";
+import { fieldSearchIlikePattern } from "@/lib/field-search-contract";
 import { parsePublicPresence } from "@/lib/public-presence";
 import {
   creativeMatchesPracticeFilter,
@@ -140,10 +141,11 @@ export async function fetchCreativeExplorerList(
       )
     `);
 
-  const term = args.q.trim().replace(/,/g, " ");
-  if (term) {
-    const p = `%${term}%`;
-    query = query.or(`display_name.ilike.${p},bio.ilike.${p}`);
+  const ilikePattern = fieldSearchIlikePattern(args.q);
+  if (ilikePattern) {
+    query = query.or(
+      `display_name.ilike.${ilikePattern},bio.ilike.${ilikePattern},slug.ilike.${ilikePattern}`
+    );
   }
 
   const { data: rawArtists, error } = await query;

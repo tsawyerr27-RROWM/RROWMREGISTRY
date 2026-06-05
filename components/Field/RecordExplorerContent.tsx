@@ -6,10 +6,11 @@ import { RecordExplorerCard } from "@/components/Field/RecordExplorerCard";
 import { RecordExplorerFilters } from "@/components/Field/RecordExplorerFilters";
 import { RecordExplorerPagination } from "@/components/Field/RecordExplorerPagination";
 import type { RecordExplorerRow } from "@/lib/fetch-record-explorer-list";
-import type {
-  RecordExplorerCertificateFilter,
-  RecordExplorerSort,
-  RecordExplorerVerifiedFilter,
+import {
+  recordExplorerQueryString,
+  type RecordExplorerCertificateFilter,
+  type RecordExplorerSort,
+  type RecordExplorerVerifiedFilter,
 } from "@/lib/field-record-explorer-params";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
@@ -48,8 +49,22 @@ export function RecordExplorerContent({
     Boolean(creative) ||
     Boolean(organisation) ||
     Boolean(practice) ||
-    verified === "verified" ||
+    verified === "all" ||
     certificate === "present";
+
+  const browseAllHref = (() => {
+    const qs = recordExplorerQueryString({
+      q,
+      sort,
+      page: 1,
+      creative,
+      organisation,
+      practice,
+      verified: "all",
+      certificate,
+    });
+    return qs ? `${basePath}?${qs}` : `${basePath}?verified=0`;
+  })();
 
   return (
     <div className="mt-10">
@@ -82,7 +97,7 @@ export function RecordExplorerContent({
                   {t("field.explorer.records.empty.clearFilters")}
                 </Link>
                 <Link
-                  href={basePath}
+                  href={browseAllHref}
                   className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
                 >
                   {t("field.explorer.records.empty.browseAll")}

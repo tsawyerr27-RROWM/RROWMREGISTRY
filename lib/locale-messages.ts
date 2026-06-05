@@ -30,6 +30,11 @@ export type MessageKey =
   | "field.explorer.tab.records"
   | "field.explorer.hub.title"
   | "field.explorer.hub.lede"
+  | "field.explorer.hub.searchLabel"
+  | "field.explorer.hub.searchPlaceholder"
+  | "field.explorer.hub.searchSubmit"
+  | "field.explorer.hub.searchHint"
+  | "field.explorer.hub.searchRequired"
   | "field.explorer.hub.recordsCard"
   | "field.explorer.organisations.headline"
   | "field.explorer.organisations.lede"
@@ -55,6 +60,8 @@ export type MessageKey =
   | "field.explorer.records.lede"
   | "field.explorer.records.searching"
   | "field.explorer.records.filtered"
+  | "field.explorer.records.verifiedScopeDefault"
+  | "field.explorer.records.verifiedScopeAll"
   | "field.explorer.records.filter.search"
   | "field.explorer.records.filter.searchPlaceholder"
   | "field.explorer.records.filter.creative"
@@ -1438,6 +1445,12 @@ const EN: Record<MessageKey, string> = {
   "field.explorer.hub.title": "Explorer",
   "field.explorer.hub.lede":
     "Browse public Creatives, Organisations, and Registry records. Discovery follows alphabetical order and your filters — not recommendations or paid placement.",
+  "field.explorer.hub.searchLabel": "Search The Field",
+  "field.explorer.hub.searchPlaceholder": "Registry ID, title, or name…",
+  "field.explorer.hub.searchSubmit": "Search",
+  "field.explorer.hub.searchHint":
+    "Registry IDs open the Field Record. Other terms search Registry records.",
+  "field.explorer.hub.searchRequired": "Enter a Registry ID or search term.",
   "field.explorer.hub.recordsCard": "Browse Registry records",
   "field.explorer.organisations.headline": "Discover Organisations",
   "field.explorer.organisations.lede":
@@ -1467,6 +1480,8 @@ const EN: Record<MessageKey, string> = {
     "Browse Registry records with verification status, certificates, and links to Creatives and Organisations. No recommendations or paid ranking.",
   "field.explorer.records.searching": "searching",
   "field.explorer.records.filtered": "filters applied",
+  "field.explorer.records.verifiedScopeDefault": "Verified records on file",
+  "field.explorer.records.verifiedScopeAll": "All public records",
   "field.explorer.records.filter.search": "Search",
   "field.explorer.records.filter.searchPlaceholder": "Title or Registry ID…",
   "field.explorer.records.filter.creative": "Creative",
@@ -3122,6 +3137,12 @@ const DE: Record<MessageKey, string> = {
   "field.explorer.hub.title": "Explorer",
   "field.explorer.hub.lede":
     "Öffentliche Creatives, Organisationen und Register-Einträge durchsuchen. Entdeckung folgt alphabetischer Reihenfolge und Ihren Filtern — keine Empfehlungen oder bezahlte Platzierung.",
+  "field.explorer.hub.searchLabel": "The Field durchsuchen",
+  "field.explorer.hub.searchPlaceholder": "Register-ID, Titel oder Name…",
+  "field.explorer.hub.searchSubmit": "Suchen",
+  "field.explorer.hub.searchHint":
+    "Register-IDs öffnen den Field Record. Andere Begriffe durchsuchen Register-Einträge.",
+  "field.explorer.hub.searchRequired": "Register-ID oder Suchbegriff eingeben.",
   "field.explorer.hub.recordsCard": "Register-Einträge durchsuchen",
   "field.explorer.organisations.headline": "Organisationen entdecken",
   "field.explorer.organisations.lede":
@@ -3151,6 +3172,8 @@ const DE: Record<MessageKey, string> = {
     "Register-Einträge mit Verifizierungsstatus, Zertifikaten und Links zu Creatives und Organisationen. Keine Empfehlungen oder bezahlte Platzierung.",
   "field.explorer.records.searching": "Suche",
   "field.explorer.records.filtered": "Filter aktiv",
+  "field.explorer.records.verifiedScopeDefault": "Verifizierte Einträge auf Datei",
+  "field.explorer.records.verifiedScopeAll": "Alle öffentlichen Einträge",
   "field.explorer.records.filter.search": "Suche",
   "field.explorer.records.filter.searchPlaceholder": "Titel oder Registry-ID…",
   "field.explorer.records.filter.creative": "Creative",
@@ -4682,6 +4705,12 @@ const FR: Record<MessageKey, string> = {
   "field.explorer.hub.title": "Explorateur",
   "field.explorer.hub.lede":
     "Parcourez les Creatives, Organisations et entrées du registre publics. La découverte suit l’ordre alphabétique et vos filtres — pas de recommandations ni de placement payant.",
+  "field.explorer.hub.searchLabel": "Rechercher dans The Field",
+  "field.explorer.hub.searchPlaceholder": "ID registre, titre ou nom…",
+  "field.explorer.hub.searchSubmit": "Rechercher",
+  "field.explorer.hub.searchHint":
+    "Les ID registre ouvrent l’entrée Field Record. Les autres termes recherchent dans les entrées du registre.",
+  "field.explorer.hub.searchRequired": "Saisissez un ID registre ou un terme de recherche.",
   "field.explorer.hub.recordsCard": "Parcourir les entrées du registre",
   "field.explorer.organisations.headline": "Découvrir les Organisations",
   "field.explorer.organisations.lede":
@@ -4711,6 +4740,8 @@ const FR: Record<MessageKey, string> = {
     "Parcourez les entrées du Registre avec statut de vérification, certificats et liens vers Creatives et Organisations. Pas de recommandations ni de placement payant.",
   "field.explorer.records.searching": "recherche",
   "field.explorer.records.filtered": "filtres actifs",
+  "field.explorer.records.verifiedScopeDefault": "Entrées vérifiées au registre",
+  "field.explorer.records.verifiedScopeAll": "Toutes les entrées publiques",
   "field.explorer.records.filter.search": "Rechercher",
   "field.explorer.records.filter.searchPlaceholder": "Titre ou Registry ID…",
   "field.explorer.records.filter.creative": "Creative",
@@ -6245,6 +6276,12 @@ const JA: Record<MessageKey, string> = {
   "field.explorer.hub.title": "エクスプローラー",
   "field.explorer.hub.lede":
     "公開 Creative、Organisation、レジストリレコードを閲覧。発見はアルファベット順とフィルタに従います — おすすめや有料掲載はありません。",
+  "field.explorer.hub.searchLabel": "The Field を検索",
+  "field.explorer.hub.searchPlaceholder": "レジストリ ID、タイトル、名前…",
+  "field.explorer.hub.searchSubmit": "検索",
+  "field.explorer.hub.searchHint":
+    "レジストリ ID は Field Record を開きます。その他の語句はレジストリレコードを検索します。",
+  "field.explorer.hub.searchRequired": "レジストリ ID または検索語を入力してください。",
   "field.explorer.hub.recordsCard": "レジストリレコードを閲覧",
   "field.explorer.organisations.headline": "Organisation を探す",
   "field.explorer.organisations.lede":
@@ -6274,6 +6311,8 @@ const JA: Record<MessageKey, string> = {
     "検証状態、証明書、Creative・Organisation へのリンク付きでレジストリレコードを閲覧。おすすめや有料掲載はありません。",
   "field.explorer.records.searching": "検索",
   "field.explorer.records.filtered": "フィルター適用中",
+  "field.explorer.records.verifiedScopeDefault": "記録上 verified のレコード",
+  "field.explorer.records.verifiedScopeAll": "すべての公開レコード",
   "field.explorer.records.filter.search": "検索",
   "field.explorer.records.filter.searchPlaceholder": "タイトルまたは Registry ID…",
   "field.explorer.records.filter.creative": "Creative",
