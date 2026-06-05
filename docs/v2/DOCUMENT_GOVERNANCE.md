@@ -64,6 +64,7 @@ To change a frozen document:
 | Phase 2 Architecture Decisions | Founder marks ADRs DECIDED; amend recommendations via ADR revision |
 | Phase 2A Field Foundations Spec | Product + engineering lead; LOCKED DRAFT → LOCKED after founder freeze + sign-off; explicit unlock for scope delta |
 | Phase 2A Founder Decisions Freeze | Founder + product; version bump for any §1–§10 change |
+| Phase 2A PR1 Field Foundation Plan | Engineering lead update; must stay aligned with 2A spec and founder freeze; no scope expansion without spec unlock |
 
 ## Related operational docs
 
@@ -72,6 +73,7 @@ To change a frozen document:
 - [Phase 2 architecture decisions](./phase-2-architecture-decisions.md) — Founder ADRs (DRAFT)
 - [Phase 2A Field foundations spec](./phase-2a-field-foundations-spec.md) — First Field release scope (LOCKED DRAFT)
 - [Phase 2A founder decisions freeze](./phase-2a-founder-decisions-freeze.md) — Settled 2A founder decisions (FROZEN)
+- [Phase 2A PR1 field foundation plan](./phase-2a-pr1-field-foundation-plan.md) — PR1 execution (IMPLEMENTATION SOURCE OF TRUTH)
 - [Post-certification remediation](./post-certification-remediation.md) — Phase 1.1 harness, replay, integrity, and reproducibility backlog
 - [Phase 1 production signoff](./phase-1-production-signoff.md)
 - [Account lifecycle deployment](../account-lifecycle-deployment.md)
@@ -100,3 +102,4 @@ To change a frozen document:
 | `phase-2-architecture-decisions.md` | DRAFT |
 | `phase-2a-field-foundations-spec.md` | LOCKED DRAFT |
 | `phase-2a-founder-decisions-freeze.md` | FROZEN |
+| `phase-2a-pr1-field-foundation-plan.md` | IMPLEMENTATION SOURCE OF TRUTH |

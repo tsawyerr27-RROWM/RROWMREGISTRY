@@ -3,455 +3,645 @@
 **Document status:** IMPLEMENTATION SOURCE OF TRUTH  
 **Effective:** 31 May 2026  
 **Authority:** [Phase 2A Field Foundations Spec](./phase-2a-field-foundations-spec.md) (LOCKED DRAFT), [Phase 2A Founder Decisions Freeze](./phase-2a-founder-decisions-freeze.md) (FROZEN), [Phase 2 Blueprint — The Field](./phase-2-the-field-blueprint.md) (DRAFT), [Phase 2 Architecture Decisions](./phase-2-architecture-decisions.md) (DRAFT)  
-**PR scope:** Phase 2A **PR1 only** — canonical Field route structure, Field navigation architecture, presence page mapping, migration impacts, rollout sequence, acceptance criteria.  
-**Golden rule (inherited from Phase 1 PR4):** **Move, then redirect.** Legacy routes become redirect stubs in the **same commit** as the canonical move. Never delete a route and add redirects later.
+**Predecessor:** Phase 1 Studio Foundation — production-certified @ `checkpoint-phase1-production`
 
-**Out of scope for PR1 (document only — do not implement):** Database schema, visual UI design, Opportunity objects, `/field/open-calls`, Studio inbox, API namespace migration, `/field/record/[registry_id]` **content move** (see §1.2 — scaffold only in PR1 unless PR1 extended by unlock).
+**Golden rule (Phase 1 PR4 discipline):** **Move, then redirect.** Legacy App Router routes become `permanentRedirect` stubs in the **same commit** as the canonical Field move.
 
-**Document type:** Implementation plan — **no code, no database tables, no visual UI specification.**
-
----
-
-## 0. PR1 objective
-
-Establish **The Field** as the **third ecosystem surface** by:
-
-1. Creating the canonical **`/field/*` App Router namespace** with shared Field layout (no Studio workspace sidebar).
-2. Introducing **Field navigation architecture** (explorer hub + cross-surface links).
-3. **Moving** public profile and explorer implementations into Field routes with **301 legacy stubs**.
-4. Defining **presence → page** data mapping so Studio remains edit source and Field remains read projection.
-5. Preparing **migration and link-grep** inventory for downstream PRs (record detail, verify, full redirect matrix).
-
-**PR1 success statement:**
-
-> Anonymous and signed-in users can reach Field explorer and profile canonical URLs; legacy public URLs 301 correctly; Field chrome applies (header-only, no Studio sidebar); presence rules match founder freeze §1.
+**Constraints for this document:** No database schema. No migrations. No code. No visual UI design.
 
 ---
 
-## 1. Canonical Field route structure
+## SECTION 1 — Objective
 
-### 1.1 PR1 canonical routes (user-facing)
+### 1.1 Ecosystem transition
 
-| Route | Role | PR1 behaviour target |
-|-------|------|----------------------|
-| `/field` | Surface entry | **Redirect** → `/field/explorer` (permanent) |
-| `/field/explorer` | Explorer hub | **Render** — default view = Record Explorer content |
-| `/field/explorer/records` | Record Explorer | **Render** — same product behaviour as current `/registry` list |
-| `/field/explorer/creatives` | Creative Explorer | **Render** — public Creative index |
-| `/field/explorer/organisations` | Organisation Explorer | **Render** — public Organisation index |
-| `/field/creative/[slug]` | Creative presence | **Render** — same product behaviour as `/artist/[slug]` |
-| `/field/organisation/[slug]` | Organisation presence | **Render** — same product behaviour as `/institutional-studio/[slug]` |
-| `/field/collector/[slug]` | Collector presence (limited) | **Render** — same product behaviour as `/collector-studio/[slug]` |
-| `/field/verify` | Verify entry | **Redirect** → `/field/explorer/records` **or** minimal static “enter registry ID” hub (product pick at implementation — must not require auth) |
+| Surface | Role today | After PR1 |
+|---------|------------|-----------|
+| **Registry** | System of record; public list at `/registry` | **Unchanged ledger semantics**; public list **migrates host** to Field Record Explorer |
+| **Studio** | Authenticated identity, stewardship, account | **Unchanged** canonical `/studio/*` (Phase 1) |
+| **The Field** | Terminology label only | **Third public surface** — discovery, presence, verify entry |
 
-**Dynamic verify path (spec-required, PR1 scaffold or PR2 move):**
+**Target ecosystem:**
 
-| Route | Role | PR1 target |
-|-------|------|------------|
-| `/field/verify/[registry_id]` | Public verify | **Scaffold stub** in PR1 if verify page not moved; **full move** in PR2 |
+```
+Registry (truth)  ←── reads ──  The Field (public discovery & presence)
+       ↑                              │
+       └── RPC/API ── Studio (edit & stewardship)
+```
 
-### 1.2 Spec companion route (not in PR1 move unless unlocked)
+### 1.2 PR1 deliverable
 
-| Route | Role | PR1 target |
-|-------|------|------------|
-| `/field/record/[registry_id]` | Field Record | **Scaffold only** in PR1 (route exists, optional `permanentRedirect` to legacy until PR2) |
+Establish **The Field** as the **public discovery and presence layer**:
 
-**Rationale:** PR1 focuses on **surface foundation** (namespace, layout, explorers, profiles, verify entry). Single-record pages are high-traffic and high-risk; spec AC-FL* and AC-FV* for record detail may land in **PR2 — Field Record migration**. PR1 must not block PR2: internal links **may** still point at legacy `/registry/[id]` until PR2 grep pass — document in §4.
+- Canonical **`/field/*`** App Router namespace with Field layout (no Studio workspace sidebar).
+- **Creative Presence** and **Creative Explorer** shipped **first** (priority order).
+- Organisation and Collector presence, Organisation and Record explorers, verify surfaces follow in PR1 sequence after Creative path is validated.
+- Legacy public URLs **301** to Field canonical paths.
+- **Read-only** projection of existing participant and registry data — Studio remains edit source.
 
-### 1.3 App Router module map (target tree)
+### 1.3 PR1 north star (from 2A spec)
+
+> A user can discover a Creative, understand their practice, trust their credentials, and navigate toward Registry records.
+
+Record detail canonical URL (`/field/record/[registry_id]`) may remain on legacy paths until **PR2**; PR1 must not block navigation via legacy `/registry/[id]` links from profiles.
+
+### 1.4 Explicit PR1 non-goals
+
+No opportunities, briefs, programmes, commissions, messaging, payments, recommendations, production workflows, marketplace, practice-type taxonomy editor, full-text search engine, or API namespace migration.
+
+---
+
+## SECTION 2 — Route architecture
+
+### 2.1 App Router target tree
 
 ```
 app/field/
-├── layout.tsx                 # Field layout — shared chrome contract (no Studio sidebar)
-├── page.tsx                   # permanentRedirect → /field/explorer
+├── layout.tsx                      # Field chrome contract
+├── page.tsx                        # → /field/explorer
 ├── explorer/
-│   ├── page.tsx               # Hub — Record Explorer default
-│   ├── records/page.tsx       # Record list (from app/registry/page.tsx)
-│   ├── creatives/page.tsx     # Creative index (new server page)
-│   └── organisations/page.tsx # Organisation index (new server page)
-├── creative/[slug]/page.tsx   # from app/artist/[artist_id]/page.tsx
-├── organisation/[slug]/page.tsx # from app/institutional-studio/[slug]/page.tsx
-├── collector/[slug]/page.tsx  # from app/collector-studio/[slug]/page.tsx
+│   ├── page.tsx                    # Hub (Record default) — may defer if creatives-first
+│   ├── creatives/page.tsx          # PRIORITY
+│   ├── organisations/page.tsx
+│   └── records/page.tsx
+├── creative/[slug]/page.tsx        # PRIORITY (move from app/artist/[artist_id])
+├── organisation/[slug]/page.tsx      # move from app/institutional-studio/[slug]
+├── collector/[slug]/page.tsx       # move from app/collector-studio/[slug]
 ├── verify/
-│   ├── page.tsx               # Hub or redirect
-│   └── [registry_id]/page.tsx # from app/verify/[registry_id]/page.tsx (PR1 or PR2)
-└── record/[registry_id]/page.tsx  # scaffold; PR2 move from registry/artwork
+│   ├── page.tsx                    # Verify entry hub
+│   └── [registry_id]/page.tsx      # move from app/verify/[registry_id]
+└── record/[registry_id]/page.tsx   # PR2 scaffold optional in PR1
 ```
 
-**Slug param naming:** Use `[slug]` on Field profile routes (spec). Legacy `artist/[artist_id]` param name is **slug in practice** — rename param in move for clarity.
+### 2.2 Route catalogue
 
-### 1.4 Legacy stub routes (after move)
+#### `/field`
 
-| Legacy path | Stub action |
-|-------------|-------------|
-| `app/registry/page.tsx` | `permanentRedirect('/field/explorer/records')` or `/field/explorer` |
-| `app/artist/[artist_id]/page.tsx` | `permanentRedirect('/field/creative/[slug]')` |
-| `app/institutional-studio/[slug]/page.tsx` | `permanentRedirect('/field/organisation/[slug]')` |
-| `app/gallery/[slug]/page.tsx` | Already redirects to institutional — update chain to Field org URL in `next.config.ts` |
-| `app/collector-studio/[slug]/page.tsx` | `permanentRedirect('/field/collector/[slug]')` |
-
-**Do not stub:** `app/collector-studio/page.tsx` (exact — Studio dashboard redirect per Phase 1).
+| Attribute | Definition |
+|-----------|------------|
+| **Purpose** | Surface entry point; orients user to The Field |
+| **Audience** | Anonymous and authenticated |
+| **Content source** | None — redirect only |
+| **Authentication** | None required |
+| **Implementation** | `permanentRedirect('/field/explorer')` or `/field/explorer/creatives` during creatives-first rollout window (see §7) |
 
 ---
 
-## 2. Field navigation architecture
+#### `/field/explorer`
 
-### 2.1 Navigation layers
-
-| Layer | Owner | PR1 deliverable |
-|-------|-------|-----------------|
-| **Global header** | Shared `Header` | Extend surface detection: `isFieldSurface` for `/field/*` |
-| **Field sub-nav** | Field layout | Explorer hub tabs — conceptual module `lib/field-nav/` |
-| **In-page links** | Route pages | Profile ↔ record links (legacy URLs OK until PR2) |
-| **Footer** | Shared footer | Field explorer links use canonical paths |
-
-### 2.2 Field layout contract (`app/field/layout.tsx`)
-
-| Requirement | Source |
-|-------------|--------|
-| **No** `SignedInCatalogueShellLayout` | Founder freeze §6, ADR-28-C |
-| **No** `*WorkspaceShellLayout` | Blueprint chrome rule |
-| **Yes** site `Header` + `Footer` (or Field-specific footer slot) | Spec §8.2 |
-| Auth-aware header: Sign in / Studio entry | Spec §11.2 |
-| Children render full-width public content | Field atmosphere (existing narrative/registry tokens — not visual spec here) |
-
-**Explicit removal (PR1 or coordinated PR2):** `app/registry/layout.tsx` must **not** wrap Field routes. After record move, registry layout either deleted or stub-only.
-
-### 2.3 Explorer hub navigation (information architecture)
-
-```
-/field/explorer
-├── [Records]      → /field/explorer/records   (default active on hub)
-├── [Creatives]    → /field/explorer/creatives
-└── [Organisations] → /field/explorer/organisations
-```
-
-| Nav item | Label (i18n key — provisional) | Active when |
-|----------|----------------------------------|-------------|
-| Records | `field.nav.records` | `/field/explorer`, `/field/explorer/records` |
-| Creatives | `field.nav.creatives` | `/field/explorer/creatives` |
-| Organisations | `field.nav.organisations` | `/field/explorer/organisations` |
-
-**Rules:**
-
-- Hub at `/field/explorer` and `/field/explorer/records` show **equivalent** record list (alias — no duplicate logic long-term; one imports shared server component).
-- No fourth tab for Collector in 2A (collectors discovered via records or direct slug).
-- No brief/open-call nav items (anti-features freeze §10).
-
-### 2.4 Field nav module (conceptual — `lib/field-nav/`)
-
-| Export | Purpose |
-|--------|---------|
-| `FIELD_EXPLORER_TABS` | Tab id, href, label key |
-| `isFieldPath(pathname)` | Header/layout surface detection |
-| `fieldCreativeProfileHref(slug)` | `/field/creative/${slug}` |
-| `fieldOrganisationProfileHref(slug)` | `/field/organisation/${slug}` |
-| `fieldCollectorProfileHref(slug)` | `/field/collector/${slug}` |
-| `fieldRecordHref(registryId)` | `/field/record/${id}` — for PR2 link grep |
-| `fieldVerifyHref(registryId)` | `/field/verify/${id}` |
-
-### 2.5 Header integration impacts
-
-| Current | PR1 change |
-|---------|------------|
-| `isRegistrySurface` paths | Add parallel `isFieldSurface` OR extend registry paths to include `/field/*` for chrome styling |
-| `isAppShell` | **Exclude** `/field/*` — Field is not Studio shell |
-| Marketing links to `/registry` | Grep pass → `/field/explorer` |
-
-### 2.6 Breadcrumbs (conceptual)
-
-| Page | Trail |
-|------|-------|
-| Creative profile | The Field → Creatives → {name} |
-| Organisation profile | The Field → Organisations → {name} |
-| Record (PR2) | The Field → Records → {registry_id} |
-
-Implementation: optional in PR1; required before 2A sign-off if spec QA demands orientation.
+| Attribute | Definition |
+|-----------|------------|
+| **Purpose** | Explorer hub; default tab hosts primary explorer view |
+| **Audience** | Anonymous and authenticated |
+| **Content source** | Delegates to default explorer (Record list post-full rollout; see §7 priority) |
+| **Authentication** | None required |
+| **Implementation** | Render hub with sub-nav (§6); default child route content inline or redirect to `/field/explorer/records` |
 
 ---
 
-## 3. Presence page data mapping
+#### `/field/explorer/creatives`
 
-Studio owns edit; Field pages **read** the same sources as legacy public pages. No new Field-owned tables in PR1.
-
-### 3.1 Creative presence — `/field/creative/[slug]`
-
-| Field block | Data source | Visibility gate |
-|-------------|-------------|-----------------|
-| Headline | `artists.display_name` | `public_presence.profile` |
-| Bio | `artists.bio` | profile enabled |
-| Website / Instagram | `artists.website`, `artists.instagram` | profile enabled |
-| Participation layers | RPC `get_artist_representation_state` + existing parsers | when data exists |
-| Representing Organisation link | `artists.galleries` join | org public profile only |
-| Works list | `fetchArtistArtworkList` / `artwork_read_model` | public works; link targets PR2 canonical |
-| List filters | `registry-list-params` (q, sort, page, status) | preserve behaviour |
-| Owner preview | auth.uid === artist.id | bypass 404 when profile disabled |
-
-**404 rule:** Anonymous + profile disabled → `notFound()` (spec AC-FC1).
-
-### 3.2 Organisation presence — `/field/organisation/[slug]`
-
-| Field block | Data source | Visibility gate |
-|-------------|-------------|-----------------|
-| Name | `galleries.name` | `public_presence.profile` |
-| Location | `galleries.location` | `presence.location` flag |
-| Description | `galleries.description` | `presence.description` |
-| Website | `galleries.website_url` | when set |
-| Verified badge | `galleries.verified` | always show when true on public profile |
-| Stats | roster + artwork counts | derived |
-| Roster | `artists` where `gallery_id` | `presence.ownership` (existing gallery public sections) |
-| Catalogue works | `artwork_read_model` for roster artists | verification filter as today |
-| Creative links | artist slug | `/field/creative/[slug]` when creative public |
-
-**Legacy note:** `app/gallery/[slug]` redirects via config — update destination to `/field/organisation/[slug]`.
-
-### 3.3 Collector presence (limited) — `/field/collector/[slug]`
-
-| Field block | Data source | Visibility gate |
-|-------------|-------------|-----------------|
-| Collection identity | `collector_profiles` + slug | `public_presence.profile` |
-| Bio / location | collector profile fields | presence + anonymity rules |
-| Public works | collector catalogue query (existing page logic) | as today |
-| Anonymous mode | `collectorAnonymous` equivalent | hide identifying narrative |
-| Commission / marketplace | — | **Absent** (anti-features) |
-
-**Scope limit:** No patron, no production, no marketplace (founder freeze §1, §10).
-
-### 3.4 Explorer index data mapping
-
-| Explorer | Query concept | Inclusion rule |
-|----------|---------------|----------------|
-| **Records** | Existing verified artwork list | Same as `/registry` |
-| **Creatives** | `artists` where `public_presence.profile` | Paginated; name sort default |
-| **Organisations** | `galleries` where `public_presence.profile` | Paginated; verified filter optional toggle |
-
-**PR1 note:** Creative and Organisation explorers are **new index pages** — not moves. They aggregate presence-enabled profiles only; no new discovery algorithm.
-
-### 3.5 Verify mapping — `/field/verify/[registry_id]`
-
-| Field block | Data source |
-|-------------|-------------|
-| Public cert status | Existing verify page RPC/queries |
-| Link to record | `/field/record/[id]` when PR2 live; legacy until then |
-| Full certificate | Auth-gated — unchanged |
+| Attribute | Definition |
+|-----------|------------|
+| **Purpose** | **Creative Explorer** — browse public Creative profiles |
+| **Audience** | Anonymous and authenticated |
+| **Content source** | Query `artists` where `public_presence.profile` true; paginated index |
+| **Authentication** | None required |
+| **Legacy** | **New route** (no legacy list URL) |
+| **Priority** | **P0 — ship before Organisation/Record explorers in PR1 sequence** |
 
 ---
 
-## 4. Migration impacts
+#### `/field/explorer/organisations`
 
-### 4.1 Route and config redirects
+| Attribute | Definition |
+|-----------|------------|
+| **Purpose** | **Organisation Explorer** — browse public Organisation profiles |
+| **Audience** | Anonymous and authenticated |
+| **Content source** | Query `galleries` where `public_presence.profile` true; paginated index |
+| **Authentication** | None required |
+| **Legacy** | **New route** |
 
-| ID | From | To | Mechanism |
-|----|------|-----|-----------|
-| F-01 | `/field` | `/field/explorer` | App Router |
-| F-02 | `/registry` | `/field/explorer/records` | App stub after move |
-| F-03 | `/artist/:slug` | `/field/creative/:slug` | App stub |
-| F-04 | `/institutional-studio/:slug` | `/field/organisation/:slug` | App stub |
-| F-05 | `/gallery/:slug` | `/field/organisation/:slug` | `next.config.ts` update (replace intermediate hop) |
-| F-06 | `/collector-studio/:slug` | `/field/collector/:slug` | App stub |
-| F-07 | `/verify/:id` | `/field/verify/:id` | App stub (PR1 or PR2) |
-| F-08 | `/registry/:id` | `/field/record/:id` | **PR2** stub |
-| F-09 | `/artwork/:id` | `/field/record/:id` | **PR2** stub |
+---
 
-**Retention:** Permanent `301` preferred (founder freeze §7, ADR-29).
+#### `/field/explorer/records`
 
-### 4.2 Layout migration
+| Attribute | Definition |
+|-----------|------------|
+| **Purpose** | **Record Explorer** — browse Registry records (works) |
+| **Audience** | Anonymous and authenticated |
+| **Content source** | Existing verified artwork list pipeline (`fetchVerifiedArtworkList`, `artwork_read_model`) — same as `app/registry/page.tsx` |
+| **Authentication** | None required |
+| **Legacy** | Move from `app/registry/page.tsx`; stub `/registry` → here |
+| **Layout** | **Must not** use `SignedInCatalogueShellLayout` on Field route |
 
-| File | Action |
+---
+
+#### `/field/creative/[slug]`
+
+| Attribute | Definition |
+|-----------|------------|
+| **Purpose** | **Creative Presence** — public practice and registry footprint |
+| **Audience** | Anonymous; owner may view when profile disabled (Studio only for edit — Field 404 for anonymous) |
+| **Content source** | `artists` row by slug; `fetchArtistArtworkList`; representation RPCs; existing artist page components |
+| **Authentication** | None required for public profile; owner session does not change public URL |
+| **Legacy** | Move from `app/artist/[artist_id]/page.tsx`; stub 301 |
+| **Param** | `[slug]` replaces misnamed `[artist_id]` |
+| **Priority** | **P0 — first presence surface** |
+
+---
+
+#### `/field/organisation/[slug]`
+
+| Attribute | Definition |
+|-----------|------------|
+| **Purpose** | **Organisation Presence** — public org, roster, catalogue |
+| **Audience** | Anonymous and authenticated |
+| **Content source** | `galleries` by slug; roster `artists`; catalogue via `artwork_read_model`; `GalleryPublic*` components |
+| **Authentication** | None required |
+| **Legacy** | Move from `app/institutional-studio/[slug]/page.tsx`; update `next.config` `/gallery/:slug` chain to Field URL |
+
+---
+
+#### `/field/collector/[slug]`
+
+| Attribute | Definition |
+|-----------|------------|
+| **Purpose** | **Collector Presence (limited)** — public collection/custody narrative |
+| **Audience** | Anonymous and authenticated |
+| **Content source** | `collector_profiles`; owned artwork ids; certificate status map; existing collector public components |
+| **Authentication** | None required |
+| **Legacy** | Move from `app/collector-studio/[slug]/page.tsx` only (**not** exact `/collector-studio` dashboard) |
+| **Scope limit** | No patron, marketplace, or commissioning UI |
+
+---
+
+#### `/field/verify`
+
+| Attribute | Definition |
+|-----------|------------|
+| **Purpose** | Verify **entry** — orient user to certificate/status checking |
+| **Audience** | Anonymous and authenticated |
+| **Content source** | Static copy + link to Record Explorer; optional registry ID input that navigates to `/field/verify/[registry_id]` |
+| **Authentication** | None required |
+| **Implementation** | Does not perform verification by itself — routes to per-record verify |
+
+---
+
+#### `/field/verify/[registry_id]` (companion — spec-required)
+
+| Attribute | Definition |
+|-----------|------------|
+| **Purpose** | Public certificate / verification status for one record |
+| **Audience** | Anonymous and authenticated |
+| **Content source** | Existing `app/verify/[registry_id]/page.tsx` logic |
+| **Authentication** | Public status yes; **full certificate document** authenticated only (ADR-32-A, founder freeze §3) |
+| **Legacy** | Move + stub `/verify/[registry_id]` |
+
+---
+
+#### `/field/record/[registry_id]` (PR2 — scaffold note)
+
+| Attribute | Definition |
+|-----------|------------|
+| **Purpose** | **Field Record** — single work trust page |
+| **PR1** | Optional empty scaffold or legacy redirect; **full move in PR2** |
+| **Reason** | PR1 prioritises Creative path; record move is high-risk, high-traffic |
+
+### 2.3 Legacy redirect matrix (301)
+
+| Legacy | Canonical | When |
+|--------|-----------|------|
+| `/artist/:slug` | `/field/creative/:slug` | Same commit as creative move |
+| `/institutional-studio/:slug` | `/field/organisation/:slug` | Same commit as org move |
+| `/gallery/:slug` | `/field/organisation/:slug` | `next.config.ts` update |
+| `/collector-studio/:slug` | `/field/collector/:slug` | Same commit as collector move |
+| `/registry` | `/field/explorer/records` | Same commit as record explorer move |
+| `/verify/:id` | `/field/verify/:id` | Same commit as verify move |
+| `/registry/:id`, `/artwork/:id` | `/field/record/:id` | **PR2** |
+
+**Retention:** Permanent 301 preferred (founder freeze §7, ADR-29).
+
+### 2.4 Routes explicitly unchanged
+
+| Path | Reason |
 |------|--------|
-| `app/registry/layout.tsx` | Remove shell after record list moves to Field; legacy registry stub has **no** layout or minimal passthrough |
-| `app/field/layout.tsx` | **Create** — Field chrome contract |
+| `/studio/*` | Studio namespace |
+| `/collector-studio` (exact) | Dashboard → `/studio/collector` |
+| `/collector-studio/artwork/*`, claim, provenance | Transitional flows |
+| `/login`, `/signup`, `/onboarding`, `/api/*` | Auth and API |
 
-### 4.3 Internal link grep categories (PR1 pass)
+---
 
-| Category | Example paths to update |
-|----------|-------------------------|
-| Marketing / landing | `CTASection`, `HeroSection`, `Footer` |
-| Header | registry surface detection, nav links |
-| Studio heroes | `/registry` links → `/field/explorer` |
-| Account presence hero | public page preview hrefs |
-| Organisation dashboard | artist links, registry links |
-| Registry components | pagination base path props |
-| Artist page self-links | base path → `/field/creative/[slug]` |
+## SECTION 3 — Presence architecture
 
-**Grep patterns (baseline before PR1):**
+**Principle (founder freeze §1):** Studio edits; Field reads. Visibility gated by **`public_presence`** JSON flags on participant rows.
+
+### 3.1 Creative Presence
+
+| Dimension | Specification |
+|-----------|---------------|
+| **Canonical URL** | `/field/creative/[slug]` |
+| **Required content** | Display name; bio when set; paginated works list from registry read model; link each work to record URL (legacy `/registry/[id]` OK in PR1) |
+| **Optional content** | Website, Instagram; participation layers strip when RPC returns data; representing Organisation name/link when org profile public |
+| **Visibility rules** | Anonymous: 404 if `public_presence.profile` false. Owner: edit in Studio account only — Field URL stays 404 for anonymous. Works list respects existing artwork visibility on read model. |
+| **Relationship to Registry** | Read-only footprint; representation/participation from Registry RPCs; verification status per work; factual verified-work count allowed, not a score |
+| **Relationship to Studio** | All mutable fields (`bio`, links, presence toggles) edited in `/studio/account`; Studio “view public page” link targets Field URL; Creative dashboard unchanged |
+
+**Move source:** `app/artist/[artist_id]/page.tsx` → preserve `fetchArtistArtworkList`, `parseListParams`, `ParticipationLayersStrip`, filter form behaviour.
+
+---
+
+### 3.2 Organisation Presence
+
+| Dimension | Specification |
+|-----------|---------------|
+| **Canonical URL** | `/field/organisation/[slug]` |
+| **Required content** | Organisation name; verified badge when `galleries.verified`; stats (artist count, work count, verified work count) |
+| **Optional content** | Location, description, website — each gated by existing `public_presence` sub-flags (`location`, `description`, etc.); roster section when `presence.ownership`; catalogue grid |
+| **Visibility rules** | 404 when `public_presence.profile` false for anonymous; sub-sections respect granular flags (same as current gallery public page) |
+| **Relationship to Registry** | Catalogue reads `artwork_read_model`; roster links to Creative Presence when creative public; verified works emphasised in counts |
+| **Relationship to Studio** | Org edits in `/studio/organisation` and `/studio/account`; no Field-side editing |
+
+**Move source:** `app/institutional-studio/[slug]/page.tsx` + `GalleryPublicHero`, `GalleryPublicSections`.
+
+---
+
+### 3.3 Collector Presence (limited)
+
+| Dimension | Specification |
+|-----------|---------------|
+| **Canonical URL** | `/field/collector/[slug]` |
+| **Required content** | Collection display name; public works grid when works exist |
+| **Optional content** | Bio, location — suppressed when `anonymous_on_public` / anonymity settings apply |
+| **Visibility rules** | `public_presence.profile` + collector public flags; anonymity hides identifying narrative per existing logic |
+| **Relationship to Registry** | Owned works via ownership resolution; certificate public status on cards; custody/ownership badges — **not** org-style verification |
+| **Relationship to Studio** | Edit in `/studio/account`; collector dashboard at `/studio/collector` unchanged |
+
+**Explicit absence:** Patron briefs, marketplace, commissioning, production reputation (anti-features §9).
+
+**Move source:** `app/collector-studio/[slug]/page.tsx`.
+
+---
+
+## SECTION 4 — Explorer architecture
+
+**Principle (founder freeze §2, §8):** Three explorers, no recommendation engine, no popularity ranking.
+
+### 4.1 Creative Explorer
+
+| Dimension | Specification |
+|-----------|---------------|
+| **Route** | `/field/explorer/creatives` |
+| **Index unit** | One row/card per public Creative (`public_presence.profile`) |
+| **Card minimum fields** | Display name; slug link; optional bio excerpt (truncated); optional verified work count |
+| **Filtering** | Optional case-insensitive name substring match (query param `q`) — **no discipline filter in PR1** |
+| **Sorting** | Default: alphabetical by `display_name` ascending; optional: `sort=recent` if `updated_at` or proxy available — **never** popularity |
+| **Pagination** | Required; page size consistent with registry list norms (reuse `REGISTRY_PAGE_SIZE` or dedicated `FIELD_PROFILE_PAGE_SIZE` constant in implementation) |
+| **Empty state** | Copy: no public Creatives yet; link to `/get-started` or marketing — **no** “recommended Creatives” |
+| **Visibility** | Only profiles with `public_presence.profile` true |
+
+---
+
+### 4.2 Organisation Explorer
+
+| Dimension | Specification |
+|-----------|---------------|
+| **Route** | `/field/explorer/organisations` |
+| **Index unit** | One row/card per public Organisation |
+| **Card minimum fields** | Name; location if public; verified badge; roster/work counts |
+| **Filtering** | `verified=1` toggle (optional filter — **default shows all public orgs** per AC-XO3); optional location text match |
+| **Sorting** | Alphabetical by name default |
+| **Pagination** | Required |
+| **Empty state** | No public Organisations; neutral copy |
+| **Visibility** | `public_presence.profile` true on gallery row |
+
+---
+
+### 4.3 Record Explorer
+
+| Dimension | Specification |
+|-----------|---------------|
+| **Route** | `/field/explorer/records` (alias of hub default) |
+| **Index unit** | Registry record (artwork read model row) |
+| **Filtering** | **Preserve** existing registry filters: verification status (`status`), text query `q` on title/registry_id, sort param |
+| **Sorting** | **Preserve** existing registry sort options |
+| **Pagination** | **Preserve** `redirectIfPageOutOfRange` behaviour with base path `/field/explorer/records` |
+| **Empty state** | **Preserve** existing registry empty/filter-empty messaging |
+| **Visibility** | Same visibility rules as current `/registry` — verified emphasis unchanged |
+| **Layout** | Field layout — **remove** `SignedInCatalogueShellLayout` from this route |
+
+**Move source:** `app/registry/page.tsx` + registry list components (`RegistryExplorerHero`, filters, pagination).
+
+---
+
+### 4.4 Cross-explorer rules
+
+| Rule | Detail |
+|------|--------|
+| No recommendations | No “suggested”, “for you”, or similarity rows |
+| No paid rank | Subscription tier does not sort order |
+| Hub navigation | Tabs: Records \| Creatives \| Organisations (§6) |
+| Graph links | Creative/Org explorer → Presence → works → record URL |
+
+---
+
+## SECTION 5 — Verification layer
+
+### 5.1 Terminology (ADR-31-A, founder freeze §3)
+
+| Term | Meaning on Field |
+|------|------------------|
+| **Field verification UX** | Public-facing **presentation** of trust at `/field/verify` and on record/profile surfaces |
+| **Registry verification** | **Authoritative** verification state on ledger/read model (`verification_status`, events) |
+| **Certificate verification** | Public cert status via existing RPC/batch helpers; verify page per `registry_id` |
+
+Field does **not** define a separate verification authority — it **displays** Registry truth.
+
+### 5.2 Trust hierarchy (display order — ADR-13, founder freeze §3)
+
+1. Record verification status  
+2. Certificate public status  
+3. Provenance / continuity summary (on record — PR2 full page)  
+4. Participation chronology (confirmed events only)  
+5. Organisation verified badge  
+
+**Forbidden in PR1 UI:** stars, likes, followers, NFT badges, pay-to-boost, Field production badges.
+
+### 5.3 `/field/verify` (entry)
+
+| Behaviour | Specification |
+|-----------|---------------|
+| Purpose | Explain how to check a Registry record; entry to per-record verify |
+| Content | Static instructional copy; link to Record Explorer; optional input: user enters `registry_id` → navigate to `/field/verify/[registry_id]` |
+| Auth | None |
+
+### 5.4 `/field/verify/[registry_id]` (per-record)
+
+| Behaviour | Specification |
+|-----------|---------------|
+| Purpose | Show **public** verification/certificate status for one record |
+| Content source | Move existing verify page server logic unchanged |
+| Link to record | Prefer `/field/record/[id]` when PR2 live; else legacy `/registry/[id]` in PR1 |
+| Full certificate | Redirect or gate to authenticated `/certificate/[id]` — not public on Field |
+
+### 5.5 Profile-level verification signals
+
+| Surface | Signals |
+|---------|---------|
+| Creative Presence | Per-work verification in list; optional aggregate verified count |
+| Organisation Presence | `verified` badge; verified works count in catalogue |
+| Collector Presence | Ownership/custody status on works — not org verification |
+
+---
+
+## SECTION 6 — Navigation
+
+**No UI design** — behavioural and structural requirements only.
+
+### 6.1 Ecosystem navigation (three surfaces)
+
+| From | To Studio | To Field | To Registry truth |
+|------|-----------|----------|-------------------|
+| Marketing header | `/studio/*` via role home when signed in | `/field/explorer` | N/A — Registry is accessed via Field record surfaces |
+| Signed-out header | `/login` | `/field/explorer` | — |
+| Copy | “Studio” label | “The Field” label | “Registry record” / “Registry ID” on trust copy |
+
+**Header changes (implementation):**
+
+- Add `isFieldSurface`: `pathname.startsWith('/field')`.
+- **Exclude** `/field/*` from `isAppShell` (no Studio sidebar treatment).
+- Extend or replace `isRegistrySurface` so legacy `/registry` redirects do not require duplicate chrome logic long-term.
+
+### 6.2 Field navigation (within `/field/*`)
+
+| Element | Specification |
+|---------|---------------|
+| **Field layout** | `app/field/layout.tsx` — wraps children with site Header + Footer; **no** `WorkspaceShell`, **no** `SignedInCatalogueShellLayout` |
+| **Explorer sub-nav** | Three links: Records, Creatives, Organisations — active state from pathname |
+| **Breadcrumbs** | Conceptual: The Field → {Explorer tab} → {entity name} on profiles — implement when QA requires |
+| **Module** | `lib/field-nav/` — tab config, href builders, `isFieldPath()` |
+
+### 6.3 Relationship to Studio
+
+| Rule | Detail |
+|------|--------|
+| Edit | Always deep-link to `/studio/account` or role dashboard |
+| Auth CTAs | Sign in → `/login?next=` current Field path |
+| Signed-in on Field | Header account/Studio entry only — **no** role sidebar |
+| Personal archive save | CTA may appear on record (PR2) — mutation via existing Studio/API |
+
+### 6.4 Relationship to Registry
+
+| Rule | Detail |
+|------|--------|
+| Reads | Field pages use existing read models and RPCs |
+| Writes | Never from Field routes — register, verify, claim via Studio or existing flow URLs |
+| URLs | Internal links progressively adopt `/field/record/[id]` (PR2 grep) |
+| Terminology | Field is surface; Registry is trust system on record copy |
+
+### 6.5 Internal link migration (grep pass — PR1 exit)
+
+Update primary navigation targets:
+
+- Landing/marketing `/registry` → `/field/explorer/records`
+- Studio heroes `/registry` → Field explorer
+- Account “browse registry” → Field explorer
+- Organisation dashboard artist links → `/field/creative/[slug]`
+- Pagination `basePath` props on moved list pages
+
+**Baseline command:**
 
 ```bash
 rg '"/registry"|`/registry|/artist/|/institutional-studio/|/collector-studio/[a-z]' --glob '*.{ts,tsx}'
-rg 'isRegistrySurface|isAppShell' components/Header.tsx
 ```
 
-Save baseline to `docs/v2/baselines/field-pr1-link-grep-baseline.txt` (artifact — optional).
+---
 
-### 4.4 i18n and copy
+## SECTION 7 — Rollout sequence
 
-| Area | PR1 action |
-|------|------------|
-| Surface name | “The Field” in explorer hub and header |
-| Trust copy | Retain “Registry record”, “Registry ID” on record surfaces (ADR-31-A) |
-| New keys | `field.nav.*`, `field.explorer.*` — EN minimum; DE/FR/JA follow existing locale pass |
+**Priority mandate:** **`/field` → Creative Presence → Creative Explorer`** before Organisation Presence, Collector Presence, Record Explorer, and verify moves.
 
-### 4.5 SEO and sitemap
+### 7.1 Implementation order
 
-| Impact | Mitigation |
-|--------|------------|
-| `/registry` indexed URLs | 301 to Field explorer |
-| Profile slug URLs change | 301 per participant type |
-| `registry_id` URLs | Stable across PR2 record move |
+| Step | Deliverable | Exit criterion |
+|------|-------------|----------------|
+| **1** | **Preflight** — branch `pr/phase2a-field-pr1`, tsc clean, link grep baseline | Branch pushed |
+| **2** | **Field scaffold** — `app/field/layout.tsx`, `/field` → redirect, empty `lib/field-nav/` | `/field` resolves; layout renders Header without sidebar |
+| **3** | **Creative Presence move** — move artist page → `/field/creative/[slug]`; stub `/artist/*` | AC-FC1, AC-FC2; anonymous 404 when presence off |
+| **4** | **Creative Explorer** — `/field/explorer/creatives` index + pagination | AC-XC1, AC-XC2; **first explorer live** |
+| **5** | **Field explorer hub** — `/field/explorer` with sub-nav; default tab **Creatives** during early rollout OR parallel Records default per founder freeze — **implementation default: hub with Creatives linked first in nav until step 8** | Hub navigates between tabs |
+| **6** | **Organisation Presence move** — institutional-studio → `/field/organisation/[slug]`; gallery config redirect | AC-FO1, AC-FO2 |
+| **7** | **Organisation Explorer** — `/field/explorer/organisations` | AC-XO1–XO3 |
+| **8** | **Record Explorer move** — registry list → `/field/explorer/records`; remove registry layout shell; stub `/registry` | AC-FS1, AC-FS2; hub default may switch to Records |
+| **9** | **Collector Presence move** — `[slug]` only | AC-FK1, AC-FK2 |
+| **10** | **Verify move** — `/field/verify` hub + `/field/verify/[registry_id]`; stub legacy | AC-FV2 path exists |
+| **11** | **Header + link grep** — `isFieldSurface`, marketing/studio/account links | AC-FP2; no stale primary `/registry` links |
+| **12** | **Validation** — redirect smoke, manual QA, tsc, lint | §8 acceptance gate |
 
-### 4.6 Registry preservation
+**Commit discipline:** One step or logical group per commit; **move + stub atomically** per route family.
 
-| Rule | PR1 |
-|------|-----|
-| Ledger RPCs | Unchanged |
-| List/read queries | Same functions, new route hosts |
-| RLS | Unchanged |
-| RP smoke | RP-10, RP-11 after PR1+PR2 on staging |
+### 7.2 Parallel work forbidden
 
-### 4.7 Phase 1 documents touched (reference only)
+- Do not move Record Explorer before Creative Presence + Creative Explorer validated (steps 3–4 complete).
+- Do not add brief/open-call nav items.
+- Do not introduce `SignedInCatalogueShellLayout` on any `/field/*` route.
 
-| Doc | Update timing |
-|-----|---------------|
-| Route migration matrix | Supplement with Field redirect appendix post-PR1 |
-| Phase 2A spec | Mark PR1 complete in future execution log |
+### 7.3 PR2 handoff (out of PR1 scope)
+
+- `/field/record/[registry_id]` full move from `/registry/[id]` and `/artwork/[id]`
+- Full AC-FL*, AC-FV1, AC-FV3 on Field Record page
+- Complete internal link grep to `/field/record/*`
+- Redirect smoke archive for all §2.3 rows
 
 ---
 
-## 5. Rollout sequence
+## SECTION 8 — Acceptance criteria
 
-### 5.1 Preconditions (gate before PR1)
+Measurable completion for **PR1 merge**. Mapped to [phase-2a-field-foundations-spec.md](./phase-2a-field-foundations-spec.md).
 
-| ID | Check |
-|----|-------|
-| G-1 | Phase 1 `checkpoint-phase1-production` on `main` |
-| G-2 | Founder freeze + 2A spec reviewed |
-| G-3 | `npx tsc --noEmit` clean |
-| G-4 | Branch: `pr/phase2a-field-pr1` from `main` |
-| G-5 | Link grep baseline saved (optional) |
+### 8.1 Routing
 
-### 5.2 Implementation phases (commits)
+| ID | Criterion | Measure |
+|----|-----------|---------|
+| R-1 | `/field` returns 301/308 to explorer | HTTP check |
+| R-2 | `/field/creative/[slug]` 200 for public profile | curl/browser |
+| R-3 | `/artist/[slug]` 301 to `/field/creative/[slug]` | HTTP check |
+| R-4 | `/field/explorer/creatives` 200 | HTTP check |
+| R-5 | `/field/explorer/organisations` 200 | HTTP check |
+| R-6 | `/field/explorer/records` 200; `/registry` 301 | HTTP check |
+| R-7 | Organisation and collector profile canonical + legacy 301 | HTTP check |
+| R-8 | `/field/verify/[registry_id]` 200 for sample id | HTTP check |
 
-| Phase | Name | Goal | Exit criterion |
-|-------|------|------|----------------|
-| **0** | Preflight | Branch, baseline grep | Branch pushed |
-| **1** | Field scaffold | Create `app/field/` tree + `layout.tsx` + `/field` redirect | Routes resolve; empty or placeholder OK |
-| **2** | Field nav module | `lib/field-nav/` + explorer tab contract | Tabs link between explorer routes |
-| **3** | Record Explorer move | Move `app/registry/page.tsx` → `app/field/explorer/records/page.tsx`; hub re-exports; registry stub | `/field/explorer/records` works; `/registry` 301 |
-| **4** | Profile moves | Move artist, institutional-studio, collector-studio `[slug]` pages atomically with stubs | Canonical profile URLs work; legacy 301 |
-| **5** | Explorer indexes | Implement creatives + organisations index pages | AC-XC*, AC-XO* ready for QA |
-| **6** | Header + chrome | `isFieldSurface`; remove catalogue shell from moved routes; verify no sidebar on Field | ADR-28-C satisfied on Field routes |
-| **7** | Config redirects | Update `next.config.ts` F-05 gallery chain | One-hop to Field org URL |
-| **8** | Internal links | Grep pass — marketing, header, studio heroes, account | No stale `/registry` as primary internal target |
-| **9** | Verify route | Move or stub `/field/verify/[registry_id]` | AC-FV2 path exists |
-| **10** | Validation | Redirect smoke, tsc, lint, manual explorer/profile QA | §6 acceptance gate |
+### 8.2 Presence rendering
 
-**Commit discipline:** One phase = one commit (or split Phase 4 per profile family: creative, org, collector).
+| ID | Criterion | Measure |
+|----|-----------|---------|
+| P-1 | Creative name, bio, works list render on Field URL | Manual QA |
+| P-2 | Participation layers when data exists | Manual QA |
+| P-3 | Organisation verified badge when `verified=true` | Manual QA |
+| P-4 | Collector anonymity respected | Manual QA |
+| P-5 | Disabled profile → 404 anonymous | Manual QA |
+| P-6 | No Studio sidebar on any Field presence page | Visual/ DOM QA |
 
-### 5.3 PR2 handoff (explicit boundary)
+### 8.3 Explorer functionality
 
-| Item | Owner |
-|------|-------|
-| `/field/record/[registry_id]` move from `registry/[id]` + `artwork/[id]` | PR2 |
-| `app/registry/layout.tsx` deletion | PR2 |
-| Full internal link migration to `/field/record/*` | PR2 grep |
-| Redirect smoke archive | PR2 validation |
+| ID | Criterion | Measure |
+|----|-----------|---------|
+| E-1 | Creative explorer lists only presence-enabled profiles | Data QA |
+| E-2 | Creative explorer paginates | Query param `page=2` |
+| E-3 | Org explorer verified filter toggles result set | Query param |
+| E-4 | Record explorer preserves verification filter | Same as legacy registry |
+| E-5 | No recommendation/similarity UI | Code review + QA |
 
-### 5.4 Deployment
+### 8.4 Verification surface
 
-| Step | Action |
-|------|--------|
-| D-1 | Merge to `main` after review |
-| D-2 | Deploy Vercel production |
-| D-3 | Smoke: legacy URLs 301, canonical 200 |
-| D-4 | Monitor 404 rate on `/registry`, `/artist/*` for 48h |
+| ID | Criterion | Measure |
+|----|-----------|---------|
+| V-1 | `/field/verify` entry reachable | HTTP 200 |
+| V-2 | Per-record verify shows public status | Sample `registry_id` |
+| V-3 | Trust copy includes “Registry record/ID” where applicable | Copy review |
+| V-4 | No excluded reputation signals (§5.2) | QA checklist |
 
----
+### 8.5 Navigation integrity
 
-## 6. Acceptance criteria
+| ID | Criterion | Measure |
+|----|-----------|---------|
+| N-1 | Explorer hub tabs switch routes | Click QA |
+| N-2 | Creative explorer → profile → work link resolves | Click QA |
+| N-3 | Header Studio link works signed-in | Session QA |
+| N-4 | `npm run validate:phase1-static` passes or documented delta | CI script |
+| N-5 | Grep: no primary internal links to bare `/registry` except stubs/legacy record until PR2 | rg diff vs baseline |
 
-Mapped to [phase-2a-field-foundations-spec.md](./phase-2a-field-foundations-spec.md). **PR1 satisfies subset**; full 2A requires PR2+.
+### 8.6 PR1 merge gate
 
-### 6.1 PR1 must pass
-
-| ID | Criterion | PR1 |
-|----|-----------|-----|
-| AC-FC1 | Creative profile at `/field/creative/[slug]` when presence on | Yes |
-| AC-FC2 | `/artist/[slug]` 301 | Yes |
-| AC-FC5 | No Studio sidebar on Field profile | Yes |
-| AC-FO1 | Organisation profile at `/field/organisation/[slug]` | Yes |
-| AC-FO2 | Legacy org/gallery public 301 | Yes |
-| AC-FO3 | Verified badge shown | Yes |
-| AC-FK1 | Collector profile at `/field/collector/[slug]` | Yes |
-| AC-FK2 | `/collector-studio/[slug]` 301 | Yes |
-| AC-FK3 | No commissioning/marketplace UI | Yes |
-| AC-XC1 | Browse public Creatives | Yes |
-| AC-XC2 | Links to Field creative profiles | Yes |
-| AC-XC3 | No recommendation feed | Yes |
-| AC-XO1 | Browse public Organisations | Yes |
-| AC-XO2 | Links to Field org profiles | Yes |
-| AC-XO3 | Verified filter on org explorer | Yes |
-| AC-FP1 | Anonymous discover → profile journey | Yes |
-| AC-FP2 | Signed-in Field without Studio sidebar | Yes |
-| AC-FM1 | §9.2 redirects for profiles + registry list | Partial — record detail PR2 |
-| AC-FS1 | Record explorer verification filter | Yes |
-| AC-FS2 | Explorers paginate | Yes |
-| AC-FS3 | No recommendation UI | Yes |
-
-### 6.2 PR2 required for full 2A spec
-
-| ID | Criterion |
-|----|-----------|
-| AC-FC3, AC-FC4 | Participation layers; works link to Field Record |
-| AC-FO4, AC-FK4 | Work links; custody CTAs |
-| AC-FV1–AC-FV4 | Record trust hierarchy on Field Record |
-| AC-FL1–AC-FL4 | Full profile ↔ record graph |
-| AC-FM1 (complete) | All record redirects |
-| AC-FM3 | RP smoke no regression |
-
-### 6.3 PR1 validation checklist (operator)
-
-- [ ] `/field` → `/field/explorer` → records list
-- [ ] `/field/explorer/creatives` and `/organisations` paginate
-- [ ] Sample public creative, org, collector profiles load on Field URLs
-- [ ] Legacy profile URLs 301
-- [ ] `/registry` 301 to Field explorer
-- [ ] Signed-in user on Field: no workspace sidebar
-- [ ] Header Studio link works for authenticated role
-- [ ] `npm run validate:phase1-static` still passes (redirect rules extended manually if needed)
-- [ ] No brief/apply/messaging placeholders in nav
-
-### 6.4 Suggested checkpoint tag (post full 2A, not PR1 alone)
-
-`checkpoint-phase2a-field-foundations` — after PR1 **and** PR2 acceptance.
+**PR1 is complete when:** R-1–R-8, P-1–P-6, E-1–E-5, V-1–V-4, N-1–N-5 pass on staging; founder freeze anti-features absent; Phase 1 registry smoke (RP-10 list path) unchanged in behaviour.
 
 ---
 
-## 7. Risks and mitigations (PR1)
+## SECTION 9 — Explicit exclusions
 
-| Risk | Mitigation |
-|------|------------|
-| Breaking shared registry list component | Move file only; shared imports unchanged |
-| Gallery redirect chain double-hop | Update `next.config.ts` to single hop to Field |
-| Header mis-classifies Field as Studio shell | Explicit `isFieldSurface`; test signed-in |
-| Creative explorer empty on small DB | Accept; index only presence-enabled |
-| Partial link grep leaves stale `/registry` | Phase 8 mandatory; baseline diff |
-| PR1 scope creep into record move | §1.2 scaffold only; PR2 boundary §5.3 |
+### 9.1 Deferred to Phase 2B — Discovery enrichment
+
+| Exclusion |
+|-----------|
+| Practice type / discipline tags on profiles |
+| Discipline filters on Creative Explorer |
+| Full-text search across bios and metadata |
+| Geo/regional hub pages |
+| Programme stub landing pages |
+| i18n pass beyond minimum new `field.*` keys |
+
+### 9.2 Deferred to Phase 2C — Opportunity
+
+| Exclusion |
+|-----------|
+| Briefs, programmes, open calls |
+| Applications and apply CTAs |
+| Commissions and awards |
+| `/field/open-calls`, `/field/programmes/[slug]` |
+| Studio Creative/Org inbox |
+| Org publishing permissions and subscription gates for briefs |
+| Saved opportunities |
+
+### 9.3 Deferred to Phase 2D — Production
+
+| Exclusion |
+|-----------|
+| Projects, teams, milestones, deliverables |
+| Film/crew brief templates |
+| Field production credits on records |
+| “Delivered via RROWM commission” badge |
+| Party-visible `/field/commissions/[id]` |
+| Deliverable → register bridge with commission link |
+
+### 9.4 Deferred to Phase 2E — Patron / Commerce
+
+| Exclusion |
+|-----------|
+| Patron-funded briefs |
+| Collector commissioning |
+| Marketplace listings UX (`market_listings`) |
+| Payments, checkout, facilitation fees on Field |
+| Field: Commerce lane decision (ADR-25) |
+
+### 9.5 Deferred to PR2 within 2A (Field Record migration)
+
+| Exclusion |
+|-----------|
+| `/field/record/[registry_id]` full move |
+| `/registry/[id]` and `/artwork/[id]` 301 to Field Record |
+| Removal of `app/registry/layout.tsx` catalogue shell |
+| Full AC-FL* and AC-FV1 record-page criteria |
+| Field Record trust band ordering on dedicated page |
+
+### 9.6 Permanent anti-features (founder freeze §10 — never in PR1)
+
+Applications; messaging/DMs; recommendation feeds; pay-to-rank discovery; pay-to-verify; social follower counts; NFT reputation; Field ledger writes; Studio workspace sidebar on Field; placeholder “coming soon” for excluded capabilities in primary nav.
 
 ---
 
-## 8. Related documents
+## Appendix A — File move reference (implementation)
+
+| Canonical | Move from | Stub legacy |
+|-----------|-----------|-------------|
+| `app/field/creative/[slug]/page.tsx` | `app/artist/[artist_id]/page.tsx` | `app/artist/[artist_id]/page.tsx` redirect |
+| `app/field/organisation/[slug]/page.tsx` | `app/institutional-studio/[slug]/page.tsx` | institutional-studio redirect |
+| `app/field/collector/[slug]/page.tsx` | `app/collector-studio/[slug]/page.tsx` | collector-studio `[slug]` redirect |
+| `app/field/explorer/records/page.tsx` | `app/registry/page.tsx` | `app/registry/page.tsx` redirect |
+| `app/field/verify/[registry_id]/page.tsx` | `app/verify/[registry_id]/page.tsx` | verify redirect |
+
+## Appendix B — Related documents
 
 | Document | Role |
 |----------|------|
-| [phase-2a-field-foundations-spec.md](./phase-2a-field-foundations-spec.md) | Full 2A acceptance criteria |
+| [phase-2a-field-foundations-spec.md](./phase-2a-field-foundations-spec.md) | Full 2A AC-* |
 | [phase-2a-founder-decisions-freeze.md](./phase-2a-founder-decisions-freeze.md) | Frozen philosophy |
-| [phase-1-pr4-execution-package.md](./phase-1-pr4-execution-package.md) | Move-then-redirect pattern reference |
-| [phase-1-route-migration-matrix.md](./phase-1-route-migration-matrix.md) | Prior redirect discipline |
-
----
+| [phase-1-pr4-execution-package.md](./phase-1-pr4-execution-package.md) | Move-then-redirect pattern |
+| [DOCUMENT_GOVERNANCE.md](./DOCUMENT_GOVERNANCE.md) | This doc = IMPLEMENTATION SOURCE OF TRUTH for PR1 |
 
 ## Revision history
 
 | Version | Date | Status | Notes |
 |---------|------|--------|-------|
-| 1.0 | 31 May 2026 | IMPLEMENTATION SOURCE OF TRUTH | Initial PR1 plan |
+| 2.0 | 31 May 2026 | IMPLEMENTATION SOURCE OF TRUTH | Restructured §1–§9; creatives-first rollout; implementation detail |
