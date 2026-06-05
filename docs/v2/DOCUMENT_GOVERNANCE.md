@@ -27,8 +27,9 @@ This folder holds the **planning and certification stack** for RROWM V2. **Phase
 | P2-2 | [Phase 2 Architecture Decisions](./phase-2-architecture-decisions.md) | **DRAFT** | Founder-level ADRs; must be DECIDED before 2A implementation |
 | P2-3 | [Phase 2A Field Foundations Spec](./phase-2a-field-foundations-spec.md) | **LOCKED DRAFT** | First Field release: public profiles, explorers, verification visibility, URL migration; no opportunities |
 | P2-4 | [Phase 2A Founder Decisions Freeze](./phase-2a-founder-decisions-freeze.md) | **FROZEN** | Settled founder decisions before 2A implementation; supersedes PENDING ADR-13, 15, 17, 27–32 for 2A scope |
+| P2-5 | [Phase 2A PR1 — Field Surface Foundation Plan](./phase-2a-pr1-field-foundation-plan.md) | **IMPLEMENTATION SOURCE OF TRUTH** | How to execute 2A PR1: `/field/*` routes, nav, presence mapping, move-then-redirect, rollout phases |
 
-**Phase 2 authority chain:** Blueprint v1.1 (APPROVED) → Phase 2 Blueprint (DRAFT) → Phase 2A Founder Decisions Freeze (FROZEN) → Phase 2A Spec (LOCKED DRAFT). ADR document remains catalogue; 2A-blocking items are **DECIDED** per founder freeze. Phase 1 freeze remains binding for delivered Studio scope.
+**Phase 2 authority chain:** Blueprint v1.1 (APPROVED) → Phase 2 Blueprint (DRAFT) → Phase 2A Founder Decisions Freeze (FROZEN) → Phase 2A Spec (LOCKED DRAFT) → **Phase 2A PR1 Plan (IMPLEMENTATION SOURCE OF TRUTH)** for PR1 execution. ADR document remains catalogue; 2A-blocking items are **DECIDED** per founder freeze. Phase 1 freeze remains binding for delivered Studio scope.
 
 ## Interpretation rules
 
@@ -43,6 +44,7 @@ This folder holds the **planning and certification stack** for RROWM V2. **Phase
 9. **Phase 2 Blueprint (DRAFT)** bounds Field work. Does not unlock Briefs, Programmes, Commissions, or production workflows until later Phase 2 sub-specs. Contradictions with Blueprint v1.1 require Blueprint version bump — not silent Phase 2 edits.
 10. **Phase 2A Spec (LOCKED DRAFT)** is the **only** authoritative scope for the first Field implementation release. Engineering must satisfy AC-FC*, AC-FO*, AC-FK*, AC-XC*, AC-XO*, AC-FV*, AC-FL*, AC-FS*, AC-FP*, AC-FM* as written. Explicit §14 exclusions are non-negotiable in 2A.
 11. **Phase 2A Founder Decisions Freeze (FROZEN)** settles product philosophy for 2A (presence, explorers, trust, URLs, search, anti-features). Implementation must not re-litigate frozen §1–§10 without unlock. Conflicts between spec and freeze → **freeze prevails** on philosophy; spec prevails on acceptance criteria detail.
+12. **Phase 2A PR1 Plan (IMPLEMENTATION SOURCE OF TRUTH)** governs PR1 execution order, route moves, redirect stubs, and link grep. **Move, then redirect** — same discipline as Phase 1 PR4. Does not expand beyond 2A spec §14 exclusions; `/field/record/[registry_id]` full move is PR2 per plan §5.3.
 
 ## Unlock procedure
 
