@@ -10,11 +10,13 @@
 
 ## Purpose
 
-Define **Phase 2C — Field: Opportunity Layer**: the third Field release. Phase 2C introduces **programmes, briefs, applications, awards, and commissions** — the structured path from published work intent to awarded contract — while preserving Registry authority and Studio ownership.
+Define **Phase 2C — Field: Opportunity Layer**: the third Field release. Phase 2C introduces **trust-qualified matching** and **auditable opportunity workflow** — programmes, briefs, applications, awards, and commissions — while preserving Registry authority and Studio ownership.
 
 **North-star outcome for 2C:**
 
-> An Organisation can publish auditable work opportunities to The Field; Creatives can discover them through **explainable filters**, apply from Studio, and receive awards; organisations can award commissions with a **clear handoff** to future production filing — **without** payments, messaging products, production runtime, patronage, or marketplace commerce.
+> A Creative can **discover** opportunities on Field through practice-, sector-, and verification-qualified discovery; **apply** from Studio with **registry-evidence portfolio** context; an Organisation can **review** with the same trust signals, **award**, and create a **Commission** (Opportunity Loop Slice 1) — **without** payments, messaging products, production runtime, patronage, or marketplace commerce.
+
+**Loop boundary:** Slice 1 ends at Commission. Project + Record filing in 2D completes full Product Blueprint loop v1.
 
 ---
 
@@ -34,18 +36,22 @@ Define **Phase 2C — Field: Opportunity Layer**: the third Field release. Phase
 
 | In scope (2C) | Out of scope (2C) |
 |---------------|-------------------|
-| Programme object (optional container) | Project, team, milestone, deliverable runtime |
-| Brief object — draft, publish, withdraw | Production management workflows |
-| Brief types: open call, residency/award, direct, fabrication RFP | Patron briefs (Collector publisher) |
-| Application — Studio submit, org review | Application fees |
-| Award decision | Commission ratings / scores |
-| Commission object on award | Automatic Registry filing on award |
-| Open calls + programme Field surfaces | Payments, escrow, checkout |
-| Explainable open-call filters | Platform auto-matching |
-| Org/Creative Studio inbox notifications | Messaging, DMs, chat threads |
-| Deterministic graph: brief ↔ org ↔ programme | Recommendations, pay-to-boost |
-| Participation modes: open, roster, invite, direct | Marketplace / sale listings |
-| i18n for new opportunity copy | Collaboration (peer-led) |
+| **Opportunity taxonomy** — canonical term; Brief primary subtype | Project, team, milestone, deliverable runtime |
+| Programme object (optional container) | Production management workflows |
+| Brief object — draft, publish, withdraw | Patron briefs (Collector publisher) |
+| Brief types: open call, residency/award, direct, production partner search | Peer collaboration **implementation** (planned kind — 2D) |
+| **Sector taxonomy** on brief + Creative profile | Application fees |
+| **Rule-based eligibility matching** in Studio | Algorithmic ranking / recommendations |
+| **Registry-evidence portfolio** at apply/review | Automatic Registry filing on award |
+| Application — Studio submit, org review | Commission ratings / scores |
+| Award decision | Payments, escrow, checkout |
+| Commission object on award (Slice 1 terminus) | Messaging, DMs, chat threads |
+| Opportunities + programme Field surfaces | Marketplace / sale listings |
+| Org/Creative Studio inbox notifications | Pay-to-boost |
+| Deterministic graph: brief ↔ org ↔ programme | Collaboration (peer-led) runtime |
+| Participation modes: open, roster, invite, direct | |
+| Cultural presentation guardrails (AC-CP*) | |
+| i18n for new opportunity copy | |
 
 ---
 
@@ -62,10 +68,11 @@ Phase 2B delivers explainable discovery, practice taxonomy, relationship graph, 
 
 | 2B output | 2C consumer |
 |-----------|-------------|
-| Practice slugs | Brief `practices_required[]` filter vocabulary |
-| Creative Explorer filters | Applicant self-qualification display |
-| Organisation profile + roster | Roster-only / invite participation |
+| Practice slugs | Brief `practices_required[]` + eligibility matching |
+| Creative Explorer filters | Applicant practice display + registry-evidence practices |
+| Organisation profile + roster | Publisher footprint on matching surfaces; roster-only / invite participation |
 | Graph navigation | Brief → org → programme edges |
+| Record footprint | Registry-evidence portfolio at apply/review |
 
 ---
 
@@ -106,12 +113,12 @@ A **Brief** is a structured production request: scope, timeline, required practi
 
 ### 2.2 Brief types
 
-| Type | Public open-calls index | Application required |
+| Type | Public opportunities index | Application required |
 |------|-------------------------|----------------------|
 | Open call | Yes (when mode open) | Yes |
 | Residency / award | Yes (under programme) | Yes |
 | Direct commission | No | No — named Creative |
-| Fabrication RFP | Yes (when mode open) | Yes |
+| Production partner search | Yes (when mode open) | Yes |
 
 ### 2.3 Lifecycle
 
@@ -132,8 +139,9 @@ draft → published → [accepting responses] → awarded | withdrawn | closed
 | Gate | Rule |
 |------|------|
 | Role | Org admin/staff |
-| Subscription | Publish to public Field requires active org subscription (policy) |
-| Verification | Public open-call listing requires verified org |
+| Subscription | Does **not** block first public publish in 2C — verified org required |
+| Verification | Public opportunities listing requires verified org |
+| Sector | Required on public briefs — closed taxonomy (Product Blueprint v1.1 §3) |
 | Registry-outcome-required | Requires verified org regardless of mode |
 | Copy | Must state registry outcome expectation and participation mode plainly |
 
@@ -141,7 +149,7 @@ draft → published → [accepting responses] → awarded | withdrawn | closed
 
 | Mode | Field listing | Who can respond |
 |------|---------------|-----------------|
-| Open | Open calls index | Any authenticated Creative |
+| Open | Opportunities index | Any authenticated Creative meeting eligibility |
 | Roster-only | Hidden from open index | Roster Creatives only |
 | Invite-only | Hidden | Invited Creatives |
 | Direct | Hidden | Named Creative — org initiates |
@@ -153,11 +161,42 @@ draft → published → [accepting responses] → awarded | withdrawn | closed
 | AC-BR1 | Org admin/staff can create, edit, draft, publish, withdraw briefs in Studio |
 | AC-BR2 | Brief types enum enforced — no patron/sale/collaboration types in 2C |
 | AC-BR3 | Participation mode selectable per brief; defaults to open for verified public briefs |
-| AC-BR4 | Published brief visible on Field detail page with scope, practices, registry outcome, org context |
-| AC-BR5 | Withdrawn brief removed from open-calls index and programme lists |
+| AC-BR4 | Published brief visible on Field detail page as **matching surface** — scope, sector, practices, registry outcome, org footprint |
+| AC-BR5 | Withdrawn brief removed from opportunities index and programme lists |
 | AC-BR6 | Direct commission brief awards named Creative without application window |
-| AC-BR7 | Unverified org cannot publish to public open-calls index |
+| AC-BR7 | Unverified org cannot publish to public opportunities index |
 | AC-BR8 | Brief detail includes apply CTA routing to Studio — not anonymous apply |
+| AC-BR9 | Public brief includes sector from closed taxonomy |
+
+---
+
+## 2a. Sector taxonomy
+
+### 2a.1 Definition
+
+**Sector** is the cultural-context dimension for matching — where in the cultural economy the work lives. Closed taxonomy aligned with [Product Blueprint v1.1 §3](./product-blueprint-v1.1.md).
+
+### 2a.2 Seed sectors (founder-approved)
+
+Public Art, Film, Hospitality, Retail, Festivals, Museums, Culture, Education, Residential, Commercial Property, Public Realm, Heritage.
+
+Expandable via admin-curated lookup — not user-generated in 2C.
+
+### 2a.3 Rules
+
+| Object | Sector field |
+|--------|--------------|
+| Brief (public) | Single required `sector` |
+| Creative profile (Studio) | `sectors[]` — multi-select from closed taxonomy |
+
+### 2a.4 Acceptance criteria (AC-SC*)
+
+| ID | Criterion |
+|----|-----------|
+| AC-SC1 | Public brief requires sector from closed taxonomy |
+| AC-SC2 | Opportunities index filterable by sector |
+| AC-SC3 | Creative can declare sectors on Studio profile |
+| AC-SC4 | Eligibility matching considers sector overlap (see §6a) |
 
 ---
 
@@ -165,7 +204,7 @@ draft → published → [accepting responses] → awarded | withdrawn | closed
 
 ### 3.1 Definition
 
-An **Application** is a Creative’s structured response to a brief — statement, optional attachments (policy TBD in engineering), declared practice fit.
+An **Application** is a Creative’s structured response to a brief — statement, optional attachments (policy TBD in engineering), declared practice fit, and **registry-evidence portfolio context** (verified records from Creative footprint).
 
 ### 3.2 Rules
 
@@ -192,7 +231,7 @@ draft → submitted → under review → shortlisted | rejected | withdrawn
 |------------|------|
 | Review queue | Studio Organisation workspace |
 | Shortlist | Manual — no auto-rank |
-| Filter assist | By declared practice — explainable filter, not auto-reject |
+| Filter assist | By declared practice + registry-evidence practices — explainable filter, not auto-reject |
 | Reject | With optional internal note — not public |
 
 ### 3.5 Acceptance criteria (AC-AP*)
@@ -203,7 +242,7 @@ draft → submitted → under review → shortlisted | rejected | withdrawn
 | AC-AP2 | Participation mode enforced — roster/invite/direct rules block ineligible apply |
 | AC-AP3 | One active application per Creative per brief |
 | AC-AP4 | Application content not visible on public Field |
-| AC-AP5 | Org staff can view, shortlist, reject applications in Studio |
+| AC-AP5 | Org staff can view, shortlist, reject applications in Studio **with registry-evidence portfolio visible** |
 | AC-AP6 | No algorithmic applicant ranking or auto-reject |
 | AC-AP7 | Field brief detail shows apply state only to authenticated eligible Creative (e.g. “Apply in Studio”) |
 
@@ -265,24 +304,27 @@ A **Commission** is the durable contract object linking Organisation, Creative l
 
 ---
 
-## 6. Open calls discovery
+## 6. Opportunities discovery
 
 ### 6.1 Surfaces
 
 | Surface | Route |
 |---------|-------|
-| Open calls index | `/field/open-calls` |
-| Brief detail | `/field/open-calls/[id]` |
+| Opportunities index | `/field/opportunities` |
+| Opportunity detail | `/field/opportunities/[id]` |
 | Programme hub | `/field/programmes/[slug]` |
+
+**Vocabulary:** “Open call” is an opportunity **kind** — not the primary namespace.
 
 ### 6.2 Filters (explainable)
 
 | Filter | Source |
 |--------|--------|
 | Practice | Brief required practices — closed taxonomy |
+| **Sector** | Brief sector — closed taxonomy |
 | Organisation | Publisher slug |
 | Programme | Programme slug |
-| Brief type | Product enum |
+| Opportunity kind | Product enum (open call, residency, direct, production partner search) |
 | Closing date | Brief closing date window |
 | Verification | Verified org only toggle |
 
@@ -292,20 +334,91 @@ A **Commission** is the durable contract object linking Organisation, Creative l
 
 | Rule | Detail |
 |------|--------|
-| Hub | Add Open calls entry — Records remain default tab |
-| Search | Open calls use dedicated filter vocabulary — not blended global ranked search |
+| Hub | Add **Opportunities** entry — Records remain default tab |
+| Search | Opportunities use dedicated filter vocabulary — not blended global ranked search |
 | 2B explorers | Unchanged default behaviour |
 
 ### 6.4 Acceptance criteria (AC-OC*)
 
 | ID | Criterion |
 |----|-----------|
-| AC-OC1 | Anonymous user can browse open-calls index and brief detail |
+| AC-OC1 | Anonymous user can browse opportunities index and detail |
 | AC-OC2 | Filters compose with AND logic; no hidden ranking |
-| AC-OC3 | Brief detail links to org profile and programme when present |
+| AC-OC3 | Opportunity detail links to org profile and programme when present |
 | AC-OC4 | Withdrawn and ineligible briefs absent from index |
-| AC-OC5 | No recommendation or “similar briefs” rows |
-| AC-OC6 | Open calls sort does not use application counts |
+| AC-OC5 | No recommendation or “similar opportunities” rows |
+| AC-OC6 | Opportunities sort does not use application counts |
+| AC-OC7 | Opportunity detail presents as **matching surface** — org footprint, sector, practices, registry outcome before scope |
+
+---
+
+## 6a. Eligibility matching (rule-based)
+
+### 6a.1 Definition
+
+**Eligibility matching** surfaces briefs a Creative **may** apply to when deterministic rules pass: practice overlap, sector overlap, verification gates, participation mode. **Not** algorithmic ranking.
+
+### 6a.2 Rules
+
+| Rule | Detail |
+|------|--------|
+| Surface | Creative Studio — eligible opportunities section |
+| Logic | Explainable AND of practice + sector + verification + participation mode |
+| Sort | Closing date, published date — **not** match score or engagement |
+| Excluded | ML scores, “recommended for you”, similarity panels |
+
+### 6a.3 Acceptance criteria (AC-MT*)
+
+| ID | Criterion |
+|----|-----------|
+| AC-MT1 | Authenticated Creative sees eligible briefs in Studio when practice + sector + verification rules pass |
+| AC-MT2 | Ineligible briefs omitted from eligible list with neutral omission — not error |
+| AC-MT3 | Eligibility logic documented and deterministic — same inputs → same eligibility |
+| AC-MT4 | No ranked “best match” score displayed |
+| AC-MT5 | Field opportunities index remains browseable independently of Studio eligibility surfacing |
+
+---
+
+## 6b. Registry evidence at apply/review
+
+### 6b.1 Definition
+
+**Registry-evidence portfolio** is the set of verified Records linked to the Creative footprint, surfaced at apply and org review — primary matching differentiator.
+
+### 6b.2 Rules
+
+| Moment | Requirement |
+|--------|-------------|
+| Apply (Studio) | Show verified records + registry-evidence practices before submit |
+| Org review (Studio) | Same portfolio visible alongside application statement |
+| Public Field | No private application content; opportunity detail may link to public verified records on org/Creative profiles |
+
+### 6b.3 Acceptance criteria (AC-RE*)
+
+| ID | Criterion |
+|----|-----------|
+| AC-RE1 | Apply flow shows Creative registry-evidence portfolio preview |
+| AC-RE2 | Org review queue shows applicant registry-evidence portfolio |
+| AC-RE3 | Portfolio distinguishes verified records from declared-only practice |
+| AC-RE4 | No registry-evidence data written to Field public application surfaces |
+
+---
+
+## 6c. Cultural presentation
+
+### 6c.1 Principles
+
+See blueprint §Cultural presentation. Copy must not imply generic job board, HR pipeline, or procurement portal.
+
+### 6c.2 Acceptance criteria (AC-CP*)
+
+| ID | Criterion |
+|----|-----------|
+| AC-CP1 | Public copy uses “opportunity/opportunities” — not “job”, “vacancy”, or “RFP” as primary label |
+| AC-CP2 | Programme pages frame season/cohort/residency — not job requisition |
+| AC-CP3 | Production partner search type uses cultural production language |
+| AC-CP4 | Registry outcome framed as work on file for cultural record |
+| AC-CP5 | No application counts, view counts, or popularity badges on public surfaces |
 
 ---
 
@@ -337,13 +450,13 @@ Chat, DMs, threaded discussion, @mentions, read receipts, public comment threads
 
 ### 8.1 Hierarchy (inherit 2A/2B)
 
-Record verification > certificate > continuity > participation > org badge. Opportunity signals **below** participation in public trust copy.
+Record verification > certificate > continuity > participation > org badge. **Registry-evidence portfolio** elevates apply/review trust — opportunity popularity signals remain forbidden.
 
 ### 8.2 Opportunity-specific rules
 
 | Rule | Detail |
 |------|--------|
-| Brief listing | Show org verification badge when applicable |
+| Brief listing | Show org verification badge + publisher footprint when applicable |
 | Applicant counts | Not shown publicly as popularity signal |
 | Org commission history | Optional public opt-in on org profile (ADR-15-B) |
 | Practice requirements | Display as requirements — not match scores |
@@ -353,7 +466,7 @@ Record verification > certificate > continuity > participation > org badge. Oppo
 | ID | Criterion |
 |----|-----------|
 | AC-VT1 | Brief pages show verification hierarchy consistent with 2B |
-| AC-VT2 | No application-count or award-count sort on open calls |
+| AC-VT2 | No application-count or award-count sort on opportunities |
 | AC-VT3 | Registry outcome requirement shown before apply |
 | AC-VT4 | No commission ratings |
 
@@ -363,7 +476,7 @@ Record verification > certificate > continuity > participation > org badge. Oppo
 
 | Action | Rule |
 |--------|------|
-| View open calls | Anonymous |
+| View opportunities | Anonymous |
 | View brief detail | Anonymous for public briefs |
 | Apply | Authenticated Creative — Studio |
 | Manage programmes/briefs | Org admin/staff — Studio |
@@ -453,7 +566,7 @@ Must **not** appear in Phase 2C:
 
 Phase 2C is **complete** when:
 
-1. All acceptance criteria **AC-PG, AC-BR, AC-AP, AC-AW, AC-CM, AC-OC, AC-NT, AC-VT, AC-GN, AC-SR** pass on staging sign-off.
+1. All acceptance criteria **AC-PG, AC-BR, AC-SC, AC-AP, AC-AW, AC-CM, AC-OC, AC-MT, AC-RE, AC-CP, AC-NT, AC-VT, AC-GN, AC-SR** pass on staging sign-off.
 2. Phase 2B checkpoint applied; 2B discovery regression verified.
 3. 2A/2B anti-features remain absent on Field.
 4. Registry preservation verified — no ledger regression from 2C.
@@ -478,3 +591,4 @@ Phase 2C is **complete** when:
 | Version | Date | Status | Notes |
 |---------|------|--------|-------|
 | 0.1 | 31 May 2026 | LOCKED DRAFT | Initial Phase 2C opportunity layer spec |
+| 0.2 | 31 May 2026 | LOCKED DRAFT | Founder review revision — Sector, eligibility matching, registry evidence, cultural presentation, opportunities routes |

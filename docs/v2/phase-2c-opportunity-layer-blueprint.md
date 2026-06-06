@@ -10,13 +10,40 @@
 
 ## Purpose
 
-Define **Phase 2C — Field: Opportunity Layer**: the third Field release after 2A foundations and 2B discovery. Phase 2C introduces **structured work opportunities** — how Organisations publish intent, how Creatives respond, and how awards become auditable commissions — while preserving **Registry authority** for record truth and **Studio ownership** for all mutations.
+Define **Phase 2C — Field: Opportunity Layer**: the first **matching marketplace** slice on The Field — built on 2B discovery and Registry-backed trust. Phase 2C connects **trust-qualified matching** to **auditable opportunity workflow**: how Creatives discover fit, how Organisations publish cultural production intent, and how awards become commissions with a clear path to Registry outcomes in 2D.
+
+**Platform vision (Phase 2C alignment):**
+
+> RROWM is a **matching marketplace powered by Registry-backed trust**, purpose-built for **arts, culture and creative production**.
 
 **North-star outcome for 2C:**
 
-> An Organisation can **publish** a programme or brief to The Field; a Creative can **discover** it through explainable filters, **apply** from Studio; an Organisation can **review, shortlist, and award**; the outcome creates a **Commission** trail linked to future Registry filing — without payments, messaging products, production runtime, or marketplace commerce on Field.
+> A Creative can **discover** an opportunity on Field through practice, sector, and verification-qualified discovery; **apply** from Studio with **registry-evidence portfolio** context; an Organisation can **review** with the same trust signals, **award**, and create a **Commission** handoff to 2D production and Record filing — without payments, messaging products, production runtime, or sale-commerce on Field.
 
-Phase 2C **orchestrates opportunity state**. It does **not** replace Registry verification, certificate issuance, or ledger chronology.
+Phase 2C is **Opportunity Loop Slice 1** (ends at Commission). Full loop including **Project** and **Record filing** completes in 2D. Phase 2C **orchestrates matching and opportunity state**. It does **not** replace Registry verification, certificate issuance, or ledger chronology.
+
+---
+
+## Strategic positioning (founder review v0.2)
+
+Phase 2C combines two co-equal product goals:
+
+| Goal | What it means |
+|------|----------------|
+| **Matching marketplace** | Rule-based **eligibility matching** — practice, sector, verification, registry-evidence flags — not algorithmic ranking |
+| **Opportunity workflow** | Auditable Programme → Brief → Application → Award → Commission pipeline for institutional fairness |
+
+**Not in 2C:** algorithmic auto-match (ADR-19-C rejected), recommendation feeds (ADR-20-A), payments, messaging, production runtime, patronage, sale-commerce.
+
+**Canonical user journey (2C):**
+
+```
+Field: practice/sector/trust-qualified opportunity discovery
+  → opportunity detail (org footprint, registry outcome expectation)
+  → Studio: apply with registry-evidence preview
+  → org review with same evidence
+  → award → commission (Slice 1 end; Project + Record in 2D)
+```
 
 ---
 
@@ -34,7 +61,7 @@ Phase 2E (Field: Patron/Commerce) — optional; patron briefs, marketplace decis
 | Phase | Question answered |
 |-------|-------------------|
 | 2A–2B | **Who** and **what work** can I trust on file? |
-| **2C** | **What work is being offered** and **how do I respond**? |
+| **2C** | **What opportunities match my practice** and **how do I respond with evidence on file**? |
 | 2D | **How is commissioned work produced** and **filed to Registry**? |
 | 2E | **Who pays whom** for transfer or patronage (if ever)? |
 
@@ -44,7 +71,7 @@ Phase 2E (Field: Patron/Commerce) — optional; patron briefs, marketplace decis
 
 | Surface | 2C responsibility |
 |---------|-------------------|
-| **The Field** | Public read of published programmes/briefs; open-calls discovery; auth-gated apply entry points; party-visible commission **summary** where appropriate |
+| **The Field** | Public read of published opportunities; eligibility-qualified discovery; matching surfaces on opportunity detail; auth-gated apply entry points; party-visible commission **summary** where appropriate |
 | **Studio** | Create/edit programmes and briefs; application submit; org review queue; award action; inbox notifications |
 | **Registry** | Record truth when filing occurs — verification, certificates, provenance, disputes |
 
@@ -52,19 +79,65 @@ Phase 2E (Field: Patron/Commerce) — optional; patron briefs, marketplace decis
 
 ---
 
-## Core objects (conceptual — no schema)
+## Opportunity taxonomy (conceptual — no schema)
 
-| Object | Definition | Primary owner | Field visibility |
-|--------|------------|---------------|------------------|
-| **Programme** | Organisation-scoped container for related briefs — season, residency slate, award cycle, production series | Organisation (Studio) | Public when programme published |
-| **Brief** | Structured production request — scope, timeline, practices, deliverables, registry outcome rule, participation mode | Organisation (Studio) | Public when brief published (subject to participation mode) |
-| **Application** | Creative response to a brief — statement, attachments, declared fit | Creative (Studio) | Private to applicant + publishing org |
-| **Award** | Organisation decision selecting an applicant (or named Creative on direct brief) | Organisation (Studio) | Summarised on brief/programme when org opts in |
-| **Commission** | Contractual outcome of award — links org, Creative(s), originating brief | Organisation → Creative | Party-visible status; public summary optional |
+**Opportunity** is the **canonical product term** for publishable work intent on The Field (ADR-03 modified). **Brief** is the primary **publishable subtype** for Organisation-led opportunities in 2C implementation.
 
-**Terminology note (ADR-03):** “Opportunity” is **user-facing language** for published briefs and programme contexts — not a separate system object in 2C MVP.
+```
+Opportunity (canonical taxonomy root)
+├── Kind: Open call
+├── Kind: Residency / programme opportunity
+├── Kind: Direct commission
+├── Kind: Production partner search (cultural fabrication)
+├── Kind: Collaboration request          ← planned; implementation 2D
+└── Kind: Team formation request         ← planned; implementation 2D
 
-**Out of 2C object model:** Project, Team, Milestone, Deliverable, Collaboration, Patron brief, Listing, Payment, Escrow.
+Container: Programme (optional — season, cohort, award cycle)
+Publisher: Organisation (2C); Collector (2E deferred)
+
+Workflow objects (audit trail):
+  Application → Award → Commission → Project (2D) → Record (Registry, 2D)
+```
+
+| Object | Role in 2C |
+|--------|------------|
+| **Programme** | Optional cultural container — season, residency slate, award cycle |
+| **Brief** | Primary published opportunity unit for org-led flows |
+| **Application** | Creative response with registry-evidence context |
+| **Award** | Organisation selection decision |
+| **Commission** | Contract handoff — **Slice 1 loop terminus** |
+
+**Out of 2C implementation:** Project, Team, Milestone, Deliverable, Collaboration (peer-led), Patron brief, Listing, Payment, Escrow.
+
+---
+
+## Matching primitives (rule-based — not algorithmic)
+
+| Primitive | Source | Used for |
+|-----------|--------|----------|
+| **Practice** | 2B closed taxonomy — declared + registry-evidence | Brief requirements; Creative eligibility |
+| **Sector** | 2C closed cultural taxonomy (Product Blueprint §3) | Brief cultural context; Creative eligibility |
+| **Verification** | Registry + org badge | Publish and apply gates |
+| **Registry evidence** | Verified records on Creative/org footprint | Apply and review context — primary differentiator |
+
+**Eligibility matching (in scope):** Studio surfaces briefs a Creative **may** respond to when practice + sector + verification rules pass — explainable, deterministic, **not** ranked by engagement or ML.
+
+**Excluded:** platform auto-match scores, “recommended for you” feeds, pay-to-boost placement.
+
+---
+
+## Cultural presentation principles
+
+Public opportunity surfaces must read as **cultural production infrastructure**, not generic job posts:
+
+| Principle | Rule |
+|-----------|------|
+| **Programme as season** | Programmes frame cohorts, residencies, and award cycles — not job requisitions |
+| **Opportunity over vacancy** | Primary vocabulary: **opportunities**; “open call” is a **kind**, not the product name |
+| **Registry outcome as cultural artifact** | Frame registry outcome as work **on file** for the cultural record — not compliance checkbox |
+| **Production partner search** | Fabrication/partner needs use cultural production language — not procurement RFP tone |
+| **No popularity signals** | No application counts, view counts, or “hot opportunity” badges |
+| **Trust before transaction** | Publisher footprint and verification precede scope and timeline |
 
 ---
 
@@ -72,12 +145,14 @@ Phase 2E (Field: Patron/Commerce) — optional; patron briefs, marketplace decis
 
 | Brief type | Typical use | Public listing default | Registry outcome expectation |
 |------------|-----------|------------------------|----------------------------|
-| **Open call** | Public competition, general submission | Listed on open calls | Often required |
+| **Open call** | Public competition, general submission | Listed on opportunities index | Often required |
 | **Residency / award** | Seasonal programme, prize, alumni track | Listed under programme | Required for alumni record |
-| **Direct commission** | Sole-source or named Creative | **Not** on open calls index | Usually required |
-| **Fabrication RFP** | Production partner search | Listed when participation open | Optional per deliverable |
+| **Direct commission** | Sole-source or named Creative | **Not** on opportunities index | Usually required |
+| **Production partner search** | Cultural fabrication, technical production partners | Listed when participation open | Optional per deliverable |
 
-**Excluded from 2C brief types:** Patron commission (Collector publisher — 2E), peer collaboration brief (2D), sale/listing brief (commerce — excluded).
+**Product copy:** Use **production partner search** — not procurement RFP language.
+
+**Excluded from 2C brief types:** Patron commission (Collector publisher — 2E), peer collaboration brief (implementation 2D — **planned opportunity kind**), sale/listing brief (commerce — excluded).
 
 ---
 
@@ -125,12 +200,14 @@ Phase 2C **extends** discovery — does not replace 2B search contract.
 
 | Surface | Purpose |
 |---------|---------|
-| `/field/open-calls` | Filterable public brief listing |
-| `/field/open-calls/[id]` | Brief detail — scope, org, practices, registry outcome rule, apply CTA |
-| `/field/programmes/[slug]` | Programme hub — curated briefs, org context |
+| `/field/opportunities` | Primary public index — filterable opportunities (practice, sector, org, programme, kind, date, verification) |
+| `/field/opportunities/[id]` | Opportunity detail — **matching surface**: scope, sector, practices, org footprint, registry outcome expectation |
+| `/field/programmes/[slug]` | Programme hub — season/cohort framing; curated briefs |
 | Existing explorers | Unchanged — Creatives/Orgs/Records remain primary trust discovery |
 
-**Filter philosophy (ADR-19-A):** User-controlled filters only — practice, organisation, programme, brief type, date window, verification gates. **No** platform auto-matching, **no** engagement ranking, **no** “recommended for you”.
+**Vocabulary:** **Opportunities** is the primary Field namespace. **Open call** is an opportunity **kind** and filter value — not the product name.
+
+**Filter philosophy (ADR-19-A modified):** User-controlled filters **plus** rule-based **eligibility matching** in Studio (practice + sector + verification + registry-evidence flags). **No** algorithmic ranking, **no** engagement-based sort, **no** “recommended for you” feed.
 
 **Graph extension (deterministic):**
 
@@ -150,10 +227,10 @@ Each brief selects one **participation mode** at publish:
 
 | Mode | Who may apply | Field listing |
 |------|---------------|---------------|
-| **Open** | Any authenticated Creative | Open calls index |
-| **Roster-only** | Creatives on org roster | Hidden from open index until org opens publicly |
-| **Invite-only** | Invited Creatives | Not on open index |
-| **Direct** | Named Creative (no application window) | Not on open index |
+| **Open** | Any authenticated Creative meeting eligibility rules | Opportunities index |
+| **Roster-only** | Creatives on org roster | Hidden from public index until org opens publicly |
+| **Invite-only** | Invited Creatives | Not on public index |
+| **Direct** | Named Creative (no application window) | Not on public index |
 
 **Default for verified-org public briefs:** Open.
 
@@ -192,19 +269,20 @@ An **Award** is the organisation’s selection act — not a financial payment o
 
 ## Studio journeys
 
-### Organisation
+### Organisation (secondary journey — publish path)
 
 ```
-Studio: create programme (optional) → draft brief → configure participation + registry outcome
-      → publish to Field → receive applications (review queue)
+Studio: create programme (optional) → draft brief → configure sector, practices, participation + registry outcome
+      → publish to Field → receive applications (review queue with registry-evidence context)
       → shortlist → award → commission created → inbox notification to Creative
 ```
 
-### Creative
+### Creative (primary journey — matching path)
 
 ```
-Field: discover brief (open calls / programme / org profile)
-     → sign in → Studio apply flow → submit application
+Field: discover opportunity via practice/sector/trust-qualified filters or Studio eligible-brief surfacing
+     → read matching surface (org footprint, registry outcome expectation, verified work links)
+     → sign in → Studio apply flow with registry-evidence portfolio preview
      → track status in Studio inbox (not public Field feed)
      → receive award notification → view commission summary
 ```
@@ -212,7 +290,7 @@ Field: discover brief (open calls / programme / org profile)
 ### Anonymous visitor
 
 ```
-Field: browse open calls and programme pages → read brief detail
+Field: browse opportunities and programme pages → read opportunity detail as matching surface
      → sign-in prompt to apply — no application without auth
 ```
 
@@ -239,13 +317,13 @@ Blueprint references brief posting fees and subscription gates (ADR-23). **Phase
 
 | Hook | 2C stance |
 |------|-----------|
-| Publish to Field | May require org subscription tier (ADR-07-D) — **policy decision in founder freeze** |
+| Publish to Field | **Verified org required** for public listing; subscription does **not** block first cultural publish in 2C (ADR-07 modified) |
 | Application fee | **Excluded** |
 | Payment processing | **Excluded** |
 | Escrow | **Excluded** |
 | Facilitation fee on award | **Excluded** until 2D+ (ADR-24) |
 
-No checkout, invoicing, or wallet UI in 2C.
+No checkout, invoicing, or wallet UI in 2C. Future subscription tiers may gate advanced publisher features — not initial public opportunity contribution.
 
 ---
 
@@ -275,13 +353,16 @@ The following **must not appear** in Phase 2C:
 
 | Metric | Intent |
 |--------|--------|
-| Brief publish → apply conversion | Validates discovery + apply UX |
-| Time-to-first-application | Org brief clarity |
+| Eligible Creative → apply rate | Validates trust-qualified matching + apply UX |
+| Practice + sector filter usage | Validates cultural discovery, not generic browse |
+| Registry-evidence portfolio shown at apply | Validates differentiation vs job boards |
 | Award completion rate | Org workflow usability |
-| Registry filing rate post-commission | Guardrail — 2C must not reduce registration (2D measures filing) |
-| Open-call filter usage | Validates explainable discovery |
+| Registry filing rate post-commission | Guardrail — 2D measures filing; 2C must not reduce registration intent |
+| Programme-as-season engagement | Validates cultural framing vs transactional listings |
 
-**Not measured:** message volume, social engagement, recommendation CTR, payment GMV.
+**Balanced with (not replacing):** brief publish → apply conversion, time-to-first-application.
+
+**Not measured:** message volume, social engagement, recommendation CTR, payment GMV, application counts as popularity.
 
 ---
 
@@ -292,6 +373,7 @@ The following **must not appear** in Phase 2C:
 | Phase 2B complete | `checkpoint-phase2b-field-discovery` recommended |
 | 2A/2B freezes | Explorer IA, search, graph, trust hierarchy binding |
 | Practice taxonomy | Brief `practices_required[]` uses 2B closed vocabulary |
+| Sector taxonomy | Brief `sector` + Creative `sectors[]` — Product Blueprint v1.1 §3 seed list |
 | Organisation verification | Publish gates per founder freeze |
 | Phase 1 Studio | Org staff roles, roster, representation model |
 
@@ -304,6 +386,7 @@ The following **must not appear** in Phase 2C:
 | [phase-2c-opportunity-layer-spec.md](./phase-2c-opportunity-layer-spec.md) | Acceptance criteria and scope detail |
 | [phase-2c-founder-decisions-freeze.md](./phase-2c-founder-decisions-freeze.md) | Founder decisions before implementation |
 | [phase-2c-pr1-plan.md](./phase-2c-pr1-plan.md) | First 2C train product plan |
+| [phase-2c-founder-review-strategic-audit.md](./phase-2c-founder-review-strategic-audit.md) | Founder review + v0.2 resolutions |
 | [phase-2-the-field-blueprint.md](./phase-2-the-field-blueprint.md) | Parent Field architecture |
 | [phase-2-architecture-decisions.md](./phase-2-architecture-decisions.md) | ADR catalogue |
 
@@ -314,3 +397,4 @@ The following **must not appear** in Phase 2C:
 | Version | Date | Status | Notes |
 |---------|------|--------|-------|
 | 0.1 | 31 May 2026 | DRAFT | Initial Phase 2C Opportunity Layer blueprint |
+| 0.2 | 31 May 2026 | DRAFT | Founder review revision — matching marketplace centre of gravity, Sector, eligibility matching, cultural presentation, Opportunity taxonomy |
