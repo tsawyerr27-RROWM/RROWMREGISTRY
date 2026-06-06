@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { CreativePresenceDiscoverySection } from "@/components/Field/CreativePresenceDiscoverySection";
+import { FieldRelationshipContextSection } from "@/components/Field/FieldRelationshipContextSection";
 import { CreativePresenceOwnerStewardship } from "@/components/Field/CreativePresenceOwnerStewardship";
 import { CreativePresenceRegistryEvidence } from "@/components/Field/CreativePresenceRegistryEvidence";
 import { RegistryListFilters } from "@/components/Registry/RegistryListFilters";
@@ -43,6 +44,7 @@ export function CreativePresenceView({ data }: Props) {
     isProfileOwner,
     showOwnerPracticeGuidance,
     stewardshipItems,
+    contextPanels,
   } = data;
 
   return (
@@ -130,6 +132,8 @@ export function CreativePresenceView({ data }: Props) {
           </div>
         </section>
       ) : null}
+
+      <FieldRelationshipContextSection data={{ panels: contextPanels }} />
 
       <CreativePresenceDiscoverySection
         gallery={gallery}

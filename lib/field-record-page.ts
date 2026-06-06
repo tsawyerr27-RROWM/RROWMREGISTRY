@@ -5,10 +5,15 @@ import {
   type FieldVerifyRecordData,
 } from "@/lib/field-verify-record";
 import {
+  loadRecordRelationshipContextPanels,
+  type FieldRelationshipContextPanelData,
+} from "@/lib/field-relationship-context";
+import {
   fieldCreativeHref,
   fieldOrganisationHref,
 } from "@/lib/field-nav";
 import { parsePublicPresence } from "@/lib/public-presence";
+import { parsePrimaryPracticeSlug } from "@/lib/practices";
 
 export type FieldRecordPageData = FieldVerifyRecordData & {
   image_url: string | null;
@@ -19,9 +24,11 @@ export type FieldRecordPageData = FieldVerifyRecordData & {
   creativeHref: string | null;
   organisationName: string | null;
   organisationHref: string | null;
+  contextPanels: FieldRelationshipContextPanelData[];
 };
 
 type GalleryLinkRow = {
+  id?: string;
   slug: string | null;
   name: string | null;
   public_presence?: unknown;
@@ -34,32 +41,42 @@ async function resolveOrganisationLink(
     filingGalleryId: string | null;
     fallbackName: string | null;
   }
-): Promise<{ name: string | null; href: string | null }> {
+): Promise<{
+  name: string | null;
+  href: string | null;
+  slug: string | null;
+  galleryId: string | null;
+}> {
   let gallery: GalleryLinkRow | null = null;
 
   if (args.filingGalleryId) {
     const { data } = await supabase
       .from("galleries")
-      .select("slug, name, public_presence")
+      .select("id, slug, name, public_presence")
       .eq("id", args.filingGalleryId)
       .maybeSingle<GalleryLinkRow>();
     gallery = data;
   } else if (args.artistGalleryId) {
     const { data } = await supabase
       .from("galleries")
-      .select("slug, name, public_presence")
+      .select("id, slug, name, public_presence")
       .eq("id", args.artistGalleryId)
       .maybeSingle<GalleryLinkRow>();
     gallery = data;
   }
 
   const name = gallery?.name?.trim() || args.fallbackName;
-  const slug = gallery?.slug?.trim();
+  const slug = gallery?.slug?.trim() || null;
   const presence = parsePublicPresence(gallery?.public_presence);
   const href =
     slug && presence.profile ? fieldOrganisationHref(slug) : null;
 
-  return { name: name ?? null, href };
+  return {
+    name: name ?? null,
+    href,
+    slug,
+    galleryId: gallery?.id ?? args.filingGalleryId ?? args.artistGalleryId,
+  };
 }
 
 export async function loadFieldRecordPageData(
@@ -88,6 +105,8 @@ export async function loadFieldRecordPageData(
   let artistName = base.artist?.display_name ?? null;
   let creativeHref: string | null = null;
   let artistGalleryId: string | null = null;
+  let artistSlug: string | null = base.artist?.slug?.trim() || null;
+  let primaryPracticeSlug: string | null = null;
 
   if (base.artwork.artist_id) {
     const { data: artistRow } = await supabase
@@ -108,6 +127,8 @@ export async function loadFieldRecordPageData(
         artistRow.full_name?.trim() ||
         artistName;
       artistGalleryId = artistRow.gallery_id;
+      artistSlug = artistRow.slug?.trim() || artistSlug;
+      primaryPracticeSlug = parsePrimaryPracticeSlug(artistRow.public_presence);
       const slug = artistRow.slug?.trim();
       const presence = parsePublicPresence(artistRow.public_presence);
       if (slug && presence.profile) {
@@ -122,6 +143,18 @@ export async function loadFieldRecordPageData(
     fallbackName: base.organisation?.name ?? null,
   });
 
+  const contextPanels = await loadRecordRelationshipContextPanels(supabase, {
+    registryId: base.artwork.registry_id,
+    artistId: base.artwork.artist_id,
+    artistSlug,
+    artistName,
+    galleryId: orgLink.galleryId,
+    organisationSlug: orgLink.slug,
+    organisationName: orgLink.name,
+    medium: artwork?.medium ?? null,
+    primaryPracticeSlug,
+  });
+
   return {
     ...base,
     image_url: artwork?.image_url ?? null,
@@ -132,6 +165,7 @@ export async function loadFieldRecordPageData(
     creativeHref,
     organisationName: orgLink.name,
     organisationHref: orgLink.href,
+    contextPanels,
   };
 }
 

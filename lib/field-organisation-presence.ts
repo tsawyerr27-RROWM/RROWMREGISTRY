@@ -2,6 +2,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { fetchCertificatePublicStatusByArtworkIds } from "@/lib/fetch-certificate-public-status-map";
 import { fieldCreativeHref } from "@/lib/field-nav";
+import {
+  buildOrganisationRelationshipContextPanels,
+  type FieldRelationshipContextPanelData,
+} from "@/lib/field-relationship-context";
 import type { MessageKey } from "@/lib/locale-messages";
 import type { ParticipationLayer } from "@/lib/get-artwork-participation-layers";
 import { parsePublicPresence } from "@/lib/public-presence";
@@ -26,6 +30,7 @@ export type OrganisationPresenceArtwork = {
   artist_id: string | null;
   artistName: string | null;
   verification_status: string | null;
+  created_at: string;
   hasCertificate: boolean;
   certificateRevoked: boolean;
 };
@@ -56,6 +61,7 @@ export type OrganisationPresencePageData = {
   footprint: OrganisationPresenceFootprint;
   isProfileOwner: boolean;
   stewardshipItems: Array<{ id: string; labelKey: MessageKey; complete: boolean }>;
+  contextPanels: FieldRelationshipContextPanelData[];
 };
 
 type GalleryRow = {
@@ -86,6 +92,7 @@ type ArtworkRow = {
   image_url: string | null;
   artist_id: string | null;
   verification_status: string | null;
+  created_at: string;
 };
 
 function resolveWebsiteHref(raw: string | null | undefined): string | null {
@@ -207,7 +214,7 @@ export async function loadOrganisationPresencePageData(
     const { data: artworks, error: artworksError } = await supabase
       .from("artwork_read_model")
       .select(
-        "id, title, registry_id, image_url, artist_id, verification_status"
+        "id, title, registry_id, image_url, artist_id, verification_status, created_at"
       )
       .in("artist_id", artistIds)
       .order("created_at", { ascending: false })
@@ -245,6 +252,7 @@ export async function loadOrganisationPresencePageData(
       artistName:
         (row.artist_id && artistNameById[row.artist_id]) || null,
       verification_status: row.verification_status,
+      created_at: row.created_at,
       hasCertificate,
       certificateRevoked,
     };
@@ -350,6 +358,11 @@ export async function loadOrganisationPresencePageData(
     footprint,
     isProfileOwner,
     stewardshipItems,
+    contextPanels: buildOrganisationRelationshipContextPanels({
+      organisationName: displayName,
+      representedCreatives,
+      artworks,
+    }),
   };
 }
 

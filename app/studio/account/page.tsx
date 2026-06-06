@@ -16,9 +16,20 @@ import { fieldCollectorHref, fieldCreativeHref, fieldOrganisationHref } from "@/
 import {
   DEFAULT_PUBLIC_PRESENCE,
   parsePublicPresence,
-  toPublicPresenceJson,
   type PublicPresence,
 } from "@/lib/public-presence";
+import {
+  buildPublicPresenceJson,
+  normalizeCreativePracticeSettings,
+  parseCreativePracticeSettings,
+  type CreativePracticeSettings,
+} from "@/lib/studio-practice-settings";
+import {
+  buildCreativeProfileCompleteness,
+  buildOrganisationProfileCompleteness,
+  type ProfileCompletenessSnapshot,
+} from "@/lib/studio-profile-completeness";
+import { inferRegistryPracticeSlugs } from "@/lib/practices";
 import { parseArtistRepresentationState } from "@/lib/artwork-representation";
 import {
   parseStudioArtworksAccent,
@@ -63,6 +74,16 @@ export default function AccountPage() {
     AccountHeroPreviewArtwork[]
   >([]);
   const [artistRepHistorical, setArtistRepHistorical] = useState(false);
+  const [artistRepActive, setArtistRepActive] = useState(false);
+  const [artistVerifiedWorkCount, setArtistVerifiedWorkCount] = useState(0);
+  const [practiceSettings, setPracticeSettings] = useState<CreativePracticeSettings>({
+    declaredSlugs: [],
+    primarySlug: null,
+    practicesVisible: true,
+  });
+  const [registryEvidenceSlugs, setRegistryEvidenceSlugs] = useState<string[]>([]);
+  const [galleryVerified, setGalleryVerified] = useState(false);
+  const [galleryRosterCount, setGalleryRosterCount] = useState(0);
   const [accountStatus, setAccountStatus] = useState<
     "active" | "deactivated" | "pending_deletion" | "deleted"
   >("active");
@@ -119,6 +140,11 @@ export default function AccountPage() {
     setRole(r);
     setCollectorPreviewArtworks([]);
     setArtistRepHistorical(false);
+    setArtistRepActive(false);
+    setArtistVerifiedWorkCount(0);
+    setRegistryEvidenceSlugs([]);
+    setGalleryVerified(false);
+    setGalleryRosterCount(0);
     setDisplayName(
       String((actor as { display_name?: string | null }).display_name || "").trim()
     );
@@ -150,6 +176,19 @@ export default function AccountPage() {
         nextPresence = parsePublicPresence(
           (ar as { public_presence?: unknown }).public_presence
         );
+        const practiceRaw = (ar as { public_presence?: unknown }).public_presence;
+        setPracticeSettings(parseCreativePracticeSettings(practiceRaw));
+
+        const { data: verifiedWorks } = await supabase
+          .from("artworks")
+          .select("medium")
+          .eq("artist_id", uid)
+          .eq("verification_status", "verified");
+        const mediums = (verifiedWorks ?? [])
+          .map((row) => (row as { medium?: string | null }).medium)
+          .filter((m): m is string => Boolean(m?.trim()));
+        setRegistryEvidenceSlugs(inferRegistryPracticeSlugs(mediums));
+        setArtistVerifiedWorkCount(verifiedWorks?.length ?? 0);
       }
 
       const { data: repRaw } = await supabase.rpc(
@@ -158,6 +197,7 @@ export default function AccountPage() {
       );
       const rep = parseArtistRepresentationState(repRaw);
       setArtistRepHistorical(rep.historical && !rep.active);
+      setArtistRepActive(rep.active);
     }
 
     if (r === "collector") {
@@ -205,6 +245,7 @@ export default function AccountPage() {
             location,
             website_url,
             description,
+            verified,
             public_presence
           )
         `
@@ -221,6 +262,7 @@ export default function AccountPage() {
             location: string | null;
             website_url: string | null;
             description: string | null;
+            verified?: boolean;
             public_presence?: unknown;
           }
         | {
@@ -229,6 +271,7 @@ export default function AccountPage() {
             location: string | null;
             website_url: string | null;
             description: string | null;
+            verified?: boolean;
             public_presence?: unknown;
           }[]
         | null
@@ -240,7 +283,15 @@ export default function AccountPage() {
         setGalleryLocation(String(g.location || "").trim());
         setGalleryWebsite(String(g.website_url || "").trim());
         setGalleryDescription(String(g.description || "").trim());
+        setGalleryVerified(Boolean(g.verified));
         nextPresence = parsePublicPresence(g.public_presence);
+
+        const { count: rosterCount } = await supabase
+          .from("artists")
+          .select("id", { count: "exact", head: true })
+          .eq("gallery_id", g.id)
+          .eq("shown_on_institutional_public", true);
+        setGalleryRosterCount(rosterCount ?? 0);
       }
     }
 
@@ -263,7 +314,14 @@ export default function AccountPage() {
     setSavedAt(null);
 
     const supabase = sb();
-    const json = toPublicPresenceJson(presence);
+    const normalizedPractice =
+      role === "artist"
+        ? normalizeCreativePracticeSettings(practiceSettings)
+        : undefined;
+    const json =
+      role === "artist"
+        ? buildPublicPresenceJson(presence, normalizedPractice)
+        : buildPublicPresenceJson(presence);
     let actorDisplay = displayName.trim();
     if (!actorDisplay && role === "gallery") {
       actorDisplay = "Gallery";
@@ -341,8 +399,51 @@ export default function AccountPage() {
 
     setSaving(false);
     setSavedAt(Date.now());
+    if (role === "artist" && normalizedPractice) {
+      setPracticeSettings(normalizedPractice);
+    }
     await load();
   };
+
+  const profileCompleteness = useMemo((): ProfileCompletenessSnapshot | null => {
+    if (role === "artist") {
+      return buildCreativeProfileCompleteness({
+        profilePublic: presence.profile,
+        bio: artistBio,
+        declaredPracticeCount: practiceSettings.declaredSlugs.length,
+        hasWebsiteOrInstagram:
+          Boolean(artistWebsite.trim()) || Boolean(artistInstagram.trim()),
+        verifiedWorkCount: artistVerifiedWorkCount,
+        hasRepresentationSignal: artistRepActive || presence.ownership,
+      });
+    }
+    if (role === "gallery") {
+      return buildOrganisationProfileCompleteness({
+        profilePublic: presence.profile,
+        description: galleryDescription,
+        location: galleryLocation,
+        locationVisible: presence.location,
+        rosterPublicCount: galleryRosterCount,
+        organisationVerified: galleryVerified,
+      });
+    }
+    return null;
+  }, [
+    role,
+    presence.profile,
+    presence.location,
+    presence.ownership,
+    artistBio,
+    practiceSettings.declaredSlugs.length,
+    artistWebsite,
+    artistInstagram,
+    artistVerifiedWorkCount,
+    artistRepActive,
+    galleryDescription,
+    galleryLocation,
+    galleryRosterCount,
+    galleryVerified,
+  ]);
 
   const publicPageHref = useMemo(() => {
     if (!role) return null;
@@ -459,6 +560,10 @@ export default function AccountPage() {
       workspaceHref={workspaceHref}
       workspaceLabel={workspaceLabel}
       profileSnapshot={profileSnapshot}
+      profileCompleteness={profileCompleteness}
+      practiceSettings={practiceSettings}
+      onPracticeSettingsChange={setPracticeSettings}
+      registryEvidenceSlugs={registryEvidenceSlugs}
       collectorPreviewArtworks={
         role === "collector" ? collectorPreviewArtworks : null
       }

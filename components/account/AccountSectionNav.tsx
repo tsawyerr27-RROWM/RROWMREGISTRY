@@ -3,6 +3,7 @@
 export type AccountSectionId =
   | "account-profile"
   | "account-visibility"
+  | "account-practice"
   | "account-studio"
   | "account-privacy-data";
 
@@ -96,6 +97,7 @@ export function buildAccountNavItems(
     { id: "account-visibility", label: "Public visibility" },
   ];
   if (role === "artist") {
+    items.push({ id: "account-practice", label: "Practice" });
     items.push({ id: "account-studio", label: "Studio" });
   }
   items.push({ id: "account-privacy-data", label: "Privacy & data" });

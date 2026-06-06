@@ -5,6 +5,7 @@ import { ArtworksHeroPreview } from "@/components/Dashboard/ArtworksHeroPreview"
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 import type { PublicPresence } from "@/lib/public-presence";
+import type { ProfileCompletenessSnapshot } from "@/lib/studio-profile-completeness";
 import { RegistryCatalogueInfoTooltip } from "@/components/Registry/RegistryCatalogueInfoTooltip";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { productRoleLabel } from "@/lib/studio-terminology";
@@ -30,11 +31,6 @@ type Role = "artist" | "collector" | "gallery";
 
 function filled(s: string | undefined): boolean {
   return Boolean(s && s.trim().length > 0);
-}
-
-function completenessPercent(flags: boolean[]): number {
-  if (flags.length === 0) return 0;
-  return Math.round((flags.filter(Boolean).length / flags.length) * 100);
 }
 
 function truncate(text: string, max: number): string {
@@ -75,19 +71,21 @@ function HeroTile({
   );
 }
 
-function CompletenessMeter({ percent }: { percent: number }) {
+function CompletenessMeter({ snapshot }: { snapshot: ProfileCompletenessSnapshot }) {
   return (
     <div className="space-y-2">
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-[11px] uppercase tracking-wide text-white/45">
-          Profile completeness
+          Discoverability checklist
         </span>
-        <span className="tabular-nums text-sm font-semibold text-white">{percent}%</span>
+        <span className="tabular-nums text-sm font-semibold text-white">
+          {snapshot.completedCount}/{snapshot.totalCount}
+        </span>
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
         <div
           className="h-full rounded-full bg-gradient-to-r from-amber-400/90 to-amber-200/80 transition-[width] duration-500 ease-out"
-          style={{ width: `${Math.min(100, Math.max(0, percent))}%` }}
+          style={{ width: `${Math.min(100, Math.max(0, snapshot.percent))}%` }}
         />
       </div>
     </div>
@@ -196,27 +194,28 @@ function PreviewRow({
 
 function ArtistNarrativeTile({
   snapshot,
-  displayName,
+  profileCompleteness,
 }: {
   snapshot: AccountProfileSnapshot;
-  displayName: string;
+  profileCompleteness: ProfileCompletenessSnapshot | null;
 }) {
-  const flags = [
-    filled(displayName),
-    filled(snapshot.bio) && (snapshot.bio?.trim().length ?? 0) >= 24,
-    filled(snapshot.website),
-    filled(snapshot.instagram),
-  ];
-  const percent = completenessPercent(flags);
   const bio = snapshot.bio?.trim() ?? "";
   const ig = snapshot.instagram?.trim().replace(/^@/, "") ?? "";
+  const checklistItems =
+    profileCompleteness?.items.map((item) => ({
+      label: item.label,
+      done: item.done,
+    })) ?? [];
 
   return (
     <HeroTile
       title="Public narrative"
       footer={<AnchorLink href="#account-profile">Edit biography & links</AnchorLink>}
     >
-      <CompletenessMeter percent={percent} />
+      {profileCompleteness ? (
+        <CompletenessMeter snapshot={profileCompleteness} />
+      ) : null}
+      {checklistItems.length > 0 ? <FieldChecklist items={checklistItems} /> : null}
       {bio ? (
         <p className="line-clamp-2 text-[11px] leading-relaxed text-white/55 italic">
           &ldquo;{truncate(bio, 100)}&rdquo;
@@ -240,6 +239,39 @@ function ArtistNarrativeTile({
         {!filled(snapshot.website) && !ig ? (
           <span className="text-[10px] text-white/35">No links added</span>
         ) : null}
+      </div>
+    </HeroTile>
+  );
+}
+
+function ArtistPracticeTile({
+  declaredCount,
+  registryCount,
+}: {
+  declaredCount: number;
+  registryCount: number;
+}) {
+  return (
+    <HeroTile
+      title="Practice"
+      footer={<AnchorLink href="#account-practice">Edit declared practices</AnchorLink>}
+    >
+      <div className="space-y-3">
+        <p className="text-[11px] text-white/55">
+          <span className="font-medium text-white/80">{declaredCount}</span> declared
+          {registryCount > 0 ? (
+            <>
+              {" "}
+              ·{" "}
+              <span className="font-medium text-white/80">{registryCount}</span> from
+              Registry records
+            </>
+          ) : null}
+        </p>
+        <p className="text-[11px] leading-relaxed text-white/45">
+          Declared practices describe how you work. Registry-evidence practices are
+          read-only and inferred from verified records.
+        </p>
       </div>
     </HeroTile>
   );
@@ -422,27 +454,32 @@ function CollectorAccountTile({
 function GalleryIdentityTile({
   snapshot,
   displayName,
-  title,
+  profileCompleteness,
 }: {
   snapshot: AccountProfileSnapshot;
   displayName: string;
-  title: string;
+  profileCompleteness: ProfileCompletenessSnapshot | null;
 }) {
-  const items = [
-    { label: "Display name", done: filled(displayName) },
-    { label: "Location", done: filled(snapshot.location) },
-    { label: "Website", done: filled(snapshot.website) },
-    { label: "Description", done: filled(snapshot.description) },
-  ];
-  const percent = completenessPercent(items.map((i) => i.done));
+  const checklistItems =
+    profileCompleteness?.items.map((item) => ({
+      label: item.label,
+      done: item.done,
+    })) ?? [
+      { label: "Display name", done: filled(displayName) },
+      { label: "Location", done: filled(snapshot.location) },
+      { label: "Website", done: filled(snapshot.website) },
+      { label: "Description", done: filled(snapshot.description) },
+    ];
 
   return (
     <HeroTile
       title="Institutional identity"
       footer={<AnchorLink href="#account-profile">Edit institution details</AnchorLink>}
     >
-      <CompletenessMeter percent={percent} />
-      <FieldChecklist items={items} />
+      {profileCompleteness ? (
+        <CompletenessMeter snapshot={profileCompleteness} />
+      ) : null}
+      <FieldChecklist items={checklistItems} />
     </HeroTile>
   );
 }
@@ -457,6 +494,9 @@ function roleTiles(
     presence: PublicPresence;
     snapshot: AccountProfileSnapshot;
     ownedWorkCount: number;
+    profileCompleteness: ProfileCompletenessSnapshot | null;
+    declaredPracticeCount: number;
+    registryEvidenceCount: number;
     participantLabel: string;
     organisationIdentityTitle: string;
   }
@@ -469,6 +509,9 @@ function roleTiles(
     presence,
     snapshot,
     ownedWorkCount,
+    profileCompleteness,
+    declaredPracticeCount,
+    registryEvidenceCount,
     participantLabel,
     organisationIdentityTitle,
   } = props;
@@ -476,7 +519,14 @@ function roleTiles(
   if (role === "artist") {
     return (
       <>
-        <ArtistNarrativeTile snapshot={snapshot} displayName={displayName} />
+        <ArtistNarrativeTile
+          snapshot={snapshot}
+          profileCompleteness={profileCompleteness}
+        />
+        <ArtistPracticeTile
+          declaredCount={declaredPracticeCount}
+          registryCount={registryEvidenceCount}
+        />
         <VisibilityTile presence={presence} />
         <CanonicalPresenceTile
           publicPageHref={publicPageHref}
@@ -505,7 +555,7 @@ function roleTiles(
       <GalleryIdentityTile
         snapshot={snapshot}
         displayName={displayName}
-        title={organisationIdentityTitle}
+        profileCompleteness={profileCompleteness}
       />
       <VisibilityTile presence={presence} />
     </>
@@ -520,6 +570,9 @@ type Props = {
   workspaceLabel: string;
   presence: PublicPresence;
   profileSnapshot?: AccountProfileSnapshot;
+  profileCompleteness?: ProfileCompletenessSnapshot | null;
+  declaredPracticeCount?: number;
+  registryEvidenceCount?: number;
   collectionPreviewArtworks?: AccountHeroPreviewArtwork[] | null;
 };
 
@@ -531,6 +584,9 @@ export function AccountPresenceHero({
   workspaceLabel,
   presence,
   profileSnapshot = {},
+  profileCompleteness = null,
+  declaredPracticeCount = 0,
+  registryEvidenceCount = 0,
   collectionPreviewArtworks,
 }: Props) {
   const { t } = useLocalePreferences();
@@ -586,7 +642,11 @@ export function AccountPresenceHero({
           <div className="mt-10 space-y-5 lg:mt-12">
             <ul
               className={`grid gap-4 sm:gap-5 ${
-                role === "gallery" ? "sm:grid-cols-2" : "sm:grid-cols-3"
+                role === "artist"
+                  ? "sm:grid-cols-2 xl:grid-cols-4"
+                  : role === "gallery"
+                    ? "sm:grid-cols-2"
+                    : "sm:grid-cols-3"
               }`}
             >
               {roleTiles(role, {
@@ -597,6 +657,9 @@ export function AccountPresenceHero({
                 presence,
                 snapshot: profileSnapshot,
                 ownedWorkCount,
+                profileCompleteness,
+                declaredPracticeCount,
+                registryEvidenceCount,
                 participantLabel,
                 organisationIdentityTitle: t("account.hero.organisationIdentity"),
               })}

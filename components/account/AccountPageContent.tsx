@@ -7,6 +7,7 @@ import type {
   AccountHeroPreviewArtwork,
   AccountProfileSnapshot,
 } from "@/components/account/AccountPresenceHero";
+import { AccountPracticeSection } from "@/components/account/AccountPracticeSection";
 import { AccountProfileSection } from "@/components/account/AccountProfileSection";
 import { AccountSaveBar } from "@/components/account/AccountSaveBar";
 import {
@@ -19,6 +20,8 @@ import { AccountVisibilitySection } from "@/components/account/AccountVisibility
 import { PrivacyDataSection } from "@/components/account/PrivacyDataSection";
 import { WorkspacePanel } from "@/components/ui/WorkspacePanel";
 import type { PublicPresence } from "@/lib/public-presence";
+import type { CreativePracticeSettings } from "@/lib/studio-practice-settings";
+import type { ProfileCompletenessSnapshot } from "@/lib/studio-profile-completeness";
 import { REPRESENTATION_PHRASES } from "@/lib/representation-language";
 import { navigateToStudioSection } from "@/lib/studio-nav";
 import type { StudioArtworksAccentId } from "@/lib/studio-artworks-accent";
@@ -58,6 +61,10 @@ export type AccountPageContentProps = {
   workspaceHref: string;
   workspaceLabel: string;
   profileSnapshot: AccountProfileSnapshot;
+  profileCompleteness: ProfileCompletenessSnapshot | null;
+  practiceSettings: CreativePracticeSettings;
+  onPracticeSettingsChange: (v: CreativePracticeSettings) => void;
+  registryEvidenceSlugs: string[];
   collectorPreviewArtworks: AccountHeroPreviewArtwork[] | null;
   artistRepHistorical: boolean;
   accountStatus: AccountStatus;
@@ -121,6 +128,9 @@ export function AccountPageContent(props: AccountPageContentProps) {
           workspaceLabel={props.workspaceLabel}
           presence={props.presence}
           profileSnapshot={props.profileSnapshot}
+          profileCompleteness={props.profileCompleteness}
+          declaredPracticeCount={props.practiceSettings.declaredSlugs.length}
+          registryEvidenceCount={props.registryEvidenceSlugs.length}
           collectionPreviewArtworks={props.collectorPreviewArtworks}
         />
       </div>
@@ -192,6 +202,34 @@ export function AccountPageContent(props: AccountPageContentProps) {
             onCollectorAnonymousChange={props.onCollectorAnonymousChange}
             saving={props.saving}
           />
+
+          {props.role === "artist" ? (
+            <AccountPracticeSection
+              declaredSlugs={props.practiceSettings.declaredSlugs}
+              primarySlug={props.practiceSettings.primarySlug}
+              practicesVisible={props.practiceSettings.practicesVisible}
+              registryEvidenceSlugs={props.registryEvidenceSlugs}
+              onDeclaredSlugsChange={(declaredSlugs) =>
+                props.onPracticeSettingsChange({
+                  ...props.practiceSettings,
+                  declaredSlugs,
+                })
+              }
+              onPrimarySlugChange={(primarySlug) =>
+                props.onPracticeSettingsChange({
+                  ...props.practiceSettings,
+                  primarySlug,
+                })
+              }
+              onPracticesVisibleChange={(practicesVisible) =>
+                props.onPracticeSettingsChange({
+                  ...props.practiceSettings,
+                  practicesVisible,
+                })
+              }
+              saving={props.saving}
+            />
+          ) : null}
 
           {props.role === "artist" ? (
             <AccountStudioSection

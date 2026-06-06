@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { FieldRelationshipContextSection } from "@/components/Field/FieldRelationshipContextSection";
 import {
   artistConfirmationLabel,
   certificateStatusLabel,
@@ -56,6 +57,7 @@ export function FieldRecordView({ data }: Props) {
     creativeHref,
     organisationName,
     organisationHref,
+    contextPanels,
   } = data;
 
   const title = artwork.title?.trim() || "Registry record";
@@ -198,6 +200,8 @@ export function FieldRecordView({ data }: Props) {
           </div>
         </section>
       ) : null}
+
+      <FieldRelationshipContextSection data={{ panels: contextPanels }} />
 
       <section className="mt-14 rounded-[1.25rem] border border-neutral-900/[0.06] bg-white/70 p-6 shadow-sm md:p-8">
         <h2 className="font-serif text-xl font-normal tracking-tight text-neutral-950">

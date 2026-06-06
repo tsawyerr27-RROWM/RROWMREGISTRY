@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { OrganisationPresenceDiscoverySection } from "@/components/Field/OrganisationPresenceDiscoverySection";
+import { FieldRelationshipContextSection } from "@/components/Field/FieldRelationshipContextSection";
 import { OrganisationPresenceOwnerStewardship } from "@/components/Field/OrganisationPresenceOwnerStewardship";
 import { OrganisationPresenceRegistryEvidence } from "@/components/Field/OrganisationPresenceRegistryEvidence";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
@@ -35,6 +36,7 @@ export function OrganisationPresenceView({ data }: Props) {
     footprint,
     isProfileOwner,
     stewardshipItems,
+    contextPanels,
   } = data;
 
   return (
@@ -84,6 +86,8 @@ export function OrganisationPresenceView({ data }: Props) {
       </section>
 
       <OrganisationPresenceDiscoverySection />
+
+      <FieldRelationshipContextSection data={{ panels: contextPanels }} />
 
       {showRoster ? (
         <section className="mt-14 md:mt-16" aria-labelledby="org-roster-heading">
