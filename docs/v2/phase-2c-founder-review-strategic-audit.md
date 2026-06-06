@@ -4,7 +4,7 @@
 **Audit date:** 31 May 2026  
 **Status:** ACCEPTED — revisions applied in governance package v0.2  
 **Verdict (original):** Revise before freeze  
-**Verdict (post-revision):** Ready for founder sign-off on updated v0.2 documents
+**Verdict (post-revision):** Ready for founder sign-off on v0.3 documents — **READY FOR FREEZE** pending founder signature
 
 ---
 
@@ -110,21 +110,31 @@ Creative → discover opportunity through practice-, sector-, and trust-qualifie
 
 ---
 
-## Required document edits (completed in v0.2)
+## Section I — Freeze finalisation resolutions (v0.3)
+
+| # | Topic | Resolution |
+|---|-------|------------|
+| 1 | **Originator model** | §1a founder freeze — Organisation-only publisher in 2C; Creative originator in 2D; Collector in 2E; representation does not change originator semantics |
+| 2 | **Sector eligibility** | **Culture = wildcard** — AC-SC5; single sector per Brief; multi-sector Creative profile; multi-sector Briefs deferred |
+| 3 | **Collaboration boundary** | §11c founder freeze + spec §6d — 2C Creative ↔ Organisation; 2D Creative ↔ Creative + Project ↔ Team; kinds strategic not implementation |
+
+---
+
+## Required document edits (completed in v0.3)
 
 | Document | Status |
 |----------|--------|
-| phase-2c-opportunity-layer-blueprint.md | Updated v0.2 |
-| phase-2c-founder-decisions-freeze.md | Updated v0.2 |
-| phase-2c-opportunity-layer-spec.md | Updated v0.2 |
-| phase-2c-pr1-plan.md | Updated v0.2 |
+| phase-2c-opportunity-layer-blueprint.md | Updated v0.3 |
+| phase-2c-founder-decisions-freeze.md | Updated v0.3 |
+| phase-2c-opportunity-layer-spec.md | Updated v0.3 |
+| phase-2c-pr1-plan.md | Updated v0.3 |
 | DOCUMENT_GOVERNANCE.md | Updated |
 
 ---
 
 ## Final recommendation
 
-**Proceed to freeze** on v0.2 documents after founder confirms Section H resolutions.
+**Proceed to freeze** on v0.3 documents after founder confirms Section H and Section I resolutions.
 
 ---
 

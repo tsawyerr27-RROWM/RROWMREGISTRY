@@ -50,6 +50,7 @@ Define **Phase 2C — Field: Opportunity Layer**: the third Field release. Phase
 | Org/Creative Studio inbox notifications | Pay-to-boost |
 | Deterministic graph: brief ↔ org ↔ programme | Collaboration (peer-led) runtime |
 | Participation modes: open, roster, invite, direct | |
+| **Collaboration matching boundary** (AC-CB*) — kinds in taxonomy; implementation 2D | Collaboration runtime |
 | Cultural presentation guardrails (AC-CP*) | |
 | i18n for new opportunity copy | |
 
@@ -186,17 +187,30 @@ Expandable via admin-curated lookup — not user-generated in 2C.
 
 | Object | Sector field |
 |--------|--------------|
-| Brief (public) | Single required `sector` |
+| Brief (public) | Single required `sector` — multi-sector briefs **deferred beyond 2C** |
 | Creative profile (Studio) | `sectors[]` — multi-select from closed taxonomy |
+
+### 2a.3a Sector eligibility (Culture wildcard)
+
+Eligibility is satisfied when **any** of:
+
+| Condition | Rule |
+|-----------|------|
+| **A** | Creative `sectors[]` intersects Brief `sector` |
+| **B** | Creative declares **Culture** in `sectors[]` |
+| **C** | Brief `sector` is **Culture** |
+
+Practice overlap and verification gates apply in addition (§6a).
 
 ### 2a.4 Acceptance criteria (AC-SC*)
 
 | ID | Criterion |
 |----|-----------|
-| AC-SC1 | Public brief requires sector from closed taxonomy |
+| AC-SC1 | Public brief requires **single** sector from closed taxonomy |
 | AC-SC2 | Opportunities index filterable by sector |
-| AC-SC3 | Creative can declare sectors on Studio profile |
-| AC-SC4 | Eligibility matching considers sector overlap (see §6a) |
+| AC-SC3 | Creative can declare **multiple** sectors on Studio profile |
+| AC-SC4 | Eligibility matching applies sector rule per §2a.3a |
+| AC-SC5 | Eligibility is satisfied when Creative sectors intersect Brief sector, or either party declares **Culture** |
 
 ---
 
@@ -356,14 +370,15 @@ A **Commission** is the durable contract object linking Organisation, Creative l
 
 ### 6a.1 Definition
 
-**Eligibility matching** surfaces briefs a Creative **may** apply to when deterministic rules pass: practice overlap, sector overlap, verification gates, participation mode. **Not** algorithmic ranking.
+**Eligibility matching** surfaces Opportunities a Creative **may** apply to when deterministic rules pass: practice overlap, sector eligibility (Culture wildcard — §2a.3a), verification gates, participation mode. **Not** algorithmic ranking.
 
 ### 6a.2 Rules
 
 | Rule | Detail |
 |------|--------|
 | Surface | Creative Studio — eligible opportunities section |
-| Logic | Explainable AND of practice + sector + verification + participation mode |
+| Logic | Explainable AND of practice + sector (AC-SC5) + verification + participation mode |
+| Sector | Single sector per Brief; multiple sectors on Creative profile; multi-sector Briefs deferred beyond 2C |
 | Sort | Closing date, published date — **not** match score or engagement |
 | Excluded | ML scores, “recommended for you”, similarity panels |
 
@@ -371,7 +386,7 @@ A **Commission** is the durable contract object linking Organisation, Creative l
 
 | ID | Criterion |
 |----|-----------|
-| AC-MT1 | Authenticated Creative sees eligible briefs in Studio when practice + sector + verification rules pass |
+| AC-MT1 | Authenticated Creative sees eligible Opportunities in Studio when practice + sector (AC-SC5) + verification rules pass |
 | AC-MT2 | Ineligible briefs omitted from eligible list with neutral omission — not error |
 | AC-MT3 | Eligibility logic documented and deterministic — same inputs → same eligibility |
 | AC-MT4 | No ranked “best match” score displayed |
@@ -419,6 +434,34 @@ See blueprint §Cultural presentation. Copy must not imply generic job board, HR
 | AC-CP3 | Production partner search type uses cultural production language |
 | AC-CP4 | Registry outcome framed as work on file for cultural record |
 | AC-CP5 | No application counts, view counts, or popularity badges on public surfaces |
+
+---
+
+## 6d. Collaboration matching boundary
+
+### 6d.1 Scope by phase
+
+| Phase | Matching scope |
+|-------|----------------|
+| **2C** | **Creative ↔ Organisation** |
+| **2D** | **Creative ↔ Creative**; **Project ↔ Team** |
+| **2E** | **Collector / Patron** participation |
+
+### 6d.2 Rules
+
+**Collaboration Request** and **Team Formation Request** are **recognised Opportunity kinds** in the product taxonomy. Their appearance is **strategic** — preserving the long-term matching marketplace vision. **Implementation is intentionally deferred to Phase 2D** alongside Project and Team runtime. They are **not** 2C implementation scope.
+
+2C delivers org-led matching powered by Registry-backed trust. Peer collaboration matching is the declared **2D expansion** — not silent exclusion.
+
+See founder freeze §11c.
+
+### 6d.3 Acceptance criteria (AC-CB*)
+
+| ID | Criterion |
+|----|-----------|
+| AC-CB1 | 2C ships Creative ↔ Organisation matching only — no Creative-originated publish flow |
+| AC-CB2 | Opportunity taxonomy documents Collaboration Request and Team Formation Request as planned kinds |
+| AC-CB3 | No Collaboration Request or Team Formation implementation in 2C — deferred to 2D spec |
 
 ---
 
@@ -551,7 +594,7 @@ Must **not** appear in Phase 2C:
 | Messaging, DMs, chat | Permanent |
 | Production teams, milestones, deliverables | 2D |
 | Patron briefs | 2E |
-| Peer collaboration | 2D |
+| Peer collaboration **runtime** | 2D — kinds documented per AC-CB* |
 | Platform auto-matching | Rejected ADR-19-C |
 | Recommendations, similarity, “for you” | ADR-20-A |
 | Pay-to-boost placement | ADR-17 |
@@ -566,7 +609,7 @@ Must **not** appear in Phase 2C:
 
 Phase 2C is **complete** when:
 
-1. All acceptance criteria **AC-PG, AC-BR, AC-SC, AC-AP, AC-AW, AC-CM, AC-OC, AC-MT, AC-RE, AC-CP, AC-NT, AC-VT, AC-GN, AC-SR** pass on staging sign-off.
+1. All acceptance criteria **AC-PG, AC-BR, AC-SC, AC-AP, AC-AW, AC-CM, AC-OC, AC-MT, AC-RE, AC-CP, AC-CB, AC-NT, AC-VT, AC-GN, AC-SR** pass on staging sign-off.
 2. Phase 2B checkpoint applied; 2B discovery regression verified.
 3. 2A/2B anti-features remain absent on Field.
 4. Registry preservation verified — no ledger regression from 2C.
@@ -592,3 +635,4 @@ Phase 2C is **complete** when:
 |---------|------|--------|-------|
 | 0.1 | 31 May 2026 | LOCKED DRAFT | Initial Phase 2C opportunity layer spec |
 | 0.2 | 31 May 2026 | LOCKED DRAFT | Founder review revision — Sector, eligibility matching, registry evidence, cultural presentation, opportunities routes |
+| 0.3 | 31 May 2026 | LOCKED DRAFT | Freeze finalisation — Originator model, Culture wildcard (AC-SC5), Collaboration boundary (AC-CB*) |

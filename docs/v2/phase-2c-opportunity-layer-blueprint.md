@@ -111,6 +111,26 @@ Workflow objects (audit trail):
 
 ---
 
+## Originator model
+
+Phase 2C supports a **single public publisher class**. Originator roadmap:
+
+| Phase | Originator |
+|-------|------------|
+| **2C** | **Organisation** publishes Opportunities |
+| **2D** | **Creative** — Collaboration Request; Team Formation Request |
+| **2E** | **Collector** — patron opportunity publishing |
+
+**Clarifications:**
+
+- Organisation remains the **sole public publisher** in 2C.
+- Gallery/organisation publishing on behalf of represented Creatives does **not** change originator semantics — publisher remains the Organisation.
+- Creative-originated opportunities are **strategically planned** (named in taxonomy) and **intentionally deferred** to 2D.
+
+See founder freeze §1a.
+
+---
+
 ## Matching primitives (rule-based — not algorithmic)
 
 | Primitive | Source | Used for |
@@ -120,7 +140,29 @@ Workflow objects (audit trail):
 | **Verification** | Registry + org badge | Publish and apply gates |
 | **Registry evidence** | Verified records on Creative/org footprint | Apply and review context — primary differentiator |
 
-**Eligibility matching (in scope):** Studio surfaces briefs a Creative **may** respond to when practice + sector + verification rules pass — explainable, deterministic, **not** ranked by engagement or ML.
+**Sector cardinality (2C):** Brief = **single** required sector. Creative profile = **multiple** sectors. Multi-sector briefs deferred beyond 2C.
+
+**Sector eligibility — Culture wildcard (founder decision):**
+
+Eligibility satisfied when **any** of:
+
+- **A.** Creative `sectors[]` intersects Brief `sector`
+- **B.** Creative declares **Culture**
+- **C.** Brief `sector` is **Culture**
+
+Practice overlap and verification gates apply in addition. See spec AC-SC5.
+
+**Eligibility matching (in scope):** Studio surfaces Opportunities a Creative **may** respond to when practice + sector (Culture wildcard) + verification rules pass — explainable, deterministic, **not** ranked by engagement or ML.
+
+**Matching scope by phase:**
+
+| Phase | Scope |
+|-------|--------|
+| **2C** | Creative ↔ Organisation |
+| **2D** | Creative ↔ Creative; Project ↔ Team |
+| **2E** | Collector / Patron participation |
+
+Collaboration Request and Team Formation Request are **recognised Opportunity kinds** — strategic taxonomy, **2D implementation**. See founder freeze §11c.
 
 **Excluded:** platform auto-match scores, “recommended for you” feeds, pay-to-boost placement.
 
@@ -398,3 +440,4 @@ The following **must not appear** in Phase 2C:
 |---------|------|--------|-------|
 | 0.1 | 31 May 2026 | DRAFT | Initial Phase 2C Opportunity Layer blueprint |
 | 0.2 | 31 May 2026 | DRAFT | Founder review revision — matching marketplace centre of gravity, Sector, eligibility matching, cultural presentation, Opportunity taxonomy |
+| 0.3 | 31 May 2026 | DRAFT | Freeze finalisation — Originator model, Culture wildcard, Collaboration matching boundary |

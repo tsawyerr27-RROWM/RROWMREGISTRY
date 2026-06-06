@@ -37,6 +37,38 @@ Elevates matching marketplace language without forcing a new persistence entity.
 
 ---
 
+## 1a. Originator model
+
+### Decision
+
+Phase 2C deliberately supports a **single public publisher class**. Originator semantics are explicit — not inferred from “publisher” copy elsewhere in the package.
+
+| Phase | Who may originate (publish) public Opportunities |
+|-------|--------------------------------------------------|
+| **2C** | **Organisation** (admin/staff, verified org) |
+| **2D** | **Creative** — Collaboration Request; Team Formation Request (new originator paths) |
+| **2E** | **Collector** — patron / Collector opportunity publishing |
+
+**2C rules:**
+
+| Rule | Detail |
+|------|--------|
+| Sole public publisher | **Organisation** — Creatives respond; they do not publish public opportunities in 2C |
+| Representation | Gallery/organisation publishing **on behalf of** represented Creatives does **not** change originator semantics — publisher remains the Organisation |
+| Creative-originated work | **Collaboration Request** and **Team Formation Request** are **strategically planned** Opportunity kinds — **intentionally deferred** to 2D implementation |
+| Collector / patron | Deferred to **2E** — not a silent exclusion |
+
+### Rationale
+
+ADR-05: introducing Creative-as-publisher before Project/Team runtime would mean two originators with duplicate governance. Single-originator 2C preserves engineering boundary while the Opportunity taxonomy names future originator paths.
+
+### Future review trigger
+
+- Creative-originated publish → 2D ADR-05 unlock with Collaboration spec.
+- Collector-as-publisher → 2E unlock with patron/commerce spec.
+
+---
+
 ## 2. Programme model
 
 ### Decision
@@ -76,7 +108,9 @@ Optional Programme (ADR-01-B) balances structure for institutions with simplicit
 
 **Excluded brief types:** patron commission, peer collaboration (implementation 2D — planned kind), sale/listing.
 
-**Sector:** Required on public briefs — closed taxonomy per Product Blueprint v1.1 §3.
+**Sector:** Required on public briefs — **single sector per brief**; closed taxonomy per Product Blueprint v1.1 §3. Creative profiles may declare **multiple** sectors. Multi-sector briefs deferred beyond 2C.
+
+**Sector eligibility (founder decision — Culture wildcard):** Eligibility satisfied when **(A)** Creative `sectors[]` intersects Brief `sector`, **OR (B)** Creative declares **Culture**, **OR (C)** Brief `sector` is **Culture**. See §6a.
 
 ### Rationale
 
@@ -154,7 +188,7 @@ Award is auditable decision; Commission is durable contract handoff to 2D. Publi
 |------------|-----------|
 | Opportunities listing | Filter by practice, **sector**, org, programme, kind, date, verification |
 | Sort | Date published, closing date, title — **not** application count or engagement |
-| **Eligibility matching** | Studio surfaces briefs Creative **may** apply to when practice + sector + verification rules pass — explainable, deterministic |
+| **Eligibility matching** | Studio surfaces briefs Creative **may** apply to when practice + sector (Culture wildcard rule) + verification rules pass — explainable, deterministic |
 | Org shortlist assist | Filter applications by declared practice + registry-evidence practices — **manual** |
 | Suggested briefs email | **Out of 2C** — optional 2C.1 with strict opt-in |
 | Roster fast-path | Via participation mode — not algorithmic |
@@ -171,6 +205,36 @@ Award is auditable decision; Commission is durable contract handoff to 2D. Publi
 ### Future review trigger
 
 - Email digest of new briefs → separate spec with opt-in only.
+
+---
+
+## 6a. Sector eligibility (founder decision)
+
+### Decision
+
+**Culture = wildcard sector** for rule-based eligibility matching.
+
+Eligibility is satisfied when **any** of:
+
+| Condition | Rule |
+|-----------|------|
+| **A** | Creative `sectors[]` **intersects** Brief `sector` |
+| **B** | Creative declares **Culture** in `sectors[]` |
+| **C** | Brief `sector` is **Culture** |
+
+**Cardinality:**
+
+| Object | 2C rule |
+|--------|---------|
+| Brief | **Single** required sector |
+| Creative profile | **Multiple** sectors allowed |
+| Multi-sector briefs | **Deferred** beyond 2C |
+
+Practice overlap and verification gates apply **in addition** to sector eligibility — see spec AC-SC5, AC-MT*.
+
+### Rationale
+
+Aligns with Product Blueprint v1.1 §3.4 Culture wildcard product decision. Keeps cross-sector discovery possible without multi-sector brief complexity in 2C.
 
 ---
 
@@ -333,6 +397,30 @@ Preserves engineering boundary while aligning strategic narrative toward Registr
 
 ---
 
+## 11c. Collaboration matching boundary
+
+### Decision
+
+**Matching scope expands by phase — Collaboration is a strategic pillar, not an omitted feature.**
+
+| Phase | Matching scope |
+|-------|----------------|
+| **2C** | **Creative ↔ Organisation** — eligibility-qualified opportunity discovery, apply with registry evidence, org review |
+| **2D** | **Creative ↔ Creative** — Collaboration Request, Team Formation Request; **Project ↔ Team** runtime |
+| **2E** | **Collector / Patron** participation — patron opportunity publishing |
+
+**Collaboration Request** and **Team Formation Request** are **recognised Opportunity kinds** in the product taxonomy. Their presence is **strategic** — naming the long-term matching vision. **Implementation is intentionally deferred to Phase 2D** alongside Project and Team objects. They are **not** 2C implementation scope.
+
+2C delivers org-led matching marketplace slice 1. Peer collaboration matching unlocks in 2D — not as an afterthought, but as the declared next matching expansion.
+
+Spec §6d restates this boundary for acceptance criteria.
+
+### Rationale
+
+Preserves Registry-backed matching marketplace vision while keeping 2C implementation bounded. Avoids silent exclusion of collaboration from product narrative.
+
+---
+
 ## 12. Phase 2C PR sequencing (product)
 
 ### Decision
@@ -388,7 +476,7 @@ Separates publish/read path from apply/review and award — reduces risk and ena
 
 ## Unlock procedure
 
-Changes to §1–§12 require **founder + product sign-off** and version bump. Engineering may not expand 2C scope through implementation without spec unlock.
+Changes to §1–§12 and §1a, §6a, §11a–§11c require **founder + product sign-off** and version bump. Engineering may not expand 2C scope through implementation without spec unlock.
 
 ---
 
@@ -398,3 +486,4 @@ Changes to §1–§12 require **founder + product sign-off** and version bump. E
 |---------|------|--------|-------|
 | 0.1 | 31 May 2026 | DRAFT | Initial Phase 2C founder decisions — pending founder review |
 | 0.2 | 31 May 2026 | DRAFT | Founder review revision — matching marketplace, Sector, eligibility matching, Opportunity taxonomy, cultural presentation, Loop Slice 1 |
+| 0.3 | 31 May 2026 | DRAFT | Freeze finalisation — Originator model §1a, Sector eligibility §6a (Culture wildcard), Collaboration boundary §11c |

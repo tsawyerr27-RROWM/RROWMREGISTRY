@@ -38,15 +38,15 @@ This folder holds the **planning and certification stack** for RROWM V2. **Phase
 
 | Priority | Document | Status | Role |
 |----------|----------|--------|------|
-| P2C-1 | [Phase 2C Opportunity Layer Blueprint](./phase-2c-opportunity-layer-blueprint.md) | **DRAFT v0.2** | Matching marketplace + opportunity workflow architecture; Sector; eligibility matching; cultural presentation |
-| P2C-2 | [Phase 2C Founder Decisions Freeze](./phase-2c-founder-decisions-freeze.md) | **DRAFT v0.2** | Settled founder decisions before 2C implementation; Opportunity taxonomy; Loop Slice 1 |
-| P2C-3 | [Phase 2C Opportunity Layer Spec](./phase-2c-opportunity-layer-spec.md) | **LOCKED DRAFT v0.2** | Third Field release: AC-PG/BR/SC/AP/AW/CM/OC/MT/RE/CP/NT/VT/GN/SR; no production/commerce/messaging |
-| P2C-4 | [Phase 2C PR1 — Opportunity Foundation Plan](./phase-2c-pr1-plan.md) | **DRAFT v0.2** | First 2C train: publish/read as matching surfaces; `/field/opportunities` |
-| P2C-5 | [Phase 2C Founder Review — Strategic Audit](./phase-2c-founder-review-strategic-audit.md) | **ACCEPTED** | Founder review findings + Section H resolutions applied in v0.2 |
+| P2C-1 | [Phase 2C Opportunity Layer Blueprint](./phase-2c-opportunity-layer-blueprint.md) | **DRAFT v0.3** | Matching marketplace + workflow; Originator model; Sector Culture wildcard; Collaboration boundary |
+| P2C-2 | [Phase 2C Founder Decisions Freeze](./phase-2c-founder-decisions-freeze.md) | **DRAFT v0.3** | §1a Originator; §6a Sector eligibility; §11c Collaboration boundary — pending founder FROZEN |
+| P2C-3 | [Phase 2C Opportunity Layer Spec](./phase-2c-opportunity-layer-spec.md) | **LOCKED DRAFT v0.3** | AC-SC5, AC-CB*; full AC set for 2C |
+| P2C-4 | [Phase 2C PR1 — Opportunity Foundation Plan](./phase-2c-pr1-plan.md) | **DRAFT v0.3** | Matching surfaces; single-sector brief in PR1 |
+| P2C-5 | [Phase 2C Founder Review — Strategic Audit](./phase-2c-founder-review-strategic-audit.md) | **ACCEPTED** | v0.1 findings; Section H + I resolutions |
 
-**Phase 2C authority chain:** Blueprint v1.1 (APPROVED) → Phase 2 Blueprint (DRAFT) → Phase 2C Blueprint (DRAFT v0.2) → [Phase 2C Founder Review](./phase-2c-founder-review-strategic-audit.md) (ACCEPTED) → Phase 2C Founder Decisions Freeze (DRAFT v0.2 → FROZEN) → Phase 2C Spec (LOCKED DRAFT v0.2 → LOCKED) → **Phase 2C PR1 Plan (DRAFT v0.2)** for PR1 product boundaries. Engineering execution packages are authored **after** spec LOCKED — not part of foundation branch. Inherits 2A/2B freezes where not superseded.
+**Phase 2C authority chain:** Blueprint v1.1 (APPROVED) → Phase 2 Blueprint (DRAFT) → Phase 2C Blueprint (DRAFT v0.3) → [Phase 2C Founder Review](./phase-2c-founder-review-strategic-audit.md) (ACCEPTED) → Phase 2C Founder Decisions Freeze (DRAFT v0.3 → **FROZEN**) → Phase 2C Spec (LOCKED DRAFT v0.3 → **LOCKED**) → **Phase 2C PR1 Plan (DRAFT v0.3)**. Engineering execution packages authored **after** spec LOCKED.
 
-**Product Blueprint v1.1 tension (documented):** Full Opportunity Loop v1 including **Project** and **Record filing** completes in **2D**. Phase 2C delivers **Opportunity Loop Slice 1** ending at **Commission** — explicit narrowing documented in founder freeze §11b and audit Section H #5. **Sector** is in 2C scope per v0.2 (aligns Blueprint §3).
+**Product Blueprint v1.1 alignment:** **Sector** + **Culture wildcard** in 2C (§6a). **Project** + **Record filing** in 2D (Loop Slice 1). **Collaboration kinds** in taxonomy; implementation 2D (§11c). **Originator:** Organisation-only in 2C (§1a); Creative 2D; Collector 2E.
 
 **Phase 2 authority chain:** Blueprint v1.1 (APPROVED) → Phase 2 Blueprint (DRAFT) → Phase 2A Founder Decisions Freeze (FROZEN) → Phase 2A Spec (LOCKED DRAFT) → **Phase 2A PR1 Plan (IMPLEMENTATION SOURCE OF TRUTH)** for 2A PR1 execution → Phase 2B Founder Decisions Freeze (FROZEN) → Phase 2B Spec (LOCKED DRAFT) → **Phase 2B PR1 Plan (IMPLEMENTATION SOURCE OF TRUTH)** for 2B PR1 execution. ADR document remains catalogue; 2A-blocking items are **DECIDED** per 2A founder freeze; 2B search/matching/recommendation items are **DECIDED** per 2B founder freeze. Phase 1 freeze remains binding for delivered Studio scope.
 
@@ -67,10 +67,10 @@ This folder holds the **planning and certification stack** for RROWM V2. **Phase
 13. **Phase 2B Discovery Expansion Spec (LOCKED DRAFT)** is the authoritative scope for the second Field release. Engineering must satisfy AC-SR*, AC-PR*, AC-DC*, AC-DO*, AC-DR*, AC-GN*, AC-PC*, AC-VT*, AC-IA* as written. Explicit §13 exclusions are non-negotiable in 2B.
 14. **Phase 2B Founder Decisions Freeze (FROZEN)** settles product philosophy for 2B (search, practice, record default, graph, completeness, anti-features). Inherits 2A freeze where not superseded. Implementation must not re-litigate frozen §1–§11 without unlock. Conflicts between spec and freeze → **freeze prevails** on philosophy; spec prevails on acceptance criteria detail.
 15. **Phase 2B PR1 Search and Discovery Plan (IMPLEMENTATION SOURCE OF TRUTH)** governs 2B PR1 only: record detail redirects, Field Search Contract, verified-default Record Explorer, hub search IA, partial graph link grep. **Move, then redirect** for `/registry/[id]` and `/artwork/[id]`. Does not expand into PR2 practice, PR3 graph panels, or 2C opportunities.
-16. **Phase 2C Opportunity Layer Spec (LOCKED DRAFT v0.2)** is the authoritative scope for the third Field implementation release. Engineering must satisfy AC-PG*, AC-BR*, AC-SC*, AC-AP*, AC-AW*, AC-CM*, AC-OC*, AC-MT*, AC-RE*, AC-CP*, AC-NT*, AC-VT*, AC-GN*, AC-SR* as written. Explicit §13 exclusions are non-negotiable in 2C.
-17. **Phase 2C Founder Decisions Freeze (DRAFT v0.2 → FROZEN)** settles product philosophy for 2C (matching marketplace slice 1, opportunity taxonomy, Sector, eligibility matching, cultural presentation, Loop Slice 1). Inherits 2A/2B freezes where not superseded. Implementation must not re-litigate frozen §1–§12 without unlock. Conflicts between spec and freeze → **freeze prevails** on philosophy; spec prevails on acceptance criteria detail.
-18. **Phase 2C PR1 Opportunity Foundation Plan (DRAFT v0.2)** governs **product boundaries** for 2C PR1 only: programme/brief publish and **opportunities matching surfaces** read path. **No engineering execution tasks** in foundation package. Execution packages authored after spec LOCKED.
-19. **Phase 2C Founder Review — Strategic Audit (ACCEPTED)** records v0.1 findings and Section H resolutions. v0.2 governance documents implement those resolutions. Founder sign-off on freeze promotes DRAFT → FROZEN.
+16. **Phase 2C Opportunity Layer Spec (LOCKED DRAFT v0.3)** is the authoritative scope for the third Field implementation release. Engineering must satisfy AC-PG*, AC-BR*, AC-SC*, AC-AP*, AC-AW*, AC-CM*, AC-OC*, AC-MT*, AC-RE*, AC-CP*, AC-CB*, AC-NT*, AC-VT*, AC-GN*, AC-SR* as written. Explicit §13 exclusions are non-negotiable in 2C.
+17. **Phase 2C Founder Decisions Freeze (DRAFT v0.3 → FROZEN)** settles product philosophy for 2C including §1a Originator model, §6a Sector eligibility (Culture wildcard), §11c Collaboration matching boundary. Inherits 2A/2B freezes where not superseded.
+18. **Phase 2C PR1 Opportunity Foundation Plan (DRAFT v0.3)** governs PR1 product boundaries: matching surfaces read path; single-sector brief; eligibility AC deferred to PR2 where noted.
+19. **Phase 2C Founder Review — Strategic Audit (ACCEPTED)** records v0.1 findings and Section H + I resolutions. Founder signature promotes freeze DRAFT → FROZEN and spec LOCKED DRAFT → LOCKED.
 
 ## Unlock procedure
 
@@ -97,7 +97,7 @@ To change a frozen document:
 | Phase 2B PR1 Search and Discovery Plan | Engineering lead update; must stay aligned with 2B spec and founder freeze; no scope expansion without spec unlock |
 | Phase 2C Opportunity Layer Blueprint | Founder/product approval; promote DRAFT with version note |
 | Phase 2C Opportunity Layer Spec | Product + engineering lead; LOCKED DRAFT → LOCKED after 2C founder freeze + sign-off; explicit unlock for scope delta |
-| Phase 2C Founder Decisions Freeze | Founder + product; version bump for any §1–§12 change |
+| Phase 2C Founder Decisions Freeze | Founder + product; version bump for any §1–§12, §1a, §6a, §11a–§11c change |
 | Phase 2C PR1 Opportunity Foundation Plan | Product update; must stay aligned with 2C spec and founder freeze; no scope expansion without spec unlock |
 
 ## Related operational docs
@@ -153,8 +153,8 @@ To change a frozen document:
 | `phase-2b-discovery-expansion-plan.md` | DRAFT |
 | `phase-2b-founder-decisions-freeze.md` | FROZEN |
 | `phase-2b-pr1-search-and-discovery-plan.md` | IMPLEMENTATION SOURCE OF TRUTH |
-| `phase-2c-opportunity-layer-blueprint.md` | DRAFT v0.2 |
-| `phase-2c-founder-decisions-freeze.md` | DRAFT v0.2 |
-| `phase-2c-opportunity-layer-spec.md` | LOCKED DRAFT v0.2 |
-| `phase-2c-pr1-plan.md` | DRAFT v0.2 |
+| `phase-2c-opportunity-layer-blueprint.md` | DRAFT v0.3 |
+| `phase-2c-founder-decisions-freeze.md` | DRAFT v0.3 |
+| `phase-2c-opportunity-layer-spec.md` | LOCKED DRAFT v0.3 |
+| `phase-2c-pr1-plan.md` | DRAFT v0.3 |
 | `phase-2c-founder-review-strategic-audit.md` | ACCEPTED |

@@ -74,7 +74,7 @@ PR1 exit requires subset of spec AC-*:
 |-------|--------------|
 | **AC-PG*** | AC-PG1–AC-PG5 |
 | **AC-BR*** | AC-BR1–AC-BR5, AC-BR7, AC-BR9 (direct/apply deferred — AC-BR6, AC-BR8 → PR2) |
-| **AC-SC*** | AC-SC1–AC-SC2 (Creative profile sectors → PR2 with apply) |
+| **AC-SC*** | AC-SC1–AC-SC2 (Creative profile sectors + AC-SC3–AC-SC5 → PR2 with apply/eligibility) |
 | **AC-OC*** | AC-OC1–AC-OC7 |
 | **AC-CP*** | AC-CP1–AC-CP5 (PR1 public surfaces) |
 | **AC-GN*** | AC-GN1–AC-GN3 (opportunity edges only); AC-GN4 regression |
@@ -106,7 +106,7 @@ Step 0  Governance lock (founder freeze + spec LOCKED)
 | Step | Product increment | Exit signal |
 |------|-------------------|-------------|
 | 1.1 | Studio programme CRUD (draft/publish/archive) | AC-PG1, AC-PG2 |
-| 1.2 | Studio brief CRUD + participation mode + sector + types | AC-BR1–AC-BR3, AC-BR9 |
+| 1.2 | Studio brief CRUD + participation mode + **single sector** + types | AC-BR1–AC-BR3, AC-BR9, AC-SC1 |
 | 1.3 | Publish gates (verified org; no subscription block on first publish) | AC-BR7 |
 | 1.4 | Field programme page | AC-PG3–AC-PG5, AC-CP2 |
 | 1.5 | Field opportunity detail — matching surface | AC-BR4, AC-OC7, AC-CP* |
@@ -203,3 +203,4 @@ Do not tag full 2C checkpoint at PR1.
 |---------|------|--------|-------|
 | 0.1 | 31 May 2026 | DRAFT | Initial Phase 2C PR1 product plan |
 | 0.2 | 31 May 2026 | DRAFT | Founder review revision — matching surfaces, opportunities routes, sector, cultural presentation |
+| 0.3 | 31 May 2026 | DRAFT | Aligned with freeze finalisation — single-sector brief, Culture wildcard deferred to PR2 eligibility |
