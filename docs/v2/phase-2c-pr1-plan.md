@@ -1,8 +1,10 @@
 # Phase 2C PR1 — Opportunity Foundation Plan
 
-**Document status:** DRAFT  
+> **SUPERSEDED for implementation** by [phase-2c-pr1-implementation-plan.md](./phase-2c-pr1-implementation-plan.md) (P2C-6, IMPLEMENTATION SOURCE OF TRUTH). Retained for historical product-scoping context only.
+
+**Document status:** SUPERSEDED  
 **Effective:** 31 May 2026  
-**Authority:** [Phase 2C Opportunity Layer Spec](./phase-2c-opportunity-layer-spec.md) (LOCKED DRAFT), [Phase 2C Founder Decisions Freeze](./phase-2c-founder-decisions-freeze.md) (DRAFT), [Phase 2C Opportunity Layer Blueprint](./phase-2c-opportunity-layer-blueprint.md) (DRAFT), [Phase 2B Discovery Expansion Plan](./phase-2b-discovery-expansion-plan.md) (DRAFT)  
+**Authority:** [Phase 2C Opportunity Layer Spec](./phase-2c-opportunity-layer-spec.md) (LOCKED), [Phase 2C Founder Decisions Freeze](./phase-2c-founder-decisions-freeze.md) (FROZEN), [Phase 2C Opportunity Layer Blueprint](./phase-2c-opportunity-layer-blueprint.md) (DRAFT v0.3)  
 **Scope:** **Product planning only** — defines PR1 train boundaries, dependencies, and acceptance focus. **No database schema, no API definitions, no file lists, no implementation tasks.**
 
 **Effect:** This document governs **what PR1 must achieve in product terms** before an engineering execution package is authored. Engineering plans are **out of scope** until founder freeze is FROZEN and spec is LOCKED.
@@ -203,4 +205,4 @@ Do not tag full 2C checkpoint at PR1.
 |---------|------|--------|-------|
 | 0.1 | 31 May 2026 | DRAFT | Initial Phase 2C PR1 product plan |
 | 0.2 | 31 May 2026 | DRAFT | Founder review revision — matching surfaces, opportunities routes, sector, cultural presentation |
-| 0.3 | 31 May 2026 | DRAFT | Aligned with freeze finalisation — single-sector brief, Culture wildcard deferred to PR2 eligibility |
+| 0.3 | 31 May 2026 | SUPERSEDED | Aligned with freeze finalisation — superseded by P2C-6 implementation plan |

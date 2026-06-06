@@ -1,8 +1,8 @@
 # Phase 2C Implementation Specification — Field Opportunity Layer
 
-**Document status:** LOCKED DRAFT  
+**Document status:** LOCKED  
 **Effective:** 31 May 2026  
-**Authority:** [Phase 2C Opportunity Layer Blueprint](./phase-2c-opportunity-layer-blueprint.md) (DRAFT), [Phase 2C Founder Decisions Freeze](./phase-2c-founder-decisions-freeze.md) (DRAFT), [Phase 2B Discovery Expansion Spec](./phase-2b-discovery-expansion-spec.md) (LOCKED DRAFT), [Phase 2 Architecture Decisions](./phase-2-architecture-decisions.md) (DRAFT), [Product Blueprint v1.1](./product-blueprint-v1.1.md) (APPROVED)  
+**Authority:** [Phase 2C Opportunity Layer Blueprint](./phase-2c-opportunity-layer-blueprint.md) (DRAFT v0.3), [Phase 2C Founder Decisions Freeze](./phase-2c-founder-decisions-freeze.md) (FROZEN), [Phase 2B Discovery Expansion Spec](./phase-2b-discovery-expansion-spec.md) (LOCKED DRAFT), [Phase 2 Architecture Decisions](./phase-2-architecture-decisions.md) (DRAFT), [Product Blueprint v1.1](./product-blueprint-v1.1.md) (APPROVED)  
 **Predecessor release:** Phase 2B Field Discovery — `checkpoint-phase2b-field-discovery`  
 **Document type:** Product specification only — **no database schema, no UI design, no implementation tasks, no code**
 
@@ -24,8 +24,8 @@ Define **Phase 2C — Field: Opportunity Layer**: the third Field release. Phase
 
 | Rule | Detail |
 |------|--------|
-| **LOCKED DRAFT** | Scope and acceptance criteria fixed for founder review. No engineering expansion without unlock. |
-| **Promotion** | Becomes **LOCKED** after founder signs 2C freeze + acceptance on staging. |
+| **LOCKED** | Scope and acceptance criteria fixed. Engineering implements against AC-* as written. |
+| **Promotion** | Achieved at founder sign-off on 2C freeze FROZEN — 31 May 2026. |
 | **Unlock** | Explicit product approval; documented delta; version bump (2C.1, etc.). |
 | **Registry rule** | Zero ledger semantic change in 2C; no Record created on award. |
 | **Inheritance** | 2A/2B AC-* remain binding where not superseded. |
@@ -41,7 +41,9 @@ Define **Phase 2C — Field: Opportunity Layer**: the third Field release. Phase
 | Brief object — draft, publish, withdraw | Patron briefs (Collector publisher) |
 | Brief types: open call, residency/award, direct, production partner search | Peer collaboration **implementation** (planned kind — 2D) |
 | **Sector taxonomy** on brief + Creative profile | Application fees |
-| **Rule-based eligibility matching** in Studio | Algorithmic ranking / recommendations |
+| **Practice eligibility** (AC-PR*) | Algorithmic ranking / recommendations |
+| **Rule-based eligibility matching** in Studio | |
+| **Opportunities text search** (`q` + facets, AC-OC8) | |
 | **Registry-evidence portfolio** at apply/review | Automatic Registry filing on award |
 | Application — Studio submit, org review | Commission ratings / scores |
 | Award decision | Payments, escrow, checkout |
@@ -153,7 +155,7 @@ draft → published → [accepting responses] → awarded | withdrawn | closed
 | Open | Opportunities index | Any authenticated Creative meeting eligibility |
 | Roster-only | Hidden from open index | Roster Creatives only |
 | Invite-only | Hidden | Invited Creatives |
-| Direct | Hidden | Named Creative — org initiates |
+| Direct | Hidden | Named Creative — org initiates; **PR1:** publish + party Studio read only; award deferred PR2 (AC-BR6) |
 
 ### 2.6 Acceptance criteria (AC-BR*)
 
@@ -214,11 +216,35 @@ Practice overlap and verification gates apply in addition (§6a).
 
 ---
 
+## 2b. Practice eligibility
+
+### 2b.1 Definition
+
+**Practice gate** determines whether a Creative meets a Brief’s practice requirements for apply eligibility — any-match, not all-match (Product Blueprint v1.1 §3.4).
+
+### 2b.2 Rules
+
+| Condition | Rule |
+|-----------|------|
+| `practices_required[]` empty | Practice gate **passes** |
+| `practices_required[]` non-empty | Gate passes when **∃** slug in `practices_required[]` in Creative **declared practices ∪ registry-evidence practices** |
+
+Combined with sector (AC-SC5), verification, participation mode, and application window via **AND**. Eligibility is **binary** — eligible or not eligible; no partial-match tier.
+
+### 2b.3 Acceptance criteria (AC-PR*)
+
+| ID | Criterion |
+|----|-----------|
+| AC-PR1 | Practice eligibility uses any-match rule: non-empty `practices_required[]` satisfied by overlap with declared ∪ registry-evidence practices |
+| AC-PR2 | Empty `practices_required[]` passes practice gate without blocking eligibility |
+
+---
+
 ## 3. Application model
 
 ### 3.1 Definition
 
-An **Application** is a Creative’s structured response to a brief — statement, optional attachments (policy TBD in engineering), declared practice fit, and **registry-evidence portfolio context** (verified records from Creative footprint).
+An **Application** is a Creative’s structured response to a brief — statement, declared practice fit, and **registry-evidence portfolio context** (verified records from Creative footprint). **Attachments excluded in PR1** — deferred to 2C.1 unlock.
 
 ### 3.2 Rules
 
@@ -228,7 +254,7 @@ An **Application** is a Creative’s structured response to a brief — statemen
 | Auth | Authenticated Creative owner only |
 | One active application | Per Creative per brief |
 | Visibility | Applicant + publishing org staff — **not** public Field |
-| Edit after submit | Locked or revision policy — org notified on resubmit if allowed |
+| Edit after submit | **PR1:** locked after submit; Creative may **withdraw**; resubmit/revision deferred 2C.1 |
 | Fee | None |
 
 ### 3.3 Application lifecycle
@@ -334,6 +360,7 @@ A **Commission** is the durable contract object linking Organisation, Creative l
 
 | Filter | Source |
 |--------|--------|
+| Text `q` | Opportunity title, org name, programme name, public description/scope — **namespace-local only** |
 | Practice | Brief required practices — closed taxonomy |
 | **Sector** | Brief sector — closed taxonomy |
 | Organisation | Publisher slug |
@@ -349,7 +376,7 @@ A **Commission** is the durable contract object linking Organisation, Creative l
 | Rule | Detail |
 |------|--------|
 | Hub | Add **Opportunities** entry — Records remain default tab |
-| Search | Opportunities use dedicated filter vocabulary — not blended global ranked search |
+| Search | Opportunities index supports optional text `q` **AND** facet filters — not blended global ranked search; no relevance scoring |
 | 2B explorers | Unchanged default behaviour |
 
 ### 6.4 Acceptance criteria (AC-OC*)
@@ -363,6 +390,7 @@ A **Commission** is the durable contract object linking Organisation, Creative l
 | AC-OC5 | No recommendation or “similar opportunities” rows |
 | AC-OC6 | Opportunities sort does not use application counts |
 | AC-OC7 | Opportunity detail presents as **matching surface** — org footprint, sector, practices, registry outcome before scope |
+| AC-OC8 | Text `q` on opportunities index composes with facet filters via AND; no hidden ranking or recommendation behaviour |
 
 ---
 
@@ -370,14 +398,15 @@ A **Commission** is the durable contract object linking Organisation, Creative l
 
 ### 6a.1 Definition
 
-**Eligibility matching** surfaces Opportunities a Creative **may** apply to when deterministic rules pass: practice overlap, sector eligibility (Culture wildcard — §2a.3a), verification gates, participation mode. **Not** algorithmic ranking.
+**Eligibility matching** surfaces Opportunities a Creative **may** apply to when deterministic rules pass: practice gate (AC-PR*), sector (AC-SC5), verification gates, participation mode. **Not** algorithmic ranking. Eligibility is **binary** — eligible or not eligible.
 
 ### 6a.2 Rules
 
 | Rule | Detail |
 |------|--------|
 | Surface | Creative Studio — eligible opportunities section |
-| Logic | Explainable AND of practice + sector (AC-SC5) + verification + participation mode |
+| Logic | Explainable AND of practice (AC-PR*) + sector (AC-SC5) + verification + participation mode |
+| Eligibility display | **Binary** — eligible or not eligible; no partial-match tier |
 | Sector | Single sector per Brief; multiple sectors on Creative profile; multi-sector Briefs deferred beyond 2C |
 | Sort | Closing date, published date — **not** match score or engagement |
 | Excluded | ML scores, “recommended for you”, similarity panels |
@@ -386,7 +415,7 @@ A **Commission** is the durable contract object linking Organisation, Creative l
 
 | ID | Criterion |
 |----|-----------|
-| AC-MT1 | Authenticated Creative sees eligible Opportunities in Studio when practice + sector (AC-SC5) + verification rules pass |
+| AC-MT1 | Authenticated Creative sees eligible Opportunities in Studio when practice (AC-PR*) + sector (AC-SC5) + verification rules pass |
 | AC-MT2 | Ineligible briefs omitted from eligible list with neutral omission — not error |
 | AC-MT3 | Eligibility logic documented and deterministic — same inputs → same eligibility |
 | AC-MT4 | No ranked “best match” score displayed |
@@ -609,11 +638,11 @@ Must **not** appear in Phase 2C:
 
 Phase 2C is **complete** when:
 
-1. All acceptance criteria **AC-PG, AC-BR, AC-SC, AC-AP, AC-AW, AC-CM, AC-OC, AC-MT, AC-RE, AC-CP, AC-CB, AC-NT, AC-VT, AC-GN, AC-SR** pass on staging sign-off.
+1. All acceptance criteria **AC-PG, AC-BR, AC-SC, AC-PR, AC-AP, AC-AW, AC-CM, AC-OC, AC-MT, AC-RE, AC-CP, AC-CB, AC-NT, AC-VT, AC-GN, AC-SR** pass on staging sign-off.
 2. Phase 2B checkpoint applied; 2B discovery regression verified.
 3. 2A/2B anti-features remain absent on Field.
 4. Registry preservation verified — no ledger regression from 2C.
-5. Founder/product sign-off on founder freeze DRAFT → **FROZEN** and spec LOCKED DRAFT → **LOCKED**.
+5. Founder freeze **FROZEN** and spec **LOCKED** — achieved 31 May 2026.
 6. Tag recommendation: **`checkpoint-phase2c-field-opportunity`** on `main` at acceptance merge commit.
 
 ---
@@ -623,7 +652,7 @@ Phase 2C is **complete** when:
 | Document | Role |
 |----------|------|
 | [phase-2c-founder-decisions-freeze.md](./phase-2c-founder-decisions-freeze.md) | Founder philosophy |
-| [phase-2c-pr1-plan.md](./phase-2c-pr1-plan.md) | First implementation train (product) |
+| [phase-2c-pr1-implementation-plan.md](./phase-2c-pr1-implementation-plan.md) | PR1 implementation (IMPLEMENTATION SOURCE OF TRUTH) |
 | [phase-2b-pr4-acceptance-signoff.md](./phase-2b-pr4-acceptance-signoff.md) | Predecessor gate |
 | [phase-2-architecture-decisions.md](./phase-2-architecture-decisions.md) | ADR source |
 
@@ -636,3 +665,4 @@ Phase 2C is **complete** when:
 | 0.1 | 31 May 2026 | LOCKED DRAFT | Initial Phase 2C opportunity layer spec |
 | 0.2 | 31 May 2026 | LOCKED DRAFT | Founder review revision — Sector, eligibility matching, registry evidence, cultural presentation, opportunities routes |
 | 0.3 | 31 May 2026 | LOCKED DRAFT | Freeze finalisation — Originator model, Culture wildcard (AC-SC5), Collaboration boundary (AC-CB*) |
+| 0.4 | 31 May 2026 | **LOCKED** | Founder resolution pass — AC-PR*, AC-OC8, practice eligibility §2b, PR1 application policy, binary eligibility |

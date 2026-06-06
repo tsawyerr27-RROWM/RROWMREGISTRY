@@ -150,9 +150,18 @@ Eligibility satisfied when **any** of:
 - **B.** Creative declares **Culture**
 - **C.** Brief `sector` is **Culture**
 
-Practice overlap and verification gates apply in addition. See spec AC-SC5.
+Practice overlap and verification gates apply in addition. See spec AC-SC5, AC-PR*.
 
-**Eligibility matching (in scope):** Studio surfaces Opportunities a Creative **may** respond to when practice + sector (Culture wildcard) + verification rules pass — explainable, deterministic, **not** ranked by engagement or ML.
+**Practice eligibility — any-match (founder decision):**
+
+| Condition | Rule |
+|-----------|------|
+| Empty `practices_required[]` | Practice gate passes |
+| Non-empty | **∃** slug in `practices_required[]` in Creative declared ∪ registry-evidence practices |
+
+**Opportunities text search:** Optional `q` on `/field/opportunities` — title, org, programme, description; AND-composes with facets; no relevance ranking (AC-OC8).
+
+**Eligibility matching (in scope):** Studio surfaces Opportunities a Creative **may** respond to when practice (AC-PR*) + sector (AC-SC5) + verification rules pass — explainable, deterministic, **binary** eligible/not eligible, **not** ranked by engagement or ML.
 
 **Matching scope by phase:**
 
@@ -441,3 +450,4 @@ The following **must not appear** in Phase 2C:
 | 0.1 | 31 May 2026 | DRAFT | Initial Phase 2C Opportunity Layer blueprint |
 | 0.2 | 31 May 2026 | DRAFT | Founder review revision — matching marketplace centre of gravity, Sector, eligibility matching, cultural presentation, Opportunity taxonomy |
 | 0.3 | 31 May 2026 | DRAFT | Freeze finalisation — Originator model, Culture wildcard, Collaboration matching boundary |
+| 0.4 | 31 May 2026 | DRAFT | Founder resolution pass — practice eligibility, opportunities text search |

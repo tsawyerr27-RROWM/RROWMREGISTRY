@@ -1,12 +1,12 @@
 # Phase 2C Founder Decisions Freeze
 
-**Document status:** DRAFT (pending founder sign-off)  
+**Document status:** FROZEN  
 **Effective:** 31 May 2026  
-**Authority:** [Phase 2C Opportunity Layer Blueprint](./phase-2c-opportunity-layer-blueprint.md) (DRAFT), [Phase 2C Opportunity Layer Spec](./phase-2c-opportunity-layer-spec.md) (LOCKED DRAFT), [Phase 2B Founder Decisions Freeze](./phase-2b-founder-decisions-freeze.md) (FROZEN), [Phase 2A Founder Decisions Freeze](./phase-2a-founder-decisions-freeze.md) (FROZEN), [Phase 2 Architecture Decisions](./phase-2-architecture-decisions.md) (DRAFT), [Phase 2 Blueprint — The Field](./phase-2-the-field-blueprint.md) (DRAFT)  
+**Authority:** [Phase 2C Opportunity Layer Blueprint](./phase-2c-opportunity-layer-blueprint.md) (DRAFT v0.3), [Phase 2C Opportunity Layer Spec](./phase-2c-opportunity-layer-spec.md) (LOCKED), [Phase 2B Founder Decisions Freeze](./phase-2b-founder-decisions-freeze.md) (FROZEN), [Phase 2A Founder Decisions Freeze](./phase-2a-founder-decisions-freeze.md) (FROZEN), [Phase 2 Architecture Decisions](./phase-2-architecture-decisions.md) (DRAFT), [Phase 2 Blueprint — The Field](./phase-2-the-field-blueprint.md) (DRAFT)  
 **Purpose:** Capture **founder-level decisions settled before Phase 2C implementation begins**.  
 **Scope:** Product philosophy only — **no implementation details, no database schema, no UI design.**
 
-**Effect:** When promoted to **FROZEN**, this document settles ADR outcomes for Phase 2C (ADR-01–08, 09–12, 15-B, 16, 19, 23 policy hooks). Phase 2A and 2B frozen decisions **remain binding** unless explicitly superseded here.
+**Effect:** This document settles ADR outcomes for Phase 2C (ADR-01–08, 09–12, 15-B, 16, 19, 23 policy hooks). Phase 2A and 2B frozen decisions **remain binding** unless explicitly superseded here.
 
 ---
 
@@ -143,6 +143,8 @@ Publishing is an Organisation capability tied to verification — not SaaS gate 
 | Multiple applications per Creative per brief | **One** active application |
 | Org auto-reject by algorithm | **Forbidden** — manual review only |
 
+**PR1 application policy (founder resolution):** No attachments in PR1. Application **locked after submit**; Creative may **withdraw**. Resubmit/revision deferred to 2C.1 unlock.
+
 ### Rationale
 
 Flexible commissioning practice without platform matching. Application-first default preserves fairness story; direct and invite paths support real org workflows.
@@ -235,6 +237,27 @@ Practice overlap and verification gates apply **in addition** to sector eligibil
 ### Rationale
 
 Aligns with Product Blueprint v1.1 §3.4 Culture wildcard product decision. Keeps cross-sector discovery possible without multi-sector brief complexity in 2C.
+
+---
+
+## 6b. Practice eligibility (founder decision)
+
+### Decision
+
+**Any-match practice gate** for rule-based eligibility matching (Product Blueprint v1.1 §3.4).
+
+| Condition | Rule |
+|-----------|------|
+| Empty `practices_required[]` on Brief | Practice gate **passes** (no practice requirement declared) |
+| Non-empty `practices_required[]` | Gate passes when **∃** slug in `practices_required[]` that appears in Creative **declared practices ∪ registry-evidence practices** |
+
+Sector (§6a), verification, participation mode, and application window apply **in addition** — all **AND**. Eligibility is **binary**: eligible or not eligible — no partial-match tier (AC-MT2).
+
+See spec §2b, AC-PR1, AC-PR2.
+
+### Rationale
+
+Codifies deterministic practice matching aligned with Registry-backed trust (registry-evidence practices may satisfy gate) and Blueprint any-match semantics.
 
 ---
 
@@ -425,26 +448,25 @@ Preserves Registry-backed matching marketplace vision while keeping 2C implement
 
 ### Decision
 
-Phase 2C ships as **sequenced product trains** after governance lock:
+Phase 2C ships as **sequenced product trains** after governance lock. **PR1 implementation authority:** [phase-2c-pr1-implementation-plan.md](./phase-2c-pr1-implementation-plan.md) (IMPLEMENTATION SOURCE OF TRUTH) — supersedes [phase-2c-pr1-plan.md](./phase-2c-pr1-plan.md) (P2C-4) where train boundaries conflict.
 
 | Train | Product focus |
 |-------|---------------|
-| **PR1** | Programmes + briefs publish/read + **opportunities discovery as matching surfaces** |
-| **PR2** | Applications (Studio submit + org review queue) |
-| **PR3** | Awards + commissions + inbox notifications |
-| **PR4** | Acceptance, audit, i18n, checkpoint |
+| **PR1** | Publish → discover → eligibility → apply → org review (Opportunity Loop slice through applications) |
+| **PR2** | Awards + commissions + inbox notifications |
+| **PR3** | Acceptance, audit, i18n, full 2C checkpoint |
 
-Detailed product scope per train: [phase-2c-pr1-plan.md](./phase-2c-pr1-plan.md) and successor plans after PR1 lock.
+Detailed PR1 scope: [phase-2c-pr1-implementation-plan.md](./phase-2c-pr1-implementation-plan.md). Successor PR2/PR3 plans authored after PR1 lock.
 
 **Engineering execution packages** are **separate documents** created after spec LOCKED — not part of this freeze.
 
 ### Rationale
 
-Separates publish/read path from apply/review and award — reduces risk and enables staged QA.
+PR1 delivers the first shippable matching-marketplace slice (Creative ↔ Organisation through review). Awards and notifications follow once apply/review is stable.
 
 ### Future review trigger
 
-- Collapsing trains requires spec unlock + founder approval.
+- Collapsing or splitting trains requires spec unlock + founder approval.
 
 ---
 
@@ -476,7 +498,7 @@ Separates publish/read path from apply/review and award — reduces risk and ena
 
 ## Unlock procedure
 
-Changes to §1–§12 and §1a, §6a, §11a–§11c require **founder + product sign-off** and version bump. Engineering may not expand 2C scope through implementation without spec unlock.
+Changes to §1–§12 and §1a, §6a, §6b, §11a–§11c require **founder + product sign-off** and version bump. Engineering may not expand 2C scope through implementation without spec unlock.
 
 ---
 
@@ -487,3 +509,4 @@ Changes to §1–§12 and §1a, §6a, §11a–§11c require **founder + product 
 | 0.1 | 31 May 2026 | DRAFT | Initial Phase 2C founder decisions — pending founder review |
 | 0.2 | 31 May 2026 | DRAFT | Founder review revision — matching marketplace, Sector, eligibility matching, Opportunity taxonomy, cultural presentation, Loop Slice 1 |
 | 0.3 | 31 May 2026 | DRAFT | Freeze finalisation — Originator model §1a, Sector eligibility §6a (Culture wildcard), Collaboration boundary §11c |
+| 0.4 | 31 May 2026 | **FROZEN** | Founder sign-off; PR1 train resequence §12; practice eligibility §6b; PR1 application policy §4 |
