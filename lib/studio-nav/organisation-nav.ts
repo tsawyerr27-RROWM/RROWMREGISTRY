@@ -13,6 +13,7 @@ export const ORGANISATION_NAV_SECTIONS = [
   "catalogue",
   "verification",
   "invitations",
+  "opportunities",
 ] as const;
 
 export type OrganisationSectionId = (typeof ORGANISATION_NAV_SECTIONS)[number];

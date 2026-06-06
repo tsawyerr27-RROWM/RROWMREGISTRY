@@ -7,12 +7,13 @@ import { useLocalePreferences } from "@/components/providers/LocalePreferencesPr
 import { fieldExplorerTabHref } from "@/lib/field-search-contract";
 import {
   FIELD_EXPLORER,
+  fieldOpportunitiesHref,
   fieldVerifyHref,
   type FieldExplorerTabId,
 } from "@/lib/field-nav";
 
 type Props = {
-  activeTab: FieldExplorerTabId | "hub";
+  activeTab: FieldExplorerTabId | "hub" | "opportunities";
 };
 
 const EXPLORER_TABS: FieldExplorerTabId[] = ["records", "creatives", "organisations"];
@@ -56,6 +57,14 @@ export function FieldExplorerDiscoveryStrip({ activeTab }: Props) {
             </Link>
           );
         })}
+        {activeTab !== "opportunities" ? (
+          <Link
+            href={fieldOpportunitiesHref()}
+            className="inline-flex rounded-2xl border border-neutral-200 bg-white px-5 py-2.5 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
+          >
+            {t("field.explorer.tab.opportunities")}
+          </Link>
+        ) : null}
         <Link
           href={fieldVerifyHref()}
           className="inline-flex rounded-2xl border border-neutral-200 bg-white px-5 py-2.5 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"

@@ -70,6 +70,7 @@ import {
 } from "@/lib/representation-amendments";
 import { getSiteUrl } from "@/lib/site-url";
 import ModalShell from "@/components/ui/ModalShell";
+import { OrganisationOpportunitiesSection } from "@/components/Studio/OrganisationOpportunitiesSection";
 import { RepresentationAmendmentsSection } from "@/components/Studio/RepresentationAmendmentsSection";
 import { EndRepresentationModal } from "@/components/Studio/EndRepresentationModal";
 import {
@@ -279,6 +280,7 @@ export default function GalleryDashboardPage() {
     | "invitations"
     | "catalogue"
     | "verification"
+    | "opportunities"
   >("studio");
   const [workspaceGuideOpen, setWorkspaceGuideOpen] = useState(false);
   const [isTransitioningSection, setIsTransitioningSection] = useState(false);
@@ -2729,6 +2731,14 @@ export default function GalleryDashboardPage() {
                 </>
               )}
             </section>
+        ) : null}
+
+        {activeSection === "opportunities" ? (
+          <OrganisationOpportunitiesSection
+            galleryId={gallery.id}
+            galleryVerified={gallery.verified}
+            gallerySlug={gallery.slug}
+          />
         ) : null}
       </StudioShell>
 

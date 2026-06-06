@@ -7,7 +7,7 @@ import { FieldExplorerDiscoveryStrip } from "@/components/Field/FieldExplorerDis
 import { FieldExplorerHubSearch } from "@/components/Field/FieldExplorerHubSearch";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fieldExplorerTabHref } from "@/lib/field-search-contract";
-import { fieldVerifyHref } from "@/lib/field-nav";
+import { fieldOpportunitiesHref, fieldVerifyHref } from "@/lib/field-nav";
 import { narrativeLayout } from "@/styles/narrative-layout";
 
 const gutter = narrativeLayout.gutter;
@@ -43,7 +43,7 @@ export function FieldExplorerHubContent() {
         </div>
       </header>
 
-      <div className="mt-14 grid gap-6 md:grid-cols-3">
+      <div className="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         <Link
           href={recordsHref}
           className="group rounded-[1.25rem] border border-emerald-900/10 bg-emerald-50/30 p-8 shadow-sm transition hover:border-emerald-900/15 hover:bg-emerald-50/50 hover:shadow-md"
@@ -86,6 +86,21 @@ export function FieldExplorerHubContent() {
           </p>
           <p className="mt-3 text-sm leading-relaxed text-neutral-600">
             {t("field.explorer.organisations.orientation")}
+          </p>
+        </Link>
+
+        <Link
+          href={fieldOpportunitiesHref()}
+          className="group rounded-[1.25rem] border border-neutral-900/[0.06] bg-white/70 p-8 shadow-sm transition hover:border-neutral-900/10 hover:bg-white hover:shadow-md"
+        >
+          <p className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
+            {t("field.explorer.tab.opportunities")}
+          </p>
+          <p className="mt-3 font-serif text-2xl text-neutral-950 transition group-hover:text-neutral-700">
+            {t("field.opportunities.headline")}
+          </p>
+          <p className="mt-3 text-sm leading-relaxed text-neutral-600">
+            {t("field.opportunities.orientation")}
           </p>
         </Link>
       </div>

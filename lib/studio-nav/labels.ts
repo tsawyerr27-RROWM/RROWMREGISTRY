@@ -23,6 +23,7 @@ export const ORGANISATION_SECTION_LABEL_KEYS: Record<
   catalogue: "gallery.nav.catalogue",
   verification: "gallery.nav.verification",
   invitations: "gallery.nav.invitations",
+  opportunities: "gallery.nav.opportunities",
 };
 
 export const COLLECTOR_SECTION_LABEL_KEYS: Record<CollectorSectionId, MessageKey> =

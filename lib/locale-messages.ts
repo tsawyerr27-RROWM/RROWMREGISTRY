@@ -28,6 +28,7 @@ export type MessageKey =
   | "field.explorer.tab.creatives"
   | "field.explorer.tab.organisations"
   | "field.explorer.tab.records"
+  | "field.explorer.tab.opportunities"
   | "field.explorer.hub.title"
   | "field.explorer.hub.lede"
   | "field.explorer.hub.searchLabel"
@@ -43,6 +44,39 @@ export type MessageKey =
   | "field.explorer.records.orientation"
   | "field.explorer.creatives.orientation"
   | "field.explorer.organisations.orientation"
+  | "field.opportunities.headline"
+  | "field.opportunities.lede"
+  | "field.opportunities.orientation"
+  | "field.opportunities.countSingular"
+  | "field.opportunities.countPlural"
+  | "field.opportunities.searching"
+  | "field.opportunities.filtered"
+  | "field.opportunities.browseAll"
+  | "field.opportunities.filter.search"
+  | "field.opportunities.filter.searchPlaceholder"
+  | "field.opportunities.filter.sector"
+  | "field.opportunities.filter.allSectors"
+  | "field.opportunities.filter.practice"
+  | "field.opportunities.filter.allPractices"
+  | "field.opportunities.filter.type"
+  | "field.opportunities.filter.allTypes"
+  | "field.opportunities.filter.window"
+  | "field.opportunities.filter.allWindows"
+  | "field.opportunities.filter.open"
+  | "field.opportunities.filter.closed"
+  | "field.opportunities.filter.sort"
+  | "field.opportunities.filter.apply"
+  | "field.opportunities.sort.closing"
+  | "field.opportunities.sort.published"
+  | "field.opportunities.sort.title"
+  | "field.opportunities.empty.none"
+  | "field.opportunities.empty.filtered"
+  | "field.opportunities.empty.clearFilters"
+  | "field.opportunities.empty.browseAll"
+  | "field.opportunities.windowOpen"
+  | "field.opportunities.windowClosed"
+  | "field.opportunities.verifiedOrganisation"
+  | "field.opportunities.viewOpportunity"
   | "field.explorer.organisations.headline"
   | "field.explorer.organisations.lede"
   | "field.explorer.organisations.searching"
@@ -445,6 +479,28 @@ export type MessageKey =
   | "studio.nav.artworks"
   | "studio.nav.certificates"
   | "studio.nav.ownership"
+  | "studio.opportunities.heading"
+  | "studio.opportunities.lede"
+  | "studio.opportunities.verificationRequired"
+  | "studio.opportunities.create"
+  | "studio.opportunities.loading"
+  | "studio.opportunities.empty"
+  | "studio.opportunities.viewOnField"
+  | "studio.opportunities.edit"
+  | "studio.opportunities.unpublish"
+  | "studio.opportunities.publish"
+  | "studio.opportunities.editTitle"
+  | "studio.opportunities.createTitle"
+  | "studio.opportunities.field.title"
+  | "studio.opportunities.field.description"
+  | "studio.opportunities.field.sector"
+  | "studio.opportunities.field.selectSector"
+  | "studio.opportunities.field.type"
+  | "studio.opportunities.field.participationMode"
+  | "studio.opportunities.field.participationHint"
+  | "studio.opportunities.field.practices"
+  | "studio.opportunities.field.opensAt"
+  | "studio.opportunities.field.closesAt"
   | "studio.shell.activity"
   | "studio.shell.recentNotes"
   | "studio.shell.catalogueActivity"
@@ -574,6 +630,7 @@ export type MessageKey =
   | "gallery.nav.catalogue"
   | "gallery.nav.verification"
   | "gallery.nav.invitations"
+  | "gallery.nav.opportunities"
   | "gallery.shell.noCatalogueActivity"
   | "gallery.shell.loading"
   | "gallery.shell.dismiss"
@@ -1542,6 +1599,7 @@ const EN: Record<MessageKey, string> = {
   "field.explorer.tab.creatives": "Creatives",
   "field.explorer.tab.organisations": "Organisations",
   "field.explorer.tab.records": "Records",
+  "field.explorer.tab.opportunities": "Opportunities",
   "field.explorer.hub.title": "Explorer",
   "field.explorer.hub.lede":
     "Browse Registry records, public Creatives, and Organisations. Discovery follows your filters and alphabetical order — not recommendations or paid placement.",
@@ -1560,6 +1618,41 @@ const EN: Record<MessageKey, string> = {
   "field.explorer.records.orientation": "Browse Registry records on file.",
   "field.explorer.creatives.orientation": "Discover Creatives and how they work.",
   "field.explorer.organisations.orientation": "Browse public Organisations.",
+  "field.opportunities.headline": "Opportunities",
+  "field.opportunities.lede":
+    "Published briefs from verified Organisations — browse by sector, practice, and application window.",
+  "field.opportunities.orientation": "Browse published opportunities on Field.",
+  "field.opportunities.countSingular": "Opportunity",
+  "field.opportunities.countPlural": "Opportunities",
+  "field.opportunities.searching": "Searching",
+  "field.opportunities.filtered": "Filtered",
+  "field.opportunities.browseAll": "Browse all opportunities",
+  "field.opportunities.filter.search": "Search",
+  "field.opportunities.filter.searchPlaceholder": "Title, description, or sector…",
+  "field.opportunities.filter.sector": "Sector",
+  "field.opportunities.filter.allSectors": "All sectors",
+  "field.opportunities.filter.practice": "Practice",
+  "field.opportunities.filter.allPractices": "All practices",
+  "field.opportunities.filter.type": "Opportunity type",
+  "field.opportunities.filter.allTypes": "All types",
+  "field.opportunities.filter.window": "Application window",
+  "field.opportunities.filter.allWindows": "All",
+  "field.opportunities.filter.open": "Open",
+  "field.opportunities.filter.closed": "Closed",
+  "field.opportunities.filter.sort": "Sort",
+  "field.opportunities.filter.apply": "Apply filters",
+  "field.opportunities.sort.closing": "Closing soon",
+  "field.opportunities.sort.published": "Recently published",
+  "field.opportunities.sort.title": "Title A–Z",
+  "field.opportunities.empty.none": "No published opportunities are available yet.",
+  "field.opportunities.empty.filtered":
+    "No opportunities match your search or filters. Try clearing filters or browsing all opportunities.",
+  "field.opportunities.empty.clearFilters": "Clear filters",
+  "field.opportunities.empty.browseAll": "Browse all",
+  "field.opportunities.windowOpen": "Open",
+  "field.opportunities.windowClosed": "Closed",
+  "field.opportunities.verifiedOrganisation": "Verified",
+  "field.opportunities.viewOpportunity": "View opportunity",
   "field.explorer.organisations.headline": "Discover Organisations",
   "field.explorer.organisations.lede":
     "Public Organisation profiles with registry footprint, verification status, and represented Creatives. No rankings or sponsored placement.",
@@ -2033,6 +2126,31 @@ const EN: Record<MessageKey, string> = {
   "studio.nav.artworks": "Artworks",
   "studio.nav.certificates": "Certificates",
   "studio.nav.ownership": "Ownership",
+  "studio.opportunities.heading": "Opportunities",
+  "studio.opportunities.lede":
+    "Create and publish briefs to Field. Verified organisation status is required before publishing.",
+  "studio.opportunities.verificationRequired":
+    "Your organisation must be verified before opportunities can appear on Field.",
+  "studio.opportunities.create": "New opportunity",
+  "studio.opportunities.loading": "Loading opportunities…",
+  "studio.opportunities.empty": "No opportunities yet. Create a draft to get started.",
+  "studio.opportunities.viewOnField": "View on Field",
+  "studio.opportunities.edit": "Edit",
+  "studio.opportunities.unpublish": "Unpublish",
+  "studio.opportunities.publish": "Publish",
+  "studio.opportunities.editTitle": "Edit opportunity",
+  "studio.opportunities.createTitle": "New opportunity",
+  "studio.opportunities.field.title": "Title",
+  "studio.opportunities.field.description": "Description",
+  "studio.opportunities.field.sector": "Sector",
+  "studio.opportunities.field.selectSector": "Select sector",
+  "studio.opportunities.field.type": "Opportunity type",
+  "studio.opportunities.field.participationMode": "Participation mode",
+  "studio.opportunities.field.participationHint":
+    "PR1A publishes open participation briefs to Field only.",
+  "studio.opportunities.field.practices": "Practices required",
+  "studio.opportunities.field.opensAt": "Application window opens",
+  "studio.opportunities.field.closesAt": "Application window closes",
   "studio.shell.activity": "Activity",
   "studio.shell.recentNotes": "Recent notes",
   "studio.shell.catalogueActivity": "Catalogue activity",
@@ -2179,6 +2297,7 @@ const EN: Record<MessageKey, string> = {
   "gallery.nav.catalogue": "Works",
   "gallery.nav.verification": "Continuity & certs",
   "gallery.nav.invitations": "Invitations",
+  "gallery.nav.opportunities": "Opportunities",
   "gallery.shell.noCatalogueActivity": "No recent catalogue activity.",
   "gallery.shell.loading": "Loading…",
   "gallery.shell.dismiss": "Dismiss",

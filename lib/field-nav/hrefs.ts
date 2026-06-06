@@ -3,6 +3,8 @@ import {
   FIELD_EXPLORER_CREATIVES,
   FIELD_EXPLORER_ORGANISATIONS,
   FIELD_EXPLORER_RECORDS,
+  FIELD_OPPORTUNITIES,
+  FIELD_PROGRAMMES,
   FIELD_ROOT,
   FIELD_VERIFY,
 } from "@/lib/field-nav/paths";
@@ -45,6 +47,18 @@ export function fieldCollectorHref(slug: string): string {
 
 export function fieldVerifyHref(): string {
   return FIELD_VERIFY;
+}
+
+export function fieldOpportunitiesHref(): string {
+  return FIELD_OPPORTUNITIES;
+}
+
+export function fieldOpportunityHref(id: string): string {
+  return `${FIELD_OPPORTUNITIES}/${encodeURIComponent(id.trim())}`;
+}
+
+export function fieldProgrammeHref(slug: string): string {
+  return `${FIELD_PROGRAMMES}/${encodeURIComponent(slug.trim())}`;
 }
 
 export function fieldVerifyRecordHref(registryId: string): string {

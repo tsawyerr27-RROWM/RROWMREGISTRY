@@ -9,6 +9,9 @@ export const FIELD_EXPLORER_RECORDS = `${FIELD_EXPLORER}/records` as const;
 
 export const FIELD_VERIFY = `${FIELD_ROOT}/verify` as const;
 
+export const FIELD_OPPORTUNITIES = `${FIELD_ROOT}/opportunities` as const;
+export const FIELD_PROGRAMMES = `${FIELD_ROOT}/programmes` as const;
+
 export type FieldExplorerTabId = "creatives" | "organisations" | "records";
 
 export function isFieldPath(pathname: string | null | undefined): boolean {

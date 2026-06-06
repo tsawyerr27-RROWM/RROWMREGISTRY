@@ -5,6 +5,8 @@ export {
   FIELD_EXPLORER_ORGANISATIONS,
   FIELD_EXPLORER_RECORDS,
   FIELD_VERIFY,
+  FIELD_OPPORTUNITIES,
+  FIELD_PROGRAMMES,
   isFieldPath,
   isFieldExplorerPath,
   fieldExplorerTabFromPath,
@@ -23,6 +25,9 @@ export {
   fieldVerifyHref,
   fieldVerifyRecordHref,
   fieldRecordHref,
+  fieldOpportunitiesHref,
+  fieldOpportunityHref,
+  fieldProgrammeHref,
 } from "@/lib/field-nav/hrefs";
 
 export {
