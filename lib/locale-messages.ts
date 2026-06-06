@@ -71,7 +71,6 @@ export type MessageKey =
   | "field.explorer.records.filtered"
   | "field.explorer.records.verifiedScopeDefault"
   | "field.explorer.records.verifiedScopeAll"
-  | "field.explorer.records.link.verifyHub"
   | "field.explorer.records.filter.search"
   | "field.explorer.records.filter.searchPlaceholder"
   | "field.explorer.records.filter.creative"
@@ -113,7 +112,6 @@ export type MessageKey =
   | "field.explorer.creatives.empty.filtered"
   | "field.explorer.creatives.empty.clearFilters"
   | "field.explorer.creatives.empty.browseAll"
-  | "field.stub.preparing"
   | "field.stub.backHome"
   | "field.verify.title"
   | "field.verify.record.title"
@@ -1596,7 +1594,6 @@ const EN: Record<MessageKey, string> = {
   "field.explorer.records.filtered": "filters applied",
   "field.explorer.records.verifiedScopeDefault": "Verified records on file",
   "field.explorer.records.verifiedScopeAll": "All public records",
-  "field.explorer.records.link.verifyHub": "Verify hub",
   "field.explorer.records.filter.search": "Search",
   "field.explorer.records.filter.searchPlaceholder": "Title or Registry ID…",
   "field.explorer.records.filter.creative": "Creative",
@@ -1707,8 +1704,6 @@ const EN: Record<MessageKey, string> = {
     "No Creatives match your search or filters. Try clearing filters or choosing a different practice.",
   "field.explorer.creatives.empty.clearFilters": "Clear filters",
   "field.explorer.creatives.empty.browseAll": "Browse all Creatives",
-  "field.stub.preparing":
-    "This route is scaffolded for Phase 2A. Content and data will ship in the next PR1 steps.",
   "field.stub.backHome": "Back to The Field",
   "field.verify.title": "Verify",
   "field.verify.record.title": "Record verification",
@@ -3415,7 +3410,6 @@ const DE: Record<MessageKey, string> = {
   "field.explorer.records.filtered": "Filter aktiv",
   "field.explorer.records.verifiedScopeDefault": "Verifizierte Einträge auf Datei",
   "field.explorer.records.verifiedScopeAll": "Alle öffentlichen Einträge",
-  "field.explorer.records.link.verifyHub": "Verifizierungs-Hub",
   "field.explorer.records.filter.search": "Suche",
   "field.explorer.records.filter.searchPlaceholder": "Titel oder Registry-ID…",
   "field.explorer.records.filter.creative": "Creative",
@@ -3526,8 +3520,6 @@ const DE: Record<MessageKey, string> = {
     "Keine Creatives entsprechen der Suche oder den Filtern.",
   "field.explorer.creatives.empty.clearFilters": "Filter zurücksetzen",
   "field.explorer.creatives.empty.browseAll": "Alle Creatives durchsuchen",
-  "field.stub.preparing":
-    "Diese Route ist für Phase 2A vorbereitet. Inhalte und Daten folgen in den nächsten PR1-Schritten.",
   "field.stub.backHome": "Zurück zu The Field",
   "field.verify.title": "Verifizieren",
   "field.verify.record.title": "Eintragsverifizierung",
@@ -5110,7 +5102,6 @@ const FR: Record<MessageKey, string> = {
   "field.explorer.records.filtered": "filtres actifs",
   "field.explorer.records.verifiedScopeDefault": "Entrées vérifiées au registre",
   "field.explorer.records.verifiedScopeAll": "Toutes les entrées publiques",
-  "field.explorer.records.link.verifyHub": "Hub de vérification",
   "field.explorer.records.filter.search": "Rechercher",
   "field.explorer.records.filter.searchPlaceholder": "Titre ou Registry ID…",
   "field.explorer.records.filter.creative": "Creative",
@@ -5221,8 +5212,6 @@ const FR: Record<MessageKey, string> = {
     "Aucun Creative ne correspond à votre recherche ou filtres.",
   "field.explorer.creatives.empty.clearFilters": "Effacer les filtres",
   "field.explorer.creatives.empty.browseAll": "Parcourir tous les Creatives",
-  "field.stub.preparing":
-    "Cette route est préparée pour la Phase 2A. Le contenu et les données suivront dans les prochaines étapes PR1.",
   "field.stub.backHome": "Retour à The Field",
   "field.verify.title": "Vérifier",
   "field.verify.record.title": "Vérification d’entrée",
@@ -6808,7 +6797,6 @@ const JA: Record<MessageKey, string> = {
   "field.explorer.records.filtered": "フィルター適用中",
   "field.explorer.records.verifiedScopeDefault": "記録上 verified のレコード",
   "field.explorer.records.verifiedScopeAll": "すべての公開レコード",
-  "field.explorer.records.link.verifyHub": "検証ハブ",
   "field.explorer.records.filter.search": "検索",
   "field.explorer.records.filter.searchPlaceholder": "タイトルまたは Registry ID…",
   "field.explorer.records.filter.creative": "Creative",
@@ -6918,8 +6906,6 @@ const JA: Record<MessageKey, string> = {
     "条件に一致する Creative がありません。",
   "field.explorer.creatives.empty.clearFilters": "フィルターをクリア",
   "field.explorer.creatives.empty.browseAll": "すべての Creative を閲覧",
-  "field.stub.preparing":
-    "このルートは Phase 2A 向けに用意されています。コンテンツとデータは次の PR1 ステップで提供されます。",
   "field.stub.backHome": "The Field に戻る",
   "field.verify.title": "検証",
   "field.verify.record.title": "レコード検証",

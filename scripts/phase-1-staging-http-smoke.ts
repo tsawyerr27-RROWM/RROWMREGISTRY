@@ -1,6 +1,10 @@
 /**
- * Phase 1 PR6 — staging HTTP smoke (no DB): public routes + redirect matrix on deployed host.
- * Usage: STAGING_URL=https://rrowm-registry.vercel.app npx tsx scripts/phase-1-staging-http-smoke.ts
+ * Staging HTTP smoke — public routes + redirect matrix on deployed host.
+ * Phase 1 PR6 + Phase 2B RD-2B record-detail redirects.
+ *
+ * Usage:
+ *   STAGING_URL=https://example.vercel.app npx tsx scripts/phase-1-staging-http-smoke.ts
+ *   STAGING_SAMPLE_REGISTRY_ID=RROWM-XXXX npx tsx scripts/phase-1-staging-http-smoke.ts
  */
 
 const base = (process.env.STAGING_URL || process.env.NEXT_PUBLIC_SITE_URL || "").replace(
@@ -57,6 +61,70 @@ async function main() {
     }
   }
 
+  const fieldRedirects: [string, string][] = [
+    ["/field", "/field/explorer"],
+    ["/registry", "/field/explorer/records"],
+  ];
+
+  for (const [from, to] of fieldRedirects) {
+    const { status, location } = await head(from);
+    const loc = location?.replace(base, "") ?? location;
+    if (
+      (status === 308 || status === 307 || status === 301 || status === 302) &&
+      loc?.startsWith(to)
+    ) {
+      pass(`RD-2B-field:${from}`, `${status} → ${loc}`);
+    } else {
+      fail(
+        `RD-2B-field:${from}`,
+        `status=${status} location=${loc ?? "none"} expected prefix=${to}`
+      );
+    }
+  }
+
+  const sampleRegistryId = (process.env.STAGING_SAMPLE_REGISTRY_ID || "").trim();
+  if (sampleRegistryId) {
+    const encoded = encodeURIComponent(sampleRegistryId);
+    const expectedRecord = `/field/record/${encoded}`;
+    const querySuffix = "?tab=verify";
+
+    for (const [id, from] of [
+      ["RD-2B-1", `/registry/${encoded}`],
+      ["RD-2B-2", `/artwork/${encoded}`],
+    ] as const) {
+      const { status, location } = await head(from);
+      const loc = location?.replace(base, "") ?? location;
+      if (
+        (status === 308 || status === 307 || status === 301 || status === 302) &&
+        loc?.startsWith(expectedRecord)
+      ) {
+        pass(id, `${status} → ${loc}`);
+      } else {
+        fail(id, `status=${status} location=${loc ?? "none"} expected prefix=${expectedRecord}`);
+      }
+    }
+
+    const { status, location } = await head(`/registry/${encoded}${querySuffix}`);
+    const loc = location?.replace(base, "") ?? location;
+    if (
+      (status === 308 || status === 307 || status === 301 || status === 302) &&
+      loc?.includes(expectedRecord) &&
+      loc?.includes("tab=verify")
+    ) {
+      pass("RD-2B-3", `${status} → ${loc}`);
+    } else {
+      fail(
+        "RD-2B-3",
+        `status=${status} location=${loc ?? "none"} expected record path + query preserved`
+      );
+    }
+  } else {
+    pass(
+      "RD-2B-sample",
+      "Skipped — set STAGING_SAMPLE_REGISTRY_ID for record-detail redirect smoke"
+    );
+  }
+
   const { status: studioStatus, location: studioLoc } = await head("/studio");
   if (studioLoc?.includes("/studio/creative")) {
     pass("redirect:/studio", `→ ${studioLoc}`);
@@ -66,7 +134,7 @@ async function main() {
     fail("redirect:/studio", `status=${studioStatus} location=${studioLoc ?? "none"}`);
   }
 
-  const publicPaths = ["/registry", "/login", "/about"];
+  const publicPaths = ["/field/explorer/records", "/login", "/about"];
   for (const p of publicPaths) {
     const s = await get(p);
     if (s === 200) pass(`RP-public:${p}`, `GET ${s}`);
@@ -97,7 +165,7 @@ async function main() {
   const failed = results.filter((r) => !r.pass);
   const report = {
     staging_url: base,
-    gate: "phase-1-staging-http-smoke",
+    gate: "phase-1-staging-http-smoke+phase-2b-rd2b",
     pass: failed.length === 0,
     results,
   };
