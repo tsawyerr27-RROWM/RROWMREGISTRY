@@ -36,43 +36,56 @@ export function StudioRouteGuard({ children }: { children: ReactNode }) {
 
     let cancelled = false;
     void (async () => {
-      const supabase = sb();
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session) {
-        if (!cancelled) {
-          deferredRouterReplace(
-            router,
-            "/login?next=" + encodeURIComponent(returnPath)
-          );
+      try {
+        const supabase = sb();
+        const { data: sessionData } = await supabase.auth.getSession();
+        const hasSession = Boolean(sessionData?.session);
+        console.log(
+          "[StudioRouteGuard] session:",
+          hasSession ? "present" : "absent"
+        );
+
+        if (!sessionData?.session) {
+          const redirectTarget =
+            "/login?next=" + encodeURIComponent(returnPath);
+          console.log("[StudioRouteGuard] redirect:", redirectTarget);
+          if (!cancelled) {
+            deferredRouterReplace(router, redirectTarget);
+          }
+          return;
         }
-        return;
+
+        const uid = sessionData.session.user.id;
+        const onboardingPath = await getOnboardingRedirectPath(supabase, uid);
+        if (onboardingPath) {
+          console.log("[StudioRouteGuard] redirect:", onboardingPath);
+          if (!cancelled) deferredRouterReplace(router, onboardingPath);
+          return;
+        }
+
+        const { data: actor } = await supabase
+          .from("actor_profiles")
+          .select("role")
+          .eq("user_id", uid)
+          .maybeSingle();
+
+        if (!actor?.role) {
+          console.log("[StudioRouteGuard] redirect:", "/onboarding");
+          if (!cancelled) deferredRouterReplace(router, "/onboarding");
+          return;
+        }
+
+        const mismatch = studioRoleHomeMismatch(actor.role, pathname);
+        if (mismatch) {
+          console.log("[StudioRouteGuard] redirect:", mismatch);
+          if (!cancelled) deferredRouterReplace(router, mismatch);
+          return;
+        }
+
+        if (!cancelled) setPhase("ready");
+      } catch (error) {
+        console.log("[StudioRouteGuard] error:", error);
       }
-
-      const uid = sessionData.session.user.id;
-      const onboardingPath = await getOnboardingRedirectPath(supabase, uid);
-      if (onboardingPath) {
-        if (!cancelled) deferredRouterReplace(router, onboardingPath);
-        return;
-      }
-
-      const { data: actor } = await supabase
-        .from("actor_profiles")
-        .select("role")
-        .eq("user_id", uid)
-        .maybeSingle();
-
-      if (!actor?.role) {
-        if (!cancelled) deferredRouterReplace(router, "/onboarding");
-        return;
-      }
-
-      const mismatch = studioRoleHomeMismatch(actor.role, pathname);
-      if (mismatch) {
-        if (!cancelled) deferredRouterReplace(router, mismatch);
-        return;
-      }
-
-      if (!cancelled) setPhase("ready");
     })();
 
     return () => {

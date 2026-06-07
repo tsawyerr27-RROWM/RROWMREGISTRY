@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { RrowmLogo } from "@/components/brand/RrowmLogo";
 import type { Session } from "@supabase/supabase-js";
-import { getSessionSafe } from "@/lib/supabase";
+import { signOutSafely } from "@/lib/auth-sign-out";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { FooterRegionSelector } from "@/components/LandingPage/FooterRegionSelector";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
@@ -75,25 +75,22 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      const s = await getSessionSafe();
-      if (mounted) {
-        setSession(s);
-        setHydrated(true);
-      }
-    })();
     const supabase = sb();
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_e: unknown, s: unknown) => {
-      setSession(((s as any) ?? null) as Session | null);
-      setHydrated(true);
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      setSession(nextSession ?? null);
+      if (
+        event === "INITIAL_SESSION" ||
+        event === "SIGNED_IN" ||
+        event === "SIGNED_OUT" ||
+        event === "TOKEN_REFRESHED" ||
+        event === "USER_UPDATED"
+      ) {
+        setHydrated(true);
+      }
     });
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, [sb]);
 
   useEffect(() => {
@@ -324,7 +321,7 @@ export default function Header() {
                 type="button"
                 className={`min-h-[44px] min-w-[44px] rounded-xl px-3 py-2 text-xs font-medium transition sm:min-h-0 sm:min-w-0 sm:px-4 sm:text-sm ${subtleClass}`}
                 onClick={async () => {
-                  await sb().auth.signOut();
+                  await signOutSafely();
                   window.location.href = "/";
                 }}
               >

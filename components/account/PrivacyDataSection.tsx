@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AccountPanel } from "@/components/account/account-ui";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
+import { signOutSafely } from "@/lib/auth-sign-out";
 
 type AccountStatus = "active" | "deactivated" | "pending_deletion" | "deleted";
 
@@ -391,7 +392,7 @@ function DeleteAccountZone({
       }
       setScheduledAt(j.deletionScheduledAt ?? null);
       setStep(4);
-      await sb().auth.signOut();
+      await signOutSafely();
     } catch {
       setError("Network error.");
     } finally {

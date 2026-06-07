@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
+import { signOutSafely } from "@/lib/auth-sign-out";
 
 export default function AccountRestorePage() {
-  const sb = useSupabaseBrowserLazy();
   const [token, setToken] = useState<string | null>(null);
   const [phase, setPhase] = useState<"loading" | "ready" | "done" | "error">("loading");
   const [error, setError] = useState<string | null>(null);
@@ -46,9 +45,9 @@ export default function AccountRestorePage() {
 
   useEffect(() => {
     if (phase === "done") {
-      void sb().auth.signOut();
+      void signOutSafely();
     }
-  }, [phase, sb]);
+  }, [phase]);
 
   return (
     <div className="ds-page-environment flex min-h-screen items-center justify-center px-6">

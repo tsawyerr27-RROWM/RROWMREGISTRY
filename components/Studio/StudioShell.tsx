@@ -10,7 +10,7 @@ import {
   type WorkspaceNavItem,
 } from "@/components/Studio/WorkspaceShell";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
-import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
+import { signOutSafely } from "@/lib/auth-sign-out";
 import { deferredRouterPush } from "@/lib/deferred-app-router";
 import {
   buildCollectorNavItems,
@@ -98,7 +98,6 @@ export function StudioShell({
 }: StudioShellProps) {
   const router = useRouter();
   const { t } = useLocalePreferences();
-  const sb = useSupabaseBrowserLazy();
 
   const resolvedNavItems = useMemo(() => {
     if (navItems) return navItems;
@@ -181,7 +180,7 @@ export function StudioShell({
   };
 
   const handleSignOut = async () => {
-    await sb().auth.signOut();
+    await signOutSafely();
     const next = signOutNext ?? SIGN_OUT_NEXT[role];
     deferredRouterPush(
       router,
