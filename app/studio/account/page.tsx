@@ -10,6 +10,7 @@ import type {
 import { ArtistWorkspaceShellLayout } from "@/components/Studio/ArtistWorkspaceShellLayout";
 import { CollectorWorkspaceShellLayout } from "@/components/Studio/CollectorWorkspaceShellLayout";
 import { GalleryWorkspaceShellLayout } from "@/components/Studio/GalleryWorkspaceShellLayout";
+import { useStudioGuardUser } from "@/components/Studio/StudioRouteGuard";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { getCollectorOwnedArtworkIds } from "@/lib/collector-portfolio";
 import { fieldCollectorHref, fieldCreativeHref, fieldOrganisationHref } from "@/lib/field-nav";
@@ -44,6 +45,7 @@ type Role = "artist" | "collector" | "gallery";
 export default function AccountPage() {
   const { t } = useLocalePreferences();
   const sb = useSupabaseBrowserLazy();
+  const guardUser = useStudioGuardUser();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
@@ -109,135 +111,135 @@ export default function AccountPage() {
 
   const load = useCallback(async () => {
     setError(null);
-    const supabase = sb();
-    const { data: sessionData } = await supabase.auth.getSession();
-    const uid = sessionData?.session?.user?.id;
-    if (!uid) return;
-
-    setUserId(uid);
-    setEmail(sessionData?.session?.user?.email ?? null);
-
-    await supabase.auth.refreshSession();
-
-    const { data: actor, error: actorErr } = await supabase
-      .from("actor_profiles")
-      .select("role, display_name, public_presence")
-      .eq("user_id", uid)
-      .maybeSingle();
-    if (actorErr || !actor?.role) {
-      setError(summarizeRpcError(actorErr) || "Could not load account.");
-      setLoading(false);
-      return;
-    }
-
-    const r = actor.role as Role;
-    if (r !== "artist" && r !== "collector" && r !== "gallery") {
-      setError("Unsupported role.");
-      setLoading(false);
-      return;
-    }
-
-    setRole(r);
-    setCollectorPreviewArtworks([]);
-    setArtistRepHistorical(false);
-    setArtistRepActive(false);
-    setArtistVerifiedWorkCount(0);
-    setRegistryEvidenceSlugs([]);
-    setGalleryVerified(false);
-    setGalleryRosterCount(0);
-    setDisplayName(
-      String((actor as { display_name?: string | null }).display_name || "").trim()
-    );
-    let nextPresence = parsePublicPresence(
-      (actor as { public_presence?: unknown }).public_presence
-    );
-
-    if (r === "artist") {
-      const { data: ar } = await supabase
-        .from("artists")
-        .select(
-          "display_name, bio, website, instagram, slug, public_presence, studio_artworks_accent"
-        )
-        .eq("id", uid)
-        .maybeSingle();
-      if (ar) {
-        setDisplayName(
-          String(ar.display_name || (actor as { display_name?: string }).display_name || "").trim()
-        );
-        setArtistBio(String(ar.bio || "").trim());
-        setArtistWebsite(String(ar.website || "").trim());
-        setArtistInstagram(String(ar.instagram || "").trim());
-        setArtistSlug(ar.slug ? String(ar.slug) : null);
-        setStudioArtworksAccent(
-          parseStudioArtworksAccent(
-            (ar as { studio_artworks_accent?: unknown }).studio_artworks_accent
-          )
-        );
-        nextPresence = parsePublicPresence(
-          (ar as { public_presence?: unknown }).public_presence
-        );
-        const practiceRaw = (ar as { public_presence?: unknown }).public_presence;
-        setPracticeSettings(parseCreativePracticeSettings(practiceRaw));
-
-        const { data: verifiedWorks } = await supabase
-          .from("artworks")
-          .select("medium")
-          .eq("artist_id", uid)
-          .eq("verification_status", "verified");
-        const mediums = (verifiedWorks ?? [])
-          .map((row) => (row as { medium?: string | null }).medium)
-          .filter((m): m is string => Boolean(m?.trim()));
-        setRegistryEvidenceSlugs(inferRegistryPracticeSlugs(mediums));
-        setArtistVerifiedWorkCount(verifiedWorks?.length ?? 0);
+    try {
+      const supabase = sb();
+      const uid = userId ?? guardUser?.userId;
+      if (!uid) {
+        setError("No active session");
+        return;
       }
 
-      const { data: repRaw } = await supabase.rpc(
-        "get_artist_representation_state",
-        { p_artist_id: uid }
-      );
-      const rep = parseArtistRepresentationState(repRaw);
-      setArtistRepHistorical(rep.historical && !rep.active);
-      setArtistRepActive(rep.active);
-    }
+      setUserId(uid);
+      setEmail(email ?? guardUser?.email ?? null);
 
-    if (r === "collector") {
-      const { data: cp } = await supabase
-        .from("collector_profiles")
-        .select(
-          "display_name, location, bio, is_public, anonymous_on_public, slug, public_presence"
-        )
+      const { data: actor, error: actorErr } = await supabase
+        .from("actor_profiles")
+        .select("role, display_name, public_presence")
         .eq("user_id", uid)
         .maybeSingle();
-      if (cp) {
-        setDisplayName(String(cp.display_name || "").trim());
-        setCollectorLocation(String(cp.location || "").trim());
-        setCollectorBio(String(cp.bio || "").trim());
-        setCollectorAnonymous(Boolean(cp.anonymous_on_public));
-        setCollectorSlug(cp.slug ? String(cp.slug) : null);
-        nextPresence = {
-          ...parsePublicPresence(
-            (cp as { public_presence?: unknown }).public_presence
-          ),
-          profile: Boolean(cp.is_public),
-        };
+
+      if (actorErr || !actor?.role) {
+        setError(summarizeRpcError(actorErr) || "Could not load account.");
+        return;
       }
 
-      const ownedIds = await getCollectorOwnedArtworkIds(supabase, uid);
-      if (ownedIds.length > 0) {
-        const { data: aw } = await supabase
-          .from("artwork_read_model")
-          .select("id, title, registry_id, image_url")
-          .in("id", ownedIds)
-          .limit(48);
-        setCollectorPreviewArtworks((aw || []) as AccountHeroPreviewArtwork[]);
+      const r = actor.role as Role;
+      if (r !== "artist" && r !== "collector" && r !== "gallery") {
+        setError("Unsupported role.");
+        return;
       }
-    }
 
-    if (r === "gallery") {
-      const { data: mem } = await supabase
-        .from("gallery_users")
-        .select(
-          `
+      setRole(r);
+      setCollectorPreviewArtworks([]);
+      setArtistRepHistorical(false);
+      setArtistRepActive(false);
+      setArtistVerifiedWorkCount(0);
+      setRegistryEvidenceSlugs([]);
+      setGalleryVerified(false);
+      setGalleryRosterCount(0);
+      setDisplayName(
+        String((actor as { display_name?: string | null }).display_name || "").trim()
+      );
+      let nextPresence = parsePublicPresence(
+        (actor as { public_presence?: unknown }).public_presence
+      );
+
+      if (r === "artist") {
+        const { data: ar } = await supabase
+          .from("artists")
+          .select(
+            "display_name, bio, website, instagram, slug, public_presence, studio_artworks_accent"
+          )
+          .eq("id", uid)
+          .maybeSingle();
+        if (ar) {
+          setDisplayName(
+            String(ar.display_name || (actor as { display_name?: string }).display_name || "").trim()
+          );
+          setArtistBio(String(ar.bio || "").trim());
+          setArtistWebsite(String(ar.website || "").trim());
+          setArtistInstagram(String(ar.instagram || "").trim());
+          setArtistSlug(ar.slug ? String(ar.slug) : null);
+          setStudioArtworksAccent(
+            parseStudioArtworksAccent(
+              (ar as { studio_artworks_accent?: unknown }).studio_artworks_accent
+            )
+          );
+          nextPresence = parsePublicPresence(
+            (ar as { public_presence?: unknown }).public_presence
+          );
+          const practiceRaw = (ar as { public_presence?: unknown }).public_presence;
+          setPracticeSettings(parseCreativePracticeSettings(practiceRaw));
+
+          const { data: verifiedWorks } = await supabase
+            .from("artworks")
+            .select("medium")
+            .eq("artist_id", uid)
+            .eq("verification_status", "verified");
+          const mediums = (verifiedWorks ?? [])
+            .map((row) => (row as { medium?: string | null }).medium)
+            .filter((m): m is string => Boolean(m?.trim()));
+          setRegistryEvidenceSlugs(inferRegistryPracticeSlugs(mediums));
+          setArtistVerifiedWorkCount(verifiedWorks?.length ?? 0);
+        }
+
+        const { data: repRaw } = await supabase.rpc(
+          "get_artist_representation_state",
+          { p_artist_id: uid }
+        );
+        const rep = parseArtistRepresentationState(repRaw);
+        setArtistRepHistorical(rep.historical && !rep.active);
+        setArtistRepActive(rep.active);
+      }
+
+      if (r === "collector") {
+        const { data: cp } = await supabase
+          .from("collector_profiles")
+          .select(
+            "display_name, location, bio, is_public, anonymous_on_public, slug, public_presence"
+          )
+          .eq("user_id", uid)
+          .maybeSingle();
+        if (cp) {
+          setDisplayName(String(cp.display_name || "").trim());
+          setCollectorLocation(String(cp.location || "").trim());
+          setCollectorBio(String(cp.bio || "").trim());
+          setCollectorAnonymous(Boolean(cp.anonymous_on_public));
+          setCollectorSlug(cp.slug ? String(cp.slug) : null);
+          nextPresence = {
+            ...parsePublicPresence(
+              (cp as { public_presence?: unknown }).public_presence
+            ),
+            profile: Boolean(cp.is_public),
+          };
+        }
+
+        const ownedIds = await getCollectorOwnedArtworkIds(supabase, uid);
+        if (ownedIds.length > 0) {
+          const { data: aw } = await supabase
+            .from("artwork_read_model")
+            .select("id, title, registry_id, image_url")
+            .in("id", ownedIds)
+            .limit(48);
+          setCollectorPreviewArtworks((aw || []) as AccountHeroPreviewArtwork[]);
+        }
+      }
+
+      if (r === "gallery") {
+        const { data: mem } = await supabase
+          .from("gallery_users")
+          .select(
+            `
           gallery_id,
           galleries (
             id,
@@ -249,59 +251,64 @@ export default function AccountPage() {
             public_presence
           )
         `
-        )
-        .eq("user_id", uid)
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
+          )
+          .eq("user_id", uid)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
 
-      const gRaw = mem?.galleries as
-        | {
-            id: string;
-            slug: string;
-            location: string | null;
-            website_url: string | null;
-            description: string | null;
-            verified?: boolean;
-            public_presence?: unknown;
-          }
-        | {
-            id: string;
-            slug: string;
-            location: string | null;
-            website_url: string | null;
-            description: string | null;
-            verified?: boolean;
-            public_presence?: unknown;
-          }[]
-        | null
-        | undefined;
-      const g = Array.isArray(gRaw) ? gRaw[0] : gRaw;
-      if (g?.id) {
-        setGalleryId(g.id);
-        setGallerySlug(g.slug || null);
-        setGalleryLocation(String(g.location || "").trim());
-        setGalleryWebsite(String(g.website_url || "").trim());
-        setGalleryDescription(String(g.description || "").trim());
-        setGalleryVerified(Boolean(g.verified));
-        nextPresence = parsePublicPresence(g.public_presence);
+        const gRaw = mem?.galleries as
+          | {
+              id: string;
+              slug: string;
+              location: string | null;
+              website_url: string | null;
+              description: string | null;
+              verified?: boolean;
+              public_presence?: unknown;
+            }
+          | {
+              id: string;
+              slug: string;
+              location: string | null;
+              website_url: string | null;
+              description: string | null;
+              verified?: boolean;
+              public_presence?: unknown;
+            }[]
+          | null
+          | undefined;
+        const g = Array.isArray(gRaw) ? gRaw[0] : gRaw;
+        if (g?.id) {
+          setGalleryId(g.id);
+          setGallerySlug(g.slug || null);
+          setGalleryLocation(String(g.location || "").trim());
+          setGalleryWebsite(String(g.website_url || "").trim());
+          setGalleryDescription(String(g.description || "").trim());
+          setGalleryVerified(Boolean(g.verified));
+          nextPresence = parsePublicPresence(g.public_presence);
 
-        const { count: rosterCount } = await supabase
-          .from("artists")
-          .select("id", { count: "exact", head: true })
-          .eq("gallery_id", g.id)
-          .eq("shown_on_institutional_public", true);
-        setGalleryRosterCount(rosterCount ?? 0);
+          const { count: rosterCount } = await supabase
+            .from("artists")
+            .select("id", { count: "exact", head: true })
+            .eq("gallery_id", g.id)
+            .eq("shown_on_institutional_public", true);
+          setGalleryRosterCount(rosterCount ?? 0);
+        }
       }
-    }
 
-    setPresence(nextPresence);
-    setLoading(false);
-  }, [sb]);
+      setPresence(nextPresence);
+    } catch {
+      setError("Failed to load account");
+    } finally {
+      setLoading(false);
+    }
+  }, [sb, userId, email, guardUser?.userId, guardUser?.email]);
 
   useEffect(() => {
+    if (!guardUser?.userId && !userId) return;
     void load();
-  }, [load]);
+  }, [guardUser?.userId, load, userId]);
 
   useEffect(() => {
     if (!loading && userId) void refreshAccountStatus();
@@ -529,52 +536,52 @@ export default function AccountPage() {
       : "Studio";
 
   const content = (
-    <AccountPageContent
-      role={role}
-      email={email}
-      displayName={displayName}
-      onDisplayNameChange={setDisplayName}
-      presence={presence}
-      onPresenceChange={setPresence}
-      artistBio={artistBio}
-      onArtistBioChange={setArtistBio}
-      artistWebsite={artistWebsite}
-      onArtistWebsiteChange={setArtistWebsite}
-      artistInstagram={artistInstagram}
-      onArtistInstagramChange={setArtistInstagram}
-      collectorLocation={collectorLocation}
-      onCollectorLocationChange={setCollectorLocation}
-      collectorBio={collectorBio}
-      onCollectorBioChange={setCollectorBio}
-      collectorAnonymous={collectorAnonymous}
-      onCollectorAnonymousChange={setCollectorAnonymous}
-      galleryLocation={galleryLocation}
-      onGalleryLocationChange={setGalleryLocation}
-      galleryWebsite={galleryWebsite}
-      onGalleryWebsiteChange={setGalleryWebsite}
-      galleryDescription={galleryDescription}
-      onGalleryDescriptionChange={setGalleryDescription}
-      studioArtworksAccent={studioArtworksAccent}
-      onStudioArtworksAccentChange={setStudioArtworksAccent}
-      publicPageHref={publicPageHref}
-      workspaceHref={workspaceHref}
-      workspaceLabel={workspaceLabel}
-      profileSnapshot={profileSnapshot}
-      profileCompleteness={profileCompleteness}
-      practiceSettings={practiceSettings}
-      onPracticeSettingsChange={setPracticeSettings}
-      registryEvidenceSlugs={registryEvidenceSlugs}
-      collectorPreviewArtworks={
-        role === "collector" ? collectorPreviewArtworks : null
-      }
-      artistRepHistorical={artistRepHistorical}
-      accountStatus={accountStatus}
-      deletionScheduledAt={deletionScheduledAt}
-      authProvider={authProvider}
-      onRefreshAccountStatus={refreshAccountStatus}
-      saving={saving}
-      savedAt={savedAt}
-      error={error}
+      <AccountPageContent
+        role={role}
+        email={email}
+        displayName={displayName}
+        onDisplayNameChange={setDisplayName}
+        presence={presence}
+        onPresenceChange={setPresence}
+        artistBio={artistBio}
+        onArtistBioChange={setArtistBio}
+        artistWebsite={artistWebsite}
+        onArtistWebsiteChange={setArtistWebsite}
+        artistInstagram={artistInstagram}
+        onArtistInstagramChange={setArtistInstagram}
+        collectorLocation={collectorLocation}
+        onCollectorLocationChange={setCollectorLocation}
+        collectorBio={collectorBio}
+        onCollectorBioChange={setCollectorBio}
+        collectorAnonymous={collectorAnonymous}
+        onCollectorAnonymousChange={setCollectorAnonymous}
+        galleryLocation={galleryLocation}
+        onGalleryLocationChange={setGalleryLocation}
+        galleryWebsite={galleryWebsite}
+        onGalleryWebsiteChange={setGalleryWebsite}
+        galleryDescription={galleryDescription}
+        onGalleryDescriptionChange={setGalleryDescription}
+        studioArtworksAccent={studioArtworksAccent}
+        onStudioArtworksAccentChange={setStudioArtworksAccent}
+        publicPageHref={publicPageHref}
+        workspaceHref={workspaceHref}
+        workspaceLabel={workspaceLabel}
+        profileSnapshot={profileSnapshot}
+        profileCompleteness={profileCompleteness}
+        practiceSettings={practiceSettings}
+        onPracticeSettingsChange={setPracticeSettings}
+        registryEvidenceSlugs={registryEvidenceSlugs}
+        collectorPreviewArtworks={
+          role === "collector" ? collectorPreviewArtworks : null
+        }
+        artistRepHistorical={artistRepHistorical}
+        accountStatus={accountStatus}
+        deletionScheduledAt={deletionScheduledAt}
+        authProvider={authProvider}
+        onRefreshAccountStatus={refreshAccountStatus}
+        saving={saving}
+        savedAt={savedAt}
+        error={error}
       onSave={() => void save()}
     />
   );

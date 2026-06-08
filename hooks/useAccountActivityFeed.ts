@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 
 import type { ActivityFeedItem } from "@/lib/activity-i18n";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
-import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 
 export function useAccountActivityFeed(userId: string | null, limit = 10) {
   const [items, setItems] = useState<ActivityFeedItem[]>([]);
@@ -27,7 +26,6 @@ export function useAccountActivityFeed(userId: string | null, limit = 10) {
       .limit(limit);
 
     if (error) {
-      console.warn("[useAccountActivityFeed]", summarizeRpcError(error));
       setItems([]);
     } else {
       setItems((data as ActivityFeedItem[]) ?? []);

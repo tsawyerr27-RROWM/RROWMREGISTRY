@@ -44,6 +44,7 @@ import {
 } from "@/components/Dashboard/CertificatesSection";
 import ModalShell from "@/components/ui/ModalShell";
 import { StudioShell } from "@/components/Studio/StudioShell";
+import { useStudioGuardUser } from "@/components/Studio/StudioRouteGuard";
 import { WorkspaceShellFooterLinks } from "@/components/Studio/WorkspaceShell";
 import { workspace } from "@/styles/workspace-design";
 import {
@@ -108,6 +109,7 @@ function isSaleLikeValueType(valueType: string | null | undefined) {
 
 export default function Dashboard() {
   const sb = useSupabaseBrowserLazy();
+  const guardUser = useStudioGuardUser();
   const { t, formatMoney } = useLocalePreferences();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
@@ -750,27 +752,24 @@ export default function Dashboard() {
 
 // Initial load (session/onboarding/role: app/studio/layout StudioRouteGuard)
 useEffect(() => {
+  const uid = guardUser?.userId;
+  if (!uid) return;
+
   const init = async () => {
     try {
-      const { data: sessionData, error: sessionError } =
-        await sb().auth.getSession();
-      if (sessionError) throw sessionError;
-
-      const currentUser = sessionData?.session?.user;
-      if (!currentUser) return;
-
+      const currentUser = { id: uid, email: guardUser.email ?? undefined };
       setUser(currentUser);
 
       const { data: profileData } = await sb()
         .from("artists")
         .select("*")
-        .eq("id", currentUser.id)
+        .eq("id", uid)
         .single();
 
       setProfile(profileData);
       try {
         const { data: repRaw } = await sb().rpc("get_artist_representation_state", {
-          p_artist_id: currentUser.id,
+          p_artist_id: uid,
         });
         const rep = parseArtistRepresentationState(repRaw);
         setRepStateActive(rep.active);
@@ -787,13 +786,13 @@ useEffect(() => {
         setRepStateActive(false);
         setRepGalleryName(null);
       }
-      await fetchArtworks(currentUser.id);
+      await fetchArtworks(uid);
       await fetchRepresentationReviewQueue();
       await fetchRepresentationAmendments();
-      await fetchCertificatesForArtist(currentUser.id);
-      await fetchActivity(currentUser.id);
-      await fetchOwnershipClaimsForArtist(currentUser.id);
-    } catch (e) {
+      await fetchCertificatesForArtist(uid);
+      await fetchActivity(uid);
+      await fetchOwnershipClaimsForArtist(uid);
+    } catch {
       showToast(
         "error",
         t("studio.toast.connectionInterrupted")
@@ -802,8 +801,8 @@ useEffect(() => {
     }
   };
 
-  init();
-}, [sb]);
+  void init();
+}, [guardUser?.userId, guardUser?.email, sb]);
 
 // 2️ FETCH VALUE + OWNERSHIP EVENTS
 useEffect(() => {

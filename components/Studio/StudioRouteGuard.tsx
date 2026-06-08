@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
@@ -13,12 +20,24 @@ import {
 
 type GuardPhase = "pending" | "ready";
 
+export type StudioGuardUser = {
+  userId: string;
+  email: string | null;
+};
+
+const StudioGuardUserContext = createContext<StudioGuardUser | null>(null);
+
+export function useStudioGuardUser(): StudioGuardUser | null {
+  return useContext(StudioGuardUserContext);
+}
+
 export function StudioRouteGuard({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const sb = useSupabaseBrowserLazy();
   const [phase, setPhase] = useState<GuardPhase>("pending");
+  const [guardUser, setGuardUser] = useState<StudioGuardUser | null>(null);
 
   const returnPath = useMemo(() => {
     const qs = searchParams?.toString();
@@ -39,16 +58,10 @@ export function StudioRouteGuard({ children }: { children: ReactNode }) {
       try {
         const supabase = sb();
         const { data: sessionData } = await supabase.auth.getSession();
-        const hasSession = Boolean(sessionData?.session);
-        console.log(
-          "[StudioRouteGuard] session:",
-          hasSession ? "present" : "absent"
-        );
 
         if (!sessionData?.session) {
           const redirectTarget =
             "/login?next=" + encodeURIComponent(returnPath);
-          console.log("[StudioRouteGuard] redirect:", redirectTarget);
           if (!cancelled) {
             deferredRouterReplace(router, redirectTarget);
           }
@@ -58,7 +71,6 @@ export function StudioRouteGuard({ children }: { children: ReactNode }) {
         const uid = sessionData.session.user.id;
         const onboardingPath = await getOnboardingRedirectPath(supabase, uid);
         if (onboardingPath) {
-          console.log("[StudioRouteGuard] redirect:", onboardingPath);
           if (!cancelled) deferredRouterReplace(router, onboardingPath);
           return;
         }
@@ -70,21 +82,25 @@ export function StudioRouteGuard({ children }: { children: ReactNode }) {
           .maybeSingle();
 
         if (!actor?.role) {
-          console.log("[StudioRouteGuard] redirect:", "/onboarding");
           if (!cancelled) deferredRouterReplace(router, "/onboarding");
           return;
         }
 
         const mismatch = studioRoleHomeMismatch(actor.role, pathname);
         if (mismatch) {
-          console.log("[StudioRouteGuard] redirect:", mismatch);
           if (!cancelled) deferredRouterReplace(router, mismatch);
           return;
         }
 
-        if (!cancelled) setPhase("ready");
-      } catch (error) {
-        console.log("[StudioRouteGuard] error:", error);
+        if (!cancelled) {
+          setGuardUser({
+            userId: uid,
+            email: sessionData.session.user.email ?? null,
+          });
+          setPhase("ready");
+        }
+      } catch {
+        /* guard stays pending */
       }
     })();
 
@@ -94,7 +110,11 @@ export function StudioRouteGuard({ children }: { children: ReactNode }) {
   }, [skipGuard, pathname, returnPath, router, sb]);
 
   if (skipGuard || phase === "ready") {
-    return <>{children}</>;
+    return (
+      <StudioGuardUserContext.Provider value={skipGuard ? null : guardUser}>
+        {children}
+      </StudioGuardUserContext.Provider>
+    );
   }
 
   return (
