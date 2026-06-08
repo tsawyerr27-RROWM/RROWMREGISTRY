@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { FieldExplorerDiscoveryStrip } from "@/components/Field/FieldExplorerDiscoveryStrip";
+import { FieldOpportunityApplySection } from "@/components/Field/FieldOpportunityApplySection";
 import { OrganisationPresenceRegistryEvidence } from "@/components/Field/OrganisationPresenceRegistryEvidence";
 import type { FieldOpportunityDetailData } from "@/lib/fetch-field-opportunity-detail";
 import {
@@ -32,6 +33,7 @@ export function FieldOpportunityDetailView({ data }: Props) {
     practiceLabels,
     acceptingResponses,
     presence,
+    applyContext,
   } = data;
 
   return (
@@ -153,6 +155,13 @@ export function FieldOpportunityDetailView({ data }: Props) {
           </div>
         ) : null}
       </section>
+
+      <FieldOpportunityApplySection
+        briefId={brief.id}
+        briefTitle={brief.title}
+        acceptingResponses={acceptingResponses}
+        initialApplyContext={applyContext}
+      />
 
       {presence ? (
         <section className="mt-12 max-w-3xl">

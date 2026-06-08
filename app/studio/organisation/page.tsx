@@ -1732,6 +1732,7 @@ export default function GalleryDashboardPage() {
         "invitations",
         "catalogue",
         "verification",
+        "opportunities",
       ]);
       if (!allowed.has(id)) return;
       if (id === activeSection) return;
@@ -1745,6 +1746,7 @@ export default function GalleryDashboardPage() {
             | "invitations"
             | "catalogue"
             | "verification"
+            | "opportunities"
         );
         setIsTransitioningSection(false);
       }, 180);

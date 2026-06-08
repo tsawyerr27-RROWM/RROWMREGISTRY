@@ -10,6 +10,15 @@ import {
   isOpportunityAcceptingResponses,
   type FieldBriefRow,
 } from "@/lib/field-opportunity-params";
+import type {
+  FieldOpportunityApplyContext,
+  OrganisationOpportunityApplicationListItem,
+  OpportunityApplicationStatus,
+} from "@/lib/field-opportunity-applications";
+import {
+  isOpportunityApplicationStatus,
+  opportunityApplicationStatusLabel,
+} from "@/lib/field-opportunity-applications";
 import {
   loadOrganisationPresencePageData,
   type OrganisationPresencePageData,
@@ -43,6 +52,7 @@ export type FieldOpportunityDetailData = {
   practiceLabels: string[];
   acceptingResponses: boolean;
   presence: OrganisationPresencePageData | null;
+  applyContext: FieldOpportunityApplyContext;
 };
 
 export async function loadFieldOpportunityDetailPageData(
@@ -94,6 +104,8 @@ export async function loadFieldOpportunityDetailPageData(
     }
   }
 
+  const applyContext = await loadFieldOpportunityApplyContext(supabase, briefId);
+
   return {
     brief: {
       id: data.id,
@@ -141,6 +153,66 @@ export async function loadFieldOpportunityDetailPageData(
       closesAt: data.closes_at,
     }),
     presence,
+    applyContext,
+  };
+}
+
+export async function loadFieldOpportunityApplyContext(
+  supabase: SupabaseClient,
+  briefId: string
+): Promise<FieldOpportunityApplyContext> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      isAuthenticated: false,
+      viewerRole: null,
+      application: null,
+    };
+  }
+
+  const { data: actor } = await supabase
+    .from("actor_profiles")
+    .select("role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const role = actor?.role;
+  const viewerRole =
+    role === "artist" || role === "collector" || role === "gallery"
+      ? role
+      : null;
+
+  if (viewerRole !== "artist") {
+    return {
+      isAuthenticated: true,
+      viewerRole,
+      application: null,
+    };
+  }
+
+  const { data: application } = await supabase
+    .from("field_opportunity_applications")
+    .select("id, status, created_at, updated_at")
+    .eq("opportunity_id", briefId)
+    .eq("applicant_user_id", user.id)
+    .maybeSingle();
+
+  return {
+    isAuthenticated: true,
+    viewerRole,
+    application: application
+      ? {
+          id: application.id,
+          status: isOpportunityApplicationStatus(application.status)
+            ? application.status
+            : ("submitted" satisfies OpportunityApplicationStatus),
+          created_at: application.created_at,
+          updated_at: application.updated_at,
+        }
+      : null,
   };
 }
 

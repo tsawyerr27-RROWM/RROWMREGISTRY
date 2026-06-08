@@ -501,6 +501,10 @@ export type MessageKey =
   | "studio.opportunities.field.practices"
   | "studio.opportunities.field.opensAt"
   | "studio.opportunities.field.closesAt"
+  | "studio.opportunities.applicationsHeading"
+  | "studio.opportunities.applicationsHint"
+  | "studio.opportunities.applicationsLoading"
+  | "studio.opportunities.applicationsEmpty"
   | "studio.shell.activity"
   | "studio.shell.recentNotes"
   | "studio.shell.catalogueActivity"
@@ -2151,6 +2155,11 @@ const EN: Record<MessageKey, string> = {
   "studio.opportunities.field.practices": "Practices required",
   "studio.opportunities.field.opensAt": "Application window opens",
   "studio.opportunities.field.closesAt": "Application window closes",
+  "studio.opportunities.applicationsHeading": "Applications",
+  "studio.opportunities.applicationsHint":
+    "Submitted applications for this opportunity. Review workflow is not available yet.",
+  "studio.opportunities.applicationsLoading": "Loading applications…",
+  "studio.opportunities.applicationsEmpty": "No applications submitted yet.",
   "studio.shell.activity": "Activity",
   "studio.shell.recentNotes": "Recent notes",
   "studio.shell.catalogueActivity": "Catalogue activity",

@@ -13,6 +13,9 @@ import {
 } from "@/lib/opportunity-types";
 import { PRACTICE_TYPES } from "@/lib/practice-types";
 import { fieldOpportunityHref } from "@/lib/field-nav";
+import type { OrganisationOpportunityApplicationListItem } from "@/lib/field-opportunity-applications";
+import { opportunityApplicationStatusLabel } from "@/lib/field-opportunity-applications";
+import { isSystemRole, productRoleLabel } from "@/lib/studio-terminology";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 type BriefRow = {
@@ -74,6 +77,10 @@ export function OrganisationOpportunitiesSection({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [busy, setBusy] = useState(false);
+  const [applications, setApplications] = useState<
+    OrganisationOpportunityApplicationListItem[]
+  >([]);
+  const [applicationsLoading, setApplicationsLoading] = useState(false);
 
   const loadBriefs = useCallback(async () => {
     setLoading(true);
@@ -92,9 +99,36 @@ export function OrganisationOpportunitiesSection({
     }
   }, [galleryId]);
 
+  const loadApplications = useCallback(async (briefId: string) => {
+    setApplicationsLoading(true);
+    try {
+      const res = await fetch(
+        `/api/studio/opportunities/briefs/${encodeURIComponent(briefId)}/applications`
+      );
+      const json = (await res.json()) as {
+        applications?: OrganisationOpportunityApplicationListItem[];
+        error?: string;
+      };
+      if (!res.ok) throw new Error(json.error || "Failed to load applications.");
+      setApplications(json.applications ?? []);
+    } catch {
+      setApplications([]);
+    } finally {
+      setApplicationsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     void loadBriefs();
   }, [loadBriefs]);
+
+  useEffect(() => {
+    if (!editingId) {
+      setApplications([]);
+      return;
+    }
+    void loadApplications(editingId);
+  }, [editingId, loadApplications]);
 
   const editingBrief = useMemo(
     () => briefs.find((b) => b.id === editingId) ?? null,
@@ -104,6 +138,7 @@ export function OrganisationOpportunitiesSection({
   function openCreate() {
     setEditingId(null);
     setForm(EMPTY_FORM);
+    setApplications([]);
     setModalOpen(true);
   }
 
@@ -209,6 +244,21 @@ export function OrganisationOpportunitiesSection({
 
   const inputClass =
     "mt-2 w-full rounded-xl border border-neutral-900/[0.08] bg-white px-4 py-3 text-sm text-neutral-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-900/12";
+
+  function formatApplicationDate(iso: string): string {
+    try {
+      return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(
+        new Date(iso)
+      );
+    } catch {
+      return iso;
+    }
+  }
+
+  function applicantRoleLabel(role: string): string {
+    if (isSystemRole(role)) return productRoleLabel(role, t);
+    return role;
+  }
 
   return (
     <section className="mt-8">
@@ -436,6 +486,49 @@ export function OrganisationOpportunitiesSection({
               />
             </div>
           </div>
+          {editingBrief ? (
+            <div className="border-t border-neutral-900/[0.06] pt-6">
+              <h3 className="text-sm font-medium text-neutral-900">
+                {t("studio.opportunities.applicationsHeading")}
+              </h3>
+              <p className="mt-1 text-xs text-neutral-500">
+                {t("studio.opportunities.applicationsHint")}
+              </p>
+              {applicationsLoading ? (
+                <p className="mt-4 text-sm text-neutral-500">
+                  {t("studio.opportunities.applicationsLoading")}
+                </p>
+              ) : applications.length === 0 ? (
+                <p className="mt-4 text-sm text-neutral-600">
+                  {t("studio.opportunities.applicationsEmpty")}
+                </p>
+              ) : (
+                <ul className="mt-4 divide-y divide-neutral-900/[0.06] rounded-xl border border-neutral-900/[0.06]">
+                  {applications.map((application) => (
+                    <li
+                      key={application.id}
+                      className="grid gap-2 px-4 py-4 sm:grid-cols-[1fr_auto_auto_auto]"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-neutral-950">
+                          {application.applicant_name}
+                        </p>
+                        <p className="mt-1 text-xs text-neutral-500">
+                          {applicantRoleLabel(application.applicant_role)}
+                        </p>
+                      </div>
+                      <p className="text-sm text-neutral-700 sm:text-right">
+                        {formatApplicationDate(application.created_at)}
+                      </p>
+                      <p className="text-sm text-neutral-700 sm:text-right">
+                        {opportunityApplicationStatusLabel(application.status)}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : null}
           <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
