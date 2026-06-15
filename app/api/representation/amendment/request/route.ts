@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
+import { notifyRegistryAmendmentRequested } from "@/lib/notification-hooks/registry";
 
 export const runtime = "nodejs";
 
@@ -98,5 +99,15 @@ export async function POST(req: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true, amendmentId: amendmentId ?? null });
+  if (!amendmentId) {
+    return NextResponse.json({ ok: true, amendmentId: null });
+  }
+
+  void notifyRegistryAmendmentRequested({
+    artworkId,
+    amendmentId: String(amendmentId),
+    requesterUserId: user.id,
+  });
+
+  return NextResponse.json({ ok: true, amendmentId });
 }

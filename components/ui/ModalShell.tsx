@@ -1,4 +1,6 @@
-import { ReactNode } from "react";
+"use client";
+
+import { ReactNode, useEffect } from "react";
 
 import { workspaceModal } from "@/styles/workspace-design";
 
@@ -47,6 +49,15 @@ export default function ModalShell({
   closeClassName,
   tone = "light",
 }: ModalShellProps) {
+  useEffect(() => {
+    if (!isOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const preset = tonePresets[tone];
@@ -59,7 +70,7 @@ export default function ModalShell({
     >
       <div
         className={[
-          "ds-z-modal relative rrowm-modal-surface",
+          "ds-z-modal relative rrowm-modal-surface mx-auto w-full shrink-0",
           preset.panelGlass,
           panelClassName ?? preset.panelSize,
         ].join(" ")}

@@ -2,35 +2,20 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import ModalShell from "@/components/ui/ModalShell";
-import { CULTURAL_SECTOR_OPTIONS } from "@/lib/cultural-sectors";
+import { OpportunityEditorWorkspace } from "@/components/Studio/Opportunities/OpportunityEditorWorkspace";
+import { OpportunityListPanel } from "@/components/Studio/Opportunities/OpportunityListPanel";
 import {
-  BRIEF_TYPES,
-  briefTypeLabel,
-  participationModeLabel,
-  type BriefType,
-  type ParticipationMode,
-} from "@/lib/opportunity-types";
-import { PRACTICE_TYPES } from "@/lib/practice-types";
-import { fieldOpportunityHref } from "@/lib/field-nav";
-import type { OrganisationOpportunityApplicationListItem } from "@/lib/field-opportunity-applications";
-import { opportunityApplicationStatusLabel } from "@/lib/field-opportunity-applications";
-import { isSystemRole, productRoleLabel } from "@/lib/studio-terminology";
+  buildOpportunitySavePayload,
+  briefToEditorForm,
+  EMPTY_OPPORTUNITY_FORM,
+  type OpportunityBriefRow,
+  type OpportunityEditorForm,
+} from "@/lib/opportunity-editor";
+import type {
+  OrganisationOpportunityApplicationListItem,
+  OpportunityApplicationStatus,
+} from "@/lib/field-opportunity-applications";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
-
-type BriefRow = {
-  id: string;
-  title: string;
-  description: string | null;
-  sector: string;
-  practices_required: string[] | null;
-  brief_type: BriefType;
-  participation_mode: ParticipationMode;
-  visibility_state: string;
-  opens_at: string | null;
-  closes_at: string | null;
-  published_at: string | null;
-};
 
 type Props = {
   galleryId: string;
@@ -38,49 +23,27 @@ type Props = {
   gallerySlug: string;
 };
 
-const EMPTY_FORM = {
-  title: "",
-  description: "",
-  sector: "",
-  brief_type: "open_call" as BriefType,
-  participation_mode: "open" as ParticipationMode,
-  practices_required: [] as string[],
-  opens_at: "",
-  closes_at: "",
-};
-
-function toDatetimeLocal(iso: string | null): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function fromDatetimeLocal(value: string): string | null {
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  const d = new Date(trimmed);
-  if (Number.isNaN(d.getTime())) return null;
-  return d.toISOString();
-}
+type EditorMode = null | "create" | "edit" | "applications";
 
 export function OrganisationOpportunitiesSection({
   galleryId,
   galleryVerified,
 }: Props) {
   const { t } = useLocalePreferences();
-  const [briefs, setBriefs] = useState<BriefRow[]>([]);
+  const [briefs, setBriefs] = useState<OpportunityBriefRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [editorMode, setEditorMode] = useState<EditorMode>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [form, setForm] = useState<OpportunityEditorForm>(EMPTY_OPPORTUNITY_FORM);
   const [busy, setBusy] = useState(false);
   const [applications, setApplications] = useState<
     OrganisationOpportunityApplicationListItem[]
   >([]);
   const [applicationsLoading, setApplicationsLoading] = useState(false);
+  const [applicationStatusBusyId, setApplicationStatusBusyId] = useState<
+    string | null
+  >(null);
 
   const loadBriefs = useCallback(async () => {
     setLoading(true);
@@ -89,7 +52,10 @@ export function OrganisationOpportunitiesSection({
       const res = await fetch(
         `/api/studio/opportunities/briefs?gallery_id=${encodeURIComponent(galleryId)}`
       );
-      const json = (await res.json()) as { briefs?: BriefRow[]; error?: string };
+      const json = (await res.json()) as {
+        briefs?: OpportunityBriefRow[];
+        error?: string;
+      };
       if (!res.ok) throw new Error(json.error || "Failed to load opportunities.");
       setBriefs(json.briefs ?? []);
     } catch (e) {
@@ -118,71 +84,115 @@ export function OrganisationOpportunitiesSection({
     }
   }, []);
 
+  const updateApplicationStatus = useCallback(
+    async (applicationId: string, status: OpportunityApplicationStatus) => {
+      setApplicationStatusBusyId(applicationId);
+      setError(null);
+      try {
+        const res = await fetch(
+          `/api/studio/opportunities/applications/${encodeURIComponent(applicationId)}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status }),
+          }
+        );
+        const json = (await res.json()) as {
+          application?: {
+            id: string;
+            status: OpportunityApplicationStatus;
+            reviewed_at: string | null;
+            reviewed_by: string | null;
+          };
+          error?: string;
+        };
+        if (!res.ok) {
+          throw new Error(json.error || "Could not update application status.");
+        }
+        if (json.application) {
+          setApplications((prev) =>
+            prev.map((row) =>
+              row.id === applicationId
+                ? {
+                    ...row,
+                    status: json.application!.status,
+                    reviewed_at: json.application!.reviewed_at,
+                    reviewed_by: json.application!.reviewed_by,
+                  }
+                : row
+            )
+          );
+        } else if (editingId) {
+          await loadApplications(editingId);
+        }
+      } catch (e) {
+        setError(
+          e instanceof Error ? e.message : "Could not update application status."
+        );
+      } finally {
+        setApplicationStatusBusyId(null);
+      }
+    },
+    [editingId, loadApplications]
+  );
+
   useEffect(() => {
     void loadBriefs();
   }, [loadBriefs]);
 
   useEffect(() => {
-    if (!editingId) {
+    if (!editingId || (editorMode !== "edit" && editorMode !== "applications")) {
       setApplications([]);
       return;
     }
     void loadApplications(editingId);
-  }, [editingId, loadApplications]);
+  }, [editingId, editorMode, loadApplications]);
 
   const editingBrief = useMemo(
     () => briefs.find((b) => b.id === editingId) ?? null,
     [briefs, editingId]
   );
 
+  const editorOpen = editorMode !== null;
+  const workspaceFocus = editorMode === "applications" ? "applications" : "full";
+
   function openCreate() {
     setEditingId(null);
-    setForm(EMPTY_FORM);
+    setForm(EMPTY_OPPORTUNITY_FORM);
     setApplications([]);
-    setModalOpen(true);
+    setEditorMode("create");
   }
 
-  function openEdit(brief: BriefRow) {
+  function openEdit(brief: OpportunityBriefRow) {
     setEditingId(brief.id);
-    setForm({
-      title: brief.title,
-      description: brief.description || "",
-      sector: brief.sector,
-      brief_type: brief.brief_type,
-      participation_mode: brief.participation_mode,
-      practices_required: Array.isArray(brief.practices_required)
-        ? brief.practices_required.filter(Boolean)
-        : [],
-      opens_at: toDatetimeLocal(brief.opens_at),
-      closes_at: toDatetimeLocal(brief.closes_at),
-    });
-    setModalOpen(true);
+    setForm(briefToEditorForm(brief));
+    setEditorMode("edit");
   }
 
-  function togglePractice(slug: string) {
-    setForm((prev) => {
-      const set = new Set(prev.practices_required);
-      if (set.has(slug)) set.delete(slug);
-      else set.add(slug);
-      return { ...prev, practices_required: [...set] };
-    });
+  function openApplicationsReview(brief: OpportunityBriefRow) {
+    setEditingId(brief.id);
+    setForm(briefToEditorForm(brief));
+    setEditorMode("applications");
+  }
+
+  function switchToEditMode() {
+    if (!editingId) return;
+    setEditorMode("edit");
+  }
+
+  function closeEditor() {
+    if (busy) return;
+    setEditorMode(null);
+    setEditingId(null);
+    setForm(EMPTY_OPPORTUNITY_FORM);
+    setApplications([]);
   }
 
   async function saveBrief() {
     setBusy(true);
     setError(null);
     try {
-      const payload = {
-        gallery_id: galleryId,
-        title: form.title.trim(),
-        description: form.description.trim() || null,
-        sector: form.sector,
-        brief_type: form.brief_type,
-        participation_mode: form.participation_mode,
-        practices_required: form.practices_required,
-        opens_at: fromDatetimeLocal(form.opens_at),
-        closes_at: fromDatetimeLocal(form.closes_at),
-      };
+      const payload = buildOpportunitySavePayload(form, galleryId);
 
       const res = editingId
         ? await fetch(`/api/studio/opportunities/briefs/${editingId}`, {
@@ -196,10 +206,18 @@ export function OrganisationOpportunitiesSection({
             body: JSON.stringify(payload),
           });
 
-      const json = (await res.json()) as { error?: string };
+      const json = (await res.json()) as {
+        brief?: OpportunityBriefRow;
+        error?: string;
+      };
       if (!res.ok) throw new Error(json.error || "Save failed.");
 
-      setModalOpen(false);
+      if (json.brief) {
+        setEditingId(json.brief.id);
+        setEditorMode("edit");
+        setForm(briefToEditorForm(json.brief));
+      }
+
       await loadBriefs();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed.");
@@ -208,11 +226,12 @@ export function OrganisationOpportunitiesSection({
     }
   }
 
-  async function publishBrief(id: string) {
+  async function publishBrief() {
+    if (!editingId) return;
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(`/api/studio/opportunities/briefs/${id}/publish`, {
+      const res = await fetch(`/api/studio/opportunities/briefs/${editingId}/publish`, {
         method: "POST",
       });
       const json = (await res.json()) as { error?: string };
@@ -225,11 +244,12 @@ export function OrganisationOpportunitiesSection({
     }
   }
 
-  async function unpublishBrief(id: string) {
+  async function unpublishBrief() {
+    if (!editingId) return;
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(`/api/studio/opportunities/briefs/${id}/unpublish`, {
+      const res = await fetch(`/api/studio/opportunities/briefs/${editingId}/unpublish`, {
         method: "POST",
       });
       const json = (await res.json()) as { error?: string };
@@ -242,313 +262,66 @@ export function OrganisationOpportunitiesSection({
     }
   }
 
-  const inputClass =
-    "mt-2 w-full rounded-xl border border-neutral-900/[0.08] bg-white px-4 py-3 text-sm text-neutral-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-900/12";
-
-  function formatApplicationDate(iso: string): string {
-    try {
-      return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(
-        new Date(iso)
-      );
-    } catch {
-      return iso;
-    }
-  }
-
-  function applicantRoleLabel(role: string): string {
-    if (isSystemRole(role)) return productRoleLabel(role, t);
-    return role;
-  }
-
   return (
     <section className="mt-8">
-      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-black/[0.06] pb-6">
-        <div>
-          <h2 className="font-serif text-3xl font-normal tracking-tight text-neutral-950 md:text-4xl">
-            {t("studio.opportunities.heading")}
-          </h2>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-neutral-600">
-            {t("studio.opportunities.lede")}
-          </p>
-          {!galleryVerified ? (
-            <p className="mt-3 text-sm text-amber-900/90">
-              {t("studio.opportunities.verificationRequired")}
-            </p>
-          ) : null}
-        </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          className="rounded-xl border border-neutral-900/[0.08] bg-neutral-950 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800"
-        >
-          {t("studio.opportunities.create")}
-        </button>
-      </div>
+      {!galleryVerified ? (
+        <p className="mb-6 text-sm text-amber-900/90">
+          {t("studio.opportunities.verificationRequired")}
+        </p>
+      ) : null}
 
       {error ? (
-        <p className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+        <p className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
           {error}
         </p>
       ) : null}
 
-      {loading ? (
-        <p className="mt-8 text-sm text-neutral-500">{t("studio.opportunities.loading")}</p>
-      ) : briefs.length === 0 ? (
-        <p className="mt-8 text-sm text-neutral-600">{t("studio.opportunities.empty")}</p>
-      ) : (
-        <ul className="mt-8 divide-y divide-neutral-900/[0.06]">
-          {briefs.map((brief) => (
-            <li key={brief.id} className="py-6">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-[0.1em] text-neutral-500">
-                    {briefTypeLabel(brief.brief_type)} · {brief.visibility_state}
-                  </p>
-                  <h3 className="mt-1 font-serif text-xl text-neutral-950">{brief.title}</h3>
-                  <p className="mt-2 text-sm text-neutral-600">
-                    {participationModeLabel(brief.participation_mode)}
-                  </p>
-                  {brief.visibility_state === "published" ? (
-                    <a
-                      href={fieldOpportunityHref(brief.id)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 inline-flex text-sm font-medium text-emerald-900 underline decoration-emerald-900/25 underline-offset-2"
-                    >
-                      {t("studio.opportunities.viewOnField")}
-                    </a>
-                  ) : null}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => openEdit(brief)}
-                    className="rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50 disabled:opacity-50"
-                  >
-                    {t("studio.opportunities.edit")}
-                  </button>
-                  {brief.visibility_state === "published" ? (
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void unpublishBrief(brief.id)}
-                      className="rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50 disabled:opacity-50"
-                    >
-                      {t("studio.opportunities.unpublish")}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled={busy || !galleryVerified}
-                      onClick={() => void publishBrief(brief.id)}
-                      className="rounded-xl border border-emerald-900/15 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-950 transition hover:bg-emerald-100 disabled:opacity-50"
-                    >
-                      {t("studio.opportunities.publish")}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <ModalShell isOpen={modalOpen} onClose={() => !busy && setModalOpen(false)}>
-        <h2 className="font-serif text-xl text-neutral-950">
-          {editingBrief
-            ? t("studio.opportunities.editTitle")
-            : t("studio.opportunities.createTitle")}
-        </h2>
-        <div className="mt-6 space-y-4">
-          <div>
-            <label className="text-sm font-medium text-neutral-700">
-              {t("studio.opportunities.field.title")}
-            </label>
-            <input
-              className={inputClass}
-              value={form.title}
-              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-neutral-700">
-              {t("studio.opportunities.field.description")}
-            </label>
-            <textarea
-              className={`${inputClass} min-h-[120px]`}
-              value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-            />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="text-sm font-medium text-neutral-700">
-                {t("studio.opportunities.field.sector")}
-              </label>
-              <select
-                className={inputClass}
-                value={form.sector}
-                onChange={(e) => setForm((f) => ({ ...f, sector: e.target.value }))}
-              >
-                <option value="">{t("studio.opportunities.field.selectSector")}</option>
-                {CULTURAL_SECTOR_OPTIONS.map((opt) => (
-                  <option key={opt.slug} value={opt.slug}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-neutral-700">
-                {t("studio.opportunities.field.type")}
-              </label>
-              <select
-                className={inputClass}
-                value={form.brief_type}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, brief_type: e.target.value as BriefType }))
-                }
-              >
-                {BRIEF_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {briefTypeLabel(type)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-neutral-700">
-              {t("studio.opportunities.field.participationMode")}
-            </label>
-            <select
-              className={inputClass}
-              value={form.participation_mode}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  participation_mode: e.target.value as ParticipationMode,
-                }))
-              }
-            >
-              <option value="open">{participationModeLabel("open")}</option>
-            </select>
-            <p className="mt-2 text-xs text-neutral-500">
-              {t("studio.opportunities.field.participationHint")}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-neutral-700">
-              {t("studio.opportunities.field.practices")}
-            </p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {PRACTICE_TYPES.map((p) => {
-                const active = form.practices_required.includes(p.slug);
-                return (
-                  <button
-                    key={p.slug}
-                    type="button"
-                    onClick={() => togglePractice(p.slug)}
-                    className={`rounded-full border px-3 py-1 text-xs transition ${
-                      active
-                        ? "border-emerald-900/20 bg-emerald-50 text-emerald-950"
-                        : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
-                    }`}
-                  >
-                    {p.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="text-sm font-medium text-neutral-700">
-                {t("studio.opportunities.field.opensAt")}
-              </label>
-              <input
-                type="datetime-local"
-                className={inputClass}
-                value={form.opens_at}
-                onChange={(e) => setForm((f) => ({ ...f, opens_at: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-neutral-700">
-                {t("studio.opportunities.field.closesAt")}
-              </label>
-              <input
-                type="datetime-local"
-                className={inputClass}
-                value={form.closes_at}
-                onChange={(e) => setForm((f) => ({ ...f, closes_at: e.target.value }))}
-              />
-            </div>
-          </div>
-          {editingBrief ? (
-            <div className="border-t border-neutral-900/[0.06] pt-6">
-              <h3 className="text-sm font-medium text-neutral-900">
-                {t("studio.opportunities.applicationsHeading")}
-              </h3>
-              <p className="mt-1 text-xs text-neutral-500">
-                {t("studio.opportunities.applicationsHint")}
-              </p>
-              {applicationsLoading ? (
-                <p className="mt-4 text-sm text-neutral-500">
-                  {t("studio.opportunities.applicationsLoading")}
-                </p>
-              ) : applications.length === 0 ? (
-                <p className="mt-4 text-sm text-neutral-600">
-                  {t("studio.opportunities.applicationsEmpty")}
-                </p>
-              ) : (
-                <ul className="mt-4 divide-y divide-neutral-900/[0.06] rounded-xl border border-neutral-900/[0.06]">
-                  {applications.map((application) => (
-                    <li
-                      key={application.id}
-                      className="grid gap-2 px-4 py-4 sm:grid-cols-[1fr_auto_auto_auto]"
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-neutral-950">
-                          {application.applicant_name}
-                        </p>
-                        <p className="mt-1 text-xs text-neutral-500">
-                          {applicantRoleLabel(application.applicant_role)}
-                        </p>
-                      </div>
-                      <p className="text-sm text-neutral-700 sm:text-right">
-                        {formatApplicationDate(application.created_at)}
-                      </p>
-                      <p className="text-sm text-neutral-700 sm:text-right">
-                        {opportunityApplicationStatusLabel(application.status)}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ) : null}
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => setModalOpen(false)}
-              className="rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-900"
-            >
-              {t("common.cancel")}
-            </button>
-            <button
-              type="button"
-              disabled={busy || !form.title.trim() || !form.sector}
-              onClick={() => void saveBrief()}
-              className="rounded-xl border border-neutral-900/[0.08] bg-neutral-950 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-            >
-              {busy ? t("common.saving") : t("common.save")}
-            </button>
-          </div>
+      <div
+        className={
+          editorOpen
+            ? "grid gap-8 lg:grid-cols-[minmax(280px,22rem)_minmax(0,1fr)] lg:items-start"
+            : ""
+        }
+      >
+        <div className={editorOpen ? "hidden lg:block" : ""}>
+          <OpportunityListPanel
+            briefs={briefs}
+            loading={loading}
+            selectedId={editorMode === "edit" ? editingId : null}
+            reviewModeId={editorMode === "applications" ? editingId : null}
+            isCreating={editorMode === "create"}
+            busy={busy}
+            onCreate={openCreate}
+            onSelect={openEdit}
+            onReviewApplications={openApplicationsReview}
+            onDuplicate={() => undefined}
+            onDelete={() => undefined}
+          />
         </div>
-      </ModalShell>
+
+        {editorOpen ? (
+          <OpportunityEditorWorkspace
+            mode={editorMode === "create" ? "create" : "edit"}
+            focus={workspaceFocus}
+            brief={editingBrief}
+            form={form}
+            busy={busy}
+            galleryVerified={galleryVerified}
+            applications={applications}
+            applicationsLoading={applicationsLoading}
+            applicationStatusBusyId={applicationStatusBusyId}
+            onFormChange={setForm}
+            onBack={closeEditor}
+            onSwitchToEdit={switchToEditMode}
+            onSave={() => void saveBrief()}
+            onPublish={() => void publishBrief()}
+            onUnpublish={() => void unpublishBrief()}
+            onUpdateApplicationStatus={(id, status) =>
+              void updateApplicationStatus(id, status)
+            }
+          />
+        ) : null}
+      </div>
     </section>
   );
 }

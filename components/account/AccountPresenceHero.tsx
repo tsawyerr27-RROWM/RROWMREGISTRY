@@ -61,9 +61,7 @@ function HeroTile({
   return (
     <li className="flex flex-col rounded-lg bg-white/[0.06] p-4 ring-1 ring-white/10">
       <p className="text-[13px] font-medium text-white">{title}</p>
-      <div className="mt-3 flex min-h-[5.5rem] flex-1 flex-col justify-between gap-3">
-        {children}
-      </div>
+      <div className="mt-3 flex flex-1 flex-col gap-3">{children}</div>
       {footer ? (
         <div className="mt-3 border-t border-white/10 pt-3">{footer}</div>
       ) : null}
@@ -214,8 +212,9 @@ function ArtistNarrativeTile({
     >
       {profileCompleteness ? (
         <CompletenessMeter snapshot={profileCompleteness} />
+      ) : checklistItems.length > 0 ? (
+        <FieldChecklist items={checklistItems} />
       ) : null}
-      {checklistItems.length > 0 ? <FieldChecklist items={checklistItems} /> : null}
       {bio ? (
         <p className="line-clamp-2 text-[11px] leading-relaxed text-white/55 italic">
           &ldquo;{truncate(bio, 100)}&rdquo;
@@ -599,50 +598,83 @@ export function AccountPresenceHero({
   );
   const ownedWorkCount =
     profileSnapshot.ownedWorkCount ?? previewList.length;
+  const isCreative = role === "artist";
 
   return (
-    <div className="relative overflow-hidden rounded-[1.25rem] border border-white/10 bg-gradient-to-br from-neutral-950 via-[#151a24] to-neutral-900 shadow-[0_32px_64px_-24px_rgba(0,0,0,0.45),inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+    <div
+      className={`relative rounded-[1.25rem] border border-white/10 bg-gradient-to-br from-neutral-950 via-[#151a24] to-neutral-900 shadow-[0_32px_64px_-24px_rgba(0,0,0,0.45),inset_0_1px_0_0_rgba(255,255,255,0.06)] ${
+        isCreative ? "overflow-visible" : "overflow-hidden"
+      }`}
+    >
       <div
-        className={`pointer-events-none absolute -right-24 top-0 h-[380px] w-[380px] rounded-full blur-[100px] ${
-          role === "collector"
-            ? "bg-teal-500/14"
-            : role === "gallery"
-              ? "bg-violet-500/12"
-              : "bg-amber-500/12"
+        className={`pointer-events-none absolute inset-0 ${
+          isCreative ? "overflow-hidden rounded-[1.25rem]" : ""
         }`}
         aria-hidden
-      />
+      >
+        <div
+          className={`absolute -right-24 top-0 h-[380px] w-[380px] rounded-full blur-[100px] ${
+            role === "collector"
+              ? "bg-teal-500/14"
+              : role === "gallery"
+                ? "bg-violet-500/12"
+                : "bg-amber-500/12"
+          }`}
+        />
+        <div
+          className={`absolute -left-16 bottom-0 h-[260px] w-[260px] rounded-full blur-[90px] ${
+            role === "collector" ? "bg-sky-500/12" : "bg-sky-500/10"
+          }`}
+        />
+      </div>
       <div
-        className={`pointer-events-none absolute -left-16 bottom-0 h-[260px] w-[260px] rounded-full blur-[90px] ${
-          role === "collector" ? "bg-sky-500/12" : "bg-sky-500/10"
+        className={`relative grid gap-10 px-6 py-12 lg:gap-8 lg:px-10 lg:py-14 xl:px-14 ${
+          isCreative ? "" : "lg:grid-cols-12"
         }`}
-        aria-hidden
-      />
-      <div className="relative grid gap-10 px-6 py-12 lg:grid-cols-12 lg:gap-8 lg:px-10 lg:py-14 xl:px-14">
-        <div className="flex flex-col justify-between lg:col-span-7">
+      >
+        <div
+          className={`relative flex flex-col justify-between ${
+            isCreative ? "" : "lg:col-span-7"
+          }`}
+        >
           <div>
             <div className="flex flex-wrap items-center gap-3">
               <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-sm font-medium text-white/85">
                 {participantLabel}
               </span>
             </div>
-            <InfoTooltip
-              text={
-                role === "collector"
-                  ? "Your public presence on the registry is deliberate. These controls shape what visitors see, not your internal records or studio activity."
-                  : "Your public presence on the registry is deliberate. These controls shape what visitors see, not your internal records or workspace activity."
-              }
-              theme="dark"
-            />
-            <h1 className="mt-5 font-serif text-[2rem] font-normal leading-[1.05] tracking-tight text-white md:text-[2.65rem] lg:text-[2.85rem]">
-              {headline}
-            </h1>
+            {isCreative ? (
+              <div className="mt-5 flex flex-wrap items-start gap-x-3 gap-y-2">
+                <h1 className="font-serif text-[2rem] font-normal leading-[1.05] tracking-tight text-white md:text-[2.65rem] lg:text-[2.85rem]">
+                  {headline}
+                </h1>
+                <InfoTooltip
+                  className="mt-2.5 shrink-0 md:mt-3"
+                  text="Your public presence on the registry is deliberate. These controls shape what visitors see, not your internal records or workspace activity."
+                  theme="dark"
+                />
+              </div>
+            ) : (
+              <>
+                <InfoTooltip
+                  text={
+                    role === "collector"
+                      ? "Your public presence on the registry is deliberate. These controls shape what visitors see, not your internal records or studio activity."
+                      : "Your public presence on the registry is deliberate. These controls shape what visitors see, not your internal records or workspace activity."
+                  }
+                  theme="dark"
+                />
+                <h1 className="mt-5 font-serif text-[2rem] font-normal leading-[1.05] tracking-tight text-white md:text-[2.65rem] lg:text-[2.85rem]">
+                  {headline}
+                </h1>
+              </>
+            )}
           </div>
 
           <div className="mt-10 space-y-5 lg:mt-12">
             <ul
               className={`grid gap-4 sm:gap-5 ${
-                role === "artist"
+                isCreative
                   ? "sm:grid-cols-2 xl:grid-cols-4"
                   : role === "gallery"
                     ? "sm:grid-cols-2"
@@ -694,6 +726,7 @@ export function AccountPresenceHero({
           </div>
         </div>
 
+        {!isCreative ? (
         <div className="flex min-h-[260px] flex-col items-center justify-center gap-10 lg:col-span-5 lg:min-h-[320px]">
           {showCollectionPreview ? (
             <div className="relative w-full max-w-[min(100%,340px)]">
@@ -729,6 +762,7 @@ export function AccountPresenceHero({
             </div>
           </div>
         </div>
+        ) : null}
       </div>
     </div>
   );

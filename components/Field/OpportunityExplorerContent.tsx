@@ -10,6 +10,24 @@ import type { FieldOpportunityCard } from "@/lib/fetch-field-opportunities-list"
 import type { FieldOpportunityListParams } from "@/lib/field-opportunity-params";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
+type OpportunityRhythmSegment = {
+  featured: FieldOpportunityCard;
+  standards: FieldOpportunityCard[];
+};
+
+function buildOpportunityRhythm(rows: FieldOpportunityCard[]): OpportunityRhythmSegment[] {
+  const segments: OpportunityRhythmSegment[] = [];
+
+  for (let i = 0; i < rows.length; i += 3) {
+    segments.push({
+      featured: rows[i],
+      standards: rows.slice(i + 1, i + 3),
+    });
+  }
+
+  return segments;
+}
+
 type Props = {
   basePath: string;
   rows: FieldOpportunityCard[];
@@ -32,6 +50,7 @@ export function OpportunityExplorerContent({
     Boolean(params.practice) ||
     Boolean(params.briefType) ||
     params.window !== "all";
+  const rhythmSegments = buildOpportunityRhythm(rows);
 
   return (
     <div className="mt-10">
@@ -74,9 +93,30 @@ export function OpportunityExplorerContent({
         </div>
       ) : (
         <>
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-            {rows.map((row) => (
-              <OpportunityExplorerCard key={row.id} row={row} />
+          <div className="mt-12 max-w-6xl space-y-8 md:space-y-10">
+            {rhythmSegments.map((segment, segmentIndex) => (
+              <div
+                key={segment.featured.id}
+                className="space-y-5 md:space-y-6"
+              >
+                <OpportunityExplorerCard
+                  row={segment.featured}
+                  variant="featured"
+                  accentIndex={segmentIndex * 3}
+                />
+                {segment.standards.length > 0 ? (
+                  <div className="grid gap-5 md:grid-cols-2 md:gap-6">
+                    {segment.standards.map((row, standardIndex) => (
+                      <OpportunityExplorerCard
+                        key={row.id}
+                        row={row}
+                        variant="standard"
+                        accentIndex={segmentIndex * 3 + standardIndex + 1}
+                      />
+                    ))}
+                  </div>
+                ) : null}
+              </div>
             ))}
           </div>
           <OpportunityExplorerPagination

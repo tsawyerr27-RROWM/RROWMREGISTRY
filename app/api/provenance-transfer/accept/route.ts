@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { logActivityEvent } from "@/lib/log-activity";
+import { notifyRegistryTransferRecorded } from "@/lib/notification-hooks/registry";
 import { guardRegistryMutation } from "@/lib/registry-action-security/guards";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
@@ -108,6 +109,12 @@ export async function POST(req: Request) {
         },
       });
     }
+
+    void notifyRegistryTransferRecorded({
+      artworkId,
+      fromUserId,
+      toUserId: user.id,
+    });
   }
 
   return NextResponse.json({

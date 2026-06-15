@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+import { requireAdminApi } from "@/lib/api-admin-auth";
+
 /**
  * Append an activity_events row for a given artist (user_id), after verifying the
  * caller is an admin. Uses service role so logging works when the RPC would
@@ -36,47 +38,51 @@ export async function POST(req: Request) {
       );
     }
 
-    const authHeader = req.headers.get("authorization") ?? "";
+    const adminSession = await requireAdminApi(req);
+    let authorized = adminSession.ok;
 
-    // Client pages may not set Supabase cookies, so authenticate via the access
-    // token header first. Fall back to cookies if no header is present.
-    let user: { id: string } | null = null;
-    if (authHeader.toLowerCase().startsWith("bearer ")) {
-      const tokenClient = createClient(url, anon, {
-        global: { headers: { Authorization: authHeader } },
-      });
-      const { data, error } = await tokenClient.auth.getUser();
-      if (error || !data?.user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-      user = data.user as { id: string };
-    } else {
-      const cookieStore = await cookies();
-      const cookieClient = createServerClient(url, anon, {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value;
+    if (!authorized) {
+      const authHeader = req.headers.get("authorization") ?? "";
+      let user: { id: string } | null = null;
+      if (authHeader.toLowerCase().startsWith("bearer ")) {
+        const tokenClient = createClient(url, anon, {
+          global: { headers: { Authorization: authHeader } },
+        });
+        const { data, error } = await tokenClient.auth.getUser();
+        if (!error && data?.user) {
+          user = data.user as { id: string };
+        }
+      } else {
+        const cookieStore = await cookies();
+        const cookieClient = createServerClient(url, anon, {
+          cookies: {
+            get(name: string) {
+              return cookieStore.get(name)?.value;
+            },
           },
-        },
-      });
-      const { data, error } = await cookieClient.auth.getUser();
-      if (error || !data?.user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        });
+        const { data, error } = await cookieClient.auth.getUser();
+        if (!error && data?.user) {
+          user = data.user as { id: string };
+        }
       }
-      user = data.user as { id: string };
+
+      if (user) {
+        const admin = createClient(url, serviceKey);
+        const { data: profile } = await admin
+          .from("artists")
+          .select("is_admin")
+          .eq("id", user.id)
+          .maybeSingle();
+        authorized = profile?.is_admin === true;
+      }
     }
 
-    const admin = createClient(url, serviceKey);
-    const { data: profile } = await admin
-      .from("artists")
-      .select("is_admin")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (!profile?.is_admin) {
+    if (!authorized) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const admin = createClient(url, serviceKey);
     const { error } = await admin.rpc("log_activity_event", {
       p_user_id: artistUserId,
       p_type: type,

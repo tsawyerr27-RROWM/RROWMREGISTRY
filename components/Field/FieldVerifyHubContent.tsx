@@ -41,10 +41,7 @@ export function FieldVerifyHubContent() {
   return (
     <div className={`${gutter} pb-20 pt-8 md:pb-28 md:pt-12`}>
       <header className="max-w-3xl">
-        <p className="text-xs font-medium uppercase tracking-[0.14em] text-neutral-500">
-          {t("ecosystem.surface.field")}
-        </p>
-        <h1 className="mt-4 font-serif text-[2.125rem] font-normal leading-[1.06] tracking-tight text-neutral-950 md:text-5xl md:leading-[1.05]">
+        <h1 className="font-serif text-[2.125rem] font-normal leading-[1.06] tracking-tight text-neutral-950 md:text-5xl md:leading-[1.05]">
           {t("field.verify.hub.title")}
         </h1>
         <p className="mt-8 max-w-2xl text-lg leading-relaxed text-neutral-600">
@@ -71,25 +68,25 @@ export function FieldVerifyHubContent() {
         </p>
         <ol className="mt-8 space-y-6">
           <li className="rounded-xl border border-neutral-900/[0.06] bg-white/50 px-5 py-4">
-            <p className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
+            <h3 className="font-serif text-base font-normal text-neutral-900">
               {t("field.verify.hub.tier1.label")}
-            </p>
+            </h3>
             <p className="mt-2 text-sm leading-relaxed text-neutral-700">
               {t("field.verify.hub.tier1.body")}
             </p>
           </li>
           <li className="rounded-xl border border-neutral-900/[0.06] bg-white/50 px-5 py-4">
-            <p className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
+            <h3 className="font-serif text-base font-normal text-neutral-900">
               {t("field.verify.hub.tier2.label")}
-            </p>
+            </h3>
             <p className="mt-2 text-sm leading-relaxed text-neutral-700">
               {t("field.verify.hub.tier2.body")}
             </p>
           </li>
           <li className="rounded-xl border border-neutral-900/[0.06] bg-white/50 px-5 py-4">
-            <p className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
+            <h3 className="font-serif text-base font-normal text-neutral-900">
               {t("field.verify.hub.tier3.label")}
-            </p>
+            </h3>
             <p className="mt-2 text-sm leading-relaxed text-neutral-700">
               {t("field.verify.hub.tier3.body")}
             </p>

@@ -29,6 +29,14 @@ import {
   type BriefType,
   type ParticipationMode,
 } from "@/lib/opportunity-types";
+import {
+  buildEligibilityMatchIndicators,
+  creativeEligibilityProfileFromArtistRow,
+  hasPublicEligibilityContent,
+  parseOpportunityEligibilityFields,
+  practiceApplyGateFromPublicPresence,
+  type OpportunityEligibilityFields,
+} from "@/lib/opportunity-eligibility";
 import { practiceLabel } from "@/lib/practice-types";
 
 export type FieldOpportunityDetailData = {
@@ -53,6 +61,8 @@ export type FieldOpportunityDetailData = {
   acceptingResponses: boolean;
   presence: OrganisationPresencePageData | null;
   applyContext: FieldOpportunityApplyContext;
+  eligibility: OpportunityEligibilityFields;
+  showEligibilityPanel: boolean;
 };
 
 export async function loadFieldOpportunityDetailPageData(
@@ -104,7 +114,14 @@ export async function loadFieldOpportunityDetailPageData(
     }
   }
 
-  const applyContext = await loadFieldOpportunityApplyContext(supabase, briefId);
+  const eligibility = parseOpportunityEligibilityFields(
+    data as Record<string, unknown>
+  );
+  const applyContext = await loadFieldOpportunityApplyContext(
+    supabase,
+    briefId,
+    eligibility
+  );
 
   return {
     brief: {
@@ -122,6 +139,11 @@ export async function loadFieldOpportunityDetailPageData(
       closes_at: data.closes_at,
       registry_outcome_required: Boolean(data.registry_outcome_required),
       registry_outcome_copy: data.registry_outcome_copy,
+      eligible_disciplines: eligibility.eligible_disciplines,
+      eligible_locations: eligibility.eligible_locations,
+      eligible_career_stages: eligibility.eligible_career_stages,
+      eligibility_notes: eligibility.eligibility_notes,
+      invitation_only: eligibility.invitation_only,
       published_at: data.published_at,
       created_at: data.created_at,
       updated_at: data.updated_at,
@@ -154,12 +176,15 @@ export async function loadFieldOpportunityDetailPageData(
     }),
     presence,
     applyContext,
+    eligibility,
+    showEligibilityPanel: hasPublicEligibilityContent(eligibility),
   };
 }
 
 export async function loadFieldOpportunityApplyContext(
   supabase: SupabaseClient,
-  briefId: string
+  briefId: string,
+  eligibility?: OpportunityEligibilityFields
 ): Promise<FieldOpportunityApplyContext> {
   const {
     data: { user },
@@ -170,6 +195,8 @@ export async function loadFieldOpportunityApplyContext(
       isAuthenticated: false,
       viewerRole: null,
       application: null,
+      eligibilityIndicators: [],
+      practiceApplyGate: null,
     };
   }
 
@@ -190,15 +217,43 @@ export async function loadFieldOpportunityApplyContext(
       isAuthenticated: true,
       viewerRole,
       application: null,
+      eligibilityIndicators: [],
+      practiceApplyGate: null,
     };
   }
 
-  const { data: application } = await supabase
-    .from("field_opportunity_applications")
-    .select("id, status, created_at, updated_at")
-    .eq("opportunity_id", briefId)
-    .eq("applicant_user_id", user.id)
-    .maybeSingle();
+  const [{ data: application }, { data: artist }] = await Promise.all([
+    supabase
+      .from("field_opportunity_applications")
+      .select("id, status, created_at, updated_at")
+      .eq("opportunity_id", briefId)
+      .eq("applicant_user_id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("artists")
+      .select("public_presence")
+      .eq("id", user.id)
+      .maybeSingle(),
+  ]);
+
+  const creativeProfile = artist
+    ? creativeEligibilityProfileFromArtistRow({
+        publicPresence: artist.public_presence,
+      })
+    : null;
+
+  const practiceApplyGate = practiceApplyGateFromPublicPresence({
+    eligibleDisciplines: eligibility?.eligible_disciplines,
+    publicPresence: artist?.public_presence,
+  });
+
+  const eligibilityIndicators =
+    eligibility && hasPublicEligibilityContent(eligibility)
+      ? buildEligibilityMatchIndicators({
+          eligibility,
+          profile: creativeProfile,
+        })
+      : [];
 
   return {
     isAuthenticated: true,
@@ -213,6 +268,8 @@ export async function loadFieldOpportunityApplyContext(
           updated_at: application.updated_at,
         }
       : null,
+    eligibilityIndicators,
+    practiceApplyGate,
   };
 }
 

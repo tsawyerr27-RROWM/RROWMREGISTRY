@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { CreativePresenceView } from "@/components/Field/CreativePresenceView";
+import { loadCreativePresencePageData } from "@/lib/field-creative-presence";
 import {
-  loadCreativePresenceMetadata,
-  loadCreativePresencePageData,
-} from "@/lib/field-creative-presence";
+  buildProfilePresenceMetadata,
+  loadCreativeProfileOgBundle,
+} from "@/lib/profile-og";
 import { redirectIfPageOutOfRange } from "@/lib/redirect-registry-page";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
@@ -19,29 +20,13 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const supabase = await createSupabaseServerClient();
-  const meta = await loadCreativePresenceMetadata(supabase, slug);
+  const bundle = await loadCreativeProfileOgBundle(supabase, slug);
 
-  if (!meta) {
+  if (!bundle) {
     return { title: "Creative · The Field" };
   }
 
-  const desc = meta.bio?.trim();
-  const summary =
-    desc && desc.length > 0
-      ? desc.length > 160
-        ? `${desc.slice(0, 157)}…`
-        : desc
-      : `Public Creative profile for ${meta.displayName} on RROWM.`;
-
-  return {
-    title: `${meta.displayName} · The Field`,
-    description: summary,
-    robots: meta.indexable ? undefined : { index: false, follow: false },
-    openGraph: {
-      title: `${meta.displayName} · The Field`,
-      description: summary,
-    },
-  };
+  return buildProfilePresenceMetadata(bundle);
 }
 
 export default async function FieldCreativePresencePage({

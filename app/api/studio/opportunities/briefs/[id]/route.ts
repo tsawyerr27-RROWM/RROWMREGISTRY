@@ -8,6 +8,11 @@ import {
   type BriefType,
   type ParticipationMode,
 } from "@/lib/opportunity-types";
+import {
+  normalizeEligibilityCareerStages,
+  normalizeEligibilityDisciplines,
+  normalizeEligibilityLocations,
+} from "@/lib/opportunity-eligibility";
 import { isPracticeSlug } from "@/lib/practice-types";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
@@ -25,6 +30,11 @@ type BriefPatchBody = {
   closes_at?: string | null;
   registry_outcome_required?: boolean;
   registry_outcome_copy?: string | null;
+  eligible_disciplines?: string[];
+  eligible_locations?: string[];
+  eligible_career_stages?: string[];
+  eligibility_notes?: string | null;
+  invitation_only?: boolean | null;
 };
 
 function normalizePractices(values: unknown): string[] {
@@ -101,6 +111,26 @@ export async function PATCH(req: Request, context: RouteContext) {
   }
   if (body.registry_outcome_copy !== undefined) {
     patch.registry_outcome_copy = body.registry_outcome_copy?.trim() || null;
+  }
+  if (body.eligible_disciplines !== undefined) {
+    patch.eligible_disciplines = normalizeEligibilityDisciplines(
+      body.eligible_disciplines
+    );
+  }
+  if (body.eligible_locations !== undefined) {
+    patch.eligible_locations = normalizeEligibilityLocations(body.eligible_locations);
+  }
+  if (body.eligible_career_stages !== undefined) {
+    patch.eligible_career_stages = normalizeEligibilityCareerStages(
+      body.eligible_career_stages
+    );
+  }
+  if (body.eligibility_notes !== undefined) {
+    patch.eligibility_notes = body.eligibility_notes?.trim() || null;
+  }
+  if (body.invitation_only !== undefined) {
+    patch.invitation_only =
+      body.invitation_only === null ? null : Boolean(body.invitation_only);
   }
 
   const { data, error } = await supabase

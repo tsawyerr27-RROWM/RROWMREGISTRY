@@ -19,7 +19,7 @@ import {
   latestOwnershipSystemStatus,
   ownershipStatusBadge,
 } from "@/lib/ownership-ledger";
-import { fieldRecordHref } from "@/lib/field-nav";
+import { fieldRecordHref, fieldCollectorHref } from "@/lib/field-nav";
 import { parsePublicPresence } from "@/lib/public-presence";
 import { warnSupabaseRpc } from "@/lib/supabase-rpc-error";
 
@@ -46,6 +46,8 @@ export type CollectorPresenceFootprint = {
 };
 
 export type CollectorPresencePageData = {
+  slug: string;
+  profilePath: string;
   displayTitle: string;
   location: string | null;
   bio: string | null;
@@ -126,10 +128,14 @@ export async function loadCollectorPresencePageData(
       : null
   );
 
+  const profilePath = fieldCollectorHref(cleanSlug);
+
   const ownedIds = await getCollectorOwnedArtworkIds(supabase, profile.user_id);
 
   if (ownedIds.length === 0) {
     return {
+      slug: cleanSlug,
+      profilePath,
       displayTitle,
       location: locationLine,
       bio,
@@ -249,6 +255,8 @@ export async function loadCollectorPresencePageData(
   });
 
   return {
+    slug: cleanSlug,
+    profilePath,
     displayTitle,
     location: locationLine,
     bio,

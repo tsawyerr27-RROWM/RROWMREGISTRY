@@ -66,18 +66,53 @@ export default function AdminPage() {
         }),
       });
 
-      const body = await res.json().catch(() => null);
+      const contentType = res.headers.get("content-type") ?? "";
+      const raw = await res.text();
+      let body: { error?: string; message?: string } | null = null;
+      if (contentType.includes("application/json") && raw) {
+        try {
+          body = JSON.parse(raw) as { error?: string; message?: string };
+        } catch (parseErr) {
+          console.error("[admin login] response JSON parse failed", parseErr, raw);
+        }
+      } else if (raw) {
+        console.error("[admin login] non-JSON response", {
+          status: res.status,
+          contentType,
+          bodyPreview: raw.slice(0, 200),
+        });
+      }
+
+      console.error("[admin login] response", {
+        status: res.status,
+        statusText: res.statusText,
+        contentType,
+        body: body ?? (raw || null),
+      });
 
       if (!res.ok) {
-        setLoginError(body?.error || "Login failed.");
+        const isHtml = raw.trimStart().startsWith("<!DOCTYPE") || raw.trimStart().startsWith("<html");
+        const detail =
+          (typeof body?.error === "string" && body.error.trim()) ||
+          (typeof body?.message === "string" && body.message.trim()) ||
+          (isHtml
+            ? `Login failed (HTTP ${res.status}). API route not found — restart the dev server or redeploy.`
+            : raw.trim() && raw.length <= 300
+              ? raw.trim()
+              : null) ||
+          `Login failed (HTTP ${res.status}).`;
+        setLoginError(detail);
         setSubmitting(false);
         return;
       }
 
       setSubmitting(false);
       setPhase("console");
-    } catch {
-      setLoginError("An unexpected error occurred.");
+    } catch (err) {
+      console.error("[admin login] exception", err);
+      setLoginError(
+        err instanceof Error ? err.message : "An unexpected error occurred."
+      );
       setSubmitting(false);
     }
   };

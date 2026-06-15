@@ -41,7 +41,9 @@ export async function GET(
   const service = createSupabaseServiceClient();
   const { data: rows, error } = await service
     .from("field_opportunity_applications")
-    .select("id, status, created_at, applicant_user_id")
+    .select(
+      "id, status, created_at, applicant_user_id, reviewed_at, reviewed_by, eligibility_override_requested, eligibility_override_reason"
+    )
     .eq("opportunity_id", briefId)
     .order("created_at", { ascending: false });
 
@@ -84,6 +86,13 @@ export async function GET(
         applicant_role: String(actor?.role || "artist"),
         status: row.status as OrganisationOpportunityApplicationListItem["status"],
         created_at: row.created_at,
+        reviewed_at: row.reviewed_at ?? null,
+        reviewed_by: row.reviewed_by ?? null,
+        eligibility_override_requested: Boolean(row.eligibility_override_requested),
+        eligibility_override_reason:
+          typeof row.eligibility_override_reason === "string"
+            ? row.eligibility_override_reason
+            : null,
       };
     }
   );

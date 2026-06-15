@@ -8,6 +8,7 @@ import type { Session } from "@supabase/supabase-js";
 import { signOutSafely } from "@/lib/auth-sign-out";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { FooterRegionSelector } from "@/components/LandingPage/FooterRegionSelector";
+import { NotificationInboxBell } from "@/components/notifications/NotificationInboxBell";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 
@@ -301,6 +302,7 @@ export default function Header() {
           </div>
           {hydrated && session ? (
             <>
+              <NotificationInboxBell tone={headerOnDarkStudio ? "dark" : "light"} />
               <Link
                 href="/studio/account"
                 className={`${subtleClass} hidden whitespace-nowrap sm:inline`}

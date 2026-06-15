@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { FieldVerifyRecordView } from "@/components/Field/FieldVerifyRecordView";
+import {
+  buildVerificationMetadata,
+  buildVerificationNotFoundMetadata,
+  loadVerificationOgBundle,
+} from "@/lib/verification-og";
 import { loadFieldVerifyRecordData } from "@/lib/field-verify-record";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
@@ -14,20 +19,16 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { registry_id } = await params;
   const clean = registry_id.trim();
-  if (!clean) return { title: "Verify record · The Field" };
+  if (!clean) return buildVerificationNotFoundMetadata();
 
   const supabase = await createSupabaseServerClient();
-  const data = await loadFieldVerifyRecordData(supabase, clean, null);
+  const bundle = await loadVerificationOgBundle(supabase, clean);
 
-  if (!data) {
-    return { title: "Registry record not found · The Field" };
+  if (!bundle) {
+    return buildVerificationNotFoundMetadata();
   }
 
-  const title = data.artwork.title?.trim() || "Registry record";
-  return {
-    title: `${title} · Verify · The Field`,
-    description: `Public verification status for Registry ID ${data.artwork.registry_id}.`,
-  };
+  return buildVerificationMetadata(bundle);
 }
 
 export default async function FieldVerifyRecordPage({ params }: Props) {

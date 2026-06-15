@@ -1,4 +1,5 @@
 import { CANONICAL_RECORD_PHRASES } from "@/lib/representation-language";
+import { buildRegistryStewardInvitePublicUrl } from "@/lib/registry-steward-invite";
 
 export type ArtworkAuthenticationInviteStatus =
   | "pending"
@@ -49,8 +50,7 @@ export function buildArtworkAuthenticationInviteUrl(
   siteUrl: string,
   token: string
 ): string {
-  const base = String(siteUrl || "").replace(/\/$/, "");
-  return `${base}/authenticate-record?token=${encodeURIComponent(token)}`;
+  return buildRegistryStewardInvitePublicUrl(token, siteUrl);
 }
 
 export const ARTWORK_AUTH_INVITE_COPY = {

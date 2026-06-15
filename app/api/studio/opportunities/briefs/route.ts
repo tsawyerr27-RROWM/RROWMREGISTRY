@@ -8,8 +8,14 @@ import {
   type BriefType,
   type ParticipationMode,
 } from "@/lib/opportunity-types";
+import {
+  normalizeEligibilityCareerStages,
+  normalizeEligibilityDisciplines,
+  normalizeEligibilityLocations,
+} from "@/lib/opportunity-eligibility";
 import { isPracticeSlug } from "@/lib/practice-types";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
 
 export const runtime = "nodejs";
 
@@ -26,6 +32,11 @@ type BriefBody = {
   closes_at?: string | null;
   registry_outcome_required?: boolean;
   registry_outcome_copy?: string | null;
+  eligible_disciplines?: string[];
+  eligible_locations?: string[];
+  eligible_career_stages?: string[];
+  eligibility_notes?: string | null;
+  invitation_only?: boolean | null;
 };
 
 function normalizePractices(values: unknown): string[] {
@@ -55,7 +66,33 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ briefs: data ?? [] });
+  const briefs = data ?? [];
+  const briefIds = briefs.map((row) => row.id);
+  const applicationCountByBriefId = new Map<string, number>();
+
+  if (briefIds.length > 0) {
+    const service = createSupabaseServiceClient();
+    const { data: applicationRows, error: applicationError } = await service
+      .from("field_opportunity_applications")
+      .select("opportunity_id")
+      .in("opportunity_id", briefIds);
+
+    if (applicationError) {
+      return NextResponse.json({ error: applicationError.message }, { status: 500 });
+    }
+
+    for (const row of applicationRows ?? []) {
+      const id = String(row.opportunity_id);
+      applicationCountByBriefId.set(id, (applicationCountByBriefId.get(id) ?? 0) + 1);
+    }
+  }
+
+  const briefsWithCounts = briefs.map((brief) => ({
+    ...brief,
+    application_count: applicationCountByBriefId.get(brief.id) ?? 0,
+  }));
+
+  return NextResponse.json({ briefs: briefsWithCounts });
 }
 
 export async function POST(req: Request) {
@@ -113,6 +150,18 @@ export async function POST(req: Request) {
       closes_at: body.closes_at || null,
       registry_outcome_required: Boolean(body.registry_outcome_required),
       registry_outcome_copy: body.registry_outcome_copy?.trim() || null,
+      eligible_disciplines: normalizeEligibilityDisciplines(body.eligible_disciplines),
+      eligible_locations: normalizeEligibilityLocations(body.eligible_locations),
+      eligible_career_stages: normalizeEligibilityCareerStages(
+        body.eligible_career_stages
+      ),
+      eligibility_notes: body.eligibility_notes?.trim() || null,
+      ...(body.invitation_only !== undefined
+        ? {
+            invitation_only:
+              body.invitation_only === null ? null : Boolean(body.invitation_only),
+          }
+        : {}),
     })
     .select("*")
     .single();

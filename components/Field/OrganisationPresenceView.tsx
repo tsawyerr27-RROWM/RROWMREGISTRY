@@ -1,10 +1,16 @@
+"use client";
+
 import Link from "next/link";
+import { useMemo } from "react";
 
 import { OrganisationPresenceDiscoverySection } from "@/components/Field/OrganisationPresenceDiscoverySection";
+import { ProfilePresencePrestigeBand } from "@/components/Field/ProfilePresencePrestigeBand";
 import { FieldRelationshipContextSection } from "@/components/Field/FieldRelationshipContextSection";
 import { OrganisationPresenceOwnerStewardship } from "@/components/Field/OrganisationPresenceOwnerStewardship";
 import { OrganisationPresenceRegistryEvidence } from "@/components/Field/OrganisationPresenceRegistryEvidence";
+import { ProfileShareControl } from "@/components/sharing/ProfileShareControl";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import type { OrganisationPresencePageData } from "@/lib/field-organisation-presence";
 import {
   fieldExplorerRecordsHref,
@@ -12,8 +18,10 @@ import {
   fieldVerifyHref,
   fieldVerifyRecordHref,
 } from "@/lib/field-nav";
+import { fillMessage } from "@/lib/locale-messages";
 import { registryLedgerHref } from "@/lib/registry-nav";
 import { artworkCardParticipationLabel } from "@/lib/representation-language";
+import { buildOrganisationProfileShareContext } from "@/lib/profile-presence-summary";
 
 type Props = {
   data: OrganisationPresencePageData;
@@ -25,6 +33,7 @@ function organisationInitial(name: string) {
 }
 
 export function OrganisationPresenceView({ data }: Props) {
+  const { t } = useLocalePreferences();
   const {
     organisation,
     showRoster,
@@ -39,13 +48,15 @@ export function OrganisationPresenceView({ data }: Props) {
     contextPanels,
   } = data;
 
+  const shareContext = useMemo(
+    () => buildOrganisationProfileShareContext(data),
+    [data]
+  );
+
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 md:py-14 lg:px-8">
       <section className="max-w-3xl">
-        <p className="text-xs font-medium uppercase tracking-[0.14em] text-neutral-500">
-          Organisation
-        </p>
-        <div className="mt-4 flex flex-wrap items-start gap-5">
+        <div className="flex flex-wrap items-start gap-5">
           <div
             className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-neutral-900/[0.08] bg-gradient-to-br from-neutral-100 to-neutral-200/90 font-serif text-2xl text-neutral-700"
             aria-hidden
@@ -59,8 +70,10 @@ export function OrganisationPresenceView({ data }: Props) {
           </div>
         </div>
 
+        <ProfilePresencePrestigeBand context={shareContext} />
+        <ProfileShareControl context={shareContext} className="mt-5" />
+
         <OrganisationPresenceRegistryEvidence
-          verified={organisation.verified}
           footprint={footprint}
           representedCreativesCount={representedCreatives.length}
           participationLayers={participationLayers}
@@ -80,7 +93,7 @@ export function OrganisationPresenceView({ data }: Props) {
             rel="noopener noreferrer"
             className="mt-4 inline-flex text-sm font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-4 transition hover:decoration-neutral-500"
           >
-            Website
+            {t("field.presence.linkWebsite")}
           </a>
         ) : null}
       </section>
@@ -93,18 +106,20 @@ export function OrganisationPresenceView({ data }: Props) {
         <section className="mt-14 md:mt-16" aria-labelledby="org-roster-heading">
           <div className="flex flex-wrap items-end justify-between gap-4 border-b border-black/[0.06] pb-6">
             <div>
-              <InfoTooltip text="Creatives who have opted in to appear on this Organisation's public profile. Links open Creative Presence when their profile is public." />
+              <InfoTooltip text={t("field.presence.organisation.rosterTooltip")} />
               <h2
                 id="org-roster-heading"
                 className="font-serif text-3xl font-normal tracking-tight text-neutral-950 md:text-4xl"
               >
-                Represented Creatives
+                {t("field.organisation.representedCreatives")}
               </h2>
             </div>
             {representedCreatives.length > 0 ? (
               <span className="tabular-nums text-xs text-neutral-500">
                 {representedCreatives.length}{" "}
-                {representedCreatives.length === 1 ? "name" : "names"}
+                {representedCreatives.length === 1
+                  ? t("field.presence.nameSingular")
+                  : t("field.presence.namesPlural")}
               </span>
             ) : null}
           </div>
@@ -112,7 +127,7 @@ export function OrganisationPresenceView({ data }: Props) {
           {representedCreatives.length === 0 ? (
             <div className="mt-10 rounded-3xl border border-black/[0.06] bg-white/70 px-8 py-14 text-center shadow-sm">
               <p className="text-sm text-neutral-600">
-                No represented Creatives are listed on this public profile yet.
+                {t("field.presence.organisation.rosterEmpty")}
               </p>
             </div>
           ) : (
@@ -141,24 +156,41 @@ export function OrganisationPresenceView({ data }: Props) {
                       )}
                       <p className="mt-2 text-[12px] text-neutral-500">
                         {creative.href
-                          ? "Creative profile"
+                          ? t("field.presence.organisation.profilePublic")
                           : creative.slug
-                            ? "Profile not yet public"
-                            : "Profile not yet on file"}
-                        {creative.artistVerified ? " · Artist confirmation on file" : null}
+                            ? t("field.presence.organisation.profileNotPublic")
+                            : t("field.presence.organisation.profileNotOnFile")}
+                        {creative.artistVerified
+                          ? ` · ${t("field.presence.artistConfirmationOnFile")}`
+                          : null}
                       </p>
                       {creative.totalWorkCount > 0 ? (
                         <p className="mt-2 text-[11px] font-medium text-neutral-700">
                           {creative.verifiedWorkCount > 0 ? (
                             <>
-                              {creative.verifiedWorkCount} verified ·{" "}
-                              {creative.totalWorkCount}{" "}
-                              {creative.totalWorkCount === 1 ? "work" : "works"} on file
+                              {fillMessage(
+                                t("field.presence.organisation.verifiedRosterLine"),
+                                {
+                                  verified: String(creative.verifiedWorkCount),
+                                  total: String(creative.totalWorkCount),
+                                  worksUnit:
+                                    creative.totalWorkCount === 1
+                                      ? t("field.presence.workSingular")
+                                      : t("field.presence.worksPlural"),
+                                }
+                              )}
                             </>
                           ) : (
                             <>
-                              {creative.totalWorkCount}{" "}
-                              {creative.totalWorkCount === 1 ? "work" : "works"} registered
+                              {creative.totalWorkCount === 1
+                                ? fillMessage(
+                                    t("field.presence.organisation.worksRegisteredSingular"),
+                                    { count: String(creative.totalWorkCount) }
+                                  )
+                                : fillMessage(
+                                    t("field.presence.organisation.worksRegistered"),
+                                    { count: String(creative.totalWorkCount) }
+                                  )}
                             </>
                           )}
                         </p>
@@ -175,23 +207,28 @@ export function OrganisationPresenceView({ data }: Props) {
       <section className="mt-16 md:mt-20" aria-labelledby="org-footprint-heading">
         <div className="flex flex-wrap items-end justify-between gap-4 border-b border-black/[0.06] pb-6">
           <div>
-            <InfoTooltip text="Open a piece for the Field record summary; use the registry ledger link for the continuity record on file." />
+            <InfoTooltip text={t("field.presence.footprintTooltip")} />
             <h2
               id="org-footprint-heading"
               className="font-serif text-3xl font-normal tracking-tight text-neutral-950 md:text-4xl"
             >
-              Registry footprint
+              {t("field.presence.footprintHeading")}
             </h2>
           </div>
           {footprint.totalRecords > 0 ? (
             <p className="text-xs text-neutral-500">
               {footprint.totalRecords}{" "}
-              {footprint.totalRecords === 1 ? "record" : "records"} ·{" "}
-              {footprint.verifiedRecords} verified
+              {footprint.totalRecords === 1
+                ? t("field.presence.recordSingular")
+                : t("field.presence.recordsPlural")}{" "}
+              · {footprint.verifiedRecords} {t("field.presence.verifiedSuffix")}
               {footprint.certificateCount > 0
-                ? ` · ${footprint.certificateCount} ${
-                    footprint.certificateCount === 1 ? "certificate" : "certificates"
-                  }`
+                ? ` · ${fillMessage(
+                    footprint.certificateCount === 1
+                      ? t("field.presence.collector.certificatesLine")
+                      : t("field.presence.collector.certificatesLinePlural"),
+                    { count: String(footprint.certificateCount) }
+                  )}`
                 : null}
             </p>
           ) : null}
@@ -200,13 +237,13 @@ export function OrganisationPresenceView({ data }: Props) {
         {footprint.totalRecords === 0 ? (
           <div className="mt-10 rounded-3xl border border-black/[0.06] bg-white/70 px-8 py-14 text-center shadow-sm">
             <p className="text-sm text-neutral-600">
-              No Registry records are on file for represented Creatives yet.
+              {t("field.organisation.noRecordsOnFile")}
             </p>
             <Link
               href={fieldExplorerRecordsHref()}
               className="mt-6 inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
             >
-              Browse the registry
+              {t("field.presence.organisation.browseRegistry")}
             </Link>
           </div>
         ) : (
@@ -214,7 +251,7 @@ export function OrganisationPresenceView({ data }: Props) {
             {artworks.map((artwork) => {
               const isVerified =
                 String(artwork.verification_status || "").toLowerCase() === "verified";
-              const title = (artwork.title || "").trim() || "Untitled";
+              const title = (artwork.title || "").trim() || t("registry.card.untitled");
               const recordHref = fieldRecordHref(artwork.registry_id);
               const ledgerHref = registryLedgerHref(artwork.registry_id);
               const verifyHref = fieldVerifyRecordHref(artwork.registry_id);
@@ -238,7 +275,7 @@ export function OrganisationPresenceView({ data }: Props) {
                         />
                       ) : (
                         <div className="flex h-full items-center justify-center text-sm text-neutral-400">
-                          No image
+                          {t("field.presence.noImage")}
                         </div>
                       )}
                       <div className="absolute left-4 top-4">
@@ -259,8 +296,8 @@ export function OrganisationPresenceView({ data }: Props) {
                             }`}
                           >
                             {artwork.certificateRevoked
-                              ? "Certificate revoked"
-                              : "Certificate on file"}
+                              ? t("field.presence.certificateRevoked")
+                              : t("field.presence.certificateOnFile")}
                           </span>
                         </div>
                       ) : null}
@@ -299,20 +336,20 @@ export function OrganisationPresenceView({ data }: Props) {
                             href={recordHref}
                             className="inline-flex flex-1 items-center justify-center rounded-2xl bg-neutral-950 px-4 py-2.5 text-center text-xs font-semibold text-white transition hover:bg-neutral-800"
                           >
-                            View record
+                            {t("field.presence.viewRecord")}
                           </Link>
                           <Link
                             href={verifyHref}
                             className="inline-flex flex-1 items-center justify-center rounded-2xl border border-neutral-200 bg-white px-4 py-2.5 text-center text-xs font-medium text-neutral-800 transition hover:bg-neutral-50"
                           >
-                            Check verification
+                            {t("field.record.link.verify")}
                           </Link>
                         </div>
                         <Link
                           href={ledgerHref}
                           className="text-center text-[11px] font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500"
                         >
-                          Registry ledger
+                          {t("field.presence.linkRegistryLedger")}
                         </Link>
                       </div>
                     </div>
@@ -330,7 +367,7 @@ export function OrganisationPresenceView({ data }: Props) {
             id="org-about-heading"
             className="font-serif text-3xl font-normal tracking-tight text-neutral-950 md:text-4xl"
           >
-            About
+            {t("field.presence.aboutHeading")}
           </h2>
           <div className="mt-8 space-y-6 text-lg leading-[1.75] text-neutral-700">
             {organisation.description.split(/\n\n+/).map((para, i) => (
@@ -347,7 +384,7 @@ export function OrganisationPresenceView({ data }: Props) {
                 rel="noopener noreferrer"
                 className="text-sm font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-4 transition hover:decoration-neutral-500"
               >
-                Visit website
+                {t("field.presence.linkVisitWebsite")}
               </a>
             </div>
           ) : null}
@@ -356,22 +393,20 @@ export function OrganisationPresenceView({ data }: Props) {
 
       <section className="mx-auto mt-20 max-w-2xl rounded-3xl border border-black/[0.06] bg-white/70 px-8 py-10 text-center shadow-sm md:mt-24 md:px-12">
         <p className="text-base leading-relaxed text-neutral-700">
-          Registry records remain the system of record. This Organisation profile
-          reads verification status, representation, and certificates from the
-          Registry — it does not create separate trust scores.
+          {t("field.presence.organisation.closingLede")}
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link
             href={fieldExplorerRecordsHref()}
             className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
           >
-            Browse registry
+            {t("field.presence.organisation.browseRegistry")}
           </Link>
           <Link
             href={fieldVerifyHref()}
             className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
           >
-            Verify a Registry record
+            {t("field.verify.hub.title")}
           </Link>
         </div>
       </section>

@@ -33,17 +33,17 @@ export function AccountPracticeSection({
 
   const toggleDeclared = (slug: string) => {
     if (declaredSlugs.includes(slug)) {
-      const next = declaredSlugs.filter((s) => s !== slug);
-      onDeclaredSlugsChange(next);
+      const nextDeclared = declaredSlugs.filter((s) => s !== slug);
+      onDeclaredSlugsChange(nextDeclared);
       if (primarySlug === slug) {
-        onPrimarySlugChange(next.length === 1 ? next[0] : null);
+        onPrimarySlugChange(nextDeclared.length === 1 ? nextDeclared[0] : null);
       }
       return;
     }
     if (atMax) return;
-    const next = [...declaredSlugs, slug];
-    onDeclaredSlugsChange(next);
-    if (next.length === 1) {
+    const nextDeclared = [...declaredSlugs, slug];
+    onDeclaredSlugsChange(nextDeclared);
+    if (nextDeclared.length === 1) {
       onPrimarySlugChange(slug);
     }
   };

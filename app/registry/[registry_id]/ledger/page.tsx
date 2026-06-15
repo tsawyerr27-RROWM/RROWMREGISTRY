@@ -24,7 +24,6 @@ export default async function PublicRegistryLedgerPage({
       artwork={data.artwork}
       artistName={data.artistName}
       artistSlug={data.artistSlug}
-      trustKind={data.trustKind}
       verificationGalleryName={data.verificationGalleryName}
       edition={data.edition}
       hasCertificate={data.hasCertificate}

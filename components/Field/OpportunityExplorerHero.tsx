@@ -1,9 +1,6 @@
 "use client";
 
-import Link from "next/link";
-
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
-import { fieldOpportunitiesHref, fieldVerifyHref } from "@/lib/field-nav";
 
 type Props = {
   searchQuery: string;
@@ -31,55 +28,44 @@ export function OpportunityExplorerHero({
     Boolean(briefType) ||
     window !== "all";
 
+  const metaParts: string[] = [];
+  if (total > 0) {
+    metaParts.push(
+      `${total} ${
+        total === 1
+          ? t("field.opportunities.countSingular")
+          : t("field.opportunities.countPlural")
+      }`
+    );
+  }
+  if (trimmedQ) {
+    metaParts.push(`${t("field.opportunities.searching")} “${trimmedQ}”`);
+  }
+  if (hasFilters) {
+    metaParts.push(t("field.opportunities.filtered"));
+  }
+
   return (
-    <section className="relative mt-2 overflow-hidden rounded-[1.25rem] border border-neutral-900/[0.05] bg-gradient-to-br from-[#f8faf9] via-white to-emerald-50/35 shadow-[0_16px_40px_-20px_rgba(15,23,42,0.08),inset_0_1px_0_0_rgba(255,255,255,0.9)]">
+    <section className="relative overflow-hidden pb-4 pt-2 md:pb-8 md:pt-4">
       <div
-        className="pointer-events-none absolute -right-24 top-0 h-80 w-80 rounded-full bg-emerald-400/12 blur-[90px]"
+        className="pointer-events-none absolute -left-32 top-0 h-72 w-72 rounded-full bg-[#e8e4df]/40 blur-[100px]"
         aria-hidden
       />
-      <div className="relative max-w-3xl p-8 lg:p-12 xl:p-14">
-        <p className="text-xs font-medium uppercase tracking-[0.14em] text-neutral-500">
-          {t("field.explorer.subNavLabel")}
-        </p>
-        <h1 className="mt-3 font-serif text-[2.125rem] font-normal leading-[1.06] tracking-tight text-neutral-950 md:text-5xl md:leading-[1.05]">
+      <div
+        className="pointer-events-none absolute -right-20 top-12 h-64 w-64 rounded-full bg-[#dfe8e3]/35 blur-[90px]"
+        aria-hidden
+      />
+
+      <div className="relative max-w-4xl">
+        <h1 className="font-serif text-[2.5rem] font-normal leading-[1.04] tracking-tight text-neutral-950 md:text-6xl md:leading-[1.02]">
           {t("field.opportunities.headline")}
         </h1>
-        <p className="mt-6 max-w-2xl text-base leading-relaxed text-neutral-600">
+        <p className="mt-8 max-w-2xl text-lg leading-[1.75] text-neutral-600 md:text-xl md:leading-[1.7]">
           {t("field.opportunities.lede")}
         </p>
-        {total > 0 || hasFilters || trimmedQ ? (
-          <p className="mt-8 text-[12px] text-neutral-500">
-            {total > 0 ? (
-              <>
-                {total}{" "}
-                {total === 1
-                  ? t("field.opportunities.countSingular")
-                  : t("field.opportunities.countPlural")}
-              </>
-            ) : null}
-            {trimmedQ ? (
-              <>
-                {total > 0 ? " · " : null}
-                {t("field.opportunities.searching")} “{trimmedQ}”
-              </>
-            ) : null}
-            {hasFilters ? ` · ${t("field.opportunities.filtered")}` : null}
-          </p>
+        {metaParts.length > 0 ? (
+          <p className="mt-10 text-sm text-neutral-500">{metaParts.join(" · ")}</p>
         ) : null}
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link
-            href={fieldOpportunitiesHref()}
-            className="inline-flex rounded-2xl border border-neutral-200 bg-white px-5 py-2.5 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
-          >
-            {t("field.opportunities.browseAll")}
-          </Link>
-          <Link
-            href={fieldVerifyHref()}
-            className="inline-flex rounded-2xl border border-neutral-200 bg-white px-5 py-2.5 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
-          >
-            {t("field.explorer.link.verifyHub")}
-          </Link>
-        </div>
       </div>
     </section>
   );

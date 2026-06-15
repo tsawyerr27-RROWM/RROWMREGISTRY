@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
+
+export const runtime = "nodejs";
 
 /**
  * Admin-only sign-in endpoint.
@@ -44,8 +44,8 @@ export async function POST(req: Request) {
     const token = generateSessionToken();
     const maxAge = 60 * 60 * 8; // 8 hours
 
-    const cookieStore = await cookies();
-    cookieStore.set("rrowm_admin_session", token, {
+    const response = NextResponse.json({ ok: true });
+    response.cookies.set("rrowm_admin_session", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -53,13 +53,12 @@ export async function POST(req: Request) {
       maxAge,
     });
 
-    return NextResponse.json({ ok: true });
+    return response;
   } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "An unexpected error occurred.";
     console.error("[admin/login]", err);
-    return NextResponse.json(
-      { error: "An unexpected error occurred." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

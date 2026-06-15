@@ -3,7 +3,12 @@
 import Link from "next/link";
 
 import { ArchivalProvenanceTimeline } from "@/components/provenance/ArchivalProvenanceTimeline";
+import { CertificateShareControl } from "@/components/certificate/CertificateShareControl";
+import { VerificationShareControl } from "@/components/Registry/VerificationShareControl";
 import { RegistryCertificateOverviewButton } from "@/components/certificate/RegistryCertificateOverviewButton";
+import { RegistryTrustPanel } from "@/components/Registry/RegistryTrustPanel";
+import { RegistryIntelligencePanel } from "@/components/Registry/RegistryIntelligencePanel";
+import { InviteRecordStewardControl } from "@/components/Registry/InviteRecordStewardControl";
 import { PublicClaimOwnership } from "@/components/Registry/PublicClaimOwnership";
 import { RegistryTechnicalDetails } from "@/components/Registry/RegistryTechnicalDetails";
 import { ShareRecordButton } from "@/components/Registry/ShareRecordButton";
@@ -17,13 +22,14 @@ import {
   type OwnershipSystemStatus,
 } from "@/lib/ownership-ledger";
 import { translateProvenanceInsight } from "@/lib/archival-provenance-i18n";
+import { buildCertificateShareContext } from "@/lib/certificate-share";
+import { buildVerificationShareContext } from "@/lib/verification-share";
 import { fieldCreativeHref, fieldRecordHref } from "@/lib/field-nav";
-
-export type RegistryTrustKind =
-  | "revoked"
-  | "verified_with_cert"
-  | "verified_no_cert"
-  | "unverified";
+import {
+  computeRegistryTrustPresentation,
+  isRecordVerified,
+} from "@/lib/registry-trust-model";
+import { computeRegistryIntelligence } from "@/lib/registry-intelligence";
 
 export type PublicRegistryRecordProps = {
   artwork: {
@@ -42,7 +48,6 @@ export type PublicRegistryRecordProps = {
   };
   artistName: string;
   artistSlug: string | null;
-  trustKind: RegistryTrustKind;
   verificationGalleryName: string | null;
   edition: {
     is_unique: boolean | null;
@@ -86,7 +91,6 @@ export function PublicRegistryRecordView({
   artwork,
   artistName,
   artistSlug,
-  trustKind,
   verificationGalleryName,
   edition,
   hasCertificate,
@@ -101,35 +105,6 @@ export function PublicRegistryRecordView({
   claimReturnPath,
 }: PublicRegistryRecordProps) {
   const { t } = useLocalePreferences();
-
-  const trust = (() => {
-    if (trustKind === "revoked") {
-      return {
-        tone: "red" as const,
-        headline: t("registry.record.trust.revokedHeadline"),
-        sub: t("registry.record.trust.revokedSub"),
-      };
-    }
-    if (trustKind === "verified_with_cert") {
-      return {
-        tone: "green" as const,
-        headline: t("registry.record.trust.verifiedHeadline"),
-        sub: t("registry.record.trust.verifiedSubCert"),
-      };
-    }
-    if (trustKind === "verified_no_cert") {
-      return {
-        tone: "green" as const,
-        headline: t("registry.record.trust.verifiedHeadline"),
-        sub: t("registry.record.trust.verifiedSubNoCert"),
-      };
-    }
-    return {
-      tone: "amber" as const,
-      headline: t("registry.record.trust.unverifiedHeadline"),
-      sub: t("registry.record.trust.unverifiedSub"),
-    };
-  })();
 
   const editionLine = (() => {
     if (!edition) return null;
@@ -179,14 +154,55 @@ export function PublicRegistryRecordView({
     return t("registry.record.privateCollection");
   })();
 
-  const trustBarToneClass =
-    trust.tone === "red"
-      ? "border-red-200/60 bg-red-50/40 text-red-950"
-      : trust.tone === "green"
-        ? "border-emerald-200/35 bg-emerald-50/20 text-neutral-800"
-        : "border-amber-200/45 bg-amber-50/30 text-amber-950";
+  const artistConfirmationOnFile = provenanceBundle.events.some(
+    (event) => event.narrativeKind === "artist_confirmation"
+  );
+  const organisationVerified =
+    Boolean(verificationGalleryName?.trim()) ||
+    provenanceBundle.events.some(
+      (event) => event.narrativeKind === "institutional_confirmation"
+    );
+  const continuityEstablished =
+    provenanceBundle.recordCompleteness === "high" ||
+    provenanceBundle.continuityIndicators.length >= 2;
 
-  const isVerified = artwork.verification_status === "verified" && !certRevoked;
+  const trustPresentation = computeRegistryTrustPresentation({
+    verificationStatus: artwork.verification_status,
+    hasCertificate,
+    certRevoked,
+    completenessLevel: provenanceBundle.recordCompleteness,
+    verifierName: verificationGalleryName,
+    artistConfirmationOnFile,
+    organisationVerified,
+    continuityEstablished,
+  });
+
+  const intelligenceAssessment = computeRegistryIntelligence({
+    provenanceBundle,
+    recordVerified: isRecordVerified(artwork.verification_status),
+    hasCertificate,
+    certRevoked,
+    provenanceInsights,
+  });
+
+  const certificateShareContext = buildCertificateShareContext({
+    registryId: artwork.registry_id,
+    artworkTitle: artwork.title || "Work on file",
+    artistName,
+    isVerified: isRecordVerified(artwork.verification_status),
+    hasCertificate,
+    revoked: certRevoked,
+  });
+
+  const recordVerified = isRecordVerified(artwork.verification_status);
+  const verificationShareContext = buildVerificationShareContext({
+    registryId: artwork.registry_id,
+    artworkTitle: artwork.title || "Work on file",
+    verifierName: verificationGalleryName,
+    trustLevel: trustPresentation.level,
+    verifiedAt: null,
+    isVerified: recordVerified,
+  });
 
   return (
     <div className="ds-page-environment min-h-screen pt-20 text-neutral-900">
@@ -195,61 +211,6 @@ export function PublicRegistryRecordView({
           className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[min(52vh,28rem)] bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(16,185,129,0.07),transparent_58%),radial-gradient(ellipse_55%_45%_at_100%_0%,rgba(14,165,233,0.06),transparent_50%)]"
           aria-hidden
         />
-        <div
-          className={`mb-8 rounded-lg border px-3.5 py-2 shadow-sm md:px-4 md:py-2.5 ${trustBarToneClass}`}
-        >
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-6">
-            <div className="min-w-0">
-              <p
-                className={
-                  trust.tone === "green"
-                    ? "text-[13px] font-medium leading-tight text-emerald-900/85"
-                    : "text-[13px] font-medium leading-tight"
-                }
-              >
-                {trust.headline}
-              </p>
-              <p className="mt-0.5 text-[11px] leading-snug text-neutral-600">
-                {trust.sub}
-              </p>
-              {verificationGalleryName ? (
-                <p className="mt-1 text-[10px] leading-snug text-neutral-500">
-                  {fillMessage(t("registry.record.verificationBy"), {
-                    name: verificationGalleryName,
-                  })}
-                </p>
-              ) : null}
-            </div>
-            <div className="flex shrink-0 flex-wrap items-center gap-1.5 md:justify-end">
-              {isVerified ? (
-                <span className="rounded border border-emerald-200/70 bg-white/65 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-emerald-900/90">
-                  {t("registry.cert.verified")}
-                </span>
-              ) : null}
-              {hasCertificate && !certRevoked ? (
-                <span className="rounded border border-neutral-200/80 bg-white/60 px-1.5 py-0.5 text-[10px] font-medium text-neutral-700">
-                  {t("registry.record.badge.certificate")}
-                </span>
-              ) : null}
-              {hasCertificate && certRevoked ? (
-                <span className="rounded border border-red-200/80 bg-white/70 px-1.5 py-0.5 text-[10px] font-medium text-red-900">
-                  {t("registry.cert.revoked")}
-                </span>
-              ) : null}
-              {!hasCertificate ? (
-                <span className="rounded border border-neutral-200/70 bg-white/50 px-1.5 py-0.5 text-[10px] font-medium text-neutral-500">
-                  {t("registry.record.badge.noCertificate")}
-                </span>
-              ) : null}
-              {artwork.is_locked ? (
-                <span className="rounded border border-neutral-200/70 bg-white/50 px-1.5 py-0.5 text-[10px] font-medium text-neutral-600">
-                  {t("registry.record.badge.locked")}
-                </span>
-              ) : null}
-            </div>
-          </div>
-        </div>
-
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neutral-900/[0.06] bg-white/70 px-4 py-3 shadow-sm">
           <p className="text-sm text-neutral-600">
             {t("registry.record.ledgerDiscoveryNote")}
@@ -261,6 +222,24 @@ export function PublicRegistryRecordView({
             {t("registry.record.openFieldRecord")}
           </Link>
         </div>
+
+        <RegistryTrustPanel
+          presentation={trustPresentation}
+          variant="hero"
+          className="mb-10"
+        />
+
+        {recordVerified ? (
+          <section className="mb-10 rounded-[1.15rem] border border-neutral-300/60 bg-gradient-to-br from-[#f7f4ef] via-[#fafaf8] to-[#f0ebe3] px-6 py-6 shadow-sm md:px-8">
+            <p className="text-sm font-medium text-neutral-800">
+              {t("verification.share.sectionLabel")}
+            </p>
+            <VerificationShareControl
+              context={verificationShareContext}
+              className="mt-4"
+            />
+          </section>
+        ) : null}
 
         <div className="mb-16 grid gap-10 lg:grid-cols-12 lg:gap-14 lg:items-start">
           <div className="lg:col-span-7">
@@ -366,44 +345,46 @@ export function PublicRegistryRecordView({
               </dl>
             </section>
 
-            <section className="relative overflow-hidden rounded-2xl border border-black/[0.07] bg-gradient-to-b from-white via-white to-neutral-50/90 p-6 shadow-[0_20px_56px_-36px_rgba(15,23,42,0.14)] md:p-9">
-              <div
-                className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-emerald-400/10 blur-3xl"
-                aria-hidden
+            <section className="rounded-[1.25rem] border border-neutral-900/[0.07] bg-[#fafaf8]/90 p-6 md:p-9">
+              <div className="border-b border-neutral-900/[0.06] pb-6">
+                <InfoTooltip text={t("registry.record.provenanceTooltip")} />
+                <h2 className="mt-3 font-serif text-[1.75rem] font-normal tracking-tight text-neutral-950 md:text-2xl">
+                  {t("registry.record.provenance")}
+                </h2>
+              </div>
+              <RegistryIntelligencePanel
+                assessment={intelligenceAssessment}
+                className="mt-8"
               />
-              <div className="relative">
-                <div className="flex flex-col gap-3 border-b border-black/[0.06] pb-6">
-                  <InfoTooltip text="A unified timeline of creation, verification, certification, ownership, and recorded values." />
-                  <h2 className="font-serif text-[1.75rem] font-normal tracking-[-0.01em] text-neutral-950">
-                    {t("registry.record.provenance")}
-                  </h2>
+              {provenanceInsights.length > 0 ? (
+                <div className="mt-8 border-b border-neutral-900/[0.06] pb-8">
+                  <h3 className="font-serif text-lg font-normal text-neutral-900">
+                    {t("registry.record.recordInsights")}
+                  </h3>
+                  <ul className="mt-4 space-y-3">
+                    {provenanceInsights.map((ins, i) => (
+                      <li
+                        key={`${ins.type}-${ins.priority}-${i}`}
+                        className="rounded-xl border border-neutral-900/[0.06] bg-white/80 px-5 py-4 text-sm leading-relaxed text-neutral-700"
+                      >
+                        {translateProvenanceInsight(ins.message, t)}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                {provenanceInsights.length > 0 ? (
-                  <div className="mt-8">
-                    <h3 className="text-base font-medium text-neutral-900">
-                      {t("registry.record.recordInsights")}
-                    </h3>
-                    <div className="mt-4 space-y-3">
-                      {provenanceInsights.map((ins, i) => (
-                        <div
-                          key={`${ins.type}-${ins.priority}-${i}`}
-                          className="rounded-xl border border-emerald-900/[0.08] bg-emerald-50/35 px-5 py-4 text-sm text-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.6)]"
-                        >
-                          {translateProvenanceInsight(ins.message, t)}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-                <div className="mt-8">
-                  <ArchivalProvenanceTimeline bundle={provenanceBundle} />
-                </div>
+              ) : null}
+              <div className={provenanceInsights.length > 0 ? "mt-8" : "mt-6"}>
+                <ArchivalProvenanceTimeline
+                  bundle={provenanceBundle}
+                  registryId={artwork.registry_id}
+                  artworkTitle={artwork.title || "Work on file"}
+                />
               </div>
             </section>
           </div>
 
           <aside className="space-y-6 lg:col-span-5">
-            <div className="liquid-glass-tile rounded-2xl p-8 md:p-9">
+            <div className="rounded-2xl border border-neutral-900/[0.06] bg-[#fafaf8]/80 p-8 md:p-9">
               <h2 className="font-serif text-lg font-normal text-neutral-950">
                 {t("registry.record.certStatusTitle")}
               </h2>
@@ -422,27 +403,36 @@ export function PublicRegistryRecordView({
                     ) : null}
                   </div>
                 ) : (
-                  <p className="font-medium text-emerald-900">
+                  <p className="font-medium text-neutral-900">
                     {t("registry.record.certRecorded")}
                   </p>
                 )}
-
-                <div className="mt-6">
-                  <RegistryCertificateOverviewButton
-                    registryId={artwork.registry_id}
-                  />
-                </div>
-
-                <p className="text-xs text-neutral-500">
-                  {t("registry.record.certFootnote")}
-                </p>
-                <Link
-                  href={`/login?next=${encodeURIComponent(`/certificate/${artwork.registry_id}`)}`}
-                  className="liquid-glass-inset mt-4 block px-4 py-3 text-center text-sm font-medium text-neutral-800 transition hover:bg-white/80"
-                >
-                  {t("registry.card.viewCertLogin")}
-                </Link>
               </div>
+
+              <div className="mt-6">
+                <RegistryCertificateOverviewButton
+                  registryId={artwork.registry_id}
+                />
+              </div>
+
+              {hasCertificate ? (
+                <div className="mt-5">
+                  <p className="mb-3 text-xs font-medium text-neutral-700">
+                    {t("certificate.share.sectionLabel")}
+                  </p>
+                  <CertificateShareControl context={certificateShareContext} />
+                </div>
+              ) : null}
+
+              <p className="mt-4 text-xs text-neutral-500">
+                {t("registry.record.certFootnote")}
+              </p>
+              <Link
+                href={`/login?next=${encodeURIComponent(`/certificate/${artwork.registry_id}`)}`}
+                className="mt-4 block rounded-xl border border-neutral-200/90 bg-white px-4 py-3 text-center text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
+              >
+                {t("registry.card.viewCertLogin")}
+              </Link>
             </div>
 
             <RegistryTechnicalDetails
@@ -466,6 +456,11 @@ export function PublicRegistryRecordView({
                   artworkId={artwork.id}
                   registryId={artwork.registry_id}
                   loginNextPath={claimReturnPath}
+                />
+                <InviteRecordStewardControl
+                  artworkId={artwork.id}
+                  registryId={artwork.registry_id}
+                  sessionUserId={sessionUserId}
                 />
                 <ShareRecordButton url={shareUrl} />
               </div>

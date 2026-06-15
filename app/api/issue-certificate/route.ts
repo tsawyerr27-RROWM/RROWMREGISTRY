@@ -4,6 +4,7 @@ import { requireAdminApi, createUserSupabaseClient } from "@/lib/api-admin-auth"
 import { authorizeCertificateIssuance } from "@/lib/certificate-issue-auth";
 import { issueCertificateForVerifiedArtwork } from "@/lib/issue-certificate";
 import { logActivityEvent } from "@/lib/log-activity";
+import { notifyRegistryCertificateIssued } from "@/lib/notification-hooks/registry";
 import { guardRegistryMutation } from "@/lib/registry-action-security/guards";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
 
@@ -101,6 +102,10 @@ export async function POST(req: Request) {
         artworkId,
         metadata: { title, registry_id: registryId || null },
       });
+    }
+
+    if (result.created) {
+      void notifyRegistryCertificateIssued({ artworkId });
     }
 
     return NextResponse.json({

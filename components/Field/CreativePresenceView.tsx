@@ -1,12 +1,18 @@
+"use client";
+
 import Link from "next/link";
+import { useMemo } from "react";
 
 import { CreativePresenceDiscoverySection } from "@/components/Field/CreativePresenceDiscoverySection";
+import { ProfilePresencePrestigeBand } from "@/components/Field/ProfilePresencePrestigeBand";
 import { FieldRelationshipContextSection } from "@/components/Field/FieldRelationshipContextSection";
 import { CreativePresenceOwnerStewardship } from "@/components/Field/CreativePresenceOwnerStewardship";
 import { CreativePresenceRegistryEvidence } from "@/components/Field/CreativePresenceRegistryEvidence";
 import { RegistryListFilters } from "@/components/Registry/RegistryListFilters";
 import { RegistryListPagination } from "@/components/Registry/RegistryListPagination";
+import { ProfileShareControl } from "@/components/sharing/ProfileShareControl";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import type { CreativePresencePageData } from "@/lib/field-creative-presence";
 import {
   fieldExplorerRecordsHref,
@@ -16,6 +22,7 @@ import {
 } from "@/lib/field-nav";
 import { registryLedgerHref } from "@/lib/registry-nav";
 import { artworkCardParticipationLabel } from "@/lib/representation-language";
+import { buildCreativeProfileShareContext } from "@/lib/profile-presence-summary";
 import { REGISTRY_PAGE_SIZE } from "@/lib/registry-list-params";
 
 type Props = {
@@ -23,6 +30,7 @@ type Props = {
 };
 
 export function CreativePresenceView({ data }: Props) {
+  const { t } = useLocalePreferences();
   const {
     artist,
     gallery,
@@ -47,19 +55,22 @@ export function CreativePresenceView({ data }: Props) {
     contextPanels,
   } = data;
 
+  const shareContext = useMemo(
+    () => buildCreativeProfileShareContext(data),
+    [data]
+  );
+
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 md:py-14 lg:px-8">
       <section className="max-w-3xl">
-        <p className="text-xs font-medium uppercase tracking-[0.14em] text-neutral-500">
-          Creative
-        </p>
-        <h1 className="mt-3 font-serif text-4xl font-normal leading-[1.08] tracking-tight text-neutral-950 md:text-5xl lg:text-[3.25rem]">
+        <h1 className="font-serif text-4xl font-normal leading-[1.08] tracking-tight text-neutral-950 md:text-5xl lg:text-[3.25rem]">
           {artist.display_name}
         </h1>
 
+        <ProfilePresencePrestigeBand context={shareContext} />
+        <ProfileShareControl context={shareContext} className="mt-5" />
+
         <CreativePresenceRegistryEvidence
-          verifiedWorkCount={verifiedWorkCount}
-          totalWorkCount={total}
           participationLayers={participationLayers}
           declaredPractices={declaredPractices}
           registryPractices={registryPractices}
@@ -89,7 +100,7 @@ export function CreativePresenceView({ data }: Props) {
                 rel="noopener noreferrer"
                 className="font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-4 transition hover:decoration-neutral-500"
               >
-                Website
+                {t("field.presence.linkWebsite")}
               </a>
             ) : null}
             {artist.instagram ? (
@@ -99,7 +110,7 @@ export function CreativePresenceView({ data }: Props) {
                 rel="noopener noreferrer"
                 className="font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-4 transition hover:decoration-neutral-500"
               >
-                Instagram
+                {t("field.presence.linkInstagram")}
               </a>
             ) : null}
           </div>
@@ -109,10 +120,7 @@ export function CreativePresenceView({ data }: Props) {
       {gallery && showOrganisationSection ? (
         <section className="mt-14 max-w-2xl">
           <div className="rounded-3xl border border-black/[0.06] bg-white/80 p-8 shadow-sm backdrop-blur-sm md:p-10">
-            <p className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
-              Organisation
-            </p>
-            <h2 className="mt-2 text-xl font-medium text-neutral-900">
+            <h2 className="text-xl font-medium text-neutral-900">
               {gallery.href ? (
                 <Link
                   href={gallery.href}
@@ -124,10 +132,10 @@ export function CreativePresenceView({ data }: Props) {
                 gallery.name
               )}
             </h2>
-            <p className="mt-2 text-xs text-neutral-500">
+            <p className="mt-2 text-sm text-neutral-500">
               {gallery.verified
-                ? "Institution-linked representation on file"
-                : "Institutional representation on file"}
+                ? t("field.presence.creative.organisationVerified")
+                : t("field.presence.creative.organisationOnFile")}
             </p>
           </div>
         </section>
@@ -144,16 +152,20 @@ export function CreativePresenceView({ data }: Props) {
       <section className="mt-20 md:mt-24">
         <div className="flex flex-col gap-4 border-b border-black/[0.06] pb-8 md:flex-row md:items-end md:justify-between">
           <div>
-            <InfoTooltip text="Open a piece for the Field record summary; use the registry ledger link for the continuity record on file." />
+            <InfoTooltip text={t("field.presence.footprintTooltip")} />
             <h2 className="font-serif text-3xl font-normal tracking-tight text-neutral-950 md:text-4xl">
-              Registry footprint
+              {t("field.presence.footprintHeading")}
             </h2>
           </div>
           {total > 0 || verifiedWorkCount > 0 ? (
             <p className="text-xs text-neutral-500">
               {total > 0 ? (
                 <>
-                  {total} {total === 1 ? "work" : "works"} matching
+                  {total}{" "}
+                  {total === 1
+                    ? t("field.presence.workSingular")
+                    : t("field.presence.worksPlural")}{" "}
+                  {t("field.presence.matching")}
                   {filterHint ? ` · ${filterHint}` : ""}
                   {q.trim() ? ` · search “${q.trim()}”` : ""}
                 </>
@@ -161,7 +173,7 @@ export function CreativePresenceView({ data }: Props) {
               {verifiedWorkCount > 0 ? (
                 <>
                   {total > 0 ? " · " : ""}
-                  {verifiedWorkCount} verified on file
+                  {verifiedWorkCount} {t("field.presence.verifiedOnFile")}
                 </>
               ) : null}
             </p>
@@ -184,14 +196,14 @@ export function CreativePresenceView({ data }: Props) {
           <div className="mt-14 rounded-3xl border border-black/[0.06] bg-white/70 px-8 py-14 text-center shadow-sm md:px-12">
             <p className="text-sm text-neutral-600">
               {q.trim() || status !== "all"
-                ? "No works match your search or filters. Try clearing the search or setting status to “All works”."
-                : "No registered works are on file for this Creative yet."}
+                ? t("field.presence.creative.emptyFiltered")
+                : t("field.creative.noWorksOnFile")}
             </p>
             <Link
               href={fieldExplorerRecordsHref()}
               className="mt-6 inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
             >
-              Browse Registry records
+              {t("field.verify.hub.linkRecords")}
             </Link>
           </div>
         ) : (
@@ -219,12 +231,12 @@ export function CreativePresenceView({ data }: Props) {
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={artwork.image_url}
-                          alt={artwork.title || "Artwork"}
+                          alt={artwork.title || t("field.record.title")}
                           className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
                         />
                       ) : (
                         <div className="flex h-full items-center justify-center text-sm text-neutral-400">
-                          No image
+                          {t("field.presence.noImage")}
                         </div>
                       )}
                       <div className="absolute left-4 top-4">
@@ -259,20 +271,20 @@ export function CreativePresenceView({ data }: Props) {
                             href={recordHref}
                             className="inline-flex flex-1 items-center justify-center rounded-2xl bg-neutral-950 px-4 py-2.5 text-center text-xs font-semibold text-white transition hover:bg-neutral-800"
                           >
-                            View record
+                            {t("field.presence.viewRecord")}
                           </Link>
                           <Link
                             href={verifyHref}
                             className="inline-flex flex-1 items-center justify-center rounded-2xl border border-neutral-200 bg-white px-4 py-2.5 text-xs font-medium text-neutral-800 transition hover:bg-neutral-50"
                           >
-                            Check verification
+                            {t("field.record.link.verify")}
                           </Link>
                         </div>
                         <Link
                           href={ledgerHref}
                           className="text-center text-[11px] font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500"
                         >
-                          Registry ledger
+                          {t("field.presence.linkRegistryLedger")}
                         </Link>
                       </div>
                     </div>
@@ -296,21 +308,20 @@ export function CreativePresenceView({ data }: Props) {
 
       <section className="mx-auto mt-20 max-w-2xl rounded-3xl border border-black/[0.06] bg-white/70 px-8 py-10 text-center shadow-sm md:mt-24 md:px-12">
         <p className="text-base leading-relaxed text-neutral-700">
-          Each work links to its Registry record — the continuity layer where
-          verification status and provenance are on file.
+          {t("field.presence.continuityLede")}
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link
             href={fieldExplorerRecordsHref()}
             className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
           >
-            Browse Registry records
+            {t("field.verify.hub.linkRecords")}
           </Link>
           <Link
             href={fieldVerifyHref()}
             className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
           >
-            Verify a Registry record
+            {t("field.verify.hub.title")}
           </Link>
         </div>
       </section>

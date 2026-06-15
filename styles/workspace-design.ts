@@ -75,9 +75,9 @@ export const workspacePanel = {
 
 /** Modal presets — use with ModalShell `tone` */
 export const workspaceModal = {
-  overlay: `${glass.liquidBackdrop} backdrop-blur-xl ${depth.className.modalBackdrop} fixed inset-0 flex items-center justify-center p-4 transition-opacity duration-300 ease-out sm:p-6 md:p-8`,
+  overlay: `${glass.liquidBackdrop} backdrop-blur-xl ${depth.className.modalBackdrop} fixed inset-0 flex flex-col items-center overflow-y-auto overscroll-y-contain px-4 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-[calc(4.5rem+env(safe-area-inset-top,0px))] transition-opacity duration-300 ease-out sm:px-6 sm:pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] md:px-8 md:pt-[calc(5rem+env(safe-area-inset-top,0px))]`,
   overlaySilver:
-    "ws-modal-backdrop-silver backdrop-blur-xl ds-z-modal-backdrop fixed inset-0 flex items-center justify-center p-4 transition-opacity duration-300 ease-out sm:p-6 md:p-8",
+    "ws-modal-backdrop-silver backdrop-blur-xl ds-z-modal-backdrop fixed inset-0 flex flex-col items-center overflow-y-auto overscroll-y-contain px-4 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-[calc(4.5rem+env(safe-area-inset-top,0px))] transition-opacity duration-300 ease-out sm:px-6 sm:pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] md:px-8 md:pt-[calc(5rem+env(safe-area-inset-top,0px))]",
   panelSize: "w-full max-w-lg p-8 md:max-w-xl md:p-10",
   panelGlassLight: `${glass.liquidPremium} ${glass.modalPanel}`,
   panelGlassDark: `${glass.liquidDarkPremium} ${glass.modalPanel}`,

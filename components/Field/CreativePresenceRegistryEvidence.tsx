@@ -4,12 +4,9 @@ import { ParticipationLayersStrip } from "@/components/Registry/ParticipationLay
 import { FieldCreativePracticeChips } from "@/components/Field/FieldCreativePracticeChips";
 import type { ParticipationLayer } from "@/lib/get-artwork-participation-layers";
 import type { CreativePracticeChip } from "@/lib/practices";
-import { fillMessage } from "@/lib/locale-messages";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 type Props = {
-  verifiedWorkCount: number;
-  totalWorkCount: number;
   participationLayers: ParticipationLayer[];
   declaredPractices: CreativePracticeChip[];
   registryPractices: CreativePracticeChip[];
@@ -17,51 +14,30 @@ type Props = {
 };
 
 export function CreativePresenceRegistryEvidence({
-  verifiedWorkCount,
-  totalWorkCount,
   participationLayers,
   declaredPractices,
   registryPractices,
   showOwnerPracticeGuidance,
 }: Props) {
   const { t } = useLocalePreferences();
-  const hasWorks = verifiedWorkCount > 0 || totalWorkCount > 0;
   const hasPractices = declaredPractices.length > 0 || registryPractices.length > 0;
+  const hasParticipation = participationLayers.length > 0;
+  const hasContent =
+    hasParticipation || hasPractices || showOwnerPracticeGuidance;
+
+  if (!hasContent) return null;
 
   return (
     <div className="mt-8 max-w-2xl rounded-2xl border border-neutral-900/[0.06] bg-white/75 p-5 shadow-sm md:p-6">
-      <p className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
+      <h2 className="font-serif text-lg font-normal text-neutral-950">
         {t("field.creative.registryEvidence")}
-      </p>
-      {hasWorks ? (
-        <p className="mt-2 text-sm text-neutral-700">
-          {verifiedWorkCount > 0 ? (
-            <>
-              {fillMessage(t("field.creative.verifiedWorksLine"), {
-                count: String(verifiedWorkCount),
-              })}
-            </>
-          ) : null}
-          {verifiedWorkCount > 0 && totalWorkCount > 0 ? " · " : null}
-          {totalWorkCount > 0 ? (
-            <>
-              {fillMessage(t("field.creative.publicFootprintLine"), {
-                count: String(totalWorkCount),
-              })}
-            </>
-          ) : null}
-        </p>
-      ) : (
-        <p className="mt-2 text-sm text-neutral-600">
-          {t("field.creative.noWorksOnFile")}
-        </p>
-      )}
+      </h2>
 
-      {participationLayers.length > 0 ? (
+      {hasParticipation ? (
         <div className="mt-5 border-t border-neutral-900/[0.05] pt-5">
-          <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-500">
+          <h3 className="mb-3 text-sm font-medium text-neutral-700">
             {t("field.creative.participationHeading")}
-          </p>
+          </h3>
           <ParticipationLayersStrip
             layers={participationLayers}
             variant="light"
@@ -74,9 +50,9 @@ export function CreativePresenceRegistryEvidence({
         <div className="mt-5 border-t border-neutral-900/[0.05] pt-5">
           {declaredPractices.length > 0 ? (
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-500">
+              <h3 className="text-sm font-medium text-neutral-700">
                 {t("field.creative.practice.declaredHeading")}
-              </p>
+              </h3>
               <div className="mt-3">
                 <FieldCreativePracticeChips
                   practices={declaredPractices}
@@ -87,9 +63,9 @@ export function CreativePresenceRegistryEvidence({
           ) : null}
           {registryPractices.length > 0 ? (
             <div className={declaredPractices.length > 0 ? "mt-4" : ""}>
-              <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-500">
+              <h3 className="text-sm font-medium text-neutral-700">
                 {t("field.creative.practice.registryHeading")}
-              </p>
+              </h3>
               <div className="mt-3">
                 <FieldCreativePracticeChips
                   practices={registryPractices}

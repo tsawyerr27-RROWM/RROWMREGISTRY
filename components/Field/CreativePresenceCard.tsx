@@ -37,11 +37,7 @@ export function CreativePresenceCard({ row }: Props) {
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-[1.25rem] border border-neutral-900/[0.06] bg-white/90 shadow-[0_16px_40px_-24px_rgba(15,23,42,0.14)] transition duration-300 hover:-translate-y-0.5 hover:border-neutral-900/[0.09] hover:shadow-[0_24px_48px_-28px_rgba(15,23,42,0.18)]">
       <div className="flex flex-1 flex-col p-6 md:p-7">
-        <p className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
-          Creative
-        </p>
-
-        <h2 className="mt-2 font-serif text-2xl font-normal leading-snug tracking-tight text-neutral-950">
+        <h2 className="font-serif text-2xl font-normal leading-snug tracking-tight text-neutral-950">
           <Link href={row.href} className="transition hover:text-neutral-600">
             {row.displayName}
           </Link>
@@ -49,7 +45,7 @@ export function CreativePresenceCard({ row }: Props) {
 
         {summary ? (
           <div className="mt-4 rounded-xl border border-neutral-900/[0.05] bg-neutral-50/80 px-3.5 py-3">
-            <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-neutral-500">
+            <p className="text-sm text-neutral-500">
               {t("field.creative.registryEvidence")}
             </p>
             <p className="mt-1 text-xs leading-relaxed text-neutral-700">{summary}</p>

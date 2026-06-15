@@ -1,6 +1,11 @@
+"use client";
+
 import Link from "next/link";
 
 import { PersonalArchiveControl } from "@/components/archive/PersonalArchiveControl";
+import { VerificationShareControl } from "@/components/Registry/VerificationShareControl";
+import { RegistryTrustPanel } from "@/components/Registry/RegistryTrustPanel";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import {
   artistConfirmationLabel,
   certificateStatusLabel,
@@ -15,7 +20,10 @@ import {
   fieldVerifyHref,
   fieldVerifyRecordHref,
 } from "@/lib/field-nav";
+import { fillMessage } from "@/lib/locale-messages";
 import { registryLedgerHref } from "@/lib/registry-nav";
+import { computeRegistryTrustPresentation } from "@/lib/registry-trust-model";
+import { buildVerificationShareContext } from "@/lib/verification-share";
 import { recordVerificationPendingLabel } from "@/lib/representation-language";
 
 type Props = {
@@ -33,9 +41,7 @@ function TrustRow({
 }) {
   return (
     <div className="border-b border-neutral-900/[0.06] py-4 last:border-0">
-      <p className="text-xs font-medium uppercase tracking-[0.1em] text-neutral-500">
-        {label}
-      </p>
+      <p className="text-sm text-neutral-500">{label}</p>
       <p className="mt-1.5 text-sm font-medium text-neutral-900">{value}</p>
       {detail ? (
         <p className="mt-1 text-xs leading-relaxed text-neutral-500">{detail}</p>
@@ -45,6 +51,7 @@ function TrustRow({
 }
 
 export function FieldVerifyRecordView({ data }: Props) {
+  const { t } = useLocalePreferences();
   const {
     artwork,
     artist,
@@ -62,6 +69,32 @@ export function FieldVerifyRecordView({ data }: Props) {
   const verifyPath = fieldVerifyRecordHref(artwork.registry_id);
   const recordHref = fieldRecordHref(artwork.registry_id);
   const ledgerHref = registryLedgerHref(artwork.registry_id);
+  const verifiedWorksLine =
+    artistVerifiedWorkCount === 1
+      ? fillMessage(t("field.verify.record.verifiedWorksCount"), {
+          count: String(artistVerifiedWorkCount),
+        })
+      : fillMessage(t("field.verify.record.verifiedWorksCountPlural"), {
+          count: String(artistVerifiedWorkCount),
+        });
+
+  const trustPresentation = computeRegistryTrustPresentation({
+    verificationStatus: artwork.verification_status,
+    hasCertificate: Boolean(certificate),
+    certRevoked: certificateRevoked,
+    verifierName: organisation?.name ?? null,
+    artistConfirmationOnFile,
+    organisationVerified: Boolean(organisation?.verified),
+  });
+
+  const verificationShareContext = buildVerificationShareContext({
+    registryId: artwork.registry_id,
+    artworkTitle: artwork.title?.trim() || t("field.record.title"),
+    verifierName: organisation?.name ?? null,
+    trustLevel: trustPresentation.level,
+    verifiedAt: recordVerified ? artwork.created_at : null,
+    isVerified: recordVerified,
+  });
 
   return (
     <div className="relative mx-auto w-full max-w-2xl px-4 py-10 sm:px-6 md:py-14 lg:px-8">
@@ -71,90 +104,110 @@ export function FieldVerifyRecordView({ data }: Props) {
           aria-hidden
         >
           <span className="rotate-[-18deg] text-7xl font-bold tracking-widest text-red-700 md:text-8xl">
-            REVOKED
+            {t("field.verify.record.revokedWatermark")}
           </span>
         </div>
       ) : null}
 
-      <p className="text-xs font-medium uppercase tracking-[0.14em] text-neutral-500">
-        Field verification
-      </p>
-      <h1 className="mt-3 font-serif text-3xl font-normal leading-[1.08] tracking-tight text-neutral-950 md:text-4xl">
-        {artwork.title?.trim() || "Registry record"}
+      <h1 className="font-serif text-3xl font-normal leading-[1.08] tracking-tight text-neutral-950 md:text-4xl">
+        {artwork.title?.trim() || t("field.record.title")}
       </h1>
       {artist?.display_name ? (
         <p className="mt-3 text-base text-neutral-700">{artist.display_name}</p>
       ) : null}
 
+      <RegistryTrustPanel
+        presentation={trustPresentation}
+        variant="compact"
+        className="relative mt-8"
+      />
+
+      {recordVerified ? (
+        <section
+          className={`relative mt-8 rounded-[1.15rem] border border-neutral-300/70 bg-gradient-to-br from-[#f7f4ef] via-[#fafaf8] to-[#f0ebe3] px-6 py-6 shadow-sm md:px-8`}
+        >
+          <p className="text-sm font-medium text-neutral-800">
+            {t("verification.share.verifiedKicker")}
+          </p>
+          <p className="mt-1 text-sm leading-relaxed text-neutral-600">
+            {t("verification.share.verifiedLede")}
+          </p>
+          <VerificationShareControl
+            context={verificationShareContext}
+            className="mt-5"
+          />
+        </section>
+      ) : null}
+
       {!recordVerified ? (
-        <div className="mt-8 rounded-xl border border-amber-200/80 bg-amber-50/80 px-4 py-4 text-sm text-amber-950">
-          <p className="font-medium">Registry record registered</p>
-          <p className="mt-1 text-amber-900/85">
-            This Registry ID exists on file. Certificate verification applies after
-            the record reaches verified status on the Registry ledger.
+        <div className="mt-6 rounded-xl border border-neutral-900/[0.08] bg-white/85 px-4 py-4 text-sm text-neutral-700">
+          <p className="font-medium text-neutral-900">
+            {t("field.verify.record.unverifiedTitle")}
+          </p>
+          <p className="mt-1 leading-relaxed text-neutral-600">
+            {t("field.verify.record.unverifiedBody")}
           </p>
           <Link
             href={recordHref}
-            className="mt-3 inline-block text-sm font-medium underline underline-offset-2"
+            className="mt-3 inline-block text-sm font-medium text-neutral-900 underline underline-offset-2"
           >
-            View Field record
+            {t("field.verify.record.viewFieldRecord")}
           </Link>
         </div>
       ) : null}
 
       <section className="relative mt-10 rounded-[1.25rem] border border-neutral-900/[0.06] bg-white/85 p-6 shadow-sm md:p-8">
         <h2 className="font-serif text-xl font-normal text-neutral-950">
-          Trust on file
+          {t("field.verify.record.trustHeading")}
         </h2>
-        <p className="mt-2 text-xs leading-relaxed text-neutral-500">
-          The Field displays Registry truth only. Signals below are read from the
-          ledger and existing verification services — not self-authored profile claims.
+        <p className="mt-2 text-sm leading-relaxed text-neutral-500">
+          {t("field.verify.record.trustIntro")}
         </p>
 
         <div className="mt-6">
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-400">
-            Tier 1 — Registry record
-          </p>
+          <h3 className="mb-3 font-serif text-base font-normal text-neutral-800">
+            {t("field.verify.hub.tier1.label")}
+          </h3>
           <TrustRow
-            label="Registry ID"
+            label={t("field.verify.record.label.registryId")}
             value={artwork.registry_id}
           />
           <TrustRow
-            label="Record verification"
+            label={t("field.verify.record.label.recordVerification")}
             value={recordVerificationStatusLabel(
               artwork.verification_status,
               recordVerified
             )}
           />
           <TrustRow
-            label="Artist confirmation"
+            label={t("field.verify.record.label.artistConfirmation")}
             value={artistConfirmationLabel(artistConfirmationOnFile)}
           />
         </div>
 
         <div className="mt-8 border-t border-neutral-900/[0.06] pt-6">
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-400">
-            Tier 2 — Organisation & verified works
-          </p>
+          <h3 className="mb-3 font-serif text-base font-normal text-neutral-800">
+            {t("field.verify.hub.tier2.label")}
+          </h3>
           <TrustRow
-            label="Organisation verification"
+            label={t("field.verify.record.label.organisationVerification")}
             value={organisationVerificationLabel(organisation)}
           />
           {artistVerifiedWorkCount > 0 ? (
             <TrustRow
-              label="Verified works by Creative"
-              value={`${artistVerifiedWorkCount} verified ${artistVerifiedWorkCount === 1 ? "work" : "works"} on file`}
-              detail="Factual count from the Registry — not a reputation score."
+              label={t("field.verify.record.label.verifiedWorksByCreative")}
+              value={verifiedWorksLine}
+              detail={t("field.verify.record.verifiedWorksDetail")}
             />
           ) : null}
         </div>
 
         <div className="mt-8 border-t border-neutral-900/[0.06] pt-6">
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-400">
-            Tier 3 — Certificate
-          </p>
+          <h3 className="mb-3 font-serif text-base font-normal text-neutral-800">
+            {t("field.verify.hub.tier3.label")}
+          </h3>
           <TrustRow
-            label="Certificate status"
+            label={t("field.verify.record.label.certificateStatus")}
             value={certificateStatusLabel({
               recordVerified,
               certificate,
@@ -164,8 +217,8 @@ export function FieldVerifyRecordView({ data }: Props) {
           />
           {certificateRevoked && certificate?.revoked_reason ? (
             <div className="mt-4 rounded-xl border border-red-200/80 bg-red-50/85 px-4 py-3 text-sm text-red-800">
-              <p className="text-xs font-medium uppercase tracking-wide">
-                Revocation reason
+              <p className="text-sm font-medium text-red-900">
+                {t("field.verify.record.revocationReason")}
               </p>
               <p className="mt-1">{certificate.revoked_reason}</p>
             </div>
@@ -174,7 +227,7 @@ export function FieldVerifyRecordView({ data }: Props) {
 
         <div className="mt-8 border-t border-neutral-900/[0.06] pt-4">
           <TrustRow
-            label="Recorded on Registry"
+            label={t("field.verify.record.label.recordedOn")}
             value={new Date(artwork.created_at).toLocaleDateString()}
           />
         </div>
@@ -182,12 +235,12 @@ export function FieldVerifyRecordView({ data }: Props) {
 
       {recordVerified ? (
         <p className="mt-8 text-xs leading-relaxed text-neutral-500">
-          Full certificate document requires sign-in.{" "}
+          {t("field.verify.record.certificateLoginNote")}{" "}
           <a
             href={`/login?next=${encodeURIComponent(`/certificate/${encodeURIComponent(artwork.registry_id)}`)}`}
             className="font-medium text-neutral-800 underline underline-offset-2"
           >
-            View certificate (login required)
+            {t("field.verify.record.viewCertificateLogin")}
           </a>
         </p>
       ) : null}
@@ -197,27 +250,27 @@ export function FieldVerifyRecordView({ data }: Props) {
           href={recordHref}
           className="rounded-xl border border-neutral-200 bg-white px-5 py-2.5 text-neutral-900 transition hover:bg-neutral-50"
         >
-          Field record
+          {t("field.verify.record.linkFieldRecord")}
         </Link>
         <Link
           href={ledgerHref}
           className="rounded-xl border border-neutral-200 bg-white px-5 py-2.5 text-neutral-900 transition hover:bg-neutral-50"
         >
-          Registry ledger
+          {t("field.verify.record.linkRegistryLedger")}
         </Link>
         {artist?.slug ? (
           <Link
             href={fieldCreativeHref(artist.slug)}
             className="rounded-xl border border-neutral-200 bg-white px-5 py-2.5 text-neutral-900 transition hover:bg-neutral-50"
           >
-            Creative profile
+            {t("field.verify.record.linkCreativeProfile")}
           </Link>
         ) : null}
         <Link
           href={fieldVerifyHref()}
-          className="text-emerald-900 underline decoration-emerald-900/25 underline-offset-[3px] hover:decoration-emerald-900/50"
+          className="text-neutral-800 underline decoration-neutral-800/25 underline-offset-[3px] hover:decoration-neutral-800/50"
         >
-          Verify hub
+          {t("field.explorer.link.verifyHub")}
         </Link>
       </div>
 

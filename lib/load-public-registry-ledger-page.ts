@@ -2,7 +2,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
   PublicRegistryRecordView,
-  type RegistryTrustKind,
 } from "@/components/Registry/PublicRegistryRecordView";
 import { getCurrentOwner } from "@/lib/get-current-owner";
 import {
@@ -31,7 +30,6 @@ export type PublicRegistryLedgerPageData = {
   };
   artistName: string;
   artistSlug: string | null;
-  trustKind: RegistryTrustKind;
   verificationGalleryName: string | null;
   edition: {
     is_unique: boolean | null;
@@ -170,13 +168,6 @@ export async function loadPublicRegistryLedgerPageData(
   const certRevoked = Boolean(certificate?.revoked);
   const hasCertificate = Boolean(certificate?.has_certificate);
 
-  let trustKind: RegistryTrustKind = "unverified";
-  if (certRevoked) {
-    trustKind = "revoked";
-  } else if (artwork.verification_status === "verified") {
-    trustKind = hasCertificate ? "verified_with_cert" : "verified_no_cert";
-  }
-
   const siteBase =
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
     "http://localhost:3000";
@@ -218,7 +209,6 @@ export async function loadPublicRegistryLedgerPageData(
     },
     artistName,
     artistSlug: artist?.slug ?? null,
-    trustKind,
     verificationGalleryName,
     edition:
       extrasError || !extras

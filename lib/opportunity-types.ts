@@ -1,3 +1,5 @@
+import type { MessageKey } from "@/lib/locale-messages";
+
 /** Frozen brief / opportunity kind enum — Phase 2C spec §2.2. */
 
 export const BRIEF_TYPES = [
@@ -32,6 +34,18 @@ export function isParticipationMode(value: string): value is ParticipationMode {
   return (PARTICIPATION_MODES as readonly string[]).includes(value);
 }
 
+const BRIEF_TYPE_MESSAGE_KEYS: Record<BriefType, MessageKey> = {
+  open_call: "studio.opportunities.briefType.openCall",
+  residency_award: "studio.opportunities.briefType.residencyAward",
+  direct_commission: "studio.opportunities.briefType.directCommission",
+  production_partner_search: "studio.opportunities.briefType.productionPartnerSearch",
+};
+
+export function briefTypeMessageKey(type: string): MessageKey {
+  if (isBriefType(type)) return BRIEF_TYPE_MESSAGE_KEYS[type];
+  return "studio.opportunities.briefType.default";
+}
+
 export function briefTypeLabel(type: BriefType): string {
   switch (type) {
     case "open_call":
@@ -45,6 +59,15 @@ export function briefTypeLabel(type: BriefType): string {
     default:
       return type;
   }
+}
+
+export function briefTypeLabelLocalized(
+  type: string,
+  t: (key: MessageKey) => string
+): string {
+  const label = t(briefTypeMessageKey(type));
+  if (label !== "[missing message]") return label;
+  return isBriefType(type) ? briefTypeLabel(type) : type;
 }
 
 export function participationModeLabel(mode: ParticipationMode): string {

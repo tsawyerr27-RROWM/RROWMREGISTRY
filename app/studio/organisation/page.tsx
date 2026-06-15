@@ -1592,14 +1592,16 @@ export default function GalleryDashboardPage() {
     if (!gallery?.verified || !artworkId) return;
     setVerifyBusy(artworkId);
     setProfileError(null);
-    const { error } = await sb().rpc("gallery_verify_artwork", {
-      p_artwork_id: artworkId,
+    const res = await fetch("/api/registry/verify-artwork", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ artwork_id: artworkId }),
     });
+    const payload = (await res.json()) as { error?: string };
     setVerifyBusy(null);
-    if (error) {
-      setProfileError(
-        summarizeRpcError(error) || t("gallery.toast.verifyFailed")
-      );
+    if (!res.ok) {
+      setProfileError(payload.error || t("gallery.toast.verifyFailed"));
       return;
     }
     setVerifyTarget(null);

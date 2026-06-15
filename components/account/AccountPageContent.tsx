@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import { AccountPresenceHero } from "@/components/account/AccountPresenceHero";
 import type {
@@ -63,7 +63,9 @@ export type AccountPageContentProps = {
   profileSnapshot: AccountProfileSnapshot;
   profileCompleteness: ProfileCompletenessSnapshot | null;
   practiceSettings: CreativePracticeSettings;
-  onPracticeSettingsChange: (v: CreativePracticeSettings) => void;
+  onPracticeSettingsChange: (
+    value: SetStateAction<CreativePracticeSettings>
+  ) => void;
   registryEvidenceSlugs: string[];
   collectorPreviewArtworks: AccountHeroPreviewArtwork[] | null;
   artistRepHistorical: boolean;
@@ -210,22 +212,22 @@ export function AccountPageContent(props: AccountPageContentProps) {
               practicesVisible={props.practiceSettings.practicesVisible}
               registryEvidenceSlugs={props.registryEvidenceSlugs}
               onDeclaredSlugsChange={(declaredSlugs) =>
-                props.onPracticeSettingsChange({
-                  ...props.practiceSettings,
+                props.onPracticeSettingsChange((prev) => ({
+                  ...prev,
                   declaredSlugs,
-                })
+                }))
               }
               onPrimarySlugChange={(primarySlug) =>
-                props.onPracticeSettingsChange({
-                  ...props.practiceSettings,
+                props.onPracticeSettingsChange((prev) => ({
+                  ...prev,
                   primarySlug,
-                })
+                }))
               }
               onPracticesVisibleChange={(practicesVisible) =>
-                props.onPracticeSettingsChange({
-                  ...props.practiceSettings,
+                props.onPracticeSettingsChange((prev) => ({
+                  ...prev,
                   practicesVisible,
-                })
+                }))
               }
               saving={props.saving}
             />

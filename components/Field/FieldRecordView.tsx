@@ -32,9 +32,7 @@ function TrustBand({
 }) {
   return (
     <div className="rounded-xl border border-neutral-900/[0.05] bg-neutral-50/80 px-4 py-3">
-      <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-neutral-500">
-        {label}
-      </p>
+      <p className="text-sm text-neutral-500">{label}</p>
       <p className="mt-1 text-sm font-medium text-neutral-900">{value}</p>
     </div>
   );
@@ -60,18 +58,14 @@ export function FieldRecordView({ data }: Props) {
     contextPanels,
   } = data;
 
-  const title = artwork.title?.trim() || "Registry record";
+  const title = artwork.title?.trim() || t("field.record.title");
   const ledgerHref = registryLedgerHref(artwork.registry_id);
   const verifyHref = fieldVerifyRecordHref(artwork.registry_id);
   const yearMedium = [year, medium].filter(Boolean).join(" · ");
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 md:py-14 lg:px-8">
-      <p className="text-xs font-medium uppercase tracking-[0.14em] text-neutral-500">
-        {t("field.record.title")}
-      </p>
-
-      <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-start">
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-start">
         <div className="overflow-hidden rounded-[1.25rem] border border-neutral-900/[0.06] bg-neutral-100">
           {image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -125,9 +119,7 @@ export function FieldRecordView({ data }: Props) {
 
           {artistName ? (
             <div className="mt-8">
-              <p className="text-xs font-medium uppercase tracking-[0.1em] text-neutral-500">
-                Creative
-              </p>
+              <h2 className="text-sm font-medium text-neutral-700">Creative</h2>
               <p className="mt-2 text-base text-neutral-900">
                 {creativeHref ? (
                   <Link
@@ -145,9 +137,7 @@ export function FieldRecordView({ data }: Props) {
 
           {organisationName ? (
             <div className="mt-6">
-              <p className="text-xs font-medium uppercase tracking-[0.1em] text-neutral-500">
-                Organisation
-              </p>
+              <h2 className="text-sm font-medium text-neutral-700">Organisation</h2>
               <p className="mt-2 text-base text-neutral-900">
                 {organisationHref ? (
                   <Link

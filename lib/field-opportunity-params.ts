@@ -106,6 +106,11 @@ export type FieldBriefRow = {
   closes_at: string | null;
   registry_outcome_required: boolean;
   registry_outcome_copy: string | null;
+  eligible_disciplines: string[] | null;
+  eligible_locations: string[] | null;
+  eligible_career_stages: string[] | null;
+  eligibility_notes: string | null;
+  invitation_only: boolean | null;
   published_at: string | null;
   created_at: string;
   updated_at: string;

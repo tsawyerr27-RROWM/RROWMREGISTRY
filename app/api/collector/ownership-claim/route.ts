@@ -6,6 +6,7 @@ import {
   isAcquisitionType,
   type OwnershipAcquisitionType,
 } from "@/lib/collector-ownership-claim";
+import { notifyRegistryTransferRecorded } from "@/lib/notification-hooks/registry";
 import { guardRegistryMutation } from "@/lib/registry-action-security/guards";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
@@ -255,6 +256,12 @@ export async function POST(req: Request) {
       registry_id: registryId || null,
       acquisition_type: acquisitionType,
     },
+  });
+
+  void notifyRegistryTransferRecorded({
+    artworkId,
+    fromUserId: art.current_owner_id ? String(art.current_owner_id) : null,
+    toUserId: user.id,
   });
 
   return NextResponse.json({

@@ -1,17 +1,26 @@
 import { NextResponse } from "next/server";
 
 import {
+  normalizeEligibilityOverrideReason,
   normalizeOpportunityApplicationStatement,
+  OPPORTUNITY_ELIGIBILITY_OVERRIDE_REASON_MIN,
   type OpportunityApplicationRow,
 } from "@/lib/field-opportunity-applications";
 import { isOpportunityAcceptingResponses } from "@/lib/field-opportunity-params";
+import {
+  parseOpportunityEligibilityFields,
+  practiceApplyGateBlockMessage,
+  practiceApplyGateFromPublicPresence,
+} from "@/lib/opportunity-eligibility";
 import { requireCreativeAccount } from "@/lib/require-creative-account";
+import { notifyOpportunityApplicationReceived } from "@/lib/notification-hooks/opportunities";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export const runtime = "nodejs";
 
 type ApplyBody = {
   statement_text?: string;
+  eligibility_override_reason?: string;
 };
 
 export async function POST(
@@ -50,7 +59,7 @@ export async function POST(
   const { data: brief, error: briefError } = await supabase
     .from("field_briefs")
     .select(
-      "id, visibility_state, participation_mode, opens_at, closes_at, galleries(verified)"
+      "id, title, gallery_id, visibility_state, participation_mode, opens_at, closes_at, eligible_disciplines, galleries(verified)"
     )
     .eq("id", opportunityId)
     .maybeSingle();
@@ -87,6 +96,51 @@ export async function POST(
     );
   }
 
+  const { data: artist } = await supabase
+    .from("artists")
+    .select("public_presence")
+    .eq("id", creative.creative.user.id)
+    .maybeSingle();
+
+  const eligibility = parseOpportunityEligibilityFields(
+    brief as Record<string, unknown>
+  );
+  const practiceGate = practiceApplyGateFromPublicPresence({
+    eligibleDisciplines: eligibility.eligible_disciplines,
+    publicPresence: artist?.public_presence,
+  });
+
+  if (!practiceGate.canApply) {
+    return NextResponse.json(
+      {
+        error:
+          practiceApplyGateBlockMessage(practiceGate.status) ??
+          "You are not eligible to apply to this opportunity.",
+      },
+      { status: 403 }
+    );
+  }
+
+  const overrideReason = practiceGate.requiresEligibilityOverride
+    ? normalizeEligibilityOverrideReason(body.eligibility_override_reason)
+    : null;
+
+  if (practiceGate.requiresEligibilityOverride && !overrideReason) {
+    return NextResponse.json(
+      {
+        error: `Explain why your practice is relevant (minimum ${OPPORTUNITY_ELIGIBILITY_OVERRIDE_REASON_MIN} characters).`,
+      },
+      { status: 400 }
+    );
+  }
+
+  if (!practiceGate.requiresEligibilityOverride && body.eligibility_override_reason) {
+    return NextResponse.json(
+      { error: "Eligibility override is not required for this application." },
+      { status: 400 }
+    );
+  }
+
   const { data: existing } = await supabase
     .from("field_opportunity_applications")
     .select("id")
@@ -109,6 +163,8 @@ export async function POST(
       applicant_actor_id: creative.creative.user.id,
       status: "submitted",
       statement_text: statementText,
+      eligibility_override_requested: practiceGate.requiresEligibilityOverride,
+      eligibility_override_reason: overrideReason,
     })
     .select("id, status, created_at, updated_at")
     .single();
@@ -122,6 +178,15 @@ export async function POST(
     }
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
+
+  void notifyOpportunityApplicationReceived({
+    galleryId: String(brief.gallery_id),
+    opportunityId,
+    applicationId: String(data.id),
+    opportunityTitle: String(brief.title ?? ""),
+    applicantDisplayName: creative.creative.actor.display_name,
+    applicantUserId: creative.creative.user.id,
+  });
 
   return NextResponse.json({
     application: data as Pick<

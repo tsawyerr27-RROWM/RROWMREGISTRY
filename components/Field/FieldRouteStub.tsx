@@ -17,10 +17,7 @@ export function FieldRouteStub({ titleKey, descriptionKey }: Props) {
   return (
     <section className="mx-auto w-full max-w-[min(100%,88rem)] px-6 py-16 md:px-14 md:py-24 lg:px-[max(1.5rem,calc((100vw-72rem)/2+1rem))]">
       <div className="max-w-2xl">
-        <p className="text-xs font-medium uppercase tracking-[0.14em] text-neutral-500">
-          {t("ecosystem.surface.field")}
-        </p>
-        <h1 className="mt-3 font-serif text-3xl font-normal tracking-tight text-neutral-950 md:text-4xl">
+        <h1 className="font-serif text-3xl font-normal tracking-tight text-neutral-950 md:text-4xl">
           {t(titleKey)}
         </h1>
         <p className="mt-6 text-base leading-relaxed text-neutral-600">

@@ -22,10 +22,8 @@ type PendingArtwork = {
 };
 
 export default function InternalVerify() {
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [artworks, setArtworks] = useState<PendingArtwork[]>([]);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [approving, setApproving] = useState<string | null>(null);
   const router = useRouter();
   const sb = useSupabaseBrowserLazy();
@@ -43,9 +41,7 @@ export default function InternalVerify() {
         return;
       }
 
-      setUser({ id: "admin" });
-      setProfile({ is_admin: true });
-      setAccessToken("admin-session");
+      setIsAdmin(true);
 
       const { data: unverified } = await sb()
         .from("artworks")
@@ -63,98 +59,20 @@ export default function InternalVerify() {
 
   const approveArtwork = useCallback(
     async (artwork: PendingArtwork) => {
-      if (!user || approving) return;
+      if (!isAdmin || approving) return;
       setApproving(artwork.id);
 
       try {
-        const canonicalString = [
-          artwork.title,
-          artwork.artist_id,
-          artwork.registry_id,
-          artwork.created_at,
-        ].join("|");
-
-        const encoder = new TextEncoder();
-        const data = encoder.encode(canonicalString);
-        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray
-          .map((b) => b.toString(16).padStart(2, "0"))
-          .join("");
-
-        const { error: updateError } = await sb()
-          .from("artworks")
-          .update({
-            verification_status: "verified",
-            approved_by: user.id,
-            approved_at: new Date().toISOString(),
-            verification_hash: hashHex,
-          })
-          .eq("id", artwork.id);
-
-        if (updateError) {
-          alert(updateError.message);
-          return;
-        }
-
-        const artistId = artwork.artist_id;
-        if (artistId) {
-          const title = artwork.title ?? "Artwork";
-          const reg = artwork.registry_id ? ` (${artwork.registry_id})` : "";
-          await fetch("/api/admin/log-artist-activity", {
-            method: "POST",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-              ...(accessToken
-                ? { Authorization: `Bearer ${accessToken}` }
-                : {}),
-            },
-            body: JSON.stringify({
-              artist_user_id: artistId,
-              type: "artwork_verified",
-              message: `Artwork verified: ${title}${reg}`,
-              artwork_id: artwork.id,
-              metadata: {
-                registry_id: artwork.registry_id ?? null,
-                approved_by: user.id,
-              },
-            }),
-          }).catch(() => {});
-        }
-
-        const response = await fetch("/api/issue-certificate", {
+        const verifyRes = await fetch("/api/admin/verify-artwork", {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ artwork_id: artwork.id }),
         });
-        let certificateCreated = false;
-        if (response.ok) {
-          const body = await response.json().catch(() => ({}));
-          certificateCreated = Boolean(body.created);
-        }
-
-        if (certificateCreated && artistId) {
-          const title = artwork.title ?? "Artwork";
-          const reg = artwork.registry_id ? ` (${artwork.registry_id})` : "";
-          await fetch("/api/admin/log-artist-activity", {
-            method: "POST",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-              ...(accessToken
-                ? { Authorization: `Bearer ${accessToken}` }
-                : {}),
-            },
-            body: JSON.stringify({
-              artist_user_id: artistId,
-              type: "certificate_issued",
-              message: `Certificate issued: ${title}${reg}`,
-              artwork_id: artwork.id,
-              metadata: { registry_id: artwork.registry_id ?? null },
-            }),
-          }).catch(() => {});
+        const verifyBody = (await verifyRes.json()) as { error?: string };
+        if (!verifyRes.ok) {
+          alert(verifyBody.error || "Verification failed.");
+          return;
         }
 
         setArtworks((prev) => prev.filter((a) => a.id !== artwork.id));
@@ -162,10 +80,10 @@ export default function InternalVerify() {
         setApproving(null);
       }
     },
-    [user, accessToken, approving, sb]
+    [isAdmin, approving]
   );
 
-  if (!user || !profile) {
+  if (!isAdmin) {
     return (
       <div className="ds-page-environment flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-black to-slate-900">
         <p className="text-sm text-white/50">
@@ -174,8 +92,6 @@ export default function InternalVerify() {
       </div>
     );
   }
-
-  if (!profile.is_admin) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-black to-slate-900 text-white">

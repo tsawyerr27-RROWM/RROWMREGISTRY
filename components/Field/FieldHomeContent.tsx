@@ -19,10 +19,7 @@ export function FieldHomeContent() {
   return (
     <div className={`${gutter} pb-20 pt-8 md:pb-28 md:pt-12`}>
       <header className="max-w-3xl">
-        <p className="text-xs font-medium uppercase tracking-[0.14em] text-neutral-500">
-          {t("ecosystem.surface.field")}
-        </p>
-        <h1 className="mt-4 font-serif text-[2.125rem] font-normal leading-[1.06] tracking-tight text-neutral-950 md:text-5xl md:leading-[1.05]">
+        <h1 className="font-serif text-[2.125rem] font-normal leading-[1.06] tracking-tight text-neutral-950 md:text-5xl md:leading-[1.05]">
           {t("field.home.title")}
         </h1>
         <p className="mt-8 max-w-2xl text-lg leading-relaxed text-neutral-600">

@@ -45,10 +45,7 @@ export function RecordExplorerHero({
         aria-hidden
       />
       <div className="relative max-w-3xl p-8 lg:p-12 xl:p-14">
-        <p className="text-xs font-medium uppercase tracking-[0.14em] text-neutral-500">
-          {t("field.explorer.subNavLabel")}
-        </p>
-        <h1 className="mt-3 font-serif text-[2.125rem] font-normal leading-[1.06] tracking-tight text-neutral-950 md:text-5xl md:leading-[1.05]">
+        <h1 className="font-serif text-[2.125rem] font-normal leading-[1.06] tracking-tight text-neutral-950 md:text-5xl md:leading-[1.05]">
           {t("field.explorer.records.headline")}
         </h1>
         <p className="mt-6 max-w-2xl text-base leading-relaxed text-neutral-600">

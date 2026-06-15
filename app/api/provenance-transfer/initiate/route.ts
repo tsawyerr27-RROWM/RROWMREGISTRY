@@ -11,6 +11,7 @@ import {
 import { generateInviteToken, inviteExpiryDate } from "@/lib/invite-token";
 import { logActivityEvent } from "@/lib/log-activity";
 import { isProvenanceTransferType } from "@/lib/provenance-transfer";
+import { buildRegistryStewardInvitePublicUrl } from "@/lib/registry-steward-invite";
 import { getSiteUrl } from "@/lib/site-url";
 import { guardRegistryMutation } from "@/lib/registry-action-security/guards";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
@@ -185,7 +186,7 @@ export async function POST(req: Request) {
 
   const transferId = String(row?.id || "");
   const siteUrl = getSiteUrl();
-  const acceptLink = `${siteUrl}/provenance/accept?token=${encodeURIComponent(token)}`;
+  const acceptLink = buildRegistryStewardInvitePublicUrl(token, siteUrl);
   const title = String(art.title || "").trim() || "Untitled work";
   const registryId = String(art.registry_id || "").trim();
 

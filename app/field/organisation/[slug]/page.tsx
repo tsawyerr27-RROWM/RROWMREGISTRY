@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { OrganisationPresenceView } from "@/components/Field/OrganisationPresenceView";
+import { loadOrganisationPresencePageData } from "@/lib/field-organisation-presence";
 import {
-  loadOrganisationPresenceMetadata,
-  loadOrganisationPresencePageData,
-} from "@/lib/field-organisation-presence";
+  buildProfilePresenceMetadata,
+  loadOrganisationProfileOgBundle,
+} from "@/lib/profile-og";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export const dynamic = "force-dynamic";
@@ -17,35 +18,13 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const supabase = await createSupabaseServerClient();
-  const meta = await loadOrganisationPresenceMetadata(supabase, slug);
+  const bundle = await loadOrganisationProfileOgBundle(supabase, slug);
 
-  if (!meta) {
+  if (!bundle) {
     return { title: "Organisation · The Field" };
   }
 
-  const desc = meta.description?.trim();
-  const summary =
-    desc && desc.length > 0
-      ? desc.length > 160
-        ? `${desc.slice(0, 157)}…`
-        : desc
-      : `Public Organisation profile for ${meta.name} on RROWM.`;
-
-  return {
-    title: `${meta.name} · The Field`,
-    description: summary,
-    robots: meta.indexable ? undefined : { index: false, follow: false },
-    openGraph: {
-      title: `${meta.name} · The Field`,
-      description: summary,
-      type: "website",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `${meta.name} · The Field`,
-      description: summary,
-    },
-  };
+  return buildProfilePresenceMetadata(bundle);
 }
 
 export default async function FieldOrganisationPresencePage({ params }: Props) {

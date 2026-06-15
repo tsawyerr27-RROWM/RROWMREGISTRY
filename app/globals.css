@@ -1493,10 +1493,11 @@ h1, h2, h3 {
   color: inherit;
 }
 
-/* Certificate print: color fidelity + avoid splitting the card across pages */
+/* Certificate & registry document print: color fidelity + avoid splitting across pages */
 @media print {
   @page {
     margin: 10mm;
+    size: A4 portrait;
   }
 
   html,
@@ -1505,8 +1506,32 @@ h1, h2, h3 {
     -webkit-print-color-adjust: exact;
   }
 
-  .certificate-print-sheet {
+  .certificate-print-sheet,
+  .registry-print-sheet {
     page-break-inside: avoid;
     break-inside: avoid;
+  }
+}
+
+.registry-document-ornament {
+  background: linear-gradient(
+    145deg,
+    rgba(247, 244, 239, 0.35) 0%,
+    rgba(255, 255, 255, 1) 42%,
+    rgba(240, 235, 227, 0.25) 100%
+  );
+}
+
+.registry-document-paper {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+@media print {
+  .registry-document-ornament {
+    background: white;
+  }
+
+  .registry-document-paper {
+    background: white;
   }
 }

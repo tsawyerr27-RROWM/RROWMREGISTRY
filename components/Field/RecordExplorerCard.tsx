@@ -93,9 +93,7 @@ export function RecordExplorerCard({ row }: Props) {
         </h2>
 
         <div className="mt-4 rounded-xl border border-neutral-900/[0.05] bg-neutral-50/80 px-3.5 py-3">
-          <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-neutral-500">
-            Verification
-          </p>
+          <p className="text-sm text-neutral-500">Verification</p>
           <p className="mt-1 text-xs leading-relaxed text-neutral-700">
             {verificationSummary(row)}
           </p>

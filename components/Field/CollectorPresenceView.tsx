@@ -1,12 +1,20 @@
-import Link from "next/link";
+"use client";
 
+import Link from "next/link";
+import { useMemo } from "react";
+
+import { ProfilePresencePrestigeBand } from "@/components/Field/ProfilePresencePrestigeBand";
+import { ProfileShareControl } from "@/components/sharing/ProfileShareControl";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import type { CollectorPresencePageData } from "@/lib/field-collector-presence";
+import { buildCollectorProfileShareContext } from "@/lib/profile-presence-summary";
 import {
   fieldExplorerRecordsHref,
   fieldVerifyHref,
   fieldVerifyRecordHref,
 } from "@/lib/field-nav";
+import { fillMessage } from "@/lib/locale-messages";
 import { registryLedgerHref } from "@/lib/registry-nav";
 
 type Props = {
@@ -19,6 +27,7 @@ function collectorInitial(title: string) {
 }
 
 export function CollectorPresenceView({ data }: Props) {
+  const { t } = useLocalePreferences();
   const {
     displayTitle,
     location,
@@ -32,13 +41,24 @@ export function CollectorPresenceView({ data }: Props) {
     works,
   } = data;
 
+  const shareContext = useMemo(
+    () => buildCollectorProfileShareContext(data),
+    [data]
+  );
+
+  const certificatesLine =
+    footprint.certificateCount === 1
+      ? fillMessage(t("field.presence.collector.certificatesLine"), {
+          count: String(footprint.certificateCount),
+        })
+      : fillMessage(t("field.presence.collector.certificatesLinePlural"), {
+          count: String(footprint.certificateCount),
+        });
+
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 md:py-14 lg:px-8">
       <section className="max-w-3xl">
-        <p className="text-xs font-medium uppercase tracking-[0.14em] text-neutral-500">
-          Collector
-        </p>
-        <div className="mt-4 flex flex-wrap items-start gap-5">
+        <div className="flex flex-wrap items-start gap-5">
           <div
             className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-neutral-900/[0.08] bg-gradient-to-br from-neutral-100 to-neutral-200/90 font-serif text-2xl text-neutral-700"
             aria-hidden
@@ -54,69 +74,43 @@ export function CollectorPresenceView({ data }: Props) {
             ) : null}
             {anonymousPublic ? (
               <p className="mt-3 text-sm text-neutral-500">
-                Public stewardship presence — identifying details withheld on file.
+                {t("field.presence.collector.anonymousNote")}
               </p>
             ) : null}
           </div>
         </div>
+
+        <ProfilePresencePrestigeBand context={shareContext} />
+        <ProfileShareControl context={shareContext} className="mt-5" />
       </section>
 
       <section className="mt-10 max-w-3xl">
         <div className="rounded-2xl border border-neutral-900/[0.06] bg-white/75 p-5 shadow-sm md:p-6">
-          <p className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
-            Stewardship
-          </p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <h2 className="font-serif text-lg font-normal text-neutral-950">
+            {t("field.presence.collector.stewardshipHeading")}
+          </h2>
+          <div className="mt-4">
             <div className="rounded-xl border border-neutral-900/[0.05] bg-neutral-50/80 px-4 py-3">
-              <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-500">
-                Registry footprint
-              </p>
-              <p className="mt-1 text-sm text-neutral-800">
-                <span className="font-medium tabular-nums">
-                  {footprint.visibleWorks}
-                </span>{" "}
-                {footprint.visibleWorks === 1 ? "work" : "works"} with verified
-                custody on file
-              </p>
-            </div>
-            <div className="rounded-xl border border-neutral-900/[0.05] bg-neutral-50/80 px-4 py-3">
-              <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-500">
-                Verified records
-              </p>
-              <p className="mt-1 text-sm text-neutral-800">
-                <span className="font-medium tabular-nums">
-                  {footprint.verifiedWorks}
-                </span>{" "}
-                {footprint.verifiedWorks === 1 ? "record" : "records"} verified
-                on the Registry
-              </p>
-            </div>
-            <div className="rounded-xl border border-neutral-900/[0.05] bg-neutral-50/80 px-4 py-3 sm:col-span-2">
-              <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-500">
-                Certificates
+              <p className="text-sm text-neutral-500">
+                {t("field.organisation.certificates")}
               </p>
               <p className="mt-1 text-sm text-neutral-800">
                 {footprint.certificateCount > 0 ? (
                   <>
-                    <span className="font-medium tabular-nums">
-                      {footprint.certificateCount}
-                    </span>{" "}
-                    {footprint.certificateCount === 1
-                      ? "certificate"
-                      : "certificates"}{" "}
-                    recorded on file
+                    {certificatesLine}
                     {footprint.revokedCertificateCount > 0 ? (
                       <>
                         {" "}
                         ·{" "}
                         <span className="text-neutral-600">
-                          {footprint.revokedCertificateCount} revoked
+                          {footprint.revokedCertificateCount}{" "}
+                          {t("field.presence.revoked")}
                         </span>
                       </>
                     ) : null}
                   </>
                 ) : (
-                  "No certificates recorded yet for visible holdings"
+                  t("field.presence.collector.noCertificates")
                 )}
               </p>
             </div>
@@ -124,9 +118,14 @@ export function CollectorPresenceView({ data }: Props) {
 
           {stats ? (
             <p className="mt-4 text-xs text-neutral-500">
-              {stats.total_owned}{" "}
-              {stats.total_owned === 1 ? "holding" : "holdings"} documented ·{" "}
-              {stats.verified_owned} with verified catalogue listing
+              {fillMessage(t("field.presence.collector.holdingsDocumented"), {
+                total: String(stats.total_owned),
+                holdingsUnit:
+                  stats.total_owned === 1
+                    ? t("field.presence.holdingSingular")
+                    : t("field.presence.holdingsPlural"),
+                verified: String(stats.verified_owned),
+              })}
             </p>
           ) : null}
 
@@ -145,20 +144,22 @@ export function CollectorPresenceView({ data }: Props) {
       <section className="mt-14 md:mt-16" aria-labelledby="collector-footprint-heading">
         <div className="flex flex-wrap items-end justify-between gap-4 border-b border-black/[0.06] pb-6">
           <div>
-            <InfoTooltip text="Works where this collector holds verified ownership on the Registry. This is a stewardship surface — not a portfolio or marketplace listing." />
+            <InfoTooltip text={t("field.presence.collector.footprintTooltip")} />
             <h2
               id="collector-footprint-heading"
               className="font-serif text-3xl font-normal tracking-tight text-neutral-950 md:text-4xl"
             >
-              Registry footprint
+              {t("field.presence.footprintHeading")}
             </h2>
           </div>
           {footprint.visibleWorks > 0 ? (
             <p className="text-xs text-neutral-500">
               {footprint.visibleWorks}{" "}
-              {footprint.visibleWorks === 1 ? "work" : "works"}
+              {footprint.visibleWorks === 1
+                ? t("field.presence.workSingular")
+                : t("field.presence.worksPlural")}
               {footprint.verifiedWorks > 0
-                ? ` · ${footprint.verifiedWorks} verified`
+                ? ` · ${footprint.verifiedWorks} ${t("field.presence.verifiedSuffix")}`
                 : null}
             </p>
           ) : null}
@@ -167,20 +168,19 @@ export function CollectorPresenceView({ data }: Props) {
         {works.length === 0 ? (
           <div className="mt-10 rounded-3xl border border-black/[0.06] bg-white/70 px-8 py-14 text-center shadow-sm">
             <p className="text-sm text-neutral-600">
-              No verified holdings are visible on this public stewardship profile
-              yet.
+              {t("field.presence.collector.emptyHoldings")}
             </p>
             <Link
               href={fieldExplorerRecordsHref()}
               className="mt-6 inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
             >
-              Browse Registry records
+              {t("field.verify.hub.linkRecords")}
             </Link>
           </div>
         ) : (
           <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {works.map((work) => {
-              const title = (work.title || "").trim() || "Untitled";
+              const title = (work.title || "").trim() || t("registry.card.untitled");
               const ledgerHref = registryLedgerHref(work.registry_id);
               const verifyHref = fieldVerifyRecordHref(work.registry_id);
 
@@ -200,7 +200,7 @@ export function CollectorPresenceView({ data }: Props) {
                         />
                       ) : (
                         <div className="flex h-full items-center justify-center text-sm text-neutral-400">
-                          No image
+                          {t("field.presence.noImage")}
                         </div>
                       )}
                       <div className="absolute left-4 top-4">
@@ -211,7 +211,9 @@ export function CollectorPresenceView({ data }: Props) {
                               : "bg-black/45 text-white/90"
                           }`}
                         >
-                          {work.recordVerified ? "Verified record" : "On file"}
+                          {work.recordVerified
+                            ? t("field.presence.verifiedRecord")
+                            : t("field.presence.onFile")}
                         </span>
                       </div>
                       {work.hasCertificate ? (
@@ -224,8 +226,8 @@ export function CollectorPresenceView({ data }: Props) {
                             }`}
                           >
                             {work.certificateRevoked
-                              ? "Certificate revoked"
-                              : "Certificate on file"}
+                              ? t("field.presence.certificateRevoked")
+                              : t("field.presence.certificateOnFile")}
                           </span>
                         </div>
                       ) : null}
@@ -267,20 +269,20 @@ export function CollectorPresenceView({ data }: Props) {
                             href={work.recordHref}
                             className="inline-flex flex-1 items-center justify-center rounded-2xl bg-neutral-950 px-4 py-2.5 text-center text-xs font-semibold text-white transition hover:bg-neutral-800"
                           >
-                            View record
+                            {t("field.presence.viewRecord")}
                           </Link>
                           <Link
                             href={verifyHref}
                             className="inline-flex flex-1 items-center justify-center rounded-2xl border border-neutral-200 bg-white px-4 py-2.5 text-center text-xs font-medium text-neutral-800 transition hover:bg-neutral-50"
                           >
-                            Check verification
+                            {t("field.record.link.verify")}
                           </Link>
                         </div>
                         <Link
                           href={ledgerHref}
                           className="text-center text-[11px] font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500"
                         >
-                          Registry ledger
+                          {t("field.presence.linkRegistryLedger")}
                         </Link>
                       </div>
                     </div>
@@ -298,7 +300,7 @@ export function CollectorPresenceView({ data }: Props) {
             id="collector-about-heading"
             className="font-serif text-3xl font-normal tracking-tight text-neutral-950 md:text-4xl"
           >
-            About
+            {t("field.presence.aboutHeading")}
           </h2>
           <div className="mt-8 space-y-6 text-lg leading-[1.75] text-neutral-700">
             {bio.split(/\n\n+/).map((para, i) => (
@@ -312,22 +314,20 @@ export function CollectorPresenceView({ data }: Props) {
 
       <section className="mx-auto mt-20 max-w-2xl rounded-3xl border border-black/[0.06] bg-white/70 px-8 py-10 text-center shadow-sm md:mt-24 md:px-12">
         <p className="text-base leading-relaxed text-neutral-700">
-          This Collector profile documents verified custody on the Registry. It is
-          not a social profile, marketplace listing, or portfolio valuation
-          surface.
+          {t("field.presence.collector.closingLede")}
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link
             href={fieldExplorerRecordsHref()}
             className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
           >
-            Browse Registry records
+            {t("field.verify.hub.linkRecords")}
           </Link>
           <Link
             href={fieldVerifyHref()}
             className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
           >
-            Verify a Registry record
+            {t("field.verify.hub.title")}
           </Link>
         </div>
       </section>

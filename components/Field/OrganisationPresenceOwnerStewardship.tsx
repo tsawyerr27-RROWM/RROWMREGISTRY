@@ -23,9 +23,9 @@ export function OrganisationPresenceOwnerStewardship({ items }: Props) {
 
   return (
     <section className="mt-8 rounded-2xl border border-amber-200/70 bg-amber-50/50 px-5 py-5 md:px-6">
-      <p className="text-xs font-medium uppercase tracking-[0.12em] text-amber-900/80">
+      <h2 className="font-serif text-lg font-normal text-amber-950">
         {t("field.organisation.stewardship.heading")}
-      </p>
+      </h2>
       <p className="mt-2 text-sm leading-relaxed text-amber-950/90">
         {t("field.organisation.stewardship.lede")}
       </p>

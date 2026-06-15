@@ -77,6 +77,38 @@ export type MessageKey =
   | "field.opportunities.windowClosed"
   | "field.opportunities.verifiedOrganisation"
   | "field.opportunities.viewOpportunity"
+  | "field.opportunities.closesOn"
+  | "field.opportunities.deadlineNotSet"
+  | "field.opportunities.apply.matchHint"
+  | "field.opportunities.apply.noPractices"
+  | "field.opportunities.apply.mismatch"
+  | "field.opportunities.apply.updatePractices"
+  | "field.opportunities.apply.withJustification"
+  | "field.opportunities.apply.profileIndicatorsLede"
+  | "field.opportunities.detail.briefHeading"
+  | "field.opportunities.detail.noDescription"
+  | "field.opportunities.detail.sector"
+  | "field.opportunities.detail.participation"
+  | "field.opportunities.detail.opens"
+  | "field.opportunities.detail.closes"
+  | "field.opportunities.detail.practices"
+  | "field.opportunities.detail.registryOutcome"
+  | "field.opportunities.detail.registryOutcomeDefault"
+  | "field.opportunities.detail.programme"
+  | "field.opportunities.detail.deadlineNotAnnounced"
+  | "field.opportunities.detail.organisationHeading"
+  | "field.opportunities.detail.viewOrganisation"
+  | "field.opportunities.detail.continueExploring"
+  | "field.opportunities.detail.browseOpportunities"
+  | "field.opportunities.detail.browseOrganisations"
+  | "field.opportunities.detail.dossierHeading"
+  | "field.opportunities.detail.applyHeading"
+  | "field.opportunities.detail.applyLede"
+  | "field.opportunities.detail.applicationSubmitted"
+  | "field.opportunities.detail.submitted"
+  | "field.opportunities.detail.currentStatus"
+  | "field.opportunities.detail.applyCta"
+  | "field.opportunities.detail.profileHeading"
   | "field.explorer.organisations.headline"
   | "field.explorer.organisations.lede"
   | "field.explorer.organisations.searching"
@@ -234,6 +266,82 @@ export type MessageKey =
   | "field.presence.creative.title"
   | "field.presence.organisation.title"
   | "field.presence.collector.title"
+  | "field.verify.record.trustHeading"
+  | "field.verify.record.trustIntro"
+  | "field.verify.record.unverifiedTitle"
+  | "field.verify.record.unverifiedBody"
+  | "field.verify.record.viewFieldRecord"
+  | "field.verify.record.label.registryId"
+  | "field.verify.record.label.recordVerification"
+  | "field.verify.record.label.artistConfirmation"
+  | "field.verify.record.label.organisationVerification"
+  | "field.verify.record.label.verifiedWorksByCreative"
+  | "field.verify.record.verifiedWorksCount"
+  | "field.verify.record.verifiedWorksCountPlural"
+  | "field.verify.record.verifiedWorksDetail"
+  | "field.verify.record.label.certificateStatus"
+  | "field.verify.record.revocationReason"
+  | "field.verify.record.certificateLoginNote"
+  | "field.verify.record.viewCertificateLogin"
+  | "field.verify.record.linkFieldRecord"
+  | "field.verify.record.linkRegistryLedger"
+  | "field.verify.record.linkCreativeProfile"
+  | "field.verify.record.label.recordedOn"
+  | "field.verify.record.revokedWatermark"
+  | "field.presence.footprintHeading"
+  | "field.presence.footprintTooltip"
+  | "field.presence.viewRecord"
+  | "field.presence.linkRegistryLedger"
+  | "field.presence.aboutHeading"
+  | "field.presence.linkWebsite"
+  | "field.presence.linkVisitWebsite"
+  | "field.presence.linkInstagram"
+  | "field.presence.noImage"
+  | "field.presence.continuityLede"
+  | "field.presence.workSingular"
+  | "field.presence.worksPlural"
+  | "field.presence.recordSingular"
+  | "field.presence.recordsPlural"
+  | "field.presence.matching"
+  | "field.presence.verifiedOnFile"
+  | "field.presence.verifiedSuffix"
+  | "field.presence.holdingSingular"
+  | "field.presence.holdingsPlural"
+  | "field.presence.nameSingular"
+  | "field.presence.namesPlural"
+  | "field.presence.revoked"
+  | "field.presence.onFile"
+  | "field.presence.verifiedRecord"
+  | "field.presence.certificateRevoked"
+  | "field.presence.certificateOnFile"
+  | "field.presence.artistConfirmationOnFile"
+  | "field.presence.creative.emptyFiltered"
+  | "field.presence.creative.organisationVerified"
+  | "field.presence.creative.organisationOnFile"
+  | "field.presence.collector.anonymousNote"
+  | "field.presence.collector.stewardshipHeading"
+  | "field.presence.collector.custodyLine"
+  | "field.presence.collector.custodyLinePlural"
+  | "field.presence.collector.verifiedRecordsHeading"
+  | "field.presence.collector.verifiedRecordsLine"
+  | "field.presence.collector.verifiedRecordsLinePlural"
+  | "field.presence.collector.certificatesLine"
+  | "field.presence.collector.certificatesLinePlural"
+  | "field.presence.collector.noCertificates"
+  | "field.presence.collector.holdingsDocumented"
+  | "field.presence.collector.footprintTooltip"
+  | "field.presence.collector.emptyHoldings"
+  | "field.presence.collector.closingLede"
+  | "field.presence.organisation.rosterTooltip"
+  | "field.presence.organisation.rosterEmpty"
+  | "field.presence.organisation.profilePublic"
+  | "field.presence.organisation.profileNotPublic"
+  | "field.presence.organisation.profileNotOnFile"
+  | "field.presence.organisation.verifiedRosterLine"
+  | "field.presence.organisation.worksRegistered"
+  | "field.presence.organisation.worksRegisteredSingular"
+  | "field.presence.organisation.browseRegistry"
+  | "field.presence.organisation.closingLede"
   | "field.record.title"
   | "field.record.discoveryHeading"
   | "field.record.discoveryLede"
@@ -505,6 +613,53 @@ export type MessageKey =
   | "studio.opportunities.applicationsHint"
   | "studio.opportunities.applicationsLoading"
   | "studio.opportunities.applicationsEmpty"
+  | "studio.opportunities.reviewApplications"
+  | "studio.opportunities.editDetails"
+  | "studio.opportunities.backToList"
+  | "studio.opportunities.saveDraft"
+  | "studio.opportunities.lastUpdated"
+  | "studio.opportunities.applicationCount"
+  | "studio.opportunities.duplicate"
+  | "studio.opportunities.delete"
+  | "studio.opportunities.duplicatePlaceholder"
+  | "studio.opportunities.deletePlaceholder"
+  | "studio.opportunities.section.basics"
+  | "studio.opportunities.section.settings"
+  | "studio.opportunities.section.applications"
+  | "studio.opportunities.eligibility.heading"
+  | "studio.opportunities.eligibility.hint"
+  | "studio.opportunities.eligibility.disciplines"
+  | "studio.opportunities.eligibility.locations"
+  | "studio.opportunities.eligibility.careerStages"
+  | "studio.opportunities.eligibility.notes"
+  | "studio.opportunities.eligibility.invitationOnly"
+  | "studio.opportunities.applicationsShortlist"
+  | "studio.opportunities.applicationsSelect"
+  | "studio.opportunities.applicationsReject"
+  | "studio.opportunities.applicationsReviewedAt"
+  | "studio.opportunities.applicationsTab.all"
+  | "studio.opportunities.applicationsTab.submitted"
+  | "studio.opportunities.applicationsTab.shortlisted"
+  | "studio.opportunities.applicationsTab.selected"
+  | "studio.opportunities.applicationsTab.rejected"
+  | "studio.opportunities.applicationsMetrics.total"
+  | "studio.opportunities.applicationsMetrics.submitted"
+  | "studio.opportunities.applicationsMetrics.shortlisted"
+  | "studio.opportunities.applicationsMetrics.selected"
+  | "studio.opportunities.applicationsMetrics.rejected"
+  | "studio.opportunities.applicationsMetrics.overrideRequests"
+  | "studio.opportunities.applicationsTabListLabel"
+  | "studio.opportunities.applicationsOverrideOnly"
+  | "studio.opportunities.applicationsEmptyFiltered"
+  | "studio.opportunities.applicationsEligibilityOverrideBadge"
+  | "studio.opportunities.briefType.openCall"
+  | "studio.opportunities.briefType.residencyAward"
+  | "studio.opportunities.briefType.directCommission"
+  | "studio.opportunities.briefType.productionPartnerSearch"
+  | "studio.opportunities.briefType.default"
+  | "studio.opportunities.visibility.draft"
+  | "studio.opportunities.visibility.published"
+  | "studio.opportunities.visibility.withdrawn"
   | "studio.shell.activity"
   | "studio.shell.recentNotes"
   | "studio.shell.catalogueActivity"
@@ -534,6 +689,7 @@ export type MessageKey =
   | "registry.record.edition.n"
   | "registry.record.edition.nOfT"
   | "registry.record.provenance"
+  | "registry.record.provenanceTooltip"
   | "registry.record.recordInsights"
   | "registry.record.certStatusTitle"
   | "registry.record.certNotRecorded"
@@ -569,6 +725,7 @@ export type MessageKey =
   | "registry.record.claim.pending"
   | "registry.record.claim.error"
   | "registry.record.technical.title"
+  | "registry.record.technical.appendixNote"
   | "registry.record.technical.verificationHash"
   | "registry.record.technical.timelineHash"
   | "about.principles.title"
@@ -1060,6 +1217,32 @@ export type MessageKey =
   | "provenance.empty"
   | "provenance.chronology"
   | "provenance.chronologyIntro"
+  | "provenance.milestone.creation"
+  | "provenance.milestone.verification"
+  | "provenance.milestone.transfer"
+  | "provenance.milestone.exhibition"
+  | "provenance.milestone.amendment"
+  | "provenance.share.sectionLabel"
+  | "provenance.share.copyLink"
+  | "provenance.share.copied"
+  | "provenance.share.copyPrompt"
+  | "provenance.share.shareMilestone"
+  | "provenance.share.downloadImage"
+  | "provenance.share.downloadingImage"
+  | "provenance.share.title"
+  | "provenance.share.titleWithEvent"
+  | "provenance.share.titleRestricted"
+  | "provenance.share.text"
+  | "provenance.share.textRestricted"
+  | "provenance.share.textRestrictedGeneric"
+  | "provenance.share.category.creation"
+  | "provenance.share.category.verification"
+  | "provenance.share.category.certificate"
+  | "provenance.share.category.transfer"
+  | "provenance.share.category.exhibition"
+  | "provenance.share.category.amendment_resolved"
+  | "provenance.milestoneRailHeading"
+  | "provenance.fileSummaryHeading"
   | "provenance.supportingMaterial"
   | "provenance.certificateOnFile"
   | "provenance.howFileReads"
@@ -1558,7 +1741,194 @@ export type MessageKey =
   | "studio.activity.collectorOwnershipDeclared"
   | "studio.activity.galleryInviteAccepted"
   | "studio.activity.unknown"
-  | "registry.record.certificateOverview";
+  | "registry.record.certificateOverview"
+  | "certificate.document.registryName"
+  | "certificate.document.subtitle"
+  | "certificate.document.registryId"
+  | "certificate.document.registeredWork"
+  | "certificate.document.attributedCreator"
+  | "certificate.document.certificateNumber"
+  | "certificate.document.dateIssued"
+  | "certificate.document.verificationNote"
+  | "certificate.document.verificationHint"
+  | "certificate.document.authenticityHeading"
+  | "certificate.document.authenticitySub"
+  | "certificate.document.certFingerprint"
+  | "certificate.document.recordFingerprint"
+  | "certificate.document.timelineFingerprint"
+  | "certificate.document.noHash"
+  | "certificate.document.noTimeline"
+  | "certificate.document.digitalSeal"
+  | "certificate.document.scanToVerify"
+  | "certificate.document.revokedTitle"
+  | "certificate.document.revokedBody"
+  | "certificate.document.revokedWatermark"
+  | "certificate.document.missingTitle"
+  | "certificate.document.missingBody"
+  | "certificate.document.viewRecord"
+  | "certificate.document.issuedBy"
+  | "certificate.document.printTitle"
+  | "certificate.document.printHint"
+  | "certificate.document.print"
+  | "certificate.document.savePdf"
+  | "certificate.document.overviewTitle"
+  | "certificate.document.overviewStatus"
+  | "certificate.document.openDocument"
+  | "certificate.document.notYetVerified"
+  | "certificate.document.notYetVerifiedBody"
+  | "certificate.share.sectionLabel"
+  | "certificate.share.copyLink"
+  | "certificate.share.copied"
+  | "certificate.share.copyPrompt"
+  | "certificate.share.shareCertificate"
+  | "certificate.share.downloadImage"
+  | "certificate.share.downloadingImage"
+  | "certificate.share.title"
+  | "certificate.share.titleWithWork"
+  | "certificate.share.titleRestricted"
+  | "certificate.share.text"
+  | "certificate.share.textRestricted"
+  | "certificate.share.textRestrictedGeneric"
+  | "certificate.share.ogAlt"
+  | "certificate.share.ogAltRestricted"
+  | "verification.share.sectionLabel"
+  | "verification.share.verifiedKicker"
+  | "verification.share.verifiedLede"
+  | "verification.share.copyLink"
+  | "verification.share.copied"
+  | "verification.share.copyPrompt"
+  | "verification.share.shareVerification"
+  | "verification.share.downloadImage"
+  | "verification.share.downloadingImage"
+  | "verification.share.title"
+  | "verification.share.titleWithWork"
+  | "verification.share.titleRestricted"
+  | "verification.share.text"
+  | "verification.share.textRestricted"
+  | "verification.share.textRestrictedGeneric"
+  | "verification.share.ogAlt"
+  | "verification.share.ogAltRestricted"
+  | "verification.share.successTitle"
+  | "verification.share.viewVerificationPage"
+  | "registry.seal.registered"
+  | "registry.seal.established"
+  | "registry.seal.attested"
+  | "registry.seal.layered"
+  | "registry.seal.revoked"
+  | "registry.seal.notRecorded"
+  | "registry.trust.panelLabel"
+  | "registry.trust.level.registered"
+  | "registry.trust.level.established"
+  | "registry.trust.level.layered"
+  | "registry.trust.level.attested"
+  | "registry.trust.level.revoked"
+  | "registry.trust.explanation.registered"
+  | "registry.trust.explanation.established"
+  | "registry.trust.explanation.layered"
+  | "registry.trust.explanation.attested"
+  | "registry.trust.explanation.revoked"
+  | "registry.trust.pillar.creatorAttested"
+  | "registry.trust.pillar.organisationVerified"
+  | "registry.trust.pillar.certificateIssued"
+  | "registry.trust.pillar.continuityEstablished"
+  | "registry.intelligence.panelLabel"
+  | "registry.intelligence.dimension.recordCompleteness"
+  | "registry.intelligence.dimension.continuity"
+  | "registry.intelligence.dimension.evidenceDepth"
+  | "registry.intelligence.dimension.riskSignals"
+  | "registry.intelligence.completeness.emerging"
+  | "registry.intelligence.completeness.developing"
+  | "registry.intelligence.completeness.deep"
+  | "registry.intelligence.completeness.comprehensive"
+  | "registry.intelligence.completeness.explanation.emerging"
+  | "registry.intelligence.completeness.explanation.developing"
+  | "registry.intelligence.completeness.explanation.deep"
+  | "registry.intelligence.completeness.explanation.comprehensive"
+  | "registry.intelligence.continuity.fragmented"
+  | "registry.intelligence.continuity.partial"
+  | "registry.intelligence.continuity.established"
+  | "registry.intelligence.continuity.continuous"
+  | "registry.intelligence.continuity.explanation.fragmented"
+  | "registry.intelligence.continuity.explanation.partial"
+  | "registry.intelligence.continuity.explanation.established"
+  | "registry.intelligence.continuity.explanation.continuous"
+  | "registry.intelligence.evidence.light"
+  | "registry.intelligence.evidence.moderate"
+  | "registry.intelligence.evidence.strong"
+  | "registry.intelligence.evidence.extensive"
+  | "registry.intelligence.evidence.explanation.light"
+  | "registry.intelligence.evidence.explanation.moderate"
+  | "registry.intelligence.evidence.explanation.strong"
+  | "registry.intelligence.evidence.explanation.extensive"
+  | "registry.intelligence.risk.noneDetected"
+  | "registry.intelligence.risk.reviewRecommended"
+  | "registry.intelligence.risk.conflictsPresent"
+  | "registry.intelligence.risk.explanation.noneDetected"
+  | "registry.intelligence.risk.explanation.reviewRecommended"
+  | "registry.intelligence.risk.explanation.conflictsPresent"
+  | "nav.inbox"
+  | "notifications.inbox.title"
+  | "notifications.inbox.intro"
+  | "notifications.inbox.empty"
+  | "notifications.inbox.loadError"
+  | "notifications.inbox.markAllRead"
+  | "notifications.inbox.viewAll"
+  | "notifications.inbox.openInbox"
+  | "profile.presence.band.kicker"
+  | "profile.presence.trust.creative.established"
+  | "profile.presence.trust.creative.footprint"
+  | "profile.presence.trust.creative.registered"
+  | "profile.presence.trust.collector.established"
+  | "profile.presence.trust.collector.stewardship"
+  | "profile.presence.trust.collector.private"
+  | "profile.presence.trust.collector.opening"
+  | "profile.presence.secondary.representedByVerifiedOrg"
+  | "profile.presence.secondary.representedByOrg"
+  | "profile.presence.secondary.representedCreatives"
+  | "profile.presence.share.copyLink"
+  | "profile.presence.share.copied"
+  | "profile.presence.share.shareProfile"
+  | "profile.presence.share.copyPrompt"
+  | "profile.presence.share.text"
+  | "registry.stewardInvite.cta"
+  | "registry.stewardInvite.modalTitle"
+  | "registry.stewardInvite.modalLead"
+  | "registry.stewardInvite.kindLabel"
+  | "registry.stewardInvite.kind.authorship"
+  | "registry.stewardInvite.kind.custody"
+  | "registry.stewardInvite.authorshipContext"
+  | "registry.stewardInvite.custodyNarrative"
+  | "registry.stewardInvite.custodyTooltip"
+  | "registry.stewardInvite.recipientEmail"
+  | "registry.stewardInvite.messageLabel"
+  | "registry.stewardInvite.sendCta"
+  | "registry.stewardInvite.sending"
+  | "registry.stewardInvite.sent"
+  | "registry.stewardInvite.onFile"
+  | "registry.stewardInvite.invalidEmail"
+  | "registry.stewardInvite.sendFailed"
+  | "registry.stewardInvite.networkError"
+  | "registry.stewardInvite.csrfError"
+  | "registry.stewardAccept.loading"
+  | "registry.stewardAccept.kicker"
+  | "registry.stewardAccept.heading"
+  | "registry.stewardAccept.lede"
+  | "registry.stewardAccept.recordLabel"
+  | "registry.stewardAccept.artistOnFile"
+  | "registry.stewardAccept.invitedBy"
+  | "registry.stewardAccept.invitedAs"
+  | "registry.stewardAccept.roleHeading"
+  | "registry.stewardAccept.recipientLine"
+  | "registry.stewardAccept.expiresLine"
+  | "registry.stewardAccept.ctaAuthorship"
+  | "registry.stewardAccept.ctaCustody"
+  | "registry.stewardAccept.viewRecord"
+  | "registry.stewardAccept.expiredTitle"
+  | "registry.stewardAccept.expiredBody"
+  | "registry.stewardAccept.acceptedTitle"
+  | "registry.stewardAccept.acceptedBody"
+  | "registry.stewardAccept.invalidTitle"
+  | "registry.stewardAccept.invalidBody";
 
 const EN: Record<MessageKey, string> = {
   "common.perMonth": "per month",
@@ -1657,6 +2027,41 @@ const EN: Record<MessageKey, string> = {
   "field.opportunities.windowClosed": "Closed",
   "field.opportunities.verifiedOrganisation": "Verified",
   "field.opportunities.viewOpportunity": "View opportunity",
+  "field.opportunities.closesOn": "Closes {date}",
+  "field.opportunities.deadlineNotSet": "Deadline not announced",
+  "field.opportunities.apply.matchHint": "Your declared practices align with this opportunity.",
+  "field.opportunities.apply.noPractices": "You need declared practices in your profile before applying.",
+  "field.opportunities.apply.mismatch":
+    "Your declared practices may not match this opportunity. Update your profile or apply with a short justification.",
+  "field.opportunities.apply.updatePractices": "Update declared practices",
+  "field.opportunities.apply.withJustification": "Apply with justification",
+  "field.opportunities.apply.profileIndicatorsLede":
+    "Discipline alignment is required to apply unless you submit a justification. Location, career stage, and invitation preferences are informational only.",
+  "field.opportunities.detail.briefHeading": "Brief",
+  "field.opportunities.detail.noDescription": "No description provided.",
+  "field.opportunities.detail.sector": "Sector",
+  "field.opportunities.detail.participation": "Participation",
+  "field.opportunities.detail.opens": "Opens",
+  "field.opportunities.detail.closes": "Closes",
+  "field.opportunities.detail.practices": "Practices",
+  "field.opportunities.detail.registryOutcome": "Registry outcome",
+  "field.opportunities.detail.registryOutcomeDefault": "This opportunity may result in registry-backed outcomes.",
+  "field.opportunities.detail.programme": "Programme",
+  "field.opportunities.detail.deadlineNotAnnounced": "Not announced",
+  "field.opportunities.detail.organisationHeading": "Organisation",
+  "field.opportunities.detail.viewOrganisation": "View organisation profile",
+  "field.opportunities.detail.continueExploring": "Continue exploring",
+  "field.opportunities.detail.browseOpportunities": "Browse opportunities",
+  "field.opportunities.detail.browseOrganisations": "Browse organisations",
+  "field.opportunities.detail.dossierHeading": "Opportunity",
+  "field.opportunities.detail.applyHeading": "Apply",
+  "field.opportunities.detail.applyLede":
+    "Submit your interest directly to the publishing organisation. Applications are reviewed on Field with the same trust signals shown on your public profile.",
+  "field.opportunities.detail.applicationSubmitted": "Application submitted",
+  "field.opportunities.detail.submitted": "Submitted",
+  "field.opportunities.detail.currentStatus": "Current status",
+  "field.opportunities.detail.applyCta": "Apply",
+  "field.opportunities.detail.profileHeading": "Your profile",
   "field.explorer.organisations.headline": "Discover Organisations",
   "field.explorer.organisations.lede":
     "Public Organisation profiles with registry footprint, verification status, and represented Creatives. No rankings or sponsored placement.",
@@ -1847,6 +2252,92 @@ const EN: Record<MessageKey, string> = {
   "field.presence.creative.title": "Creative profile",
   "field.presence.organisation.title": "Organisation profile",
   "field.presence.collector.title": "Collector profile",
+  "field.verify.record.trustHeading": "Trust on file",
+  "field.verify.record.trustIntro":
+    "The Field displays Registry truth only. Signals below are read from the ledger and existing verification services. Not self-authored profile claims.",
+  "field.verify.record.unverifiedTitle": "Registry record registered",
+  "field.verify.record.unverifiedBody":
+    "This Registry ID exists on file. Certificate verification applies after the record reaches verified status on the Registry ledger.",
+  "field.verify.record.viewFieldRecord": "View Field record",
+  "field.verify.record.label.registryId": "Registry ID",
+  "field.verify.record.label.recordVerification": "Record verification",
+  "field.verify.record.label.artistConfirmation": "Artist confirmation",
+  "field.verify.record.label.organisationVerification": "Organisation verification",
+  "field.verify.record.label.verifiedWorksByCreative": "Verified works by Creative",
+  "field.verify.record.verifiedWorksCount": "{count} verified work on file",
+  "field.verify.record.verifiedWorksCountPlural": "{count} verified works on file",
+  "field.verify.record.verifiedWorksDetail": "Factual count from the Registry. Not a reputation score.",
+  "field.verify.record.label.certificateStatus": "Certificate status",
+  "field.verify.record.revocationReason": "Revocation reason",
+  "field.verify.record.certificateLoginNote": "Full certificate document requires sign-in.",
+  "field.verify.record.viewCertificateLogin": "View certificate (login required)",
+  "field.verify.record.linkFieldRecord": "Field record",
+  "field.verify.record.linkRegistryLedger": "Registry ledger",
+  "field.verify.record.linkCreativeProfile": "Creative profile",
+  "field.verify.record.label.recordedOn": "Recorded on Registry",
+  "field.verify.record.revokedWatermark": "REVOKED",
+  "field.presence.footprintHeading": "Registry footprint",
+  "field.presence.footprintTooltip":
+    "Open a piece for the Field record summary; use the registry ledger link for the continuity record on file.",
+  "field.presence.viewRecord": "View record",
+  "field.presence.linkRegistryLedger": "Registry ledger",
+  "field.presence.aboutHeading": "About",
+  "field.presence.linkWebsite": "Website",
+  "field.presence.linkVisitWebsite": "Visit website",
+  "field.presence.linkInstagram": "Instagram",
+  "field.presence.noImage": "No image",
+  "field.presence.continuityLede":
+    "Each work links to its Registry record: the continuity layer where verification status and provenance are on file.",
+  "field.presence.workSingular": "work",
+  "field.presence.worksPlural": "works",
+  "field.presence.recordSingular": "record",
+  "field.presence.recordsPlural": "records",
+  "field.presence.matching": "matching",
+  "field.presence.verifiedOnFile": "verified on file",
+  "field.presence.verifiedSuffix": "verified",
+  "field.presence.holdingSingular": "holding",
+  "field.presence.holdingsPlural": "holdings",
+  "field.presence.nameSingular": "name",
+  "field.presence.namesPlural": "names",
+  "field.presence.revoked": "revoked",
+  "field.presence.onFile": "On file",
+  "field.presence.verifiedRecord": "Verified record",
+  "field.presence.certificateRevoked": "Certificate revoked",
+  "field.presence.certificateOnFile": "Certificate on file",
+  "field.presence.artistConfirmationOnFile": "Artist confirmation on file",
+  "field.presence.creative.emptyFiltered":
+    "No works match your search or filters. Try clearing the search or setting status to “All works”.",
+  "field.presence.creative.organisationVerified": "Institution-linked representation on file",
+  "field.presence.creative.organisationOnFile": "Institutional representation on file",
+  "field.presence.collector.anonymousNote": "Public stewardship presence. Identifying details withheld on file.",
+  "field.presence.collector.stewardshipHeading": "Stewardship",
+  "field.presence.collector.custodyLine": "{count} work with verified custody on file",
+  "field.presence.collector.custodyLinePlural": "{count} works with verified custody on file",
+  "field.presence.collector.verifiedRecordsHeading": "Verified records",
+  "field.presence.collector.verifiedRecordsLine": "{count} record verified on the Registry",
+  "field.presence.collector.verifiedRecordsLinePlural": "{count} records verified on the Registry",
+  "field.presence.collector.certificatesLine": "{count} certificate recorded on file",
+  "field.presence.collector.certificatesLinePlural": "{count} certificates recorded on file",
+  "field.presence.collector.noCertificates": "No certificates recorded yet for visible holdings",
+  "field.presence.collector.holdingsDocumented":
+    "{total} {holdingsUnit} documented · {verified} with verified catalogue listing",
+  "field.presence.collector.footprintTooltip":
+    "Works where this collector holds verified ownership on the Registry. This is a stewardship surface. Not a portfolio or marketplace listing.",
+  "field.presence.collector.emptyHoldings": "No verified holdings are visible on this public stewardship profile yet.",
+  "field.presence.collector.closingLede":
+    "This Collector profile documents verified custody on the Registry. It is not a social profile, marketplace listing, or portfolio valuation surface.",
+  "field.presence.organisation.rosterTooltip":
+    "Creatives who have opted in to appear on this Organisation's public profile. Links open Creative Presence when their profile is public.",
+  "field.presence.organisation.rosterEmpty": "No represented Creatives are listed on this public profile yet.",
+  "field.presence.organisation.profilePublic": "Creative profile",
+  "field.presence.organisation.profileNotPublic": "Profile not yet public",
+  "field.presence.organisation.profileNotOnFile": "Profile not yet on file",
+  "field.presence.organisation.verifiedRosterLine": "{verified} verified · {total} {worksUnit} on file",
+  "field.presence.organisation.worksRegistered": "{count} works registered",
+  "field.presence.organisation.worksRegisteredSingular": "{count} work registered",
+  "field.presence.organisation.browseRegistry": "Browse the registry",
+  "field.presence.organisation.closingLede":
+    "Registry records remain the system of record. This Organisation profile reads verification status, representation, and certificates from the Registry. It does not create separate trust scores.",
   "field.record.title": "Registry record",
   "field.record.discoveryHeading": "Continue exploring",
   "field.record.discoveryLede":
@@ -2160,6 +2651,54 @@ const EN: Record<MessageKey, string> = {
     "Submitted applications for this opportunity. Review workflow is not available yet.",
   "studio.opportunities.applicationsLoading": "Loading applications…",
   "studio.opportunities.applicationsEmpty": "No applications submitted yet.",
+  "studio.opportunities.reviewApplications": "Applications",
+  "studio.opportunities.editDetails": "Edit opportunity details",
+  "studio.opportunities.backToList": "Back to list",
+  "studio.opportunities.saveDraft": "Save draft",
+  "studio.opportunities.lastUpdated": "Updated {date}",
+  "studio.opportunities.applicationCount": "{count} applications",
+  "studio.opportunities.duplicate": "Duplicate",
+  "studio.opportunities.delete": "Delete",
+  "studio.opportunities.duplicatePlaceholder": "Duplicate (coming soon)",
+  "studio.opportunities.deletePlaceholder": "Delete (coming soon)",
+  "studio.opportunities.section.basics": "Basics",
+  "studio.opportunities.section.settings": "Settings",
+  "studio.opportunities.section.applications": "Applications",
+  "studio.opportunities.eligibility.heading": "Eligibility preferences",
+  "studio.opportunities.eligibility.hint":
+    "Informational signals for applicants. Discipline alignment is enforced when Creatives apply.",
+  "studio.opportunities.eligibility.disciplines": "Preferred disciplines",
+  "studio.opportunities.eligibility.locations": "Preferred locations",
+  "studio.opportunities.eligibility.careerStages": "Career stages",
+  "studio.opportunities.eligibility.notes": "Notes for applicants",
+  "studio.opportunities.eligibility.invitationOnly": "This brief is invitation-only on Field.",
+  "studio.opportunities.applicationsShortlist": "Shortlist",
+  "studio.opportunities.applicationsSelect": "Select",
+  "studio.opportunities.applicationsReject": "Reject",
+  "studio.opportunities.applicationsReviewedAt": "Reviewed",
+  "studio.opportunities.applicationsTab.all": "All",
+  "studio.opportunities.applicationsTab.submitted": "Submitted",
+  "studio.opportunities.applicationsTab.shortlisted": "Shortlisted",
+  "studio.opportunities.applicationsTab.selected": "Selected",
+  "studio.opportunities.applicationsTab.rejected": "Rejected",
+  "studio.opportunities.applicationsMetrics.total": "Total",
+  "studio.opportunities.applicationsMetrics.submitted": "Submitted",
+  "studio.opportunities.applicationsMetrics.shortlisted": "Shortlisted",
+  "studio.opportunities.applicationsMetrics.selected": "Selected",
+  "studio.opportunities.applicationsMetrics.rejected": "Rejected",
+  "studio.opportunities.applicationsMetrics.overrideRequests": "Override requests",
+  "studio.opportunities.applicationsTabListLabel": "Filter applications by status",
+  "studio.opportunities.applicationsOverrideOnly": "Override requests only",
+  "studio.opportunities.applicationsEmptyFiltered": "No applications match this filter.",
+  "studio.opportunities.applicationsEligibilityOverrideBadge": "Eligibility override requested",
+  "studio.opportunities.briefType.openCall": "Open call",
+  "studio.opportunities.briefType.residencyAward": "Residency / award",
+  "studio.opportunities.briefType.directCommission": "Direct commission",
+  "studio.opportunities.briefType.productionPartnerSearch": "Production partner search",
+  "studio.opportunities.briefType.default": "Opportunity",
+  "studio.opportunities.visibility.draft": "Draft",
+  "studio.opportunities.visibility.published": "Published",
+  "studio.opportunities.visibility.withdrawn": "Withdrawn",
   "studio.shell.activity": "Activity",
   "studio.shell.recentNotes": "Recent notes",
   "studio.shell.catalogueActivity": "Catalogue activity",
@@ -2192,11 +2731,13 @@ const EN: Record<MessageKey, string> = {
   "registry.record.edition.n": "Edition {n}",
   "registry.record.edition.nOfT": "Edition {n} of {total}",
   "registry.record.provenance": "Provenance",
+  "registry.record.provenanceTooltip":
+    "Creation, verification, custody, and amendments filed on the Registry chronology.",
   "registry.record.recordInsights": "Record insights",
   "registry.record.certStatusTitle": "Certificate status",
   "registry.record.certNotRecorded": "Certificate not recorded",
-  "registry.record.certRevoked": "✕ Revoked",
-  "registry.record.certRecorded": "✓ Certificate recorded",
+  "registry.record.certRevoked": "Certificate revoked",
+  "registry.record.certRecorded": "Certificate on file",
   "registry.record.certFootnote":
     "Numbers and fingerprints are not shown here. Sign in to view the full certificate document.",
   "registry.record.verificationTitle": "Verification",
@@ -2227,7 +2768,9 @@ const EN: Record<MessageKey, string> = {
   "registry.record.claim.submitted": "Claim submitted for review.",
   "registry.record.claim.pending": "You already have a pending claim for this work.",
   "registry.record.claim.error": "Could not submit claim.",
-  "registry.record.technical.title": "Technical details",
+  "registry.record.technical.title": "Technical appendix",
+  "registry.record.technical.appendixNote":
+    "Cryptographic references for independent verification. Not required for reading the chronology.",
   "registry.record.technical.verificationHash": "Verification hash",
   "registry.record.technical.timelineHash": "Timeline hash",
   "about.principles.title": "A registry designed for trust",
@@ -2839,6 +3382,35 @@ const EN: Record<MessageKey, string> = {
   "provenance.chronology": "Chronology",
   "provenance.chronologyIntro":
     "Entries accumulate; later filings sit alongside earlier ones. Multiple participants may appear as confirmations and custody steps are documented.",
+  "provenance.milestone.creation": "Creation",
+  "provenance.milestone.verification": "Verification",
+  "provenance.milestone.transfer": "Transfer",
+  "provenance.milestone.exhibition": "Exhibition",
+  "provenance.milestone.amendment": "Amendment",
+  "provenance.share.sectionLabel": "Share milestone",
+  "provenance.share.copyLink": "Copy chronology link",
+  "provenance.share.copied": "Link copied",
+  "provenance.share.copyPrompt": "Copy this chronology link",
+  "provenance.share.shareMilestone": "Share milestone",
+  "provenance.share.downloadImage": "Download milestone PNG",
+  "provenance.share.downloadingImage": "Preparing image…",
+  "provenance.share.title": "Registry chronology",
+  "provenance.share.titleWithEvent": "{event} · Registry chronology",
+  "provenance.share.titleRestricted": "Registry chronology",
+  "provenance.share.text":
+    "View the RROWM chronology milestone for {title}.",
+  "provenance.share.textRestricted":
+    "View the RROWM chronology record for {registryId}.",
+  "provenance.share.textRestrictedGeneric":
+    "Registry chronology on RROWM.",
+  "provenance.share.category.creation": "Creation",
+  "provenance.share.category.verification": "Verification",
+  "provenance.share.category.certificate": "Certificate",
+  "provenance.share.category.transfer": "Transfer",
+  "provenance.share.category.exhibition": "Exhibition",
+  "provenance.share.category.amendment_resolved": "Amendment resolved",
+  "provenance.milestoneRailHeading": "Milestones on file",
+  "provenance.fileSummaryHeading": "How this file reads",
   "provenance.supportingMaterial": "Supporting material attached",
   "provenance.certificateOnFile": "Certificate on file",
   "provenance.howFileReads": "How the file reads",
@@ -3449,6 +4021,237 @@ const EN: Record<MessageKey, string> = {
   "studio.activity.galleryInviteAccepted": "Gallery invitation accepted",
   "studio.activity.unknown": "Activity recorded",
   "registry.record.certificateOverview": "Certificate overview",
+  "certificate.document.registryName": "RROWM Registry",
+  "certificate.document.subtitle": "Archival certificate of registration",
+  "certificate.document.registryId": "Registry identifier",
+  "certificate.document.registeredWork": "Registered work",
+  "certificate.document.attributedCreator": "Attributed creator",
+  "certificate.document.certificateNumber": "Certificate number",
+  "certificate.document.dateIssued": "Date issued",
+  "certificate.document.verificationNote": "Verification",
+  "certificate.document.verificationHint":
+    "Scan the code below to open the public verification record.",
+  "certificate.document.authenticityHeading": "Cryptographic attestation",
+  "certificate.document.authenticitySub": "Immutable record references",
+  "certificate.document.certFingerprint": "Certificate fingerprint",
+  "certificate.document.recordFingerprint": "Cryptographic record",
+  "certificate.document.timelineFingerprint": "Event timeline fingerprint",
+  "certificate.document.noHash": "No certificate hash recorded",
+  "certificate.document.noTimeline": "No timeline data recorded",
+  "certificate.document.digitalSeal": "Registry seal",
+  "certificate.document.scanToVerify": "Scan to verify this registry record",
+  "certificate.document.revokedTitle": "Certificate revoked",
+  "certificate.document.revokedBody":
+    "This certificate is no longer valid. Do not rely on it for authenticity.",
+  "certificate.document.revokedWatermark": "REVOKED",
+  "certificate.document.missingTitle": "No certificate on file",
+  "certificate.document.missingBody":
+    "A certificate has not been issued for this registry record yet.",
+  "certificate.document.viewRecord": "View registry ledger",
+  "certificate.document.issuedBy": "Issuing authority on file",
+  "certificate.document.printTitle": "Your certificate",
+  "certificate.document.printHint":
+    "Print a copy or save as PDF from the print dialog.",
+  "certificate.document.print": "Print",
+  "certificate.document.savePdf": "Save as PDF",
+  "certificate.document.overviewTitle": "Certificate overview",
+  "certificate.document.overviewStatus": "Certificate status",
+  "certificate.document.openDocument": "Open certificate document",
+  "certificate.document.notYetVerified": "Not yet verified",
+  "certificate.document.notYetVerifiedBody":
+    "Certificate verification applies after the record is verified on the Registry ledger.",
+  "certificate.share.sectionLabel": "Share certificate",
+  "certificate.share.copyLink": "Copy certificate link",
+  "certificate.share.copied": "Link copied",
+  "certificate.share.copyPrompt": "Copy this certificate link",
+  "certificate.share.shareCertificate": "Share certificate",
+  "certificate.share.downloadImage": "Download share image",
+  "certificate.share.downloadingImage": "Preparing image…",
+  "certificate.share.title": "Registry certificate",
+  "certificate.share.titleWithWork": "{title} · Registry certificate",
+  "certificate.share.titleRestricted": "Registry certificate",
+  "certificate.share.text":
+    "View the RROWM registry certificate for {title}.",
+  "certificate.share.textRestricted":
+    "View the RROWM registry certificate for record {registryId}.",
+  "certificate.share.textRestrictedGeneric":
+    "Registry certificate on RROWM.",
+  "certificate.share.ogAlt": "Registry certificate for {title}",
+  "certificate.share.ogAltRestricted": "RROWM registry certificate",
+  "verification.share.sectionLabel": "Share verification",
+  "verification.share.verifiedKicker": "Verification on file",
+  "verification.share.verifiedLede":
+    "This record is verified on the Registry ledger. Share the public verification artifact.",
+  "verification.share.copyLink": "Copy verification link",
+  "verification.share.copied": "Link copied",
+  "verification.share.copyPrompt": "Copy this verification link",
+  "verification.share.shareVerification": "Share verification",
+  "verification.share.downloadImage": "Download verification PNG",
+  "verification.share.downloadingImage": "Preparing image…",
+  "verification.share.title": "Registry verification",
+  "verification.share.titleWithWork": "{title} · Registry verification",
+  "verification.share.titleRestricted": "Registry verification",
+  "verification.share.text":
+    "View the RROWM verification record for {title}.",
+  "verification.share.textRestricted":
+    "View the RROWM verification record for {registryId}.",
+  "verification.share.textRestrictedGeneric":
+    "Registry verification on RROWM.",
+  "verification.share.ogAlt": "Registry verification for {title}",
+  "verification.share.ogAltRestricted": "RROWM registry verification",
+  "verification.share.successTitle": "Verification recorded — share it",
+  "verification.share.viewVerificationPage": "View verification record",
+  "registry.seal.registered": "Registered on file",
+  "registry.seal.established": "Established record",
+  "registry.seal.attested": "Certificate on file",
+  "registry.seal.layered": "Layered file",
+  "registry.seal.revoked": "Revoked",
+  "registry.seal.notRecorded": "Not recorded",
+  "registry.trust.panelLabel": "Registry trust",
+  "registry.trust.level.registered": "Registered",
+  "registry.trust.level.established": "Established",
+  "registry.trust.level.layered": "Layered",
+  "registry.trust.level.attested": "Attested",
+  "registry.trust.level.revoked": "Revoked",
+  "registry.trust.explanation.registered":
+    "This work is registered on the ledger. Verification has not yet been established.",
+  "registry.trust.explanation.established":
+    "Record verification is on file through Registry attestation.",
+  "registry.trust.explanation.layered":
+    "Layered chronology, certificate, and continuity evidence are on file.",
+  "registry.trust.explanation.attested":
+    "Record verification and certificate are on file.",
+  "registry.trust.explanation.revoked":
+    "The certificate has been revoked. Prior attestations remain visible for audit.",
+  "registry.trust.pillar.creatorAttested": "Creator attested",
+  "registry.trust.pillar.organisationVerified": "Organisation verified",
+  "registry.trust.pillar.certificateIssued": "Certificate issued",
+  "registry.trust.pillar.continuityEstablished": "Continuity established",
+  "registry.intelligence.panelLabel": "Registry intelligence",
+  "registry.intelligence.dimension.recordCompleteness": "Record completeness",
+  "registry.intelligence.dimension.continuity": "Continuity",
+  "registry.intelligence.dimension.evidenceDepth": "Evidence depth",
+  "registry.intelligence.dimension.riskSignals": "Risk signals",
+  "registry.intelligence.completeness.emerging": "Emerging",
+  "registry.intelligence.completeness.developing": "Developing",
+  "registry.intelligence.completeness.deep": "Deep",
+  "registry.intelligence.completeness.comprehensive": "Comprehensive",
+  "registry.intelligence.completeness.explanation.emerging":
+    "Only the opening facts of the record are visible so far.",
+  "registry.intelligence.completeness.explanation.developing":
+    "Core filing is on record; further milestones may still arrive on the chronology.",
+  "registry.intelligence.completeness.explanation.deep":
+    "Several kinds of filing sit together so the record reads with historical depth.",
+  "registry.intelligence.completeness.explanation.comprehensive":
+    "A wide range of filings forms a layered record across verification, custody, and documents.",
+  "registry.intelligence.continuity.fragmented": "Fragmented",
+  "registry.intelligence.continuity.partial": "Partial",
+  "registry.intelligence.continuity.established": "Established",
+  "registry.intelligence.continuity.continuous": "Continuous",
+  "registry.intelligence.continuity.explanation.fragmented":
+    "The chronology does not yet show a continuous custody sequence.",
+  "registry.intelligence.continuity.explanation.partial":
+    "Some continuity signals are on file, but the custody story remains incomplete.",
+  "registry.intelligence.continuity.explanation.established":
+    "Custody milestones and participant confirmations align across the chronology.",
+  "registry.intelligence.continuity.explanation.continuous":
+    "The custody sequence reads without recorded breaks and has been continued by participants.",
+  "registry.intelligence.evidence.light": "Light",
+  "registry.intelligence.evidence.moderate": "Moderate",
+  "registry.intelligence.evidence.strong": "Strong",
+  "registry.intelligence.evidence.extensive": "Extensive",
+  "registry.intelligence.evidence.explanation.light":
+    "Few supporting documents or confirmations accompany the record today.",
+  "registry.intelligence.evidence.explanation.moderate":
+    "A modest set of confirmations and supporting material is on file.",
+  "registry.intelligence.evidence.explanation.strong":
+    "Multiple confirmations and documents reinforce the chronology.",
+  "registry.intelligence.evidence.explanation.extensive":
+    "Institutional, participant, and documentary evidence is widely represented on file.",
+  "registry.intelligence.risk.noneDetected": "None detected",
+  "registry.intelligence.risk.reviewRecommended": "Review recommended",
+  "registry.intelligence.risk.conflictsPresent": "Conflicts present",
+  "registry.intelligence.risk.explanation.noneDetected":
+    "No formal review channels, revocations, or custody gaps are flagged on this record.",
+  "registry.intelligence.risk.explanation.reviewRecommended":
+    "A formal review, custody gap, or filing amendment warrants careful reading of the chronology.",
+  "registry.intelligence.risk.explanation.conflictsPresent":
+    "Revocation or open formal review signals are on file and should be read before reliance.",
+  "nav.inbox": "Inbox",
+  "notifications.inbox.title": "Inbox",
+  "notifications.inbox.intro":
+    "Quiet updates from opportunities and registry filing. Not chat or alerts.",
+  "notifications.inbox.empty": "Nothing new on file. Updates appear here when events occur.",
+  "notifications.inbox.loadError": "Could not load inbox.",
+  "notifications.inbox.markAllRead": "Mark all read",
+  "notifications.inbox.viewAll": "View full inbox",
+  "notifications.inbox.openInbox": "Open inbox",
+  "profile.presence.band.kicker": "Registry presence",
+  "profile.presence.trust.creative.established": "Established practice",
+  "profile.presence.trust.creative.footprint": "Registry footprint on file",
+  "profile.presence.trust.creative.registered": "Practice registered on the ledger",
+  "profile.presence.trust.collector.established": "Established stewardship",
+  "profile.presence.trust.collector.stewardship": "Custody on file",
+  "profile.presence.trust.collector.private": "Private stewardship",
+  "profile.presence.trust.collector.opening": "Stewardship profile opening",
+  "profile.presence.secondary.representedByVerifiedOrg":
+    "Represented by a verified organisation",
+  "profile.presence.secondary.representedByOrg": "Institutional representation on file",
+  "profile.presence.secondary.representedCreatives":
+    "{count} Creatives represented",
+  "profile.presence.share.copyLink": "Copy profile link",
+  "profile.presence.share.copied": "Link copied",
+  "profile.presence.share.shareProfile": "Share profile",
+  "profile.presence.share.copyPrompt": "Copy this profile link",
+  "profile.presence.share.text":
+    "{name} on RROWM. {summary}",
+  "registry.stewardInvite.cta": "Invite steward to record",
+  "registry.stewardInvite.modalTitle": "Invite steward to record",
+  "registry.stewardInvite.modalLead":
+    "Invite a participant to deepen this registry record — authorship attestation or custody continuation. The record remains on file; this is continuity participation, not approval.",
+  "registry.stewardInvite.kindLabel": "Stewardship role",
+  "registry.stewardInvite.kind.authorship": "Authorship steward",
+  "registry.stewardInvite.kind.custody": "Custody steward",
+  "registry.stewardInvite.authorshipContext":
+    "Invite {artist} to authenticate authorship on file with {institution}.",
+  "registry.stewardInvite.custodyNarrative": "Custodial transition",
+  "registry.stewardInvite.custodyTooltip":
+    "How the next custodian's participation will be narrated on the chronology when they accept.",
+  "registry.stewardInvite.recipientEmail": "Steward email",
+  "registry.stewardInvite.messageLabel": "Context for the record",
+  "registry.stewardInvite.sendCta": "Send steward invitation",
+  "registry.stewardInvite.sending": "Sending invitation…",
+  "registry.stewardInvite.sent": "Steward invitation sent to {email}.",
+  "registry.stewardInvite.onFile": "Invitation recorded on file for {email}.",
+  "registry.stewardInvite.invalidEmail": "Enter a valid email address.",
+  "registry.stewardInvite.sendFailed": "Could not send this invitation.",
+  "registry.stewardInvite.networkError": "Network error. Try again.",
+  "registry.stewardInvite.csrfError":
+    "Could not prepare a secure session. Refresh and try again.",
+  "registry.stewardAccept.loading": "Verifying invitation…",
+  "registry.stewardAccept.kicker": "Registry stewardship",
+  "registry.stewardAccept.heading": "Stewardship invitation",
+  "registry.stewardAccept.lede":
+    "You have been invited to participate on a canonical registry record. Review the work on file, then continue to confirm your role.",
+  "registry.stewardAccept.recordLabel": "Record on file",
+  "registry.stewardAccept.artistOnFile": "Creative on file: {name}",
+  "registry.stewardAccept.invitedBy": "Invited by",
+  "registry.stewardAccept.invitedAs": "Stewardship role",
+  "registry.stewardAccept.roleHeading": "What this invitation means",
+  "registry.stewardAccept.recipientLine": "Issued for {email}",
+  "registry.stewardAccept.expiresLine": "Valid until {date}",
+  "registry.stewardAccept.ctaAuthorship": "Continue to authenticate authorship",
+  "registry.stewardAccept.ctaCustody": "Continue to accept custody",
+  "registry.stewardAccept.viewRecord": "View public record",
+  "registry.stewardAccept.expiredTitle": "Invitation expired",
+  "registry.stewardAccept.expiredBody":
+    "This stewardship invitation is no longer active. Ask the sender to issue a new invitation if participation is still needed.",
+  "registry.stewardAccept.acceptedTitle": "Invitation already accepted",
+  "registry.stewardAccept.acceptedBody":
+    "Stewardship for {title} has already been recorded on file.",
+  "registry.stewardAccept.invalidTitle": "Invitation unavailable",
+  "registry.stewardAccept.invalidBody":
+    "This link is incomplete, withdrawn, or no longer valid. Check the email you received or contact the sender.",
 };
 
 const DE: Record<MessageKey, string> = {
