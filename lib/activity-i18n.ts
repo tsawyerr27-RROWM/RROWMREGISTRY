@@ -26,6 +26,7 @@ function metaString(item: ActivityFeedItem, key: string): string {
 function titleFromLegacyMessage(message: string): string {
   const patterns = [
     /^Artwork registered: (.+)$/,
+    /^Catalogue work filed: (.+?)(?: \([^)]+\))?$/,
     /^Value updated: (.+)$/,
     /^Ownership confirmed: (.+)$/,
     /^Authenticated authorship: (.+?)(?: \([^)]+\))?$/,
@@ -99,6 +100,11 @@ export function translateActivityMessage(
   switch (type) {
     case "artwork_registered":
       return fillMessage(t("studio.activity.artworkRegistered"), { title });
+    case "institution_artwork_registered":
+      return fillMessage(t("studio.activity.institutionArtworkRegistered"), {
+        title,
+        registrySuffix: registry,
+      });
     case "value_added":
       return fillMessage(t("studio.activity.valueUpdated"), { title });
     case "ownership_confirmed":

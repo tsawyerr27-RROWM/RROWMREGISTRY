@@ -7,10 +7,9 @@ import {
   CTASection,
   HeroSection,
   JourneyProgress,
-  InstitutionalCredibilityStrip,
   LandingPersonaStrip,
+  LandingProductWalkthrough,
   MotionReveal,
-  PortfolioManagementSection,
   ScrollAtmosphere,
   ScrollInvitation,
   SectionFadeDivider,
@@ -50,7 +49,7 @@ export default function LandingPage() {
         </div>
 
         <MotionReveal
-          id="net-system"
+          id="net-pillars"
           delay={0.03}
           className={`${narrativeLayout.scrollAnchor} ${narrativeLayout.postHeroTop}`}
         >
@@ -61,36 +60,21 @@ export default function LandingPage() {
 
         <SectionFadeDivider />
 
-        <MotionReveal id="net-trust" delay={0.03} className={narrativeLayout.scrollAnchor}>
-          <ScrollAtmosphere parallax={0} edgeSoftening={false}>
-            <InstitutionalCredibilityStrip>
-              Participant-confirmed listings where shown · Rule-based visibility · One
-              current record per work, with chronology on file
-            </InstitutionalCredibilityStrip>
+        <MotionReveal id="net-roles" delay={0.04} className={narrativeLayout.scrollAnchor}>
+          <ScrollAtmosphere parallax={6} edgeSoftening>
+            <LandingPersonaStrip />
           </ScrollAtmosphere>
         </MotionReveal>
 
         <SectionFadeDivider />
 
         <MotionReveal
-          id="net-portfolio"
-          delay={0.04}
-          className={narrativeLayout.scrollAnchor}
-        >
-          <ScrollAtmosphere parallax={0} edgeSoftening={false}>
-            <PortfolioManagementSection />
-          </ScrollAtmosphere>
-        </MotionReveal>
-
-        <SectionFadeDivider />
-
-        <MotionReveal
-          id="net-personas"
+          id="net-products"
           delay={0.05}
           className={narrativeLayout.scrollAnchor}
         >
-          <ScrollAtmosphere parallax={6} edgeSoftening>
-            <LandingPersonaStrip />
+          <ScrollAtmosphere parallax={0} edgeSoftening={false}>
+            <LandingProductWalkthrough />
           </ScrollAtmosphere>
         </MotionReveal>
 

@@ -5,14 +5,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { RrowmLogo } from "@/components/brand/RrowmLogo";
 import type { Session } from "@supabase/supabase-js";
-import { signOutSafely } from "@/lib/auth-sign-out";
+import { signOutAndRedirect } from "@/lib/auth-sign-out";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { FooterRegionSelector } from "@/components/LandingPage/FooterRegionSelector";
 import { NotificationInboxBell } from "@/components/notifications/NotificationInboxBell";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 
-const LOGIN_NEXT = "/login?next=" + encodeURIComponent("/studio/creative");
+const LOGIN_FALLBACK = "/login";
 
 /** Scroll distance (px) after which the header is near minimum opacity */
 const FADE_RANGE = 420;
@@ -30,6 +30,7 @@ export default function Header() {
   /** actor_profiles.role — drives studio destination */
   const [actorRole, setActorRole] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   const isFieldSurface =
     pathname === "/field" || pathname?.startsWith("/field/");
@@ -121,6 +122,11 @@ export default function Header() {
         ? "/studio/organisation"
         : "/studio/creative";
 
+  const loginHref =
+    pathname && pathname !== "/login"
+      ? `${LOGIN_FALLBACK}?next=${encodeURIComponent(pathname)}`
+      : LOGIN_FALLBACK;
+
   const fadeT = Math.min(1, scrollY / FADE_RANGE);
   /** Whole header fades out as you scroll; hover brings it back for interaction */
   const baseShellOpacity = Math.max(0.14, 1 - fadeT * 0.86);
@@ -185,6 +191,16 @@ export default function Header() {
 
   const handleMouseEnter = useCallback(() => setHovered(true), []);
   const handleMouseLeave = useCallback(() => setHovered(false), []);
+
+  const handleSignOut = useCallback(async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await signOutAndRedirect("/login");
+    } catch {
+      setSigningOut(false);
+    }
+  }, [signingOut]);
 
   return (
     <header
@@ -321,19 +337,18 @@ export default function Header() {
               </Link>
               <button
                 type="button"
-                className={`min-h-[44px] min-w-[44px] rounded-xl px-3 py-2 text-xs font-medium transition sm:min-h-0 sm:min-w-0 sm:px-4 sm:text-sm ${subtleClass}`}
-                onClick={async () => {
-                  await signOutSafely();
-                  window.location.href = "/";
-                }}
+                disabled={signingOut}
+                aria-busy={signingOut}
+                className={`relative z-20 min-h-[44px] min-w-[44px] touch-manipulation rounded-xl px-3 py-2 text-xs font-medium transition sm:min-h-0 sm:min-w-0 sm:px-4 sm:text-sm disabled:cursor-wait ${subtleClass}`}
+                onClick={() => void handleSignOut()}
               >
-                {t("nav.signOut")}
+                {signingOut ? "Signing out…" : t("nav.signOut")}
               </button>
             </>
           ) : (
             <>
               <Link
-                href={LOGIN_NEXT}
+                href={loginHref}
                 className={`${subtleClass} hidden sm:inline`}
               >
                 {t("nav.signIn")}

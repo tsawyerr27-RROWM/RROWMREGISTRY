@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { isCurrentOwner } from "@/lib/canonical-ownership-engine";
 import { buildArtworkAuthenticationInvitationEmail } from "@/lib/emails/artwork-authentication-invitation";
 import { buildProvenanceContinuationEmail } from "@/lib/emails/provenance-continuation-invite";
 import {
@@ -307,10 +308,7 @@ async function sendCustodyStewardInvite(
     };
   }
 
-  if (
-    !input.artwork.current_owner_id ||
-    input.artwork.current_owner_id !== input.createdByUserId
-  ) {
+  if (!(await isCurrentOwner(service, input.createdByUserId, input.artwork.id))) {
     return {
       ok: false,
       error:

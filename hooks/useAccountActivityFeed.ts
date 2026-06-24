@@ -5,7 +5,11 @@ import { useCallback, useEffect, useState } from "react";
 import type { ActivityFeedItem } from "@/lib/activity-i18n";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
-export function useAccountActivityFeed(userId: string | null, limit = 10) {
+export function useAccountActivityFeed(
+  userId: string | null,
+  limit = 10,
+  refreshKey = 0
+) {
   const [items, setItems] = useState<ActivityFeedItem[]>([]);
   const [loading, setLoading] = useState(Boolean(userId));
 
@@ -35,7 +39,7 @@ export function useAccountActivityFeed(userId: string | null, limit = 10) {
 
   useEffect(() => {
     void refresh();
-  }, [refresh]);
+  }, [refresh, refreshKey]);
 
   return { items, loading, refresh };
 }

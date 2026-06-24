@@ -2,7 +2,7 @@ import { createHash } from "crypto";
 import { NextResponse } from "next/server";
 
 import { requireAdminApi } from "@/lib/api-admin-auth";
-import { logActivityEvent } from "@/lib/log-activity";
+import { logActivityEvent, logActivityForGalleryStaff } from "@/lib/log-activity";
 import { notifyRegistryVerificationApproved } from "@/lib/notification-hooks/registry";
 
 export const runtime = "nodejs";
@@ -101,16 +101,41 @@ export async function POST(req: Request) {
       client: service,
     });
 
-    if (artwork.artist_id) {
-      const title = String(artwork.title ?? "").trim() || "Artwork";
-      const reg = artwork.registry_id ? ` (${artwork.registry_id})` : "";
+    const { data: fullArt } = await service
+      .from("artworks")
+      .select("title, registry_id, artist_id, filing_gallery_id")
+      .eq("id", artworkId)
+      .maybeSingle();
+
+    if (fullArt?.artist_id) {
+      const title = String(fullArt.title ?? "").trim() || "Artwork";
+      const reg = fullArt.registry_id ? ` (${fullArt.registry_id})` : "";
       void logActivityEvent({
-        userId: String(artwork.artist_id),
+        userId: String(fullArt.artist_id),
         type: "artwork_verified",
         message: `Artwork verified: ${title}${reg}`,
         artworkId,
         metadata: {
-          registry_id: artwork.registry_id ?? null,
+          registry_id: fullArt.registry_id ?? null,
+          via: "admin",
+        },
+      });
+    }
+
+    const filingGalleryId = fullArt?.filing_gallery_id
+      ? String(fullArt.filing_gallery_id)
+      : null;
+    if (filingGalleryId) {
+      const title = String(fullArt?.title ?? "").trim() || "Artwork";
+      const reg = fullArt?.registry_id ? ` (${fullArt.registry_id})` : "";
+      void logActivityForGalleryStaff({
+        galleryId: filingGalleryId,
+        type: "artwork_verified",
+        message: `Artwork verified: ${title}${reg}`,
+        artworkId,
+        metadata: {
+          registry_id: fullArt?.registry_id ?? null,
+          title,
           via: "admin",
         },
       });

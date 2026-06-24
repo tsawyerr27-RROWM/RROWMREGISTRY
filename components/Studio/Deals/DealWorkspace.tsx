@@ -4,12 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { DealMessageRow, DealRevisionRow, DealRow } from "@/lib/deals";
 import { isNegotiableDealStatus, dealStatusLabel } from "@/lib/deal-status";
+import { canActorRespondToDealTerms } from "@/lib/deal-permissions";
 import { CounterProposalModal } from "@/components/Studio/Deals/CounterProposalModal";
+import { DealArtworkHero } from "@/components/Studio/Deals/DealArtworkHero";
 import { DealCounterpartyPanel } from "@/components/Studio/Deals/DealCounterpartyPanel";
 import { DealExecutionPanel } from "@/components/Studio/Deals/DealExecutionPanel";
 import { DealNegotiationLedger } from "@/components/Studio/Deals/DealNegotiationLedger";
 import { DealTermsPanel } from "@/components/Studio/Deals/DealTermsPanel";
-import { rrowmButton, rrowmDealSurface, rrowmEconomicSurface } from "@/styles/rrowm-theme";
+import { rrowmButton, rrowmDealSurface } from "@/styles/rrowm-theme";
 
 type Props = {
   userId: string;
@@ -180,6 +182,18 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
   const status = String(activeDeal?.status ?? "").toLowerCase().trim();
   const negotiable = isNegotiableDealStatus(status);
   const resolvedDeal = activeDeal ?? deal;
+  const latestRevision = detail?.revisions?.[0] ?? null;
+  const canRespondToTerms =
+    Boolean(resolvedDeal) &&
+    negotiable &&
+    canActorRespondToDealTerms({
+      actorUserId: userId,
+      dealStatus: status,
+      participantAUserId: String(resolvedDeal.participant_a_user_id ?? ""),
+      participantBUserId: String(resolvedDeal.participant_b_user_id ?? ""),
+      createdByUserId: String(resolvedDeal.created_by_user_id ?? ""),
+      latestRevisionCreatedByUserId: latestRevision?.created_by_user_id ?? null,
+    });
 
   const actionButtons: {
     key: string;
@@ -195,7 +209,7 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
       tone: "primary",
       action: () => void transitionStatus("proposed"),
     });
-  } else if (negotiable) {
+  } else if (negotiable && canRespondToTerms) {
     actionButtons.push(
       {
         key: "accept",
@@ -234,14 +248,11 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
         <div className={rrowmDealSurface.header}>
           <div className="flex flex-wrap items-start justify-between gap-6">
             <div className="min-w-0">
-              <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-400">
-                Negotiation record
-              </p>
-              <h2 className="mt-2 truncate font-serif text-2xl font-normal tracking-tight text-neutral-950">
+              <h2 className="truncate font-serif text-2xl font-normal tracking-tight text-neutral-950">
                 {header?.title ?? "Deal"}
               </h2>
               <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
-                {header?.ribbon ?? ""}
+                {header?.ribbon ?? "Negotiation record"}
               </p>
             </div>
             <div className="shrink-0 rounded-xl border border-neutral-900/[0.06] bg-white/80 px-4 py-3 text-right shadow-[0_4px_14px_rgba(25,20,10,0.04)]">
@@ -260,33 +271,7 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
           ) : null}
         </div>
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-8 px-7 py-8 lg:grid-cols-[1fr_20rem] lg:px-9">
-          <div className="min-h-0">
-            <DealNegotiationLedger
-              userId={userId}
-              deal={resolvedDeal}
-              messages={detail?.messages ?? []}
-              revisions={detail?.revisions ?? []}
-              onSendMessage={sendMessage}
-            />
-          </div>
-
-          <aside className="flex min-h-0 flex-col gap-6">
-            <DealCounterpartyPanel
-              counterpartyUserId={header?.counterpartyUserId ?? null}
-            />
-            <DealTermsPanel deal={resolvedDeal} />
-            <DealExecutionPanel
-              deal={resolvedDeal}
-              onExecuted={() => {
-                void refresh();
-                onDealUpdated();
-              }}
-            />
-          </aside>
-        </div>
-
-        <div className={rrowmEconomicSurface.actionBar}>
+        <div className={rrowmDealSurface.actionBar}>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <p className="text-[13px] text-neutral-500">
               Status actions update the record ledger.
@@ -313,9 +298,41 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
             </div>
           </div>
         </div>
+
+        <div className="flex min-h-0 flex-1 flex-col gap-8 px-7 py-8 md:gap-10 md:py-10 lg:px-11 lg:py-12">
+          <div className="min-h-0 w-full">
+            <DealNegotiationLedger
+              userId={userId}
+              deal={resolvedDeal}
+              messages={detail?.messages ?? []}
+              revisions={detail?.revisions ?? []}
+              onSendMessage={sendMessage}
+            />
+          </div>
+
+          <div className="grid min-h-0 grid-cols-1 gap-6 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] md:gap-8">
+            <DealCounterpartyPanel
+              counterpartyUserId={header?.counterpartyUserId ?? null}
+            />
+            <DealTermsPanel deal={resolvedDeal} />
+          </div>
+
+          {String(resolvedDeal.type ?? "").toLowerCase() === "acquisition" &&
+          resolvedDeal.artwork_id ? (
+            <DealArtworkHero deal={resolvedDeal} />
+          ) : null}
+
+          <DealExecutionPanel
+            deal={resolvedDeal}
+            onExecuted={() => {
+              void refresh();
+              onDealUpdated();
+            }}
+          />
+        </div>
       </div>
 
-      {negotiable ? (
+      {negotiable && canRespondToTerms ? (
         <CounterProposalModal
           isOpen={counterModalOpen}
           onClose={() => setCounterModalOpen(false)}

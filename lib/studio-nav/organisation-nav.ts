@@ -4,6 +4,7 @@ import type { WorkspaceNavItem } from "@/components/Studio/WorkspaceShell";
 import { deferredRouterPush } from "@/lib/deferred-app-router";
 import { ORGANISATION_SECTION_LABEL_KEYS } from "@/lib/studio-nav/labels";
 import { appendPersonalArchiveNavItem } from "@/lib/studio-nav/personal-archive";
+import { appendOrganisationUtilityNavItems } from "@/lib/studio-nav/studio-utility-nav";
 import type { StudioNavTranslate } from "@/lib/studio-nav/types";
 
 export const ORGANISATION_NAV_SECTIONS = [
@@ -51,15 +52,17 @@ export function buildOrganisationNavItems(
     pendingInviteCount = 0,
   } = flags;
 
+  const sectionItems = ORGANISATION_NAV_SECTIONS.map((id) => ({
+    id,
+    label: t(ORGANISATION_SECTION_LABEL_KEYS[id]),
+    showDot:
+      (id === "record-depth" && participationAttention) ||
+      (id === "verification" && verificationQueueActive) ||
+      (id === "invitations" && pendingInviteCount > 0),
+  }));
+
   return appendPersonalArchiveNavItem(
-    ORGANISATION_NAV_SECTIONS.map((id) => ({
-      id,
-      label: t(ORGANISATION_SECTION_LABEL_KEYS[id]),
-      showDot:
-        (id === "record-depth" && participationAttention) ||
-        (id === "verification" && verificationQueueActive) ||
-        (id === "invitations" && pendingInviteCount > 0),
-    })),
+    appendOrganisationUtilityNavItems(sectionItems, t),
     t
   );
 }

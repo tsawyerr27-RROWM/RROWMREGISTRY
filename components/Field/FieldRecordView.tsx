@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 
 import { FieldRelationshipContextSection } from "@/components/Field/FieldRelationshipContextSection";
 import {
@@ -17,7 +18,13 @@ import {
 } from "@/lib/field-nav";
 import { registryLedgerHref } from "@/lib/registry-nav";
 import { recordVerificationPendingLabel } from "@/lib/representation-language";
+import { buildStudioNewDealHref } from "@/lib/deal-create-nav";
+import {
+  acquisitionDealWorkLabel,
+  shouldShowAcquisitionDealCta,
+} from "@/lib/acquisition-deal-counterparty";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { rrowmButton, rrowmFieldCard } from "@/styles/rrowm-theme";
 
 type Props = {
   data: FieldRecordPageData;
@@ -31,7 +38,7 @@ function TrustBand({
   value: string;
 }) {
   return (
-    <div className="rounded-xl border border-neutral-900/[0.05] bg-neutral-50/80 px-4 py-3">
+    <div className={rrowmFieldCard.metaBand}>
       <p className="text-sm text-neutral-500">{label}</p>
       <p className="mt-1 text-sm font-medium text-neutral-900">{value}</p>
     </div>
@@ -56,7 +63,32 @@ export function FieldRecordView({ data }: Props) {
     organisationName,
     organisationHref,
     contextPanels,
+    sessionUserId,
+    dealCounterparty,
+    currentOwnerUserId,
+    pendingAcquisitionOnArtwork,
   } = data;
+
+  const showExpressInterestCta = useMemo(
+    () =>
+      shouldShowAcquisitionDealCta({
+        sessionUserId,
+        counterpartyUserId: dealCounterparty?.userId ?? null,
+        currentOwnerUserId,
+        pendingAcquisitionOnArtwork,
+      }),
+    [
+      currentOwnerUserId,
+      dealCounterparty?.userId,
+      pendingAcquisitionOnArtwork,
+      sessionUserId,
+    ]
+  );
+
+  const acquisitionWorkLabel = acquisitionDealWorkLabel({
+    title: artwork.title,
+    registryId: artwork.registry_id,
+  });
 
   const title = artwork.title?.trim() || t("field.record.title");
   const ledgerHref = registryLedgerHref(artwork.registry_id);
@@ -66,7 +98,7 @@ export function FieldRecordView({ data }: Props) {
   return (
     <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 md:py-14 lg:px-8">
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-start">
-        <div className="overflow-hidden rounded-[1.25rem] border border-neutral-900/[0.06] bg-neutral-100">
+        <div className={`overflow-hidden ${rrowmFieldCard.portfolio}`}>
           {image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -160,6 +192,20 @@ export function FieldRecordView({ data }: Props) {
             >
               {t("field.record.link.verify")}
             </Link>
+            {showExpressInterestCta && sessionUserId && dealCounterparty ? (
+              <Link
+                href={buildStudioNewDealHref({
+                  counterpartyUserId: dealCounterparty.userId,
+                  counterpartyLabel: dealCounterparty.label,
+                  artworkId: artwork.id,
+                  artworkTitle: acquisitionWorkLabel,
+                  initialIntentId: "acquisition_interest",
+                })}
+                className={`${rrowmButton.secondary} !rounded-2xl !px-6 !py-3`}
+              >
+                Start acquisition deal
+              </Link>
+            ) : null}
             <Link
               href={ledgerHref}
               className="inline-flex items-center justify-center rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
@@ -193,7 +239,7 @@ export function FieldRecordView({ data }: Props) {
 
       <FieldRelationshipContextSection data={{ panels: contextPanels }} />
 
-      <section className="mt-14 rounded-[1.25rem] border border-neutral-900/[0.06] bg-white/70 p-6 shadow-sm md:p-8">
+      <section className={`mt-14 max-w-3xl ${rrowmFieldCard.prestige}`}>
         <h2 className="font-serif text-xl font-normal tracking-tight text-neutral-950">
           {t("field.record.discoveryHeading")}
         </h2>
@@ -226,7 +272,7 @@ export function FieldRecordView({ data }: Props) {
         </div>
       </section>
 
-      <section className="mx-auto mt-12 max-w-2xl rounded-3xl border border-black/[0.06] bg-white/70 px-8 py-10 text-center shadow-sm md:mt-16">
+      <section className={`mx-auto mt-12 max-w-2xl px-8 py-10 text-center md:mt-16 md:px-12 ${rrowmFieldCard.empty}`}>
         <p className="text-base leading-relaxed text-neutral-700">
           {t("field.record.ledgerNote")}
         </p>

@@ -5,7 +5,7 @@ import { FieldLayoutChrome } from "@/components/Field/FieldLayoutChrome";
 export const metadata: Metadata = {
   title: "The Field · RROWM",
   description:
-    "Public discovery and presence on RROWM — browse Creatives, Organisations, and Registry records.",
+    "Public discovery and presence on RROWM. Browse Creatives, Organisations, Registry records, and Opportunities.",
 };
 
 export default function FieldLayout({

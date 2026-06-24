@@ -12,8 +12,11 @@ import {
   fieldCreativeHref,
   fieldOrganisationHref,
 } from "@/lib/field-nav";
+import { getCurrentOwner } from "@/lib/get-current-owner";
+import { resolveOwnershipClaimPath } from "@/lib/ownership-claim-eligibility";
 import { parsePublicPresence } from "@/lib/public-presence";
 import { parsePrimaryPracticeSlug } from "@/lib/practices";
+import { resolveAcquisitionDealCounterparty } from "@/lib/acquisition-deal-counterparty";
 
 export type FieldRecordPageData = FieldVerifyRecordData & {
   image_url: string | null;
@@ -25,6 +28,12 @@ export type FieldRecordPageData = FieldVerifyRecordData & {
   organisationName: string | null;
   organisationHref: string | null;
   contextPanels: FieldRelationshipContextPanelData[];
+  dealCounterparty: {
+    userId: string;
+    label: string;
+  } | null;
+  currentOwnerUserId: string | null;
+  pendingAcquisitionOnArtwork: boolean;
 };
 
 type GalleryLinkRow = {
@@ -155,6 +164,25 @@ export async function loadFieldRecordPageData(
     primaryPracticeSlug,
   });
 
+  const currentOwner = await getCurrentOwner(supabase, base.artwork.id);
+
+  let pendingAcquisitionOnArtwork = false;
+  if (sessionUserId) {
+    const claimPath = await resolveOwnershipClaimPath(
+      supabase,
+      sessionUserId,
+      base.artwork.id
+    );
+    pendingAcquisitionOnArtwork = claimPath.kind === "provenance_accept";
+  }
+
+  const dealCounterparty = resolveAcquisitionDealCounterparty({
+    artistUserId: base.artwork.artist_id,
+    artistName: artistName?.trim() || "Registered artist",
+    currentOwnerUserId: currentOwner.user_id,
+    currentOwnerDisplayName: currentOwner.display_name,
+  });
+
   return {
     ...base,
     image_url: artwork?.image_url ?? null,
@@ -166,6 +194,9 @@ export async function loadFieldRecordPageData(
     organisationName: orgLink.name,
     organisationHref: orgLink.href,
     contextPanels,
+    dealCounterparty,
+    currentOwnerUserId: currentOwner.user_id,
+    pendingAcquisitionOnArtwork,
   };
 }
 

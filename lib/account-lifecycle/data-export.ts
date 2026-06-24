@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { getOwnedArtworkIds } from "@/lib/canonical-ownership-engine";
+
 export type UserDataExport = {
   exported_at: string;
   user_id: string;
@@ -71,13 +73,33 @@ export async function buildUserDataExport(
     .order("created_at", { ascending: false })
     .limit(5000);
 
-  const { data: artworks } = await service
+  const { data: authoredArtworks } = await service
     .from("artworks")
     .select(
       "id, title, registry_id, artist_id, current_owner_id, filing_gallery_id, created_at, image_url, year, medium"
     )
-    .or(`artist_id.eq.${userId},current_owner_id.eq.${userId}`)
+    .eq("artist_id", userId)
     .limit(2000);
+
+  const ownedIds = await getOwnedArtworkIds(service, userId);
+  const authoredIds = (authoredArtworks ?? []).map((a) => a.id);
+  const ownedOnlyIds = ownedIds.filter(
+    (id) => !authoredIds.some((aid) => String(aid) === id)
+  );
+
+  let ownedOnlyArtworks: Record<string, unknown>[] = [];
+  if (ownedOnlyIds.length > 0) {
+    const { data } = await service
+      .from("artworks")
+      .select(
+        "id, title, registry_id, artist_id, current_owner_id, filing_gallery_id, created_at, image_url, year, medium"
+      )
+      .in("id", ownedOnlyIds)
+      .limit(2000);
+    ownedOnlyArtworks = data ?? [];
+  }
+
+  const artworks = [...(authoredArtworks ?? []), ...ownedOnlyArtworks];
 
   const artworkIds = (artworks ?? []).map((a) => a.id);
 

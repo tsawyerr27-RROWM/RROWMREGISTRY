@@ -23,7 +23,7 @@ const SURFACE_LABEL_KEYS: Record<ProductSurface, MessageKey> = {
 const WORKSPACE_LABEL_KEYS: Record<SystemRole, MessageKey> = {
   artist: "ecosystem.workspace.studio",
   collector: "ecosystem.workspace.studio",
-  gallery: "ecosystem.workspace.organisationStudio",
+  gallery: "ecosystem.workspace.studio",
 };
 
 /** Participant label shown in account chrome, signup, get-started, etc. */

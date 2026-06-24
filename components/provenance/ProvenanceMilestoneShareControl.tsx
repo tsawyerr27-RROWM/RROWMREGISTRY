@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { useCanNativeShare } from "@/hooks/useCanNativeShare";
 import {
   buildProvenanceMilestoneShareText,
   buildProvenanceMilestoneShareTitle,
@@ -86,8 +87,7 @@ export function ProvenanceMilestoneShareControl({ context, className = "" }: Pro
     }
   }, [context.eventId, context.registryId, shareImageUrl]);
 
-  const canNativeShare =
-    typeof navigator !== "undefined" && typeof navigator.share === "function";
+  const canNativeShare = useCanNativeShare();
 
   return (
     <div className={`flex flex-wrap items-center gap-2 ${className}`}>

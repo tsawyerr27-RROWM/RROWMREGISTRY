@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import { RegistryCatalogueInfoTooltip } from "@/components/Registry/RegistryCatalogueInfoTooltip";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
@@ -34,6 +34,45 @@ type WorkspaceShellProps = {
   isTransitioning?: boolean;
   children: ReactNode;
 };
+
+function WorkspaceSignOutButton({
+  onSignOut,
+  isLight,
+  className = "",
+}: {
+  onSignOut: () => void | Promise<void>;
+  isLight: boolean;
+  className?: string;
+}) {
+  const { t } = useLocalePreferences();
+  const [busy, setBusy] = useState(false);
+
+  const handleClick = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await onSignOut();
+    } catch {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      aria-busy={busy}
+      className={`relative z-20 min-h-[44px] touch-manipulation text-left text-sm font-medium transition-colors disabled:cursor-wait ${
+        isLight
+          ? "text-neutral-400 hover:text-neutral-700 disabled:text-neutral-300"
+          : "text-white/60 hover:text-white disabled:text-white/35"
+      } ${className}`}
+      onClick={() => void handleClick()}
+    >
+      {busy ? "Signing out…" : t("nav.signOut")}
+    </button>
+  );
+}
 
 /**
  * Shared workspace chrome: artist-style sticky sidebar, mobile tabs, activity + sign-out.
@@ -158,17 +197,11 @@ export function WorkspaceShell({
               </div>
             ) : null}
 
-            <button
-              type="button"
-              className={`mt-10 w-full text-left text-sm font-medium transition-colors ${
-                isLight
-                  ? "text-neutral-400 hover:text-neutral-700"
-                  : "text-white/60 hover:text-white"
-              }`}
-              onClick={() => void onSignOut()}
-            >
-              {t("nav.signOut")}
-            </button>
+            <WorkspaceSignOutButton
+              onSignOut={onSignOut}
+              isLight={isLight}
+              className="mt-10 w-full"
+            />
           </div>
         </aside>
 
@@ -222,6 +255,15 @@ export function WorkspaceShell({
                 </button>
               );
             })}
+          </div>
+
+          <div
+            className={`mb-8 flex flex-col gap-4 border-b pb-6 lg:hidden ${
+              isLight ? "border-neutral-900/[0.06]" : "border-white/10"
+            }`}
+          >
+            <div className="text-[13px]">{sidebarFooter}</div>
+            <WorkspaceSignOutButton onSignOut={onSignOut} isLight={isLight} />
           </div>
 
           {children}

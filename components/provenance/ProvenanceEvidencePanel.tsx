@@ -17,6 +17,7 @@ import {
   milestoneTierForKind,
 } from "@/lib/provenance-milestones";
 import { ProvenanceMilestoneShareControl } from "@/components/provenance/ProvenanceMilestoneShareControl";
+import { rrowmRegistrySurface } from "@/styles/rrowm-theme";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 type Props = {
@@ -65,7 +66,7 @@ export function ProvenanceEvidencePanel({
         className={`group relative scroll-mt-28 list-none ${isLast ? "" : "pb-8 md:pb-10"}`}
       >
         <article
-          className={`relative overflow-hidden rounded-[1.25rem] border border-neutral-900/[0.07] border-l-[3px] bg-gradient-to-br from-[#fafaf8] via-white to-[#f4f0ea]/80 shadow-[0_20px_56px_-44px_rgba(15,23,42,0.28)] transition duration-500 hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-40px_rgba(15,23,42,0.32)] ${accent} md:min-h-[148px]`}
+          className={`relative overflow-hidden ${rrowmRegistrySurface.trustCompact} border-l-[3px] transition duration-500 hover:-translate-y-0.5 ${accent} md:min-h-[148px]`}
         >
           <div
             className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#e8e4df]/40 blur-[72px] transition duration-700 group-hover:bg-[#e8e4df]/55"
@@ -117,9 +118,7 @@ export function ProvenanceEvidencePanel({
 
   return (
     <li className={`list-none ${isLast ? "" : "pb-4 md:pb-5"}`}>
-      <article
-        className={`rounded-xl border border-neutral-900/[0.06] border-l-2 bg-white/70 px-5 py-4 shadow-[0_8px_28px_-24px_rgba(15,23,42,0.2)] transition duration-500 hover:bg-white/90 ${accent}`}
-      >
+      <article className={`${rrowmRegistrySurface.chronology} border-l-2 transition duration-500 hover:-translate-y-0.5 ${accent}`}>
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <time
             dateTime={event.dateIso}

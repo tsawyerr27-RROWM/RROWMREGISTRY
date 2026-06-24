@@ -204,7 +204,7 @@ export function recordVerificationStatusLabel(
 ): string {
   if (recordVerified) return "Verified Registry record";
   const s = String(status ?? "").toLowerCase();
-  if (s === "pending") return "Registered — verification may deepen on file";
+  if (s === "pending") return "Registered · verification may deepen on file";
   return "Registered on file";
 }
 

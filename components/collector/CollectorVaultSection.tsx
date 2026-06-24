@@ -240,7 +240,7 @@ export function CollectorVaultSection({
                         className="rounded-lg border border-neutral-200/80 bg-neutral-50/50 px-4 py-3"
                       >
                         <div className="flex flex-wrap items-baseline justify-between gap-2">
-                          <time className="text-[11px] uppercase tracking-wide text-neutral-500">
+                          <time className="text-[11px] text-neutral-500">
                             {formatStamp(row.createdAt)}
                           </time>
                           {row.byteSize != null && row.hasFile ? (

@@ -36,7 +36,7 @@ export function ArtworkDeclaredValueBlock({
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
-            <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-neutral-500">
+            <p className="text-[11px] font-medium text-neutral-600">
               Declared
             </p>
             {managedByInstitution ? (
@@ -69,7 +69,7 @@ export function ArtworkDeclaredValueBlock({
       <div className="relative px-4 py-3.5">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5">
-            <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-neutral-500">
+            <p className="text-[11px] font-medium text-neutral-600">
               Declared on file
             </p>
             {managedByInstitution ? (

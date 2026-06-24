@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import type { OwnershipLoopPrompt } from "@/lib/acquisition-ownership-loop";
+
 import {
   getDealExecutionRecord,
   mapDealExecutionRecord,
@@ -85,6 +87,7 @@ export type DealExecutionPanelState = {
   ledger_href: string | null;
   rights_ledger_href: string | null;
   reason: string | null;
+  ownership_loop: OwnershipLoopPrompt | null;
 };
 
 const EXECUTABLE_STATUSES = new Set(["accepted", "closed"]);
@@ -550,6 +553,7 @@ export function buildDealExecutionPanelState(args: {
   canInitiate: boolean;
   reason: string | null;
   restrictToKind?: DealExecutionKind;
+  ownershipLoop?: OwnershipLoopPrompt | null;
 }): DealExecutionPanelState {
   const executionKind = dealExecutionKind(args.deal);
   const kind = args.restrictToKind ?? executionKind;
@@ -589,6 +593,7 @@ export function buildDealExecutionPanelState(args: {
     rights_ledger_href:
       kind === "licensing" ? studioRightsHref(rightsLicenseId) : null,
     reason: args.reason,
+    ownership_loop: args.ownershipLoop ?? null,
   };
 }
 

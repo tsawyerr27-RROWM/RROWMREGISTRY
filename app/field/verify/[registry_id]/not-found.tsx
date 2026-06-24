@@ -5,9 +5,7 @@ import { fieldExplorerRecordsHref, fieldVerifyHref } from "@/lib/field-nav";
 export default function FieldVerifyRecordNotFound() {
   return (
     <div className="mx-auto flex min-h-[50vh] max-w-lg flex-col justify-center px-6 py-24 text-center">
-      <p className="text-xs font-medium uppercase tracking-[0.14em] text-neutral-500">
-        Field verification
-      </p>
+      <p className="text-sm text-neutral-500">Field verification</p>
       <h1 className="mt-4 font-serif text-3xl font-normal tracking-tight text-neutral-950">
         Registry record not found
       </h1>

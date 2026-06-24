@@ -1,20 +1,16 @@
 /**
- * Effective **platform user** owner id for dashboard UI (when the current holder
- * is on-platform). Prefer the read-model ledger column (latest event), then
- * denormalized cache columns — the ledger is authoritative for provenance;
- * `current_owner_id` may lag or be null for external-only holders.
+ * Sync owner id from artwork row data.
+ *
+ * PR-BETA.7: `artworks.current_owner_id` and `ledger_latest_owner_id` are cache
+ * only — never authoritative. Loaders should attach `canonical_owner_id` from
+ * `getCanonicalOwner()` / `getCanonicalOwners()`.
  */
 export function resolveArtworkOwnerId(
   artwork: Record<string, unknown>
 ): string | null {
-  const keys = [
-    "ledger_latest_owner_id",
-    "current_owner_id",
-    "test_owner_id",
-  ] as const;
-  for (const k of keys) {
-    const v = artwork[k];
-    if (typeof v === "string" && v.length > 0) return v;
+  const canonical = artwork.canonical_owner_id ?? artwork.__canonical_owner_id;
+  if (typeof canonical === "string" && canonical.trim()) {
+    return canonical.trim();
   }
   return null;
 }

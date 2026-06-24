@@ -16,6 +16,7 @@ import {
   type ArtworkReplayValidation,
   type ArtworkReplayWireEvent,
 } from "./get-artwork-replay-data";
+import { getCanonicalOwner } from "./canonical-ownership-engine";
 
 const REGISTRY_GROUP_GAP_MS = 120_000;
 
@@ -181,7 +182,7 @@ async function loadArtworkIdentity(
   const { data: awRow } = await client
     .from("artworks")
     .select(
-      "id, created_at, artist_id, catalogue_artist_name, title, registry_id, current_owner_id"
+      "id, created_at, artist_id, catalogue_artist_name, title, registry_id"
     )
     .eq("registry_id", registryId)
     .maybeSingle();
@@ -191,8 +192,8 @@ async function loadArtworkIdentity(
   const title = awRow.title != null ? String(awRow.title) : null;
   const regId = awRow.registry_id != null ? String(awRow.registry_id) : registryId;
   const artistId = awRow.artist_id != null ? String(awRow.artist_id) : null;
-  const currentOwnerId =
-    awRow.current_owner_id != null ? String(awRow.current_owner_id) : null;
+  const canonical = await getCanonicalOwner(client, String(awRow.id));
+  const currentOwnerId = canonical.userId;
 
   let artistName: string | null = null;
   let artistSlug: string | null = null;

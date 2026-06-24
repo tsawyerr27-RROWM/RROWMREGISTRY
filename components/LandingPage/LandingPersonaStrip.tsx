@@ -2,25 +2,21 @@
 
 import { narrativeLayout } from "@/styles/narrative-layout";
 
-/**
- * Homepage constituency band — enterprise “who we serve” rhythm.
- * Body copy matches AboutAudience.
- */
-const PERSONAS = [
+const ROLES = [
   {
-    title: "Artists & studios",
-    body:
-      "File represented works and certificates so the public catalogue and chronology stay aligned with what you stand behind.",
+    title: "Artist",
+    why: "Register works once, issue certificates, declare practice, and build a public creative presence on The Field.",
+    outcome: "Your authorship and studio activity stay tied to the same registry identity.",
   },
   {
-    title: "Galleries & estates",
-    body:
-      "Keep institutional association and participant confirmations on record as exhibitions and custody change.",
+    title: "Collector",
+    why: "Hold verified ownership, manage private records in Studio, and open acquisition deals with clear counterparty context.",
+    outcome: "Stewardship stays documented without turning your collection into marketing noise.",
   },
   {
-    title: "Collectors & researchers",
-    body:
-      "Read the current record in public search, then go deeper through sign-in when a work invites authenticated access.",
+    title: "Organisation",
+    why: "Represent artists, verify records, publish opportunities, and file institutional activity on the chronology.",
+    outcome: "Your gallery or institution speaks with documentary weight, not a generic profile page.",
   },
 ] as const;
 
@@ -36,20 +32,25 @@ export function LandingPersonaStrip() {
             id="landing-personas-heading"
             className="font-serif text-[clamp(1.65rem,2.8vw,2.35rem)] font-normal leading-[1.12] tracking-tight text-neutral-950"
           >
-            Who it is for
+            Why each role uses RROWM
           </h2>
+          <p className="mt-5 max-w-2xl text-[15px] leading-[1.75] text-neutral-600 md:text-base">
+            The same infrastructure serves different kinds of cultural participation.
+            Each role gets a clear reason to show up.
+          </p>
         </div>
 
-        <ul className="mt-12 grid gap-10 md:mt-14 md:grid-cols-3 md:gap-0 md:gap-y-0 md:divide-x md:divide-[color:var(--rrowm-atmo-rim)] md:pl-0">
-          {PERSONAS.map((item, i) => (
+        <ul className="mt-12 grid gap-8 md:mt-14 md:grid-cols-3 md:gap-10">
+          {ROLES.map((role) => (
             <li
-              key={item.title}
-              className={`text-sm leading-[1.82] text-neutral-600 md:text-base md:leading-[1.8] md:px-8 lg:px-10 ${i === 0 ? "md:pl-0" : ""} ${i === 2 ? "md:pr-0" : ""}`}
+              key={role.title}
+              className="rounded-[1.25rem] border border-[color:var(--rrowm-atmo-rim)] bg-[color-mix(in_srgb,var(--rrowm-atmo-panel)_78%,transparent)] p-6 shadow-[0_12px_32px_-24px_rgba(15,23,42,0.12)] backdrop-blur-sm md:p-7"
             >
-              <p>
-                <span className="font-medium text-neutral-900">{item.title}</span>{" "}
-                {item.body}
-              </p>
+              <h3 className="font-serif text-xl font-normal tracking-tight text-neutral-950">
+                {role.title}
+              </h3>
+              <p className="mt-4 text-[15px] leading-[1.72] text-neutral-600">{role.why}</p>
+              <p className="mt-4 text-sm leading-relaxed text-neutral-500">{role.outcome}</p>
             </li>
           ))}
         </ul>

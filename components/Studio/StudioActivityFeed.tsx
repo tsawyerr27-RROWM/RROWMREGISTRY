@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
+import {
+  VERIFICATION_EVENT_ACTIVITY_SELECT,
+  verificationEventActivityLabel,
+} from "@/lib/verification-events-schema";
 
 export type StudioActivityFeedProps = {
   userId: string;
@@ -76,7 +80,7 @@ export function StudioActivityFeed({
           .limit(25),
         supabase
           .from("verification_events")
-          .select("id, artwork_id, created_at, event_type, message")
+          .select(VERIFICATION_EVENT_ACTIVITY_SELECT)
           .in("artwork_id", artworkIds)
           .order("created_at", { ascending: false })
           .limit(15),
@@ -165,7 +169,7 @@ export function StudioActivityFeed({
           kind: "verification",
           created_at: String(r.created_at || ""),
           label: "Verification",
-          detail: `${title} · ${String((r as { message?: string }).message || (r as { event_type?: string }).event_type || "update")}`,
+          detail: `${title} · ${verificationEventActivityLabel(r)}`,
           href: reg ? `/collector-studio/artwork/${encodeURIComponent(reg)}` : undefined,
         });
       }

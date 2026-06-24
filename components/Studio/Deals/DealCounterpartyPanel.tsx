@@ -248,29 +248,33 @@ export function DealCounterpartyPanel({ counterpartyUserId }: Props) {
   }
 
   return (
-    <div className={rrowmDealSurface.sidePanel}>
-      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-400">
+    <div className={rrowmDealSurface.referencePanel}>
+      <h3 className="font-serif text-base font-normal tracking-tight text-neutral-950">
         Counterparty
-      </p>
-      <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
+      </h3>
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate font-serif text-[17px] font-normal tracking-tight text-neutral-950">
+          <p className="truncate text-sm font-medium text-neutral-900">
             {loading ? "Loading counterparty" : profile?.displayName ?? "Counterparty"}
           </p>
           {profile?.role === "gallery" && profile.location ? (
-            <p className="mt-1 text-[13px] text-neutral-500">{profile.location}</p>
+            <p className="mt-1 text-[12px] leading-relaxed text-neutral-500">
+              {profile.location}
+            </p>
           ) : null}
           {profile?.role === "collector" && profile.location ? (
-            <p className="mt-1 text-[13px] text-neutral-500">{profile.location}</p>
+            <p className="mt-1 text-[12px] leading-relaxed text-neutral-500">
+              {profile.location}
+            </p>
           ) : null}
           {profile?.role === "artist" && profile.representedBy?.name ? (
-            <p className="mt-1 text-[13px] text-neutral-500">
+            <p className="mt-1 text-[12px] leading-relaxed text-neutral-500">
               {profile.representedBy.name}
             </p>
           ) : null}
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
           {pills.map((p) => (
             <Badge key={p.label} tone={p.tone ?? "muted"} className="normal-case">
               {p.label}

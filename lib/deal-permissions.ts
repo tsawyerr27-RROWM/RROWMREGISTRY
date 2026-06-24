@@ -28,3 +28,85 @@ export function otherDealParticipant(args: {
   return null;
 }
 
+const RESPONDABLE_DEAL_STATUSES = ["proposed", "under_review", "countered"] as const;
+
+export type RespondableDealStatus = (typeof RESPONDABLE_DEAL_STATUSES)[number];
+
+export function isRespondableDealStatus(
+  value: unknown
+): value is RespondableDealStatus {
+  return (
+    typeof value === "string" &&
+    (RESPONDABLE_DEAL_STATUSES as readonly string[]).includes(value)
+  );
+}
+
+/** User who issued the terms currently awaiting a response. */
+export function resolveActiveProposalSenderUserId(args: {
+  dealStatus: string;
+  createdByUserId: string;
+  latestRevisionCreatedByUserId?: string | null;
+}): string | null {
+  const status = String(args.dealStatus ?? "").toLowerCase().trim();
+  const createdBy = String(args.createdByUserId ?? "").trim();
+
+  if (status === "countered") {
+    const reviser = String(args.latestRevisionCreatedByUserId ?? "").trim();
+    return reviser || createdBy || null;
+  }
+
+  if (status === "proposed" || status === "under_review") {
+    return createdBy || null;
+  }
+
+  return null;
+}
+
+export function canActorRespondToDealTerms(args: {
+  actorUserId: string;
+  dealStatus: string;
+  participantAUserId: string;
+  participantBUserId: string;
+  createdByUserId: string;
+  latestRevisionCreatedByUserId?: string | null;
+}): boolean {
+  const status = String(args.dealStatus ?? "").toLowerCase().trim();
+  if (!isRespondableDealStatus(status)) return false;
+
+  const actor = String(args.actorUserId ?? "").trim();
+  if (
+    !isDealParticipant({
+      userId: actor,
+      participantAUserId: args.participantAUserId,
+      participantBUserId: args.participantBUserId,
+    })
+  ) {
+    return false;
+  }
+
+  const sender = resolveActiveProposalSenderUserId({
+    dealStatus: status,
+    createdByUserId: args.createdByUserId,
+    latestRevisionCreatedByUserId: args.latestRevisionCreatedByUserId,
+  });
+  if (!sender) return false;
+
+  return actor !== sender;
+}
+
+export function canActorAcceptDealTerms(args: {
+  actorUserId: string;
+  dealStatus: string;
+  participantAUserId: string;
+  participantBUserId: string;
+  createdByUserId: string;
+  latestRevisionCreatedByUserId?: string | null;
+}): boolean {
+  const status = String(args.dealStatus ?? "").toLowerCase().trim();
+  if (status !== "proposed" && status !== "countered" && status !== "under_review") {
+    return false;
+  }
+
+  return canActorRespondToDealTerms(args);
+}
+

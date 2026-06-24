@@ -39,7 +39,8 @@ export type RegistryStewardInviteArtwork = {
   catalogue_artist_name: string | null;
   artist_id: string | null;
   verification_status: string | null;
-  current_owner_id: string | null;
+  /** Cache only — custody checks use canonical ownership engine. */
+  current_owner_id?: string | null;
   filing_gallery_id: string | null;
 };
 

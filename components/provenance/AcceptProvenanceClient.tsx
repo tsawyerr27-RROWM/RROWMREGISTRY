@@ -74,8 +74,13 @@ export function AcceptProvenanceClient() {
       const j = (await res.json().catch(() => ({}))) as {
         error?: string;
         ok?: boolean;
+        lifecycle_warnings?: string[];
       };
       if (!res.ok) {
+        console.error("[provenance accept] client_http_error", {
+          status: res.status,
+          error: j.error ?? null,
+        });
         setErr(
           typeof j.error === "string" && j.error.trim()
             ? j.error.trim()
@@ -83,11 +88,17 @@ export function AcceptProvenanceClient() {
         );
         return;
       }
+      if (j.lifecycle_warnings?.length) {
+        console.error("[provenance accept] client_lifecycle_warnings", {
+          warnings: j.lifecycle_warnings,
+        });
+      }
       setDone(true);
       const reg = preview?.registryId?.trim();
       if (reg) {
         window.setTimeout(
-          () => router.push(`/artwork/${encodeURIComponent(reg)}`),
+          () =>
+            router.push(`/registry/${encodeURIComponent(reg)}/ledger`),
           2400
         );
       } else {

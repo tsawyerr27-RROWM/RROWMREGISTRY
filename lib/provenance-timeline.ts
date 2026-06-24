@@ -5,6 +5,11 @@ import {
   isProvenanceTransferType,
   provenanceTransferTypeLabel,
 } from "@/lib/provenance-transfer";
+import {
+  exhibitionProvenanceDisplayTitle,
+  exhibitionProvenanceParticipantLabel,
+  parseExhibitionProvenanceMetadata,
+} from "@/lib/provenance-evidence-events";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
 import {
   computeRecordCompleteness,
@@ -342,6 +347,43 @@ export async function getArchivalProvenanceBundle(args: {
   }
 
   const service = tryServiceClient();
+  if (service) {
+    try {
+      const { data: evidenceRows } = await service
+        .from("provenance_events")
+        .select("id, occurred_at, metadata, kind")
+        .eq("artwork_id", artwork.id)
+        .eq("kind", "evidence")
+        .order("occurred_at", { ascending: true });
+
+      for (const row of evidenceRows || []) {
+        const metadata = parseExhibitionProvenanceMetadata(
+          (row as { metadata?: unknown }).metadata
+        );
+        if (!metadata || metadata.category !== "exhibition") continue;
+
+        const date = safeDate(
+          (row as { occurred_at?: string }).occurred_at,
+          createdAt
+        );
+
+        events.push({
+          key: `pe-${String((row as { id?: string }).id || date)}`,
+          narrativeKind: "evidence",
+          dateIso: date,
+          displayTitle: exhibitionProvenanceDisplayTitle(metadata),
+          participantLabel: exhibitionProvenanceParticipantLabel(metadata),
+          verificationLabel: "On file · recorded",
+          hasSupportingEvidence: Boolean(metadata.note),
+          certificateRelated: false,
+        });
+        if (metadata.note) hasSupportingEvidence = true;
+      }
+    } catch {
+      // Provenance evidence events are optional enrichment.
+    }
+  }
+
   if (service) {
     try {
       const { disputes, evidenceFirstByDispute } = await loadDisputeMilestones(

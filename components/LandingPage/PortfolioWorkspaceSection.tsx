@@ -18,7 +18,7 @@ function PortfolioCommandDeck() {
       <div className="relative overflow-hidden rounded-3xl border border-[color:var(--rrowm-atmo-rim)] bg-[color-mix(in_srgb,var(--rrowm-atmo-panel)_86%,transparent)] shadow-[0_16px_40px_-20px_rgba(15,23,42,0.1)] backdrop-blur-md">
         <div className="flex items-center justify-between gap-3 border-b border-[color:var(--rrowm-atmo-rim)] bg-[color-mix(in_srgb,var(--rrowm-atmo-panel-muted)_78%,transparent)] px-5 py-4">
           <span className="text-sm font-medium text-neutral-700">Studio</span>
-          <span className="text-[11px] font-medium tracking-wide text-neutral-500">
+          <span className="text-[11px] font-medium text-neutral-500">
             Linked to the catalogue
           </span>
         </div>

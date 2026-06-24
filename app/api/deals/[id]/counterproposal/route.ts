@@ -5,7 +5,10 @@ import {
   isDealStatus,
   isNegotiableDealStatus,
 } from "@/lib/deal-status";
-import { otherDealParticipant } from "@/lib/deal-permissions";
+import {
+  canActorRespondToDealTerms,
+  otherDealParticipant,
+} from "@/lib/deal-permissions";
 import { mapDealMessageRow, mapDealRevisionRow, mapDealRow } from "@/lib/deals";
 import {
   notifyDealMessageReceived,
@@ -68,7 +71,7 @@ export async function POST(
   const { data: existing, error: loadError } = await supabase
     .from("deals")
     .select(
-      "id, status, type, terms, participant_a_user_id, participant_b_user_id, updated_at"
+      "id, status, type, terms, created_by_user_id, participant_a_user_id, participant_b_user_id, updated_at"
     )
     .eq("id", dealId)
     .maybeSingle();
@@ -101,6 +104,40 @@ export async function POST(
       { error: "Counterproposals are not available in the current status." },
       { status: 409 }
     );
+  }
+
+  let latestRevisionCreatedByUserId: string | null = null;
+  if (fromStatus === "countered") {
+    const { data: latestRevision, error: latestRevisionError } = await supabase
+      .from("deal_revisions")
+      .select("created_by_user_id")
+      .eq("deal_id", dealId)
+      .order("revision_number", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (latestRevisionError) {
+      return NextResponse.json({ error: latestRevisionError.message }, { status: 500 });
+    }
+
+    latestRevisionCreatedByUserId = String(
+      (latestRevision as { created_by_user_id?: string } | null)?.created_by_user_id ??
+        ""
+    ).trim();
+  }
+
+  const createdByUserId = String((existing as { created_by_user_id?: string }).created_by_user_id ?? "");
+  if (
+    !canActorRespondToDealTerms({
+      actorUserId: user.id,
+      dealStatus: fromStatus,
+      participantAUserId: participantA,
+      participantBUserId: participantB,
+      createdByUserId,
+      latestRevisionCreatedByUserId,
+    })
+  ) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const toStatus = "countered";

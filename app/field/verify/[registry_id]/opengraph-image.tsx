@@ -1,7 +1,4 @@
-import {
-  loadVerificationOgBundle,
-  resolveVerificationOgLines,
-} from "@/lib/verification-og";
+import { loadVerificationOgBundle } from "@/lib/verification-og";
 import {
   renderVerificationOgFallbackImage,
   renderVerificationOgImage,
@@ -14,6 +11,7 @@ export const dynamic = "force-dynamic";
 
 export const size = verificationOgImageSize();
 export const contentType = verificationOgImageContentType();
+export const alt = "RROWM registry verification";
 
 type Props = {
   params: Promise<{ registry_id: string }>;
@@ -29,19 +27,4 @@ export default async function Image({ params }: Props) {
   }
 
   return renderVerificationOgImage(bundle);
-}
-
-export async function generateImageMetadata({ params }: Props) {
-  const { registry_id } = await params;
-  const supabase = await createSupabaseServerClient();
-  const bundle = await loadVerificationOgBundle(supabase, registry_id);
-  const alt = bundle
-    ? resolveVerificationOgLines(bundle.context).alt
-    : "RROWM registry verification";
-
-  return {
-    alt,
-    size,
-    contentType,
-  };
 }

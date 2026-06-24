@@ -10,6 +10,7 @@ export { Footer } from "./Footer";
 export { SystemFlowSection } from "./SystemFlowSection";
 export { PortfolioManagementSection } from "./PortfolioManagementSection";
 export { PortfolioWorkspaceSection } from "./PortfolioWorkspaceSection";
+export { LandingProductWalkthrough } from "./LandingProductWalkthrough";
 export { LandingPersonaStrip } from "./LandingPersonaStrip";
 export { LandingThesisBand } from "./LandingThesisBand";
 export { InstitutionalCredibilityStrip } from "./InstitutionalCredibilityStrip";

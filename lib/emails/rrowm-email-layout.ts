@@ -87,7 +87,7 @@ export function rrowmEmailInnerFromOpts(opts: RrowmEmailLayoutOpts): string {
   for (const b of opts.blocks) {
     if (b.type === "kicker") {
       chunks.push(
-        `<p style="margin:0 0 26px;font-family:${SANS};font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:${MUTED};">${escapeHtml(b.text)}</p>`
+        `<p style="margin:0 0 26px;font-family:${SANS};font-size:13px;line-height:1.5;color:${MUTED};">${escapeHtml(b.text)}</p>`
       );
     }
     if (b.type === "p") {

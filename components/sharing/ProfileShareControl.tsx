@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { useCanNativeShare } from "@/hooks/useCanNativeShare";
 import type { ProfileShareContext } from "@/lib/profile-presence-summary";
 import {
   buildProfileShareText,
@@ -60,8 +61,7 @@ export function ProfileShareControl({ context, className = "" }: Props) {
     }
   }, [shareText, shareTitle, shareUrl]);
 
-  const canNativeShare =
-    typeof navigator !== "undefined" && typeof navigator.share === "function";
+  const canNativeShare = useCanNativeShare();
 
   return (
     <div className={`flex flex-wrap items-center gap-3 ${className}`}>

@@ -12,6 +12,7 @@ import { generateInviteToken, inviteExpiryDate } from "@/lib/invite-token";
 import { logActivityEvent } from "@/lib/log-activity";
 import { isProvenanceTransferType } from "@/lib/provenance-transfer";
 import { buildRegistryStewardInvitePublicUrl } from "@/lib/registry-steward-invite";
+import { isCurrentOwner } from "@/lib/canonical-ownership-engine";
 import { getSiteUrl } from "@/lib/site-url";
 import { guardRegistryMutation } from "@/lib/registry-action-security/guards";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
@@ -124,7 +125,7 @@ export async function POST(req: Request) {
 
   const { data: art, error: artErr } = await service
     .from("artworks")
-    .select("id, title, registry_id, verification_status, current_owner_id")
+    .select("id, title, registry_id, verification_status")
     .eq("id", artworkId)
     .maybeSingle();
 
@@ -137,8 +138,7 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
-  const ownerId = art.current_owner_id as string | null;
-  if (!ownerId || ownerId !== user.id) {
+  if (!(await isCurrentOwner(service, user.id, artworkId))) {
     return NextResponse.json(
       {
         error:

@@ -420,6 +420,9 @@ export type MessageKey =
   | "footer.blurb"
   | "landing.hero.title"
   | "landing.hero.lede"
+  | "landing.hero.audience"
+  | "landing.hero.why"
+  | "landing.hero.betaStory"
   | "landing.hero.browseCatalogue"
   | "landing.hero.takePart"
   | "landing.hero.overview"
@@ -587,6 +590,9 @@ export type MessageKey =
   | "studio.nav.artworks"
   | "studio.nav.certificates"
   | "studio.nav.ownership"
+  | "studio.nav.deals"
+  | "studio.nav.inbox"
+  | "studio.nav.rights"
   | "studio.opportunities.heading"
   | "studio.opportunities.lede"
   | "studio.opportunities.verificationRequired"
@@ -1177,6 +1183,7 @@ export type MessageKey =
   | "collector.overview.notVerified"
   | "collector.overview.openClaims"
   | "collector.overview.withCertificate"
+  | "collector.overview.recordHealthSubtitle"
   | "collector.word.work"
   | "collector.word.works"
   | "collector.word.record"
@@ -1469,13 +1476,16 @@ export type MessageKey =
   | "studio.overview.ownershipIntel.subtitle"
   | "studio.overview.totalTransfers"
   | "studio.overview.worksYouHold"
+  | "studio.overview.worksRepresented"
   | "studio.overview.avgHoldDays"
+  | "studio.overview.avgDaysOnRegistry"
   | "studio.overview.catalogueHighlights.title"
   | "studio.overview.catalogueHighlights.subtitle"
   | "studio.overview.mostTransferred"
   | "studio.overview.mostTransferredHint"
   | "studio.overview.longestHeld"
   | "studio.overview.longestHeldHint"
+  | "studio.overview.longestOnRegistryHint"
   | "studio.overview.fastestAppreciating"
   | "studio.overview.fastestAppreciatingHint"
   | "studio.records.noAwaitingAttestation"
@@ -1669,6 +1679,7 @@ export type MessageKey =
   | "studio.insight.title.health"
   | "studio.insight.title.valueArtist"
   | "studio.insight.title.valueGallery"
+  | "studio.insight.title.valueCollector"
   | "studio.insight.line.worksArtist"
   | "studio.insight.line.worksGallery"
   | "studio.insight.breakdown.totalWorks"
@@ -1682,6 +1693,19 @@ export type MessageKey =
   | "studio.insight.breakdown.withCertificate"
   | "studio.insight.breakdown.missingVerification"
   | "studio.insight.breakdown.latestDeclared"
+  | "studio.insight.breakdown.avgChange"
+  | "studio.insight.breakdown.worksIncreased"
+  | "studio.insight.breakdown.worksDeclined"
+  | "studio.insight.breakdown.totalTransfers"
+  | "studio.insight.breakdown.worksHeld"
+  | "studio.insight.breakdown.worksRepresented"
+  | "studio.insight.breakdown.avgHoldDays"
+  | "studio.insight.breakdown.avgDaysOnRegistry"
+  | "studio.insight.breakdown.mostTransferred"
+  | "studio.insight.breakdown.longestHeld"
+  | "studio.insight.breakdown.fastestAppreciating"
+  | "studio.insight.breakdown.unresolvedSales"
+  | "studio.insight.breakdown.staleRecords"
   | "studio.insight.bar.fullyVerified"
   | "studio.insight.bar.certified"
   | "studio.insight.bar.incomplete"
@@ -1690,6 +1714,8 @@ export type MessageKey =
   | "studio.insight.note.healthStrictGallery"
   | "studio.insight.note.valueBasisArtist"
   | "studio.insight.note.valueBasisGallery"
+  | "studio.insight.note.valueBasisCollector"
+  | "studio.insight.note.valueProgressionBasis"
   | "studio.insight.subtitle.artist.catalogueSteadyGrowth"
   | "studio.insight.subtitle.artist.clearOwnership"
   | "studio.insight.subtitle.artist.ownershipPending"
@@ -1722,6 +1748,7 @@ export type MessageKey =
   | "studio.insight.subtitle.collector.value.softened"
   | "studio.insight.subtitle.collector.value.steady"
   | "studio.activity.artworkRegistered"
+  | "studio.activity.institutionArtworkRegistered"
   | "studio.activity.valueUpdated"
   | "studio.activity.ownershipConfirmed"
   | "studio.activity.ownershipClaimRejected"
@@ -1878,6 +1905,12 @@ export type MessageKey =
   | "profile.presence.trust.creative.established"
   | "profile.presence.trust.creative.footprint"
   | "profile.presence.trust.creative.registered"
+  | "profile.presence.trust.creative.representedBy"
+  | "profile.presence.secondary.creative.worksExhibitions"
+  | "profile.presence.secondary.organisation.artistsExhibitions"
+  | "profile.presence.secondary.collector.holdingsAcquisitions"
+  | "profile.presence.secondary.collector.holdingsTransfers"
+  | "profile.presence.secondary.collector.holdingsFull"
   | "profile.presence.trust.collector.established"
   | "profile.presence.trust.collector.stewardship"
   | "profile.presence.trust.collector.private"
@@ -1885,6 +1918,8 @@ export type MessageKey =
   | "profile.presence.secondary.representedByVerifiedOrg"
   | "profile.presence.secondary.representedByOrg"
   | "profile.presence.secondary.representedCreatives"
+  | "profile.presence.rights.creative.activeLicenses"
+  | "profile.presence.rights.organisation.activeAgreements"
   | "profile.presence.share.copyLink"
   | "profile.presence.share.copied"
   | "profile.presence.share.shareProfile"
@@ -1959,10 +1994,10 @@ const EN: Record<MessageKey, string> = {
   "ecosystem.surface.registry": "Registry",
   "field.home.title": "Public discovery and presence",
   "field.home.lede":
-    "The Field is where you browse Creatives, Organisations, and Registry records — read-only surfaces that reflect what participants choose to make public. Studio remains where identity and stewardship are edited.",
+    "The Field is where you browse Creatives, Organisations, and Registry records. Read-only surfaces that reflect what participants choose to make public. Studio remains where identity and stewardship are edited.",
   "field.home.explorerHeading": "Explorer",
   "field.home.explorerBody":
-    "Three index views — Creatives, Organisations, and Registry records — with filters and pagination. No recommendations or paid ranking.",
+    "Three index views · Creatives, Organisations, and Registry records. With filters and pagination. No recommendations or paid ranking.",
   "field.home.verifyHeading": "Verify",
   "field.home.verifyBody":
     "Check verification and certificate status for a Registry record by its Registry ID.",
@@ -1976,7 +2011,7 @@ const EN: Record<MessageKey, string> = {
   "field.explorer.tab.opportunities": "Opportunities",
   "field.explorer.hub.title": "Explorer",
   "field.explorer.hub.lede":
-    "Browse Registry records, public Creatives, and Organisations. Discovery follows your filters and alphabetical order — not recommendations or paid placement.",
+    "Browse Registry records, public Creatives, and Organisations. Discovery follows your filters and alphabetical order. Not recommendations or paid placement.",
   "field.explorer.hub.searchLabel": "Search The Field",
   "field.explorer.hub.searchPlaceholder": "Registry ID, title, or name…",
   "field.explorer.hub.searchSubmit": "Search",
@@ -1987,14 +2022,14 @@ const EN: Record<MessageKey, string> = {
   "field.explorer.link.verifyHub": "Verify hub",
   "field.explorer.wayfinding.heading": "Continue exploring",
   "field.explorer.wayfinding.lede":
-    "Move between Registry records, public profiles, and verification — deterministic links only, not recommendations.",
+    "Move between Registry records, public profiles, and verification. Deterministic links only, not recommendations.",
   "field.explorer.wayfinding.hub": "Explorer hub",
   "field.explorer.records.orientation": "Browse Registry records on file.",
   "field.explorer.creatives.orientation": "Discover Creatives and how they work.",
   "field.explorer.organisations.orientation": "Browse public Organisations.",
   "field.opportunities.headline": "Opportunities",
   "field.opportunities.lede":
-    "Published briefs from verified Organisations — browse by sector, practice, and application window.",
+    "Published briefs from verified Organisations. Browse by sector, practice, and application window.",
   "field.opportunities.orientation": "Browse published opportunities on Field.",
   "field.opportunities.countSingular": "Opportunity",
   "field.opportunities.countPlural": "Opportunities",
@@ -2121,7 +2156,7 @@ const EN: Record<MessageKey, string> = {
   "field.explorer.records.empty.browseAll": "Browse all records",
   "field.explorer.creatives.headline": "Discover Creatives",
   "field.explorer.creatives.lede":
-    "Browse public Creative profiles on The Field — practice, verification on file, and registry footprint. Discovery only; not a marketplace or recruitment surface.",
+    "Browse public Creative profiles on The Field. Practice, verification on file, and registry footprint. Discovery only; not a marketplace or recruitment surface.",
   "field.explorer.creatives.searching": "searching",
   "field.explorer.creatives.filtered": "filters applied",
   "field.explorer.creatives.filter.search": "Search by name",
@@ -2142,13 +2177,13 @@ const EN: Record<MessageKey, string> = {
   "field.creative.participationHeading": "Registry participation",
   "field.creative.practice.declaredHeading": "Declared practices",
   "field.creative.practice.registryHeading": "From verified Registry records",
-  "field.creative.practice.legend.declared": "Neutral chip — declared in Studio",
-  "field.creative.practice.legend.registry": "Green chip — inferred from verified records",
+  "field.creative.practice.legend.declared": "Declared in Studio",
+  "field.creative.practice.legend.registry": "Inferred from verified records",
   "field.creative.practice.ownerGuidance":
     "Practices inferred from verified Registry records. Add declared practices in Studio to describe how you work.",
   "field.creative.discoveryHeading": "Continue exploring",
   "field.creative.discoveryLede":
-    "Move between Registry records, public profiles, and verification — deterministic links only, not recommendations.",
+    "Move between Registry records, public profiles, and verification. Deterministic links only, not recommendations.",
   "field.creative.link.recordExplorer": "Record Explorer",
   "field.creative.link.creativeExplorer": "Creative Explorer",
   "field.creative.link.organisation": "Organisation profile",
@@ -2157,7 +2192,7 @@ const EN: Record<MessageKey, string> = {
   "field.creative.viewProfile": "View profile",
   "field.creative.stewardship.heading": "Stewardship checklist",
   "field.creative.stewardship.lede":
-    "Visible to you only — improve public discoverability from Studio. No public score or ranking.",
+    "Visible to you only. Improve public discoverability from Studio. No public score or ranking.",
   "field.creative.stewardship.studioLink": "Open Studio",
   "field.creative.stewardship.item.bio": "Add a public bio",
   "field.creative.stewardship.item.declaredPractice": "Declare at least one practice",
@@ -2179,7 +2214,7 @@ const EN: Record<MessageKey, string> = {
   "field.organisation.participationHeading": "Registry participation",
   "field.organisation.discoveryHeading": "Continue exploring",
   "field.organisation.discoveryLede":
-    "Move between Registry records, public profiles, and verification — deterministic links only, not recommendations.",
+    "Move between Registry records, public profiles, and verification. Deterministic links only, not recommendations.",
   "field.organisation.link.recordExplorer": "Record Explorer",
   "field.organisation.link.organisationExplorer": "Organisation Explorer",
   "field.organisation.link.creativeExplorer": "Creative Explorer",
@@ -2187,7 +2222,7 @@ const EN: Record<MessageKey, string> = {
   "field.organisation.viewProfile": "View profile",
   "field.organisation.stewardship.heading": "Stewardship checklist",
   "field.organisation.stewardship.lede":
-    "Visible to you only — improve public discoverability from Studio. No public score or ranking.",
+    "Visible to you only. Improve public discoverability from Studio. No public score or ranking.",
   "field.organisation.stewardship.studioLink": "Open Studio",
   "field.organisation.stewardship.item.description": "Add a public description",
   "field.organisation.stewardship.item.location": "Add a public location",
@@ -2211,7 +2246,7 @@ const EN: Record<MessageKey, string> = {
   "field.verify.record.title": "Record verification",
   "field.verify.hub.title": "Verify a Registry record",
   "field.verify.hub.lede":
-    "The Field shows trust from the Registry ledger — verification status, participation on file, and certificate state. The Field does not issue verification; it reads Registry truth.",
+    "The Field shows trust from the Registry ledger. Verification status, participation on file, and certificate state. The Field does not issue verification; it reads Registry truth.",
   "field.verify.hub.lookupHeading": "Check by Registry ID",
   "field.verify.hub.lookupIntro":
     "Enter the Registry ID printed on a record or certificate to view its public verification status.",
@@ -2224,21 +2259,21 @@ const EN: Record<MessageKey, string> = {
   "field.verify.hub.hierarchyTitle": "How trust is ordered",
   "field.verify.hub.hierarchyIntro":
     "When reading a Creative or record on The Field, interpret signals in this order. Registry-backed facts outrank profile narrative.",
-  "field.verify.hub.tier1.label": "Tier 1 — Registry record",
+  "field.verify.hub.tier1.label": "Tier 1 · Registry record",
   "field.verify.hub.tier1.body":
     "Registry ID, record verification status, and artist confirmation on the ledger.",
-  "field.verify.hub.tier2.label": "Tier 2 — Organisation & verified works",
+  "field.verify.hub.tier2.label": "Tier 2 · Organisation & verified works",
   "field.verify.hub.tier2.body":
-    "Organisation verification badges and factual counts of verified works — not popularity scores.",
-  "field.verify.hub.tier3.label": "Tier 3 — Certificate",
+    "Organisation verification badges and factual counts of verified works. Not popularity scores.",
+  "field.verify.hub.tier3.label": "Tier 3 · Certificate",
   "field.verify.hub.tier3.body":
     "Whether a certificate is recorded or revoked for a verified record. Certificate verification applies after record verification.",
   "field.verify.hub.section.verification.title": "What verification means",
   "field.verify.hub.section.verification.body":
-    "Verification is the Registry’s attestation that a record has passed defined confirmation on file. It is ledger-backed — not a social endorsement or paid badge.",
+    "Verification is the Registry’s attestation that a record has passed defined confirmation on file. It is ledger-backed. Not a social endorsement or paid badge.",
   "field.verify.hub.section.provenance.title": "What provenance means",
   "field.verify.hub.section.provenance.body":
-    "Provenance is the chronological continuity of a Registry record — authorship, institution filing, representation, and ownership events confirmed on file.",
+    "Provenance is the chronological continuity of a Registry record. Authorship, institution filing, representation, and ownership events confirmed on file.",
   "field.verify.hub.section.registryRecord.title": "What Registry records are",
   "field.verify.hub.section.registryRecord.body":
     "A Registry record is the canonical continuity entry for a work. The Field is a public read surface; the Registry remains the system of record.",
@@ -2341,7 +2376,7 @@ const EN: Record<MessageKey, string> = {
   "field.record.title": "Registry record",
   "field.record.discoveryHeading": "Continue exploring",
   "field.record.discoveryLede":
-    "Move between the Record Explorer, public profiles, and verification — deterministic links only, not recommendations.",
+    "Move between the Record Explorer, public profiles, and verification. Deterministic links only, not recommendations.",
   "field.record.link.explorer": "Record Explorer",
   "field.record.link.verify": "Check verification",
   "field.record.link.ledger": "Open Registry ledger",
@@ -2352,7 +2387,7 @@ const EN: Record<MessageKey, string> = {
     "This Field record summary reads from the Registry. The Registry ledger remains the system of record for verification, provenance, and chronology.",
   "field.context.sectionHeading": "Relationship context",
   "field.context.sectionLede":
-    "Connections below are derived from Registry evidence — not recommendations, rankings, or social links.",
+    "Connections below are derived from Registry evidence. Not recommendations, rankings, or social links.",
   "field.context.record.sameCreative.heading": "More works by {name}",
   "field.context.record.sameCreative.lede":
     "Other Registry records filed to the same Creative, ordered by verification status then recency.",
@@ -2361,7 +2396,7 @@ const EN: Record<MessageKey, string> = {
     "Other records linked to {name} through representation or filing on file in the Registry.",
   "field.context.record.sharedMedium.heading": "Records with this medium on file",
   "field.context.record.sharedMedium.lede":
-    "Other records sharing the exact medium string “{medium}” — not algorithmic similarity.",
+    "Other records sharing the exact medium string “{medium}”. Not algorithmic similarity.",
   "field.context.record.practice.heading": "Practice context",
   "field.context.record.practice.lede":
     "Browse Creatives working in {practice} via the Creative Explorer practice filter.",
@@ -2373,7 +2408,7 @@ const EN: Record<MessageKey, string> = {
     "Institution-linked representation on file connects this Creative to {name}.",
   "field.context.creative.practice.heading": "Practice discovery",
   "field.context.creative.practice.lede":
-    "Explore other Creatives declared or inferred in {practice} — filtered in the Creative Explorer.",
+    "Explore other Creatives declared or inferred in {practice}. Filtered in the Creative Explorer.",
   "field.context.organisation.roster.heading": "Represented Creatives",
   "field.context.organisation.roster.lede":
     "Registry-linked roster entries for {name} with public Creative profiles.",
@@ -2388,7 +2423,7 @@ const EN: Record<MessageKey, string> = {
   "field.context.meta.verified": "Verified",
   "field.context.meta.workCount": "{count} works on file",
   "ecosystem.workspace.studio": "Studio",
-  "ecosystem.workspace.organisationStudio": "Organisation Studio",
+  "ecosystem.workspace.organisationStudio": "Studio",
   "getStarted.pathTooltip":
     "Each path opens the right Studio workspace for your participant type. Underneath: one chronology per work, on file in the Registry.",
   "account.hero.organisationIdentity": "Organisation identity",
@@ -2416,15 +2451,20 @@ const EN: Record<MessageKey, string> = {
   "footer.regionLabel": "Region & language",
   "footer.blurb":
     "A cryptographically verifiable registry for contemporary art, protecting authorship and provenance.",
-  "landing.hero.title": "Infrastructure for cultural memory",
-  "landing.hero.lede":
-    "A trusted provenance registry for contemporary cultural work, connecting authorship, ownership and historical record in a single evolving archive.",
-  "landing.hero.browseCatalogue": "Browse public gallery",
+  "landing.hero.title": "Infrastructure for contemporary culture & the creative economy",
+  "landing.hero.lede": "",
+  "landing.hero.audience":
+    "For artists, collectors, galleries, and cultural institutions.",
+  "landing.hero.why":
+    "One system of record so authorship, stewardship, presence, and commercial activity stay aligned.",
+  "landing.hero.betaStory":
+    "Register · Verify · Build presence · Transact",
+  "landing.hero.browseCatalogue": "Explore The Field",
   "landing.hero.takePart": "Take part",
-  "landing.hero.overview": "Overview",
-  "landing.cta.title": "Join a work's continuity",
-  "landing.cta.takePart": "Take part →",
-  "landing.cta.browseRegistry": "Browse registry",
+  "landing.hero.overview": "How it works",
+  "landing.cta.title": "Begin on RROWM",
+  "landing.cta.takePart": "Take part",
+  "landing.cta.browseRegistry": "Browse Registry records",
   "landing.thesis.title": "Continuity belongs with the work, not scattered across files",
   "landing.thesis.card1Title": "Current record",
   "landing.thesis.card1Body":
@@ -2435,19 +2475,19 @@ const EN: Record<MessageKey, string> = {
   "landing.thesis.card3Title": "Participant roles",
   "landing.thesis.card3Body":
     "Institutional association and collector studio activity appear where participants file them.",
-  "landing.flow.title": "One thread for the work, from first listing to what comes next",
-  "landing.flow.s1Label": "Name the work",
+  "landing.flow.title": "Four layers that work together",
+  "landing.flow.s1Label": "Register",
   "landing.flow.s1Detail":
-    "List it once. The piece gets a lasting identity that artists, galleries, and collectors can return to.",
-  "landing.flow.s2Label": "Attach what matters",
+    "Every work receives a persistent registry identity that artists, galleries, and collectors can return to.",
+  "landing.flow.s2Label": "Verify",
   "landing.flow.s2Detail":
-    "Certificates, gallery association, custody notes: everything lands on the same entry instead of scattered files.",
-  "landing.flow.s3Label": "See the present clearly",
+    "Authorship, stewardship, and chronology strengthen through evidence filed on the record.",
+  "landing.flow.s3Label": "Build presence",
   "landing.flow.s3Detail":
-    "What is public today is easy to read. What you keep private stays behind sign-in until you choose otherwise.",
-  "landing.flow.s4Label": "Let the thread grow",
+    "The Field turns verified cultural activity into public reputation and discoverable profiles.",
+  "landing.flow.s4Label": "Transact",
   "landing.flow.s4Detail":
-    "Each sale, transfer, or exhibition adds another line to the same story, in order, as years pass.",
+    "Deals enable commissions, acquisitions, representation, and licensing with structured terms on file.",
   "landing.workspace.title": "Where holdings stay on file",
   "landing.workspace.takePart": "Take part",
   "landing.workspace.viewPublic": "View public layer",
@@ -2621,6 +2661,9 @@ const EN: Record<MessageKey, string> = {
   "studio.nav.artworks": "Artworks",
   "studio.nav.certificates": "Certificates",
   "studio.nav.ownership": "Ownership",
+  "studio.nav.deals": "Deals",
+  "studio.nav.inbox": "Inbox",
+  "studio.nav.rights": "Rights ledger",
   "studio.opportunities.heading": "Opportunities",
   "studio.opportunities.lede":
     "Create and publish briefs to Field. Verified organisation status is required before publishing.",
@@ -2843,7 +2886,7 @@ const EN: Record<MessageKey, string> = {
     "Not available for self-serve yet. Talk to us about timing and fit.",
   "pricing.enterprise.contact": "Contact the registry",
   "pricing.alreadyAccount": "Already have an account?",
-  "gallery.nav.studio": "Overview",
+  "gallery.nav.studio": "Studio",
   "gallery.nav.recordDepth": "Record depth",
   "gallery.nav.roster": "Artists",
   "gallery.nav.catalogue": "Works",
@@ -3340,6 +3383,8 @@ const EN: Record<MessageKey, string> = {
   "collector.overview.openClaims": "{count} open ownership {units}.",
   "collector.overview.withCertificate":
     "{count} {units} with a certificate on record.",
+  "collector.overview.recordHealthSubtitle":
+    "Tap for verification gaps, certificates, and record health detail.",
   "collector.word.work": "work",
   "collector.word.works": "works",
   "collector.word.record": "record",
@@ -3652,10 +3697,10 @@ const EN: Record<MessageKey, string> = {
   "studio.overview.claimant": "Claimant",
   "studio.overview.valueProgression.title": "Value progression",
   "studio.overview.valueProgression.subtitle":
-    "How values move from initial to latest where comparable.",
+    "How declared values change when a work has more than one filing in the same currency.",
   "studio.overview.avgChange": "Avg change in value",
   "studio.overview.avgChangeHint":
-    "Mean % change where initial and latest share a currency.",
+    "Mean % change from earliest to latest value filing per work (same currency).",
   "studio.overview.worksIncreased": "Works with increased value",
   "studio.overview.decliningWorks": "Declining works",
   "studio.overview.noProgressionData": "No progression data yet",
@@ -3665,7 +3710,9 @@ const EN: Record<MessageKey, string> = {
     "Transfers, holds, and movement across your catalogue.",
   "studio.overview.totalTransfers": "Total transfers",
   "studio.overview.worksYouHold": "Works you still hold",
+  "studio.overview.worksRepresented": "Works on file",
   "studio.overview.avgHoldDays": "Avg hold (days)",
+  "studio.overview.avgDaysOnRegistry": "Avg days on registry",
   "studio.overview.catalogueHighlights.title": "Catalogue highlights",
   "studio.overview.catalogueHighlights.subtitle":
     "Standout records from your registry activity.",
@@ -3673,10 +3720,12 @@ const EN: Record<MessageKey, string> = {
   "studio.overview.mostTransferredHint": "Highest transfer count.",
   "studio.overview.longestHeld": "Longest held",
   "studio.overview.longestHeldHint":
-    "Longest span between first and latest transfer.",
+    "Longest time you have held the work on the ownership ledger.",
+  "studio.overview.longestOnRegistryHint":
+    "Work registered longest in your studio catalogue.",
   "studio.overview.fastestAppreciating": "Fastest appreciating",
   "studio.overview.fastestAppreciatingHint":
-    "Largest % gain from initial to latest (same currency).",
+    "Largest % gain from earliest to latest value filing (same currency).",
   "studio.records.noAwaitingAttestation":
     "No records awaiting your attestation. When a canonical record is associated with your practice, it appears here to authenticate and deepen.",
   "studio.records.institutionalRelationship": "Institutional relationship",
@@ -3901,6 +3950,7 @@ const EN: Record<MessageKey, string> = {
   "studio.insight.title.health": "Record health",
   "studio.insight.title.valueArtist": "Value progression",
   "studio.insight.title.valueGallery": "Declared value",
+  "studio.insight.title.valueCollector": "Collection value",
   "studio.insight.line.worksArtist": "Works",
   "studio.insight.line.worksGallery": "Cumulative works",
   "studio.insight.breakdown.totalWorks": "Total works",
@@ -3914,6 +3964,19 @@ const EN: Record<MessageKey, string> = {
   "studio.insight.breakdown.withCertificate": "With certificate",
   "studio.insight.breakdown.missingVerification": "Missing verification",
   "studio.insight.breakdown.latestDeclared": "Latest declared ({currency})",
+  "studio.insight.breakdown.avgChange": "Avg change in value",
+  "studio.insight.breakdown.worksIncreased": "Works with increased value",
+  "studio.insight.breakdown.worksDeclined": "Declining works",
+  "studio.insight.breakdown.totalTransfers": "Total transfers",
+  "studio.insight.breakdown.worksHeld": "Works you still hold",
+  "studio.insight.breakdown.worksRepresented": "Works on file",
+  "studio.insight.breakdown.avgHoldDays": "Avg hold (days)",
+  "studio.insight.breakdown.avgDaysOnRegistry": "Avg days on registry",
+  "studio.insight.breakdown.mostTransferred": "Most transferred",
+  "studio.insight.breakdown.longestHeld": "Longest held",
+  "studio.insight.breakdown.fastestAppreciating": "Fastest appreciating",
+  "studio.insight.breakdown.unresolvedSales": "Unresolved sales",
+  "studio.insight.breakdown.staleRecords": "Stale records (24+ mo)",
   "studio.insight.bar.fullyVerified": "Fully verified",
   "studio.insight.bar.certified": "Certified",
   "studio.insight.bar.incomplete": "Incomplete",
@@ -3927,6 +3990,10 @@ const EN: Record<MessageKey, string> = {
     "Figures are the latest declared value per currency from your value events (the same basis as the chart series), not a roll-up of every artwork’s current list price.",
   "studio.insight.note.valueBasisGallery":
     "Figures are the latest declared value per currency from value events (the same basis as the chart series), not a roll-up of every artwork’s current list price.",
+  "studio.insight.note.valueBasisCollector":
+    "Figures are the latest declared value per currency from your collection’s value events (the same basis as the chart series).",
+  "studio.insight.note.valueProgressionBasis":
+    "Progression compares the earliest and latest value event per work in the same currency. Works with only one value filing are excluded from change metrics.",
   "studio.insight.subtitle.artist.catalogueSteadyGrowth":
     "The catalogue has grown steadily.",
   "studio.insight.subtitle.artist.clearOwnership":
@@ -3990,6 +4057,8 @@ const EN: Record<MessageKey, string> = {
   "studio.insight.subtitle.collector.value.steady":
     "Recorded values are holding steady.",
   "studio.activity.artworkRegistered": "Artwork registered: {title}",
+  "studio.activity.institutionArtworkRegistered":
+    "Catalogue work filed: {title}{registrySuffix}",
   "studio.activity.valueUpdated": "Value updated: {title}",
   "studio.activity.ownershipConfirmed": "Ownership confirmed: {title}",
   "studio.activity.ownershipClaimRejected": "Ownership claim rejected",
@@ -4099,7 +4168,7 @@ const EN: Record<MessageKey, string> = {
     "Registry verification on RROWM.",
   "verification.share.ogAlt": "Registry verification for {title}",
   "verification.share.ogAltRestricted": "RROWM registry verification",
-  "verification.share.successTitle": "Verification recorded — share it",
+  "verification.share.successTitle": "Verification recorded · share it",
   "verification.share.viewVerificationPage": "View verification record",
   "registry.seal.registered": "Registered on file",
   "registry.seal.established": "Established record",
@@ -4190,6 +4259,17 @@ const EN: Record<MessageKey, string> = {
   "profile.presence.trust.creative.established": "Established practice",
   "profile.presence.trust.creative.footprint": "Registry footprint on file",
   "profile.presence.trust.creative.registered": "Practice registered on the ledger",
+  "profile.presence.trust.creative.representedBy": "Represented by {organisation}",
+  "profile.presence.secondary.creative.worksExhibitions":
+    "{verified} verified works · {exhibitions} exhibitions on file",
+  "profile.presence.secondary.organisation.artistsExhibitions":
+    "{artists} represented artists · {exhibitions} exhibitions on file",
+  "profile.presence.secondary.collector.holdingsAcquisitions":
+    "{verified} verified holdings · {acquisitions} acquisitions completed",
+  "profile.presence.secondary.collector.holdingsTransfers":
+    "{verified} verified holdings · {transfers} continuity transfers recorded",
+  "profile.presence.secondary.collector.holdingsFull":
+    "{verified} verified holdings · {acquisitions} acquisitions completed · {transfers} continuity transfers recorded",
   "profile.presence.trust.collector.established": "Established stewardship",
   "profile.presence.trust.collector.stewardship": "Custody on file",
   "profile.presence.trust.collector.private": "Private stewardship",
@@ -4199,6 +4279,10 @@ const EN: Record<MessageKey, string> = {
   "profile.presence.secondary.representedByOrg": "Institutional representation on file",
   "profile.presence.secondary.representedCreatives":
     "{count} Creatives represented",
+  "profile.presence.rights.creative.activeLicenses":
+    "{count} active licenses on file",
+  "profile.presence.rights.organisation.activeAgreements":
+    "{count} active rights agreements",
   "profile.presence.share.copyLink": "Copy profile link",
   "profile.presence.share.copied": "Link copied",
   "profile.presence.share.shareProfile": "Share profile",
@@ -4208,7 +4292,7 @@ const EN: Record<MessageKey, string> = {
   "registry.stewardInvite.cta": "Invite steward to record",
   "registry.stewardInvite.modalTitle": "Invite steward to record",
   "registry.stewardInvite.modalLead":
-    "Invite a participant to deepen this registry record — authorship attestation or custody continuation. The record remains on file; this is continuity participation, not approval.",
+    "Invite a participant to deepen this registry record: authorship attestation or custody continuation. The record remains on file; this is continuity participation, not approval.",
   "registry.stewardInvite.kindLabel": "Stewardship role",
   "registry.stewardInvite.kind.authorship": "Authorship steward",
   "registry.stewardInvite.kind.custody": "Custody steward",
@@ -4275,10 +4359,10 @@ const DE: Record<MessageKey, string> = {
   "ecosystem.surface.registry": "Register",
   "field.home.title": "Öffentliche Entdeckung und Präsenz",
   "field.home.lede":
-    "The Field ist der Ort, an dem Sie Creatives, Organisationen und Register-Einträge durchsuchen — schreibgeschützte Oberflächen, die widerspiegeln, was Teilnehmende öffentlich machen. Im Studio werden Identität und Verwaltung bearbeitet.",
+    "The Field ist der Ort, an dem Sie Creatives, Organisationen und Register-Einträge durchsuchen. Schreibgeschützte Oberflächen, die widerspiegeln, was Teilnehmende öffentlich machen. Im Studio werden Identität und Verwaltung bearbeitet.",
   "field.home.explorerHeading": "Explorer",
   "field.home.explorerBody":
-    "Drei Indexansichten — Creatives, Organisationen und Register-Einträge — mit Filtern und Paginierung. Keine Empfehlungen oder bezahltes Ranking.",
+    "Drei Indexansichten · Creatives, Organisationen und Register-Einträge. Mit Filtern und Paginierung. Keine Empfehlungen oder bezahltes Ranking.",
   "field.home.verifyHeading": "Verifizieren",
   "field.home.verifyBody":
     "Verifizierungs- und Zertifikatsstatus für einen Register-Eintrag anhand der Registry-ID prüfen.",
@@ -4289,9 +4373,10 @@ const DE: Record<MessageKey, string> = {
   "field.explorer.tab.creatives": "Creatives",
   "field.explorer.tab.organisations": "Organisationen",
   "field.explorer.tab.records": "Einträge",
+  "field.explorer.tab.opportunities": "Opportunities",
   "field.explorer.hub.title": "Explorer",
   "field.explorer.hub.lede":
-    "Register-Einträge, öffentliche Creatives und Organisationen durchsuchen. Entdeckung folgt Ihren Filtern und alphabetischer Reihenfolge — keine Empfehlungen oder bezahlte Platzierung.",
+    "Register-Einträge, öffentliche Creatives und Organisationen durchsuchen. Entdeckung folgt Ihren Filtern und alphabetischer Reihenfolge. Keine Empfehlungen oder bezahlte Platzierung.",
   "field.explorer.hub.searchLabel": "The Field durchsuchen",
   "field.explorer.hub.searchPlaceholder": "Register-ID, Titel oder Name…",
   "field.explorer.hub.searchSubmit": "Suchen",
@@ -4302,7 +4387,7 @@ const DE: Record<MessageKey, string> = {
   "field.explorer.link.verifyHub": "Verifizierungs-Hub",
   "field.explorer.wayfinding.heading": "Weiter erkunden",
   "field.explorer.wayfinding.lede":
-    "Wechseln Sie zwischen Register-Einträgen, öffentlichen Profilen und Verifizierung — nur deterministische Links, keine Empfehlungen.",
+    "Wechseln Sie zwischen Register-Einträgen, öffentlichen Profilen und Verifizierung. Nur deterministische Links, keine Empfehlungen.",
   "field.explorer.wayfinding.hub": "Explorer-Hub",
   "field.explorer.records.orientation": "Register-Einträge auf Datei durchsuchen.",
   "field.explorer.creatives.orientation": "Creatives und ihre Arbeitsweise entdecken.",
@@ -4366,7 +4451,7 @@ const DE: Record<MessageKey, string> = {
   "field.explorer.records.empty.browseAll": "Alle Einträge durchsuchen",
   "field.explorer.creatives.headline": "Creatives entdecken",
   "field.explorer.creatives.lede":
-    "Öffentliche Creative-Profile auf The Field — Praxis, Verifizierung und Register-Footprint. Nur Entdeckung; kein Marktplatz.",
+    "Öffentliche Creative-Profile auf The Field · Praxis, Verifizierung und Register-Footprint. Nur Entdeckung; kein Marktplatz.",
   "field.explorer.creatives.searching": "Suche",
   "field.explorer.creatives.filtered": "Filter aktiv",
   "field.explorer.creatives.filter.search": "Nach Name suchen",
@@ -4387,13 +4472,13 @@ const DE: Record<MessageKey, string> = {
   "field.creative.participationHeading": "Register-Beteiligung",
   "field.creative.practice.declaredHeading": "Deklarierte Praktiken",
   "field.creative.practice.registryHeading": "Aus verifizierten Register-Einträgen",
-  "field.creative.practice.legend.declared": "Neutral — im Studio deklariert",
-  "field.creative.practice.legend.registry": "Grün — aus verifizierten Einträgen abgeleitet",
+  "field.creative.practice.legend.declared": "Neutral. Im Studio deklariert",
+  "field.creative.practice.legend.registry": "Grün. Aus verifizierten Einträgen abgeleitet",
   "field.creative.practice.ownerGuidance":
     "Praktiken aus verifizierten Register-Einträgen abgeleitet. Deklarieren Sie Praktiken im Studio.",
   "field.creative.discoveryHeading": "Weiter entdecken",
   "field.creative.discoveryLede":
-    "Zwischen Register-Einträgen, Profilen und Verifizierung navigieren — nur deterministische Links.",
+    "Zwischen Register-Einträgen, Profilen und Verifizierung navigieren. Nur deterministische Links.",
   "field.creative.link.recordExplorer": "Record Explorer",
   "field.creative.link.creativeExplorer": "Creative Explorer",
   "field.creative.link.organisation": "Organisationsprofil",
@@ -4402,7 +4487,7 @@ const DE: Record<MessageKey, string> = {
   "field.creative.viewProfile": "Profil ansehen",
   "field.creative.stewardship.heading": "Stewardship-Checkliste",
   "field.creative.stewardship.lede":
-    "Nur für Sie sichtbar — verbessern Sie die Auffindbarkeit im Studio. Kein öffentlicher Score.",
+    "Nur für Sie sichtbar. Verbessern Sie die Auffindbarkeit im Studio. Kein öffentlicher Score.",
   "field.creative.stewardship.studioLink": "Studio öffnen",
   "field.creative.stewardship.item.bio": "Öffentliche Bio hinzufügen",
   "field.creative.stewardship.item.declaredPractice": "Mindestens eine Praxis deklarieren",
@@ -4424,7 +4509,7 @@ const DE: Record<MessageKey, string> = {
   "field.organisation.participationHeading": "Register-Beteiligung",
   "field.organisation.discoveryHeading": "Weiter erkunden",
   "field.organisation.discoveryLede":
-    "Wechseln Sie zwischen Register-Einträgen, öffentlichen Profilen und Verifizierung — nur deterministische Links, keine Empfehlungen.",
+    "Wechseln Sie zwischen Register-Einträgen, öffentlichen Profilen und Verifizierung. Nur deterministische Links, keine Empfehlungen.",
   "field.organisation.link.recordExplorer": "Eintrags-Explorer",
   "field.organisation.link.organisationExplorer": "Organisations-Explorer",
   "field.organisation.link.creativeExplorer": "Creative-Explorer",
@@ -4432,7 +4517,7 @@ const DE: Record<MessageKey, string> = {
   "field.organisation.viewProfile": "Profil ansehen",
   "field.organisation.stewardship.heading": "Stewardship-Checkliste",
   "field.organisation.stewardship.lede":
-    "Nur für Sie sichtbar — verbessern Sie die Auffindbarkeit im Studio. Kein öffentlicher Score.",
+    "Nur für Sie sichtbar. Verbessern Sie die Auffindbarkeit im Studio. Kein öffentlicher Score.",
   "field.organisation.stewardship.studioLink": "Studio öffnen",
   "field.organisation.stewardship.item.description": "Öffentliche Beschreibung hinzufügen",
   "field.organisation.stewardship.item.location": "Öffentlichen Standort hinzufügen",
@@ -4456,7 +4541,7 @@ const DE: Record<MessageKey, string> = {
   "field.verify.record.title": "Eintragsverifizierung",
   "field.verify.hub.title": "Register-Eintrag verifizieren",
   "field.verify.hub.lede":
-    "The Field zeigt Vertrauen aus dem Register — Verifizierungsstatus, Beteiligung und Zertifikatsstatus. The Field erteilt keine Verifizierung; es liest Register-Wahrheit.",
+    "The Field zeigt Vertrauen aus dem Register · Verifizierungsstatus, Beteiligung und Zertifikatsstatus. The Field erteilt keine Verifizierung; es liest Register-Wahrheit.",
   "field.verify.hub.lookupHeading": "Per Register-ID prüfen",
   "field.verify.hub.lookupIntro":
     "Geben Sie die Registry ID eines Eintrags ein, um den öffentlichen Verifizierungsstatus anzuzeigen.",
@@ -4469,21 +4554,21 @@ const DE: Record<MessageKey, string> = {
   "field.verify.hub.hierarchyTitle": "Reihenfolge der Vertrauenssignale",
   "field.verify.hub.hierarchyIntro":
     "Lesen Sie Signale auf The Field in dieser Reihenfolge. Register-Fakten haben Vorrang vor Profiltext.",
-  "field.verify.hub.tier1.label": "Stufe 1 — Register-Eintrag",
+  "field.verify.hub.tier1.label": "Stufe 1 · Register-Eintrag",
   "field.verify.hub.tier1.body":
     "Registry ID, Verifizierungsstatus des Eintrags und Künstlerbestätigung im Register.",
-  "field.verify.hub.tier2.label": "Stufe 2 — Organisation & verifizierte Werke",
+  "field.verify.hub.tier2.label": "Stufe 2 · Organisation & verifizierte Werke",
   "field.verify.hub.tier2.body":
-    "Organisations-Verifizierung und sachliche Zähler verifizierter Werke — keine Popularitätswerte.",
-  "field.verify.hub.tier3.label": "Stufe 3 — Zertifikat",
+    "Organisations-Verifizierung und sachliche Zähler verifizierter Werke. Keine Popularitätswerte.",
+  "field.verify.hub.tier3.label": "Stufe 3 · Zertifikat",
   "field.verify.hub.tier3.body":
     "Ob ein Zertifikat für einen verifizierten Eintrag auf Datei ist oder widerrufen wurde.",
   "field.verify.hub.section.verification.title": "Was Verifizierung bedeutet",
   "field.verify.hub.section.verification.body":
-    "Verifizierung ist die Bestätigung des Registers, dass ein Eintrag definierte Bestätigungen auf Datei hat — ledger-gestützt, kein Social-Badge.",
+    "Verifizierung ist die Bestätigung des Registers, dass ein Eintrag definierte Bestätigungen auf Datei hat. Ledger-gestützt, kein Social-Badge.",
   "field.verify.hub.section.provenance.title": "Was Provenienz bedeutet",
   "field.verify.hub.section.provenance.body":
-    "Provenienz ist die chronologische Kontinuität eines Register-Eintrags — bestätigte Ereignisse auf Datei.",
+    "Provenienz ist die chronologische Kontinuität eines Register-Eintrags. Bestätigte Ereignisse auf Datei.",
   "field.verify.hub.section.registryRecord.title": "Was Register-Einträge sind",
   "field.verify.hub.section.registryRecord.body":
     "Ein Register-Eintrag ist der kanonische Kontinuitätseintrag für ein Werk. The Field liest; das Register bleibt System of Record.",
@@ -4500,7 +4585,7 @@ const DE: Record<MessageKey, string> = {
   "field.record.title": "Register-Eintrag",
   "field.record.discoveryHeading": "Weiter entdecken",
   "field.record.discoveryLede":
-    "Wechseln Sie zwischen Record Explorer, öffentlichen Profilen und Verifizierung — nur deterministische Links, keine Empfehlungen.",
+    "Wechseln Sie zwischen Record Explorer, öffentlichen Profilen und Verifizierung. Nur deterministische Links, keine Empfehlungen.",
   "field.record.link.explorer": "Record Explorer",
   "field.record.link.verify": "Verifizierung prüfen",
   "field.record.link.ledger": "Register-Ledger öffnen",
@@ -4511,7 +4596,7 @@ const DE: Record<MessageKey, string> = {
     "Diese Field-Zusammenfassung liest aus dem Register. Das Register-Ledger bleibt das System of Record für Verifizierung, Provenienz und Chronologie.",
   "field.context.sectionHeading": "Beziehungskontext",
   "field.context.sectionLede":
-    "Verbindungen unten stammen aus Register-Belegen — keine Empfehlungen, Rankings oder sozialen Links.",
+    "Verbindungen unten stammen aus Register-Belegen. Keine Empfehlungen, Rankings oder sozialen Links.",
   "field.context.record.sameCreative.heading": "Weitere Werke von {name}",
   "field.context.record.sameCreative.lede":
     "Weitere Register-Einträge desselben Creatives, sortiert nach Verifizierung und Aktualität.",
@@ -4520,7 +4605,7 @@ const DE: Record<MessageKey, string> = {
     "Weitere Einträge mit Verbindung zu {name} über Vertretung oder Ablage im Register.",
   "field.context.record.sharedMedium.heading": "Einträge mit diesem Medium",
   "field.context.record.sharedMedium.lede":
-    "Weitere Einträge mit exakt dem Medium „{medium}“ — keine algorithmische Ähnlichkeit.",
+    "Weitere Einträge mit exakt dem Medium „{medium}“. Keine algorithmische Ähnlichkeit.",
   "field.context.record.practice.heading": "Praxis-Kontext",
   "field.context.record.practice.lede":
     "Creatives in {practice} über den Creative Explorer filtern.",
@@ -4532,7 +4617,7 @@ const DE: Record<MessageKey, string> = {
     "Institutionsbezogene Vertretung verbindet dieses Creative mit {name}.",
   "field.context.creative.practice.heading": "Praxis-Entdeckung",
   "field.context.creative.practice.lede":
-    "Weitere Creatives in {practice} — gefiltert im Creative Explorer.",
+    "Weitere Creatives in {practice}. Gefiltert im Creative Explorer.",
   "field.context.organisation.roster.heading": "Vertretene Creatives",
   "field.context.organisation.roster.lede":
     "Register-verknüpfte Roster-Einträge für {name} mit öffentlichen Profilen.",
@@ -4547,7 +4632,7 @@ const DE: Record<MessageKey, string> = {
   "field.context.meta.verified": "Verifiziert",
   "field.context.meta.workCount": "{count} Werke on file",
   "ecosystem.workspace.studio": "Studio",
-  "ecosystem.workspace.organisationStudio": "Organisations-Studio",
+  "ecosystem.workspace.organisationStudio": "Studio",
   "getStarted.pathTooltip":
     "Jeder Weg öffnet den passenden Studio-Arbeitsbereich für Ihren Teilnehmertyp. Darunter: eine Chronologie pro Werk, im Register dokumentiert.",
   "account.hero.organisationIdentity": "Organisationsidentität",
@@ -4573,15 +4658,21 @@ const DE: Record<MessageKey, string> = {
   "footer.regionLabel": "Region & Sprache",
   "footer.blurb":
     "Ein kryptografisch verifizierbares Register für zeitgenössische Kunst, das Urheberschaft und Provenienz schützt.",
-  "landing.hero.title": "Infrastruktur für kulturelles Gedächtnis",
+  "landing.hero.title": "Register-Infrastruktur für zeitgenössische Kultur",
   "landing.hero.lede":
-    "Ein vertrauenswürdiges Provenienzregister für zeitgenössisches Kulturwerk — Urheberschaft, Eigentum und historische Dokumentation in einem sich entwickelnden Archiv.",
-  "landing.hero.browseCatalogue": "Öffentliche Galerie durchsuchen",
+    "RROWM registriert Werke, verifiziert Provenienz, veröffentlicht Präsenz auf The Field und unterstützt kulturelle Transaktionen über Deals.",
+  "landing.hero.audience":
+    "Für Künstler, Sammler, Galerien und kulturelle Institutionen.",
+  "landing.hero.why":
+    "Ein System der Akte, damit Urheberschaft, Verwaltung, Präsenz und wirtschaftliche Aktivität verbunden bleiben.",
+  "landing.hero.betaStory":
+    "Register · Verify · Build presence · Transact",
+  "landing.hero.browseCatalogue": "The Field erkunden",
   "landing.hero.takePart": "Mitmachen",
-  "landing.hero.overview": "Überblick",
-  "landing.cta.title": "An der Kontinuität eines Werks mitwirken",
-  "landing.cta.takePart": "Mitmachen →",
-  "landing.cta.browseRegistry": "Register durchsuchen",
+  "landing.hero.overview": "So funktioniert es",
+  "landing.cta.title": "Mit RROWM beginnen",
+  "landing.cta.takePart": "Mitmachen",
+  "landing.cta.browseRegistry": "Register-Einträge durchsuchen",
   "landing.thesis.title":
     "Kontinuität gehört zum Werk, nicht verstreut in Dateien",
   "landing.thesis.card1Title": "Aktueller Stand",
@@ -4593,20 +4684,19 @@ const DE: Record<MessageKey, string> = {
   "landing.thesis.card3Title": "Rollen der Teilnehmenden",
   "landing.thesis.card3Body":
     "Institutionelle Zuordnung und Sammler-Studio-Aktivität erscheinen dort, wo Teilnehmende sie einreichen.",
-  "landing.flow.title":
-    "Ein Faden für das Werk, von der ersten Listung bis zum Nächsten",
-  "landing.flow.s1Label": "Werk benennen",
+  "landing.flow.title": "Vier Ebenen, die zusammenwirken",
+  "landing.flow.s1Label": "Register",
   "landing.flow.s1Detail":
-    "Einmal listen. Das Stück erhält eine dauerhafte Identität, zu der Künstler, Galerien und Sammler zurückkehren.",
-  "landing.flow.s2Label": "Relevantes anfügen",
+    "Jedes Werk erhält eine dauerhafte Register-Identität, zu der Künstler, Galerien und Sammler zurückkehren.",
+  "landing.flow.s2Label": "Verify",
   "landing.flow.s2Detail":
-    "Zertifikate, Galeriezuordnung, Custody-Notizen: alles landet im selben Eintrag statt in verstreuten Dateien.",
-  "landing.flow.s3Label": "Gegenwart klar sehen",
+    "Urheberschaft, Verwaltung und Chronologie stärken sich durch Belege in der Akte.",
+  "landing.flow.s3Label": "Build presence",
   "landing.flow.s3Detail":
-    "Was heute öffentlich ist, ist leicht zu lesen. Privates bleibt hinter der Anmeldung, bis Sie es freigeben.",
-  "landing.flow.s4Label": "Den Faden wachsen lassen",
+    "The Field macht verifizierte kulturelle Aktivität zu öffentlicher Reputation und auffindbaren Profilen.",
+  "landing.flow.s4Label": "Transact",
   "landing.flow.s4Detail":
-    "Jeder Verkauf, Transfer oder jede Ausstellung fügt der gleichen Geschichte eine weitere Zeile hinzu.",
+    "Deals ermöglichen Kommissionen, Erwerb, Vertretung und Lizenzierung mit strukturierten Bedingungen.",
   "landing.workspace.title": "Wo Bestände in der Akte bleiben",
   "landing.workspace.takePart": "Mitmachen",
   "landing.workspace.viewPublic": "Öffentliche Ebene ansehen",
@@ -4780,6 +4870,9 @@ const DE: Record<MessageKey, string> = {
   "studio.nav.artworks": "Werke",
   "studio.nav.certificates": "Zertifikate",
   "studio.nav.ownership": "Eigentum",
+  "studio.nav.deals": "Deals",
+  "studio.nav.inbox": "Posteingang",
+  "studio.nav.rights": "Rechte-Register",
   "studio.shell.activity": "Aktivität",
   "studio.shell.recentNotes": "Neueste Notizen",
   "studio.shell.catalogueActivity": "Katalogaktivität",
@@ -4806,7 +4899,7 @@ const DE: Record<MessageKey, string> = {
   "registry.record.provenance": "Provenienz",
   "registry.record.certStatusTitle": "Zertifikatsstatus",
   "registry.record.verificationTitle": "Verifikation",
-  "gallery.nav.studio": "Überblick",
+  "gallery.nav.studio": "Studio",
   "gallery.nav.recordDepth": "Eintragstiefe",
   "gallery.nav.roster": "Künstler",
   "gallery.nav.catalogue": "Werke",
@@ -5011,7 +5104,7 @@ const DE: Record<MessageKey, string> = {
   "gallery.invitations.copyDraft": "Entwurf kopieren",
   "gallery.invitations.representationSectionTitle": "Repräsentationseinladungen",
   "gallery.invitations.representationSectionDesc":
-    "Laden Sie Künstler ein, sich allgemein Ihrer Institution anzuschließen — getrennt von werksspezifischer Authentifizierung.",
+    "Laden Sie Künstler ein, sich allgemein Ihrer Institution anzuschließen. Getrennt von werksspezifischer Authentifizierung.",
   "gallery.artworkAuth.sectionTitle": "Werkauthentifizierungseinladungen",
   "gallery.artworkAuth.sectionDescIntro":
     "Kontinuitätsverlauf für bestimmte kanonische Einträge.",
@@ -5225,7 +5318,7 @@ const DE: Record<MessageKey, string> = {
     "Mit Ihrer Praxis verbundene Einträge authentifizieren und vertiefen",
   "gallery.email.artistInvite.kicker": "Kanonischer Eintrag · Teilnehmerattestierung",
   "gallery.email.artistInvite.body1":
-    "{galleryName} nimmt an der Chronologie in der Akte für mit Ihrer Praxis verbundene Werke teil. {inviteRecordExists} Sie sind eingeladen, Urheberschaft zu authentifizieren und den dokumentarischen Eintrag zu vertiefen — nicht einen institutionellen Upload zu genehmigen.",
+    "{galleryName} nimmt an der Chronologie in der Akte für mit Ihrer Praxis verbundene Werke teil. {inviteRecordExists} Sie sind eingeladen, Urheberschaft zu authentifizieren und den dokumentarischen Eintrag zu vertiefen. Nicht einen institutionellen Upload zu genehmigen.",
   "gallery.email.artistInvite.body2":
     "Nach dem Beitritt: kanonischen Eintrag prüfen, Urheberschaft authentifizieren, künstlerische Details ergänzen und Kontinuitätsereignisse beitragen. {recordDeepensOverTime}.",
   "gallery.email.artistInvite.body3":
@@ -5289,7 +5382,7 @@ const DE: Record<MessageKey, string> = {
   "collector.shell.loading": "Wird geladen…",
   "collector.hero.fallbackCollection": "Ihre Sammlung",
   "collector.hero.tooltip":
-    "Ein ruhiger Raum für das, was Sie halten. Eigentumsstatus, Aufmerksamkeitspunkte und Historie — ohne Katalog-Marketing.",
+    "Ein ruhiger Raum für das, was Sie halten. Eigentumsstatus, Aufmerksamkeitspunkte und Historie. Ohne Katalog-Marketing.",
   "collector.hero.ownershipOnRecord": "Eigentum in der Akte",
   "collector.hero.viewWorks": "Werke ansehen",
   "collector.hero.inStewardship": "In Ihrem Studio",
@@ -5333,6 +5426,8 @@ const DE: Record<MessageKey, string> = {
   "collector.overview.openClaims": "{count} offene Eigentums-{units}.",
   "collector.overview.withCertificate":
     "{count} {units} mit Zertifikat in der Akte.",
+  "collector.overview.recordHealthSubtitle":
+    "Tippen für Verifizierungslücken, Zertifikate und Details zur Eintragsgesundheit.",
   "collector.word.work": "Werk",
   "collector.word.works": "Werke",
   "collector.word.record": "Eintrag",
@@ -5581,7 +5676,9 @@ const DE: Record<MessageKey, string> = {
     "Übertragungen, Haltungen und Bewegung in Ihrem Katalog.",
   "studio.overview.totalTransfers": "Übertragungen gesamt",
   "studio.overview.worksYouHold": "Werke in Ihrer Obhut",
+  "studio.overview.worksRepresented": "Werke in der Akte",
   "studio.overview.avgHoldDays": "Ø Haltedauer (Tage)",
+  "studio.overview.avgDaysOnRegistry": "Ø Tage im Register",
   "studio.overview.catalogueHighlights.title": "Katalog-Highlights",
   "studio.overview.catalogueHighlights.subtitle":
     "Herausragende Einträge aus Ihrer Registeraktivität.",
@@ -5589,10 +5686,12 @@ const DE: Record<MessageKey, string> = {
   "studio.overview.mostTransferredHint": "Höchste Übertragungszahl.",
   "studio.overview.longestHeld": "Am längsten gehalten",
   "studio.overview.longestHeldHint":
-    "Längste Spanne zwischen erster und letzter Übertragung.",
+    "Längste Haltedauer im Eigentumsregister.",
+  "studio.overview.longestOnRegistryHint":
+    "Am längsten im Studio-Katalog registriert.",
   "studio.overview.fastestAppreciating": "Stärkste Wertsteigerung",
   "studio.overview.fastestAppreciatingHint":
-    "Größter %-Gewinn vom Anfangs- zum Endwert (gleiche Währung).",
+    "Größter %-Gewinn vom frühesten zum neuesten Wert-Eintrag (gleiche Währung).",
   "studio.records.noAwaitingAttestation":
     "Keine Einträge warten auf Ihre Bestätigung. Wenn ein kanonischer Eintrag mit Ihrer Praxis verknüpft wird, erscheint er hier zur Authentifizierung und Vertiefung.",
   "studio.records.institutionalRelationship": "Institutionelle Beziehung",
@@ -5824,6 +5923,7 @@ const DE: Record<MessageKey, string> = {
   "studio.insight.title.health": "Aktenzustand",
   "studio.insight.title.valueArtist": "Wertentwicklung",
   "studio.insight.title.valueGallery": "Deklarierter Wert",
+  "studio.insight.title.valueCollector": "Sammlungswert",
   "studio.insight.line.worksArtist": "Werke",
   "studio.insight.line.worksGallery": "Kumulierte Werke",
   "studio.insight.breakdown.totalWorks": "Werke gesamt",
@@ -5837,6 +5937,19 @@ const DE: Record<MessageKey, string> = {
   "studio.insight.breakdown.withCertificate": "Mit Zertifikat",
   "studio.insight.breakdown.missingVerification": "Verifizierung fehlt",
   "studio.insight.breakdown.latestDeclared": "Zuletzt deklariert ({currency})",
+  "studio.insight.breakdown.avgChange": "Ø Wertänderung",
+  "studio.insight.breakdown.worksIncreased": "Werke mit Wertsteigerung",
+  "studio.insight.breakdown.worksDeclined": "Werke mit Wertverlust",
+  "studio.insight.breakdown.totalTransfers": "Übertragungen gesamt",
+  "studio.insight.breakdown.worksHeld": "Werke in Ihrer Obhut",
+  "studio.insight.breakdown.worksRepresented": "Werke in der Akte",
+  "studio.insight.breakdown.avgHoldDays": "Ø Haltedauer (Tage)",
+  "studio.insight.breakdown.avgDaysOnRegistry": "Ø Tage im Register",
+  "studio.insight.breakdown.mostTransferred": "Am häufigsten übertragen",
+  "studio.insight.breakdown.longestHeld": "Am längsten gehalten",
+  "studio.insight.breakdown.fastestAppreciating": "Stärkste Wertsteigerung",
+  "studio.insight.breakdown.unresolvedSales": "Offene Verkäufe",
+  "studio.insight.breakdown.staleRecords": "Veraltete Einträge (24+ Mon.)",
   "studio.insight.bar.fullyVerified": "Vollständig verifiziert",
   "studio.insight.bar.certified": "Zertifiziert",
   "studio.insight.bar.incomplete": "Unvollständig",
@@ -5850,6 +5963,10 @@ const DE: Record<MessageKey, string> = {
     "Die Werte sind die zuletzt deklarierten Beträge pro Währung aus Ihren Wert-Ereignissen (gleiche Basis wie die Diagrammserie), nicht eine Summe aller aktuellen Listenpreise.",
   "studio.insight.note.valueBasisGallery":
     "Die Werte sind die zuletzt deklarierten Beträge pro Währung aus Wert-Ereignissen (gleiche Basis wie die Diagrammserie), nicht eine Summe aller aktuellen Listenpreise.",
+  "studio.insight.note.valueBasisCollector":
+    "Die Werte sind die zuletzt deklarierten Beträge pro Währung aus den Wert-Ereignissen Ihrer Sammlung (gleiche Basis wie die Diagrammserie).",
+  "studio.insight.note.valueProgressionBasis":
+    "Die Entwicklung vergleicht das früheste und neueste Wert-Ereignis pro Werk in derselben Währung. Werke mit nur einer Wertangabe sind ausgeschlossen.",
   "studio.insight.subtitle.artist.catalogueSteadyGrowth":
     "Der Katalog ist stetig gewachsen.",
   "studio.insight.subtitle.artist.clearOwnership":
@@ -5913,6 +6030,8 @@ const DE: Record<MessageKey, string> = {
   "studio.insight.subtitle.collector.value.steady":
     "Erfasste Werte bleiben stabil.",
   "studio.activity.artworkRegistered": "Werk registriert: {title}",
+  "studio.activity.institutionArtworkRegistered":
+    "Katalogwerk erfasst: {title}{registrySuffix}",
   "studio.activity.valueUpdated": "Wert aktualisiert: {title}",
   "studio.activity.ownershipConfirmed": "Eigentum bestätigt: {title}",
   "studio.activity.ownershipClaimRejected": "Eigentumsanspruch abgelehnt",
@@ -5967,10 +6086,10 @@ const FR: Record<MessageKey, string> = {
   "ecosystem.surface.registry": "Registre",
   "field.home.title": "Découverte et présence publiques",
   "field.home.lede":
-    "The Field est l’endroit où parcourir les Creatives, les Organisations et les entrées du Registre — des surfaces en lecture seule qui reflètent ce que les participants choisissent de rendre public. Le Studio reste l’espace d’édition de l’identité et de la gestion.",
+    "The Field est l’endroit où parcourir les Creatives, les Organisations et les entrées du Registre. Des surfaces en lecture seule qui reflètent ce que les participants choisissent de rendre public. Le Studio reste l’espace d’édition de l’identité et de la gestion.",
   "field.home.explorerHeading": "Explorateur",
   "field.home.explorerBody":
-    "Trois vues index — Creatives, Organisations et entrées du Registre — avec filtres et pagination. Pas de recommandations ni de classement payant.",
+    "Trois vues index · Creatives, Organisations et entrées du Registre. Avec filtres et pagination. Pas de recommandations ni de classement payant.",
   "field.home.verifyHeading": "Vérifier",
   "field.home.verifyBody":
     "Consulter le statut de vérification et de certificat d’une entrée du Registre via son identifiant Registry.",
@@ -5981,9 +6100,10 @@ const FR: Record<MessageKey, string> = {
   "field.explorer.tab.creatives": "Creatives",
   "field.explorer.tab.organisations": "Organisations",
   "field.explorer.tab.records": "Entrées",
+  "field.explorer.tab.opportunities": "Opportunités",
   "field.explorer.hub.title": "Explorateur",
   "field.explorer.hub.lede":
-    "Parcourez les entrées du Registre, les Creatives publics et les Organisations. La découverte suit vos filtres et l’ordre alphabétique — pas de recommandations ni de placement payant.",
+    "Parcourez les entrées du Registre, les Creatives publics et les Organisations. La découverte suit vos filtres et l’ordre alphabétique. Pas de recommandations ni de placement payant.",
   "field.explorer.hub.searchLabel": "Rechercher dans The Field",
   "field.explorer.hub.searchPlaceholder": "ID registre, titre ou nom…",
   "field.explorer.hub.searchSubmit": "Rechercher",
@@ -5994,7 +6114,7 @@ const FR: Record<MessageKey, string> = {
   "field.explorer.link.verifyHub": "Hub de vérification",
   "field.explorer.wayfinding.heading": "Continuer l’exploration",
   "field.explorer.wayfinding.lede":
-    "Naviguez entre entrées du Registre, profils publics et vérification — liens déterministes uniquement, pas de recommandations.",
+    "Naviguez entre entrées du Registre, profils publics et vérification. Liens déterministes uniquement, pas de recommandations.",
   "field.explorer.wayfinding.hub": "Hub explorateur",
   "field.explorer.records.orientation": "Parcourir les entrées du Registre au dossier.",
   "field.explorer.creatives.orientation": "Découvrir les Creatives et leur pratique.",
@@ -6058,7 +6178,7 @@ const FR: Record<MessageKey, string> = {
   "field.explorer.records.empty.browseAll": "Parcourir toutes les entrées",
   "field.explorer.creatives.headline": "Découvrir les Creatives",
   "field.explorer.creatives.lede":
-    "Parcourez les profils Creative publics sur The Field — pratique, vérification et empreinte registre. Découverte uniquement.",
+    "Parcourez les profils Creative publics sur The Field. Pratique, vérification et empreinte registre. Découverte uniquement.",
   "field.explorer.creatives.searching": "recherche",
   "field.explorer.creatives.filtered": "filtres actifs",
   "field.explorer.creatives.filter.search": "Rechercher par nom",
@@ -6079,13 +6199,13 @@ const FR: Record<MessageKey, string> = {
   "field.creative.participationHeading": "Participation au registre",
   "field.creative.practice.declaredHeading": "Pratiques déclarées",
   "field.creative.practice.registryHeading": "Depuis des entrées vérifiées",
-  "field.creative.practice.legend.declared": "Puce neutre — déclarée dans le Studio",
-  "field.creative.practice.legend.registry": "Puce verte — inférée des entrées vérifiées",
+  "field.creative.practice.legend.declared": "Puce neutre. Déclarée dans le Studio",
+  "field.creative.practice.legend.registry": "Puce verte. Inférée des entrées vérifiées",
   "field.creative.practice.ownerGuidance":
     "Pratiques inférées des entrées vérifiées. Ajoutez des pratiques déclarées dans le Studio.",
   "field.creative.discoveryHeading": "Poursuivre l’exploration",
   "field.creative.discoveryLede":
-    "Naviguez entre entrées, profils et vérification — liens déterministes uniquement.",
+    "Naviguez entre entrées, profils et vérification. Liens déterministes uniquement.",
   "field.creative.link.recordExplorer": "Explorateur d’entrées",
   "field.creative.link.creativeExplorer": "Explorateur Creatives",
   "field.creative.link.organisation": "Profil Organisation",
@@ -6094,7 +6214,7 @@ const FR: Record<MessageKey, string> = {
   "field.creative.viewProfile": "Voir le profil",
   "field.creative.stewardship.heading": "Liste de stewardship",
   "field.creative.stewardship.lede":
-    "Visible par vous seul — améliorez la découvrabilité depuis le Studio. Aucun score public.",
+    "Visible par vous seul. Améliorez la découvrabilité depuis le Studio. Aucun score public.",
   "field.creative.stewardship.studioLink": "Ouvrir le Studio",
   "field.creative.stewardship.item.bio": "Ajouter une bio publique",
   "field.creative.stewardship.item.declaredPractice": "Déclarer au moins une pratique",
@@ -6116,7 +6236,7 @@ const FR: Record<MessageKey, string> = {
   "field.organisation.participationHeading": "Participation au registre",
   "field.organisation.discoveryHeading": "Continuer l’exploration",
   "field.organisation.discoveryLede":
-    "Naviguez entre entrées du Registre, profils publics et vérification — liens déterministes uniquement, pas de recommandations.",
+    "Naviguez entre entrées du Registre, profils publics et vérification. Liens déterministes uniquement, pas de recommandations.",
   "field.organisation.link.recordExplorer": "Explorateur d’entrées",
   "field.organisation.link.organisationExplorer": "Explorateur d’Organisations",
   "field.organisation.link.creativeExplorer": "Explorateur de Creatives",
@@ -6124,7 +6244,7 @@ const FR: Record<MessageKey, string> = {
   "field.organisation.viewProfile": "Voir le profil",
   "field.organisation.stewardship.heading": "Liste de stewardship",
   "field.organisation.stewardship.lede":
-    "Visible par vous seul — améliorez la découvrabilité depuis le Studio. Aucun score public.",
+    "Visible par vous seul. Améliorez la découvrabilité depuis le Studio. Aucun score public.",
   "field.organisation.stewardship.studioLink": "Ouvrir le Studio",
   "field.organisation.stewardship.item.description": "Ajouter une description publique",
   "field.organisation.stewardship.item.location": "Ajouter un lieu public",
@@ -6148,7 +6268,7 @@ const FR: Record<MessageKey, string> = {
   "field.verify.record.title": "Vérification d’entrée",
   "field.verify.hub.title": "Vérifier une entrée du Registre",
   "field.verify.hub.lede":
-    "The Field affiche la confiance du registre — statut de vérification, participation et certificat. The Field ne vérifie pas ; il lit le registre.",
+    "The Field affiche la confiance du registre. Statut de vérification, participation et certificat. The Field ne vérifie pas ; il lit le registre.",
   "field.verify.hub.lookupHeading": "Vérifier par Registry ID",
   "field.verify.hub.lookupIntro":
     "Saisissez l’identifiant Registry d’une entrée pour voir son statut public.",
@@ -6161,21 +6281,21 @@ const FR: Record<MessageKey, string> = {
   "field.verify.hub.hierarchyTitle": "Ordre des signaux de confiance",
   "field.verify.hub.hierarchyIntro":
     "Interprétez les signaux dans cet ordre sur The Field. Les faits du registre priment sur le récit du profil.",
-  "field.verify.hub.tier1.label": "Niveau 1 — Entrée du registre",
+  "field.verify.hub.tier1.label": "Niveau 1 · Entrée du registre",
   "field.verify.hub.tier1.body":
     "Registry ID, statut de vérification de l’entrée et confirmation de l’artiste.",
-  "field.verify.hub.tier2.label": "Niveau 2 — Organisation et œuvres vérifiées",
+  "field.verify.hub.tier2.label": "Niveau 2 · Organisation et œuvres vérifiées",
   "field.verify.hub.tier2.body":
-    "Badge d’organisation vérifiée et nombre d’œuvres vérifiées — pas un score de popularité.",
-  "field.verify.hub.tier3.label": "Niveau 3 — Certificat",
+    "Badge d’organisation vérifiée et nombre d’œuvres vérifiées. Pas un score de popularité.",
+  "field.verify.hub.tier3.label": "Niveau 3 · Certificat",
   "field.verify.hub.tier3.body":
     "Certificat enregistré ou révoqué pour une entrée vérifiée.",
   "field.verify.hub.section.verification.title": "Ce que signifie la vérification",
   "field.verify.hub.section.verification.body":
-    "La vérification est l’attestation du registre qu’une entrée a des confirmations sur dossier — fondée sur le registre.",
+    "La vérification est l’attestation du registre qu’une entrée a des confirmations sur dossier. Fondée sur le registre.",
   "field.verify.hub.section.provenance.title": "Ce que signifie la provenance",
   "field.verify.hub.section.provenance.body":
-    "La provenance est la continuité chronologique d’une entrée — événements confirmés sur dossier.",
+    "La provenance est la continuité chronologique d’une entrée · événements confirmés sur dossier.",
   "field.verify.hub.section.registryRecord.title": "Ce que sont les entrées du registre",
   "field.verify.hub.section.registryRecord.body":
     "Une entrée du registre est l’enregistrement canonique d’une œuvre. The Field lit ; le registre reste la source de vérité.",
@@ -6192,7 +6312,7 @@ const FR: Record<MessageKey, string> = {
   "field.record.title": "Entrée du Registre",
   "field.record.discoveryHeading": "Poursuivre l’exploration",
   "field.record.discoveryLede":
-    "Naviguez entre l’explorateur d’entrées, les profils publics et la vérification — liens déterministes uniquement, pas de recommandations.",
+    "Naviguez entre l’explorateur d’entrées, les profils publics et la vérification. Liens déterministes uniquement, pas de recommandations.",
   "field.record.link.explorer": "Explorateur d’entrées",
   "field.record.link.verify": "Vérifier le statut",
   "field.record.link.ledger": "Ouvrir le registre ledger",
@@ -6203,7 +6323,7 @@ const FR: Record<MessageKey, string> = {
     "Ce résumé Field lit le Registre. Le ledger du Registre reste le système de référence pour la vérification, la provenance et la chronologie.",
   "field.context.sectionHeading": "Contexte relationnel",
   "field.context.sectionLede":
-    "Les liens ci-dessous proviennent de preuves du Registre — pas de recommandations, classements ou liens sociaux.",
+    "Les liens ci-dessous proviennent de preuves du Registre. Pas de recommandations, classements ou liens sociaux.",
   "field.context.record.sameCreative.heading": "Autres œuvres de {name}",
   "field.context.record.sameCreative.lede":
     "Autres entrées du Registre du même Creative, triées par vérification puis récence.",
@@ -6212,7 +6332,7 @@ const FR: Record<MessageKey, string> = {
     "Autres entrées liées à {name} via représentation ou dépôt au Registre.",
   "field.context.record.sharedMedium.heading": "Entrées avec ce medium",
   "field.context.record.sharedMedium.lede":
-    "Autres entrées partageant exactement le medium « {medium} » — pas de similarité algorithmique.",
+    "Autres entrées partageant exactement le medium « {medium} ». Pas de similarité algorithmique.",
   "field.context.record.practice.heading": "Contexte de pratique",
   "field.context.record.practice.lede":
     "Parcourir les Creatives en {practice} via le filtre pratique de l’Explorer.",
@@ -6224,7 +6344,7 @@ const FR: Record<MessageKey, string> = {
     "La représentation institutionnelle relie ce Creative à {name}.",
   "field.context.creative.practice.heading": "Découverte par pratique",
   "field.context.creative.practice.lede":
-    "Explorer d’autres Creatives en {practice} — filtrés dans l’Explorer Creative.",
+    "Explorer d’autres Creatives en {practice}. Filtrés dans l’Explorer Creative.",
   "field.context.organisation.roster.heading": "Creatives représentés",
   "field.context.organisation.roster.lede":
     "Entrées de roster liées au Registre pour {name} avec profils publics.",
@@ -6239,7 +6359,7 @@ const FR: Record<MessageKey, string> = {
   "field.context.meta.verified": "Vérifié",
   "field.context.meta.workCount": "{count} œuvres on file",
   "ecosystem.workspace.studio": "Studio",
-  "ecosystem.workspace.organisationStudio": "Studio Organisation",
+  "ecosystem.workspace.organisationStudio": "Studio",
   "getStarted.pathTooltip":
     "Chaque parcours ouvre le bon espace Studio pour votre type de participant. Sous-jacent : une chronologie par œuvre, au dossier dans le Registre.",
   "account.hero.organisationIdentity": "Identité organisation",
@@ -6265,15 +6385,21 @@ const FR: Record<MessageKey, string> = {
   "footer.regionLabel": "Région et langue",
   "footer.blurb":
     "Un registre vérifiable cryptographiquement pour l'art contemporain, protégeant la paternité et la provenance.",
-  "landing.hero.title": "Infrastructure pour la mémoire culturelle",
+  "landing.hero.title": "Infrastructure de registre pour la culture contemporaine",
   "landing.hero.lede":
-    "Un registre de provenance de confiance pour l'œuvre culturelle contemporaine, reliant paternité, propriété et dossier historique dans une archive évolutive unique.",
-  "landing.hero.browseCatalogue": "Parcourir la galerie publique",
+    "RROWM enregistre les œuvres, vérifie la provenance, publie la présence sur The Field et soutient les transactions culturelles via Deals.",
+  "landing.hero.audience":
+    "Pour les artistes, collectionneurs, galeries et institutions culturelles.",
+  "landing.hero.why":
+    "Un système de référence unique pour aligner paternité, gestion, présence et activité commerciale.",
+  "landing.hero.betaStory":
+    "Register · Verify · Build presence · Transact",
+  "landing.hero.browseCatalogue": "Explorer The Field",
   "landing.hero.takePart": "Participer",
-  "landing.hero.overview": "Aperçu",
-  "landing.cta.title": "Rejoindre la continuité d'une œuvre",
-  "landing.cta.takePart": "Participer →",
-  "landing.cta.browseRegistry": "Parcourir le registre",
+  "landing.hero.overview": "Comment ça marche",
+  "landing.cta.title": "Commencer sur RROWM",
+  "landing.cta.takePart": "Participer",
+  "landing.cta.browseRegistry": "Parcourir les entrées du registre",
   "landing.thesis.title":
     "La continuité appartient à l'œuvre, pas dispersée dans des fichiers",
   "landing.thesis.card1Title": "État actuel",
@@ -6285,20 +6411,19 @@ const FR: Record<MessageKey, string> = {
   "landing.thesis.card3Title": "Rôles des participants",
   "landing.thesis.card3Body":
     "Association institutionnelle et activité studio collectionneur apparaissent où les participants les déposent.",
-  "landing.flow.title":
-    "Un fil pour l'œuvre, de la première inscription à la suite",
-  "landing.flow.s1Label": "Nommer l'œuvre",
+  "landing.flow.title": "Quatre couches qui travaillent ensemble",
+  "landing.flow.s1Label": "Register",
   "landing.flow.s1Detail":
-    "Listez-la une fois. La pièce obtient une identité durable à laquelle artistes, galeries et collectionneurs reviennent.",
-  "landing.flow.s2Label": "Joindre l'essentiel",
+    "Chaque œuvre reçoit une identité de registre durable à laquelle artistes, galeries et collectionneurs reviennent.",
+  "landing.flow.s2Label": "Verify",
   "landing.flow.s2Detail":
-    "Certificats, association galerie, notes de garde : tout arrive sur la même fiche.",
-  "landing.flow.s3Label": "Voir le présent clairement",
+    "Paternité, gestion et chronologie se renforcent par des preuves au dossier.",
+  "landing.flow.s3Label": "Build presence",
   "landing.flow.s3Detail":
-    "Ce qui est public aujourd'hui se lit facilement. Le privé reste derrière la connexion jusqu'à votre choix.",
-  "landing.flow.s4Label": "Laisser le fil grandir",
+    "The Field transforme l'activité culturelle vérifiée en réputation publique et profils découvrables.",
+  "landing.flow.s4Label": "Transact",
   "landing.flow.s4Detail":
-    "Chaque vente, transfert ou exposition ajoute une ligne à la même histoire, dans l'ordre.",
+    "Deals permet commissions, acquisitions, représentation et licences avec des conditions structurées.",
   "landing.workspace.title": "Où les holdings restent au dossier",
   "landing.workspace.takePart": "Participer",
   "landing.workspace.viewPublic": "Voir la couche publique",
@@ -6472,6 +6597,9 @@ const FR: Record<MessageKey, string> = {
   "studio.nav.artworks": "Œuvres",
   "studio.nav.certificates": "Certificats",
   "studio.nav.ownership": "Propriété",
+  "studio.nav.deals": "Accords",
+  "studio.nav.inbox": "Boîte de réception",
+  "studio.nav.rights": "Registre des droits",
   "studio.shell.activity": "Activité",
   "studio.shell.recentNotes": "Notes récentes",
   "studio.shell.catalogueActivity": "Activité catalogue",
@@ -6498,7 +6626,7 @@ const FR: Record<MessageKey, string> = {
   "registry.record.provenance": "Provenance",
   "registry.record.certStatusTitle": "Statut du certificat",
   "registry.record.verificationTitle": "Vérification",
-  "gallery.nav.studio": "Aperçu",
+  "gallery.nav.studio": "Studio",
   "gallery.nav.recordDepth": "Profondeur de fiche",
   "gallery.nav.roster": "Artistes",
   "gallery.nav.catalogue": "Œuvres",
@@ -6917,7 +7045,7 @@ const FR: Record<MessageKey, string> = {
     "Authentifier et approfondir les fiches liées à votre pratique",
   "gallery.email.artistInvite.kicker": "Fiche canonique · Attestation du participant",
   "gallery.email.artistInvite.body1":
-    "{galleryName} participe à la chronologie au dossier pour les œuvres liées à votre pratique. {inviteRecordExists} Vous êtes invité à authentifier la paternité et approfondir la fiche documentaire — pas à approuver un dépôt institutionnel.",
+    "{galleryName} participe à la chronologie au dossier pour les œuvres liées à votre pratique. {inviteRecordExists} Vous êtes invité à authentifier la paternité et approfondir la fiche documentaire. Pas à approuver un dépôt institutionnel.",
   "gallery.email.artistInvite.body2":
     "Après votre adhésion : examiner la fiche canonique, authentifier la paternité, ajouter des détails d'artiste et contribuer aux événements de continuité. {recordDeepensOverTime}.",
   "gallery.email.artistInvite.body3":
@@ -6979,7 +7107,7 @@ const FR: Record<MessageKey, string> = {
   "collector.shell.loading": "Chargement…",
   "collector.hero.fallbackCollection": "Votre collection",
   "collector.hero.tooltip":
-    "Un espace calme pour ce que vous détenez. État de propriété, points d'attention et historique — sans chrome marketing du catalogue.",
+    "Un espace calme pour ce que vous détenez. État de propriété, points d'attention et historique. Sans chrome marketing du catalogue.",
   "collector.hero.ownershipOnRecord": "Propriété au dossier",
   "collector.hero.viewWorks": "Voir les œuvres",
   "collector.hero.inStewardship": "Dans votre studio",
@@ -7023,6 +7151,8 @@ const FR: Record<MessageKey, string> = {
   "collector.overview.openClaims": "{count} revendication(s) de propriété ouverte(s).",
   "collector.overview.withCertificate":
     "{count} {units} avec certificat au dossier.",
+  "collector.overview.recordHealthSubtitle":
+    "Appuyez pour les lacunes de vérification, certificats et détail de santé des fiches.",
   "collector.word.work": "œuvre",
   "collector.word.works": "œuvres",
   "collector.word.record": "fiche",
@@ -7271,7 +7401,9 @@ const FR: Record<MessageKey, string> = {
     "Transferts, détentions et mouvement dans votre catalogue.",
   "studio.overview.totalTransfers": "Transferts totaux",
   "studio.overview.worksYouHold": "Œuvres que vous détenez",
+  "studio.overview.worksRepresented": "Œuvres au dossier",
   "studio.overview.avgHoldDays": "Détention moy. (jours)",
+  "studio.overview.avgDaysOnRegistry": "Jours moy. au registre",
   "studio.overview.catalogueHighlights.title": "Points saillants du catalogue",
   "studio.overview.catalogueHighlights.subtitle":
     "Fiches remarquables de votre activité au registre.",
@@ -7279,10 +7411,12 @@ const FR: Record<MessageKey, string> = {
   "studio.overview.mostTransferredHint": "Nombre de transferts le plus élevé.",
   "studio.overview.longestHeld": "Plus longue détention",
   "studio.overview.longestHeldHint":
-    "Plus long intervalle entre premier et dernier transfert.",
+    "Plus longue détention sur le registre de propriété.",
+  "studio.overview.longestOnRegistryHint":
+    "Œuvre inscrite le plus longtemps dans votre catalogue.",
   "studio.overview.fastestAppreciating": "Plus forte plus-value",
   "studio.overview.fastestAppreciatingHint":
-    "Plus grand gain % de l'initial au dernier (même devise).",
+    "Plus grand gain % du premier au dernier événement de valeur (même devise).",
   "studio.records.noAwaitingAttestation":
     "Aucune fiche n'attend votre attestation. Quand une fiche canonique est associée à votre pratique, elle apparaît ici pour authentifier et approfondir.",
   "studio.records.institutionalRelationship": "Relation institutionnelle",
@@ -7518,6 +7652,7 @@ const FR: Record<MessageKey, string> = {
   "studio.insight.title.health": "Santé des fiches",
   "studio.insight.title.valueArtist": "Progression des valeurs",
   "studio.insight.title.valueGallery": "Valeur déclarée",
+  "studio.insight.title.valueCollector": "Valeur de la collection",
   "studio.insight.line.worksArtist": "Œuvres",
   "studio.insight.line.worksGallery": "Œuvres cumulées",
   "studio.insight.breakdown.totalWorks": "Total des œuvres",
@@ -7531,6 +7666,19 @@ const FR: Record<MessageKey, string> = {
   "studio.insight.breakdown.withCertificate": "Avec certificat",
   "studio.insight.breakdown.missingVerification": "Vérification manquante",
   "studio.insight.breakdown.latestDeclared": "Dernière déclaration ({currency})",
+  "studio.insight.breakdown.avgChange": "Variation moyenne",
+  "studio.insight.breakdown.worksIncreased": "Œuvres en hausse",
+  "studio.insight.breakdown.worksDeclined": "Œuvres en baisse",
+  "studio.insight.breakdown.totalTransfers": "Transferts totaux",
+  "studio.insight.breakdown.worksHeld": "Œuvres que vous détenez",
+  "studio.insight.breakdown.worksRepresented": "Œuvres au dossier",
+  "studio.insight.breakdown.avgHoldDays": "Détention moy. (jours)",
+  "studio.insight.breakdown.avgDaysOnRegistry": "Jours moy. au registre",
+  "studio.insight.breakdown.mostTransferred": "Plus transférée",
+  "studio.insight.breakdown.longestHeld": "Plus longue détention",
+  "studio.insight.breakdown.fastestAppreciating": "Plus forte plus-value",
+  "studio.insight.breakdown.unresolvedSales": "Ventes non résolues",
+  "studio.insight.breakdown.staleRecords": "Fiches obsolètes (24+ mois)",
   "studio.insight.bar.fullyVerified": "Entièrement vérifié",
   "studio.insight.bar.certified": "Certifié",
   "studio.insight.bar.incomplete": "Incomplet",
@@ -7544,6 +7692,10 @@ const FR: Record<MessageKey, string> = {
     "Les chiffres sont la dernière valeur déclarée par devise de vos événements de valeur (même base que la série du graphique), pas un cumul de tous les prix courants.",
   "studio.insight.note.valueBasisGallery":
     "Les chiffres sont la dernière valeur déclarée par devise des événements de valeur (même base que la série du graphique), pas un cumul de tous les prix courants.",
+  "studio.insight.note.valueBasisCollector":
+    "Les chiffres sont la dernière valeur déclarée par devise des événements de valeur de votre collection (même base que la série du graphique).",
+  "studio.insight.note.valueProgressionBasis":
+    "La progression compare le premier et le dernier événement de valeur par œuvre dans la même devise. Les œuvres avec une seule déclaration sont exclues.",
   "studio.insight.subtitle.artist.catalogueSteadyGrowth":
     "Le catalogue a progressé de façon régulière.",
   "studio.insight.subtitle.artist.clearOwnership":
@@ -7607,6 +7759,8 @@ const FR: Record<MessageKey, string> = {
   "studio.insight.subtitle.collector.value.steady":
     "Les valeurs enregistrées restent stables.",
   "studio.activity.artworkRegistered": "Œuvre enregistrée : {title}",
+  "studio.activity.institutionArtworkRegistered":
+    "Œuvre catalogue déposée : {title}{registrySuffix}",
   "studio.activity.valueUpdated": "Valeur mise à jour : {title}",
   "studio.activity.ownershipConfirmed": "Propriété confirmée : {title}",
   "studio.activity.ownershipClaimRejected": "Revendication de propriété rejetée",
@@ -7676,9 +7830,10 @@ const JA: Record<MessageKey, string> = {
   "field.explorer.tab.creatives": "Creatives",
   "field.explorer.tab.organisations": "Organisations",
   "field.explorer.tab.records": "Records",
+  "field.explorer.tab.opportunities": "Opportunities",
   "field.explorer.hub.title": "エクスプローラー",
   "field.explorer.hub.lede":
-    "レジストリレコード、公開 Creative、Organisation を閲覧。発見はフィルターとアルファベット順に従います — おすすめや有料掲載はありません。",
+    "レジストリレコード、公開 Creative、Organisation を閲覧。発見はフィルターとアルファベット順に従います · おすすめや有料掲載はありません。",
   "field.explorer.hub.searchLabel": "The Field を検索",
   "field.explorer.hub.searchPlaceholder": "レジストリ ID、タイトル、名前…",
   "field.explorer.hub.searchSubmit": "検索",
@@ -7689,7 +7844,7 @@ const JA: Record<MessageKey, string> = {
   "field.explorer.link.verifyHub": "検証ハブ",
   "field.explorer.wayfinding.heading": "探索を続ける",
   "field.explorer.wayfinding.lede":
-    "レジストリレコード、公開プロフィール、検証の間を移動 — 決定論的リンクのみ、おすすめなし。",
+    "レジストリレコード、公開プロフィール、検証の間を移動 · 決定論的リンクのみ、おすすめなし。",
   "field.explorer.wayfinding.hub": "Explorer ハブ",
   "field.explorer.records.orientation": "記録上のレジストリレコードを閲覧。",
   "field.explorer.creatives.orientation": "Creative とその practice を発見。",
@@ -7753,7 +7908,7 @@ const JA: Record<MessageKey, string> = {
   "field.explorer.records.empty.browseAll": "すべてのレコードを閲覧",
   "field.explorer.creatives.headline": "Creative を探す",
   "field.explorer.creatives.lede":
-    "The Field 上の公開 Creative プロフィールを閲覧 — プラクティス、検証、レジストリの footprint。発見のみ。",
+    "The Field 上の公開 Creative プロフィールを閲覧 · プラクティス、検証、レジストリの footprint。発見のみ。",
   "field.explorer.creatives.searching": "検索",
   "field.explorer.creatives.filtered": "フィルター適用中",
   "field.explorer.creatives.filter.search": "名前で検索",
@@ -7774,13 +7929,13 @@ const JA: Record<MessageKey, string> = {
   "field.creative.participationHeading": "レジストリ参加",
   "field.creative.practice.declaredHeading": "宣言された practice",
   "field.creative.practice.registryHeading": "verified レコードから",
-  "field.creative.practice.legend.declared": "中立 — Studio で宣言",
-  "field.creative.practice.legend.registry": "緑 — verified レコードから推論",
+  "field.creative.practice.legend.declared": "中立 · Studio で宣言",
+  "field.creative.practice.legend.registry": "緑. Verified レコードから推論",
   "field.creative.practice.ownerGuidance":
     "verified レコードから推論された practice です。Studio で宣言してください。",
   "field.creative.discoveryHeading": "探索を続ける",
   "field.creative.discoveryLede":
-    "レコード、プロフィール、検証の間を移動 — 決定論的リンクのみ。",
+    "レコード、プロフィール、検証の間を移動 · 決定論的リンクのみ。",
   "field.creative.link.recordExplorer": "レコードエクスプローラー",
   "field.creative.link.creativeExplorer": "Creative エクスプローラー",
   "field.creative.link.organisation": "Organisation プロフィール",
@@ -7789,7 +7944,7 @@ const JA: Record<MessageKey, string> = {
   "field.creative.viewProfile": "プロフィールを見る",
   "field.creative.stewardship.heading": "Stewardship チェックリスト",
   "field.creative.stewardship.lede":
-    "あなたにのみ表示 — Studio から公開 discoverability を改善。公開スコアなし。",
+    "あなたにのみ表示 · Studio から公開 discoverability を改善。公開スコアなし。",
   "field.creative.stewardship.studioLink": "Studio を開く",
   "field.creative.stewardship.item.bio": "公開 bio を追加",
   "field.creative.stewardship.item.declaredPractice": "practice を 1 つ以上宣言",
@@ -7810,7 +7965,7 @@ const JA: Record<MessageKey, string> = {
   "field.organisation.participationHeading": "レジストリ参加",
   "field.organisation.discoveryHeading": "探索を続ける",
   "field.organisation.discoveryLede":
-    "レジストリレコード、公開プロフィール、検証の間を移動 — 決定論的リンクのみ、おすすめなし。",
+    "レジストリレコード、公開プロフィール、検証の間を移動 · 決定論的リンクのみ、おすすめなし。",
   "field.organisation.link.recordExplorer": "レコード Explorer",
   "field.organisation.link.organisationExplorer": "Organisation Explorer",
   "field.organisation.link.creativeExplorer": "Creative Explorer",
@@ -7818,7 +7973,7 @@ const JA: Record<MessageKey, string> = {
   "field.organisation.viewProfile": "プロフィールを見る",
   "field.organisation.stewardship.heading": "Stewardship チェックリスト",
   "field.organisation.stewardship.lede":
-    "あなたにのみ表示 — Studio から公開 discoverability を改善。公開スコアなし。",
+    "あなたにのみ表示 · Studio から公開 discoverability を改善。公開スコアなし。",
   "field.organisation.stewardship.studioLink": "Studio を開く",
   "field.organisation.stewardship.item.description": "公開説明を追加",
   "field.organisation.stewardship.item.location": "公開所在地を追加",
@@ -7855,21 +8010,21 @@ const JA: Record<MessageKey, string> = {
   "field.verify.hub.hierarchyTitle": "信頼シグナルの順序",
   "field.verify.hub.hierarchyIntro":
     "The Field ではこの順序でシグナルを読みます。台帳の事実がプロフィール叙述より優先されます。",
-  "field.verify.hub.tier1.label": "第1層 — レジストリレコード",
+  "field.verify.hub.tier1.label": "第1層 · レジストリレコード",
   "field.verify.hub.tier1.body":
     "Registry ID、レコード検証ステータス、artist 確認。",
-  "field.verify.hub.tier2.label": "第2層 — Organisation と verified 作品",
+  "field.verify.hub.tier2.label": "第2層 · Organisation と verified 作品",
   "field.verify.hub.tier2.body":
-    "Organisation の verified バッジと verified 作品数 — 人気スコアではありません。",
-  "field.verify.hub.tier3.label": "第3層 — 証明書",
+    "Organisation の verified バッジと verified 作品数 · 人気スコアではありません。",
+  "field.verify.hub.tier3.label": "第3層 · 証明書",
   "field.verify.hub.tier3.body":
     "verified レコードに対する証明書の記録または失効。",
   "field.verify.hub.section.verification.title": "検証とは",
   "field.verify.hub.section.verification.body":
-    "検証は、定義された確認が記録上にあるというレジストリの証明です — 台帳に基づきます。",
+    "検証は、定義された確認が記録上にあるというレジストリの証明です · 台帳に基づきます。",
   "field.verify.hub.section.provenance.title": "来歴（provenance）とは",
   "field.verify.hub.section.provenance.body":
-    "来歴はレコードの時系列の連続性 — 記録上で確認されたイベントです。",
+    "来歴はレコードの時系列の連続性 · 記録上で確認されたイベントです。",
   "field.verify.hub.section.registryRecord.title": "レジストリレコードとは",
   "field.verify.hub.section.registryRecord.body":
     "レジストリレコードは作品の正規の連続性エントリです。The Field は読み取り専用の表面です。",
@@ -7886,7 +8041,7 @@ const JA: Record<MessageKey, string> = {
   "field.record.title": "レジストリレコード",
   "field.record.discoveryHeading": "探索を続ける",
   "field.record.discoveryLede":
-    "レコードエクスプローラー、公開プロフィール、検証の間を移動 — 決定論的リンクのみ。おすすめはありません。",
+    "レコードエクスプローラー、公開プロフィール、検証の間を移動 · 決定論的リンクのみ。おすすめはありません。",
   "field.record.link.explorer": "レコードエクスプローラー",
   "field.record.link.verify": "検証を確認",
   "field.record.link.ledger": "レジストリ ledger を開く",
@@ -7897,7 +8052,7 @@ const JA: Record<MessageKey, string> = {
     "この Field レコード概要はレジストリから読み取ります。レジストリ ledger は検証、来歴、年表の正本です。",
   "field.context.sectionHeading": "関係コンテキスト",
   "field.context.sectionLede":
-    "以下のつながりはレジストリの証拠に基づきます — おすすめ、ランキング、ソーシャルリンクではありません。",
+    "以下のつながりはレジストリの証拠に基づきます · おすすめ、ランキング、ソーシャルリンクではありません。",
   "field.context.record.sameCreative.heading": "{name} の他の作品",
   "field.context.record.sameCreative.lede":
     "同じ Creative に登録された他のレコード。検証状態、更新順で並べています。",
@@ -7906,7 +8061,7 @@ const JA: Record<MessageKey, string> = {
     "代表または登録により {name} とつながる他のレコード。",
   "field.context.record.sharedMedium.heading": "同じ medium のレコード",
   "field.context.record.sharedMedium.lede":
-    "medium 文字列「{medium}」が完全一致する他のレコード — アルゴリズムによる類似ではありません。",
+    "medium 文字列「{medium}」が完全一致する他のレコード · アルゴリズムによる類似ではありません。",
   "field.context.record.practice.heading": "プラクティスコンテキスト",
   "field.context.record.practice.lede":
     "Creative Explorer の practice フィルターで {practice} の Creative を閲覧。",
@@ -7918,7 +8073,7 @@ const JA: Record<MessageKey, string> = {
     "機関との代表関係により、この Creative は {name} とつながっています。",
   "field.context.creative.practice.heading": "プラクティス探索",
   "field.context.creative.practice.lede":
-    "{practice} の他の Creative — Creative Explorer でフィルター。",
+    "{practice} の他の Creative · Creative Explorer でフィルター。",
   "field.context.organisation.roster.heading": "代表 Creative",
   "field.context.organisation.roster.lede":
     "{name} のレジストリ連携 roster（公開プロフィールあり）。",
@@ -7933,7 +8088,7 @@ const JA: Record<MessageKey, string> = {
   "field.context.meta.verified": "検証済み",
   "field.context.meta.workCount": "on file {count} 件",
   "ecosystem.workspace.studio": "Studio",
-  "ecosystem.workspace.organisationStudio": "組織 Studio",
+  "ecosystem.workspace.organisationStudio": "Studio",
   "getStarted.pathTooltip":
     "各パスは参加者タイプに合った Studio ワークスペースを開きます。その下で、作品ごとに一つの年表がレジストリに記録されます。",
   "account.hero.organisationIdentity": "組織アイデンティティ",
@@ -7958,15 +8113,21 @@ const JA: Record<MessageKey, string> = {
   "footer.regionLabel": "地域と言語",
   "footer.blurb":
     "現代美術のための暗号学的に検証可能なレジストリ。作者性と来歴を保護します。",
-  "landing.hero.title": "文化の記憶のためのインフラ",
+  "landing.hero.title": "現代文化のためのレジストリ基盤",
   "landing.hero.lede":
-    "現代文化作品のための信頼できる来歴レジストリ。作者性、所有、歴史的記録を、進化する単一のアーカイブで結びつけます。",
-  "landing.hero.browseCatalogue": "公開ギャラリーを見る",
+    "RROWM は作品を登録し、来歴を検証し、The Field でプレゼンスを公開し、Deals を通じて文化取引を支えます。",
+  "landing.hero.audience":
+    "アーティスト、コレクター、ギャラリー、文化機関のために。",
+  "landing.hero.why":
+    "作者性、管理、プレゼンス、商業活動を同じ記録で結びつける単一の基盤です。",
+  "landing.hero.betaStory":
+    "Register · Verify · Build presence · Transact",
+  "landing.hero.browseCatalogue": "The Field を見る",
   "landing.hero.takePart": "参加する",
-  "landing.hero.overview": "概要",
-  "landing.cta.title": "作品の連続性に参加する",
-  "landing.cta.takePart": "参加する →",
-  "landing.cta.browseRegistry": "レジストリを見る",
+  "landing.hero.overview": "仕組み",
+  "landing.cta.title": "RROWM を始める",
+  "landing.cta.takePart": "参加する",
+  "landing.cta.browseRegistry": "レジストリレコードを見る",
   "landing.thesis.title": "連続性は作品と共にあり、ファイルに散らばらない",
   "landing.thesis.card1Title": "現在の記録",
   "landing.thesis.card1Body": "作品ごとに一つのカタログエントリ。今日照合する一覧です。",
@@ -7976,19 +8137,19 @@ const JA: Record<MessageKey, string> = {
   "landing.thesis.card3Title": "参加者の役割",
   "landing.thesis.card3Body":
     "機関の関連付けとコレクターのスタジオ活動は、参加者が提出した場所に表示されます。",
-  "landing.flow.title": "最初の掲載から次へ、作品の一本の糸",
-  "landing.flow.s1Label": "作品を名付ける",
+  "landing.flow.title": "連動する四つの層",
+  "landing.flow.s1Label": "Register",
   "landing.flow.s1Detail":
-    "一度リスト化。アーティスト、ギャラリー、コレクターが戻れる永続的な ID を得ます。",
-  "landing.flow.s2Label": "重要なものを添付",
+    "すべての作品に、アーティスト、ギャラリー、コレクターが戻れる永続的なレジストリ ID があります。",
+  "landing.flow.s2Label": "Verify",
   "landing.flow.s2Detail":
-    "証明書、ギャラリー関連、保管メモ。すべて同じエントリに集約されます。",
-  "landing.flow.s3Label": "現在を明確に",
+    "作者性、管理、年表は記録上の証拠によって強まります。",
+  "landing.flow.s3Label": "Build presence",
   "landing.flow.s3Detail":
-    "今日公開されているものは読みやすく。非公開はサインインの内側に留まります。",
-  "landing.flow.s4Label": "糸を伸ばす",
+    "The Field は検証済みの文化活動を公開評判と発見可能なプロフィールに変えます。",
+  "landing.flow.s4Label": "Transact",
   "landing.flow.s4Detail":
-    "売却、移転、展示のたびに、同じ物語に順序立てて一行が加わります。",
+    "Deals は、構造化された条件で委嘱、取得、代表、ライセンスを可能にします。",
   "landing.workspace.title": "保有が記録に残る場所",
   "landing.workspace.takePart": "参加する",
   "landing.workspace.viewPublic": "公開レイヤーを見る",
@@ -8159,6 +8320,9 @@ const JA: Record<MessageKey, string> = {
   "studio.nav.artworks": "作品",
   "studio.nav.certificates": "証明書",
   "studio.nav.ownership": "所有",
+  "studio.nav.deals": "取引",
+  "studio.nav.inbox": "受信箱",
+  "studio.nav.rights": "権利台帳",
   "studio.shell.activity": "アクティビティ",
   "studio.shell.recentNotes": "最近のメモ",
   "studio.shell.catalogueActivity": "カタログアクティビティ",
@@ -8185,7 +8349,7 @@ const JA: Record<MessageKey, string> = {
   "registry.record.provenance": "来歴",
   "registry.record.certStatusTitle": "証明書ステータス",
   "registry.record.verificationTitle": "検証",
-  "gallery.nav.studio": "概要",
+  "gallery.nav.studio": "Studio",
   "gallery.nav.recordDepth": "記録の深さ",
   "gallery.nav.roster": "アーティスト",
   "gallery.nav.catalogue": "作品",
@@ -8665,7 +8829,7 @@ const JA: Record<MessageKey, string> = {
   "collector.shell.loading": "読み込み中…",
   "collector.hero.fallbackCollection": "あなたのコレクション",
   "collector.hero.tooltip":
-    "保有作品のための静かな空間。所有状態、要確認項目、履歴 — カタログのマーケティング装飾なし。",
+    "保有作品のための静かな空間。所有状態、要確認項目、履歴 · カタログのマーケティング装飾なし。",
   "collector.hero.ownershipOnRecord": "記録上の所有",
   "collector.hero.viewWorks": "作品を見る",
   "collector.hero.inStewardship": "あなたのスタジオ内",
@@ -8709,6 +8873,8 @@ const JA: Record<MessageKey, string> = {
   "collector.overview.openClaims": "進行中の所有{units} {count}件。",
   "collector.overview.withCertificate":
     "記録上に証明書のある{units} {count}件。",
+  "collector.overview.recordHealthSubtitle":
+    "タップして検証ギャップ、証明書、記録の健全性の詳細を表示。",
   "collector.word.work": "作品",
   "collector.word.works": "作品",
   "collector.word.record": "記録",
@@ -8956,7 +9122,9 @@ const JA: Record<MessageKey, string> = {
     "カタログ全体の移転、保有、動き。",
   "studio.overview.totalTransfers": "移転合計",
   "studio.overview.worksYouHold": "あなたが保有する作品",
+  "studio.overview.worksRepresented": "記録上の作品",
   "studio.overview.avgHoldDays": "平均保有（日）",
+  "studio.overview.avgDaysOnRegistry": "レジストリ平均日数",
   "studio.overview.catalogueHighlights.title": "カタログハイライト",
   "studio.overview.catalogueHighlights.subtitle":
     "レジストリ活動からの注目記録。",
@@ -8964,10 +9132,12 @@ const JA: Record<MessageKey, string> = {
   "studio.overview.mostTransferredHint": "移転回数が最多。",
   "studio.overview.longestHeld": "最長保有",
   "studio.overview.longestHeldHint":
-    "最初と最新の移転間の最長期間。",
+    "所有台帳上で最も長く保有している期間。",
+  "studio.overview.longestOnRegistryHint":
+    "スタジオカタログで最も長く登録されている作品。",
   "studio.overview.fastestAppreciating": "最大上昇率",
   "studio.overview.fastestAppreciatingHint":
-    "初期から最新までの最大%上昇（同一通貨）。",
+    "同一通貨で最古から最新の価値記録までの最大%上昇。",
   "studio.records.noAwaitingAttestation":
     "あなたの証明を待つ記録はありません。正規記録があなたの活動に関連付けられると、ここに認証・詳細化のために表示されます。",
   "studio.records.institutionalRelationship": "機関関係",
@@ -9190,6 +9360,7 @@ const JA: Record<MessageKey, string> = {
   "studio.insight.title.health": "記録の健全性",
   "studio.insight.title.valueArtist": "価値の推移",
   "studio.insight.title.valueGallery": "申告価値",
+  "studio.insight.title.valueCollector": "コレクション価値",
   "studio.insight.line.worksArtist": "作品",
   "studio.insight.line.worksGallery": "累計作品",
   "studio.insight.breakdown.totalWorks": "作品総数",
@@ -9203,6 +9374,19 @@ const JA: Record<MessageKey, string> = {
   "studio.insight.breakdown.withCertificate": "証明書あり",
   "studio.insight.breakdown.missingVerification": "検証不足",
   "studio.insight.breakdown.latestDeclared": "最新申告（{currency}）",
+  "studio.insight.breakdown.avgChange": "平均価値変化",
+  "studio.insight.breakdown.worksIncreased": "価値が上昇した作品",
+  "studio.insight.breakdown.worksDeclined": "価値が下落した作品",
+  "studio.insight.breakdown.totalTransfers": "移転合計",
+  "studio.insight.breakdown.worksHeld": "あなたが保有する作品",
+  "studio.insight.breakdown.worksRepresented": "記録上の作品",
+  "studio.insight.breakdown.avgHoldDays": "平均保有（日）",
+  "studio.insight.breakdown.avgDaysOnRegistry": "レジストリ平均日数",
+  "studio.insight.breakdown.mostTransferred": "最多移転",
+  "studio.insight.breakdown.longestHeld": "最長保有",
+  "studio.insight.breakdown.fastestAppreciating": "最大上昇率",
+  "studio.insight.breakdown.unresolvedSales": "未解決の売却",
+  "studio.insight.breakdown.staleRecords": "更新停滞（24か月超）",
   "studio.insight.bar.fullyVerified": "完全検証",
   "studio.insight.bar.certified": "認証済み",
   "studio.insight.bar.incomplete": "未完了",
@@ -9216,6 +9400,10 @@ const JA: Record<MessageKey, string> = {
     "数値は価値イベントからの通貨別最新申告価値（グラフ系列と同じ基準）であり、すべての作品の現在リスト価格の合算ではありません。",
   "studio.insight.note.valueBasisGallery":
     "数値は価値イベントからの通貨別最新申告価値（グラフ系列と同じ基準）であり、すべての作品の現在リスト価格の合算ではありません。",
+  "studio.insight.note.valueBasisCollector":
+    "数値はコレクションの価値イベントからの通貨別最新申告価値（グラフ系列と同じ基準）です。",
+  "studio.insight.note.valueProgressionBasis":
+    "推移は同一通貨で作品ごとの最古と最新の価値イベントを比較します。価値記録が1件のみの作品は除外されます。",
   "studio.insight.subtitle.artist.catalogueSteadyGrowth":
     "カタログは着実に成長しています。",
   "studio.insight.subtitle.artist.clearOwnership":
@@ -9279,6 +9467,8 @@ const JA: Record<MessageKey, string> = {
   "studio.insight.subtitle.collector.value.steady":
     "記録価値は安定しています。",
   "studio.activity.artworkRegistered": "作品を登録：{title}",
+  "studio.activity.institutionArtworkRegistered":
+    "カタログ作品を登録：{title}{registrySuffix}",
   "studio.activity.valueUpdated": "価値を更新：{title}",
   "studio.activity.ownershipConfirmed": "所有を確認：{title}",
   "studio.activity.ownershipClaimRejected": "所有申請を却下",

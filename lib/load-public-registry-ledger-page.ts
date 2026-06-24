@@ -7,11 +7,23 @@ import { getCurrentOwner } from "@/lib/get-current-owner";
 import {
   latestOwnershipSystemStatus,
 } from "@/lib/ownership-ledger";
+import {
+  pickLatestOwnershipEvent,
+} from "@/lib/ownership-canonical";
+import {
+  getOwnershipTimeline,
+  type OwnershipTimelineEntry,
+} from "@/lib/canonical-ownership-engine";
 import { getArchivalProvenanceBundle } from "@/lib/provenance-timeline";
 import { getProvenanceInsights } from "@/lib/provenance-insights";
+import { loadPublicArtworkRightsLedger } from "@/lib/rights-ledger";
+import type { OwnershipClaimPath } from "@/lib/ownership-claim-eligibility";
+import { resolveOwnershipClaimPath } from "@/lib/ownership-claim-eligibility";
 import { fieldRecordHref } from "@/lib/field-nav";
 import { registryLedgerHref } from "@/lib/registry-nav";
 import { warnSupabaseRpc } from "@/lib/supabase-rpc-error";
+import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
+import type { RightsLedgerGrouped } from "@/lib/rights-ledger";
 
 export type PublicRegistryLedgerPageData = {
   artwork: {
@@ -29,6 +41,7 @@ export type PublicRegistryLedgerPageData = {
     is_locked: boolean | null;
   };
   artistName: string;
+  artistUserId: string | null;
   artistSlug: string | null;
   verificationGalleryName: string | null;
   edition: {
@@ -49,8 +62,12 @@ export type PublicRegistryLedgerPageData = {
   sessionUserId: string | null;
   provenanceBundle: Awaited<ReturnType<typeof getArchivalProvenanceBundle>>;
   provenanceInsights: Awaited<ReturnType<typeof getProvenanceInsights>>;
+  rightsLedger: RightsLedgerGrouped;
   shareUrl: string;
   claimReturnPath: string;
+  ownershipClaimPath: OwnershipClaimPath | null;
+  pendingAcquisitionOnArtwork: boolean;
+  ownershipTimeline: OwnershipTimelineEntry[];
 };
 
 export async function loadPublicRegistryLedgerPageData(
@@ -123,12 +140,12 @@ export async function loadPublicRegistryLedgerPageData(
     .from("ownership_events")
     .select("*")
     .eq("artwork_id", artwork.id)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .order("id", { ascending: true });
 
-  const latestOwnershipRow =
-    ownershipRows && ownershipRows.length > 0
-      ? (ownershipRows[ownershipRows.length - 1] as Record<string, unknown>)
-      : null;
+  const latestOwnershipRow = pickLatestOwnershipEvent(
+    (ownershipRows ?? []) as Record<string, unknown>[]
+  );
   const latestOwnershipStatus = latestOwnershipSystemStatus(latestOwnershipRow);
   const currentOwner = await getCurrentOwner(supabase, artwork.id);
 
@@ -192,6 +209,31 @@ export async function loadPublicRegistryLedgerPageData(
     artworkCreatedAt: artwork.created_at,
   });
 
+  const service = createSupabaseServiceClient();
+  const rightsLedger = await loadPublicArtworkRightsLedger(service, {
+    artworkId: artwork.id,
+    artistUserId: artist?.id ?? null,
+    artistDisplayName: artistName,
+  });
+
+  let ownershipClaimPath: OwnershipClaimPath | null = null;
+  if (sessionUser?.id) {
+    ownershipClaimPath = await resolveOwnershipClaimPath(
+      supabase,
+      sessionUser.id,
+      artwork.id,
+      {
+        reader: service,
+        userEmail: String(sessionUser.email ?? "").trim().toLowerCase() || null,
+      }
+    );
+  }
+
+  const pendingAcquisitionOnArtwork =
+    ownershipClaimPath?.kind === "provenance_accept";
+
+  const ownershipTimeline = await getOwnershipTimeline(service, artwork.id);
+
   return {
     artwork: {
       id: artwork.id,
@@ -208,6 +250,7 @@ export async function loadPublicRegistryLedgerPageData(
       is_locked: artwork.is_locked,
     },
     artistName,
+    artistUserId: artwork.artist_id ?? artist?.id ?? null,
     artistSlug: artist?.slug ?? null,
     verificationGalleryName,
     edition:
@@ -231,8 +274,12 @@ export async function loadPublicRegistryLedgerPageData(
     sessionUserId: sessionUser?.id ?? null,
     provenanceBundle,
     provenanceInsights,
+    rightsLedger,
     shareUrl,
     claimReturnPath,
+    ownershipClaimPath,
+    pendingAcquisitionOnArtwork,
+    ownershipTimeline,
   };
 }
 

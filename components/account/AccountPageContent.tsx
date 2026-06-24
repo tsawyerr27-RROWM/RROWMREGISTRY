@@ -18,6 +18,7 @@ import {
 import { AccountStudioSection } from "@/components/account/AccountStudioSection";
 import { AccountVisibilitySection } from "@/components/account/AccountVisibilitySection";
 import { PrivacyDataSection } from "@/components/account/PrivacyDataSection";
+import { accountBelowHeroClass } from "@/components/account/account-ui";
 import { WorkspacePanel } from "@/components/ui/WorkspacePanel";
 import type { PublicPresence } from "@/lib/public-presence";
 import type { CreativePracticeSettings } from "@/lib/studio-practice-settings";
@@ -115,14 +116,7 @@ export function AccountPageContent(props: AccountPageContentProps) {
 
   return (
     <main className="relative mx-auto w-full max-w-[min(100%,88rem)]">
-      <header className="mb-2">
-        <h1 className="font-serif text-[2rem] font-normal leading-tight tracking-tight text-neutral-950 md:text-[2.35rem]">
-          My account
-        </h1>
-      </header>
-
-      <div className="mt-8">
-        <AccountPresenceHero
+      <AccountPresenceHero
           displayName={props.displayName}
           role={props.role}
           publicPageHref={props.publicPageHref}
@@ -135,7 +129,6 @@ export function AccountPageContent(props: AccountPageContentProps) {
           registryEvidenceCount={props.registryEvidenceSlugs.length}
           collectionPreviewArtworks={props.collectorPreviewArtworks}
         />
-      </div>
 
       {props.role === "artist" && props.artistRepHistorical ? (
         <div className="mt-8" role="status">
@@ -154,7 +147,7 @@ export function AccountPageContent(props: AccountPageContentProps) {
         </div>
       ) : null}
 
-      <div className="mt-10 lg:mt-12 lg:grid lg:grid-cols-[11rem_minmax(0,1fr)] lg:gap-x-14 xl:grid-cols-[12rem_minmax(0,1fr)] xl:gap-x-16">
+      <div className={`${accountBelowHeroClass} lg:grid lg:grid-cols-[11rem_minmax(0,1fr)] lg:gap-x-14 xl:grid-cols-[12rem_minmax(0,1fr)] xl:gap-x-16`}>
         <aside className="hidden lg:block">
           <AccountSectionNav
             items={navItems}

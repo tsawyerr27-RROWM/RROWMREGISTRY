@@ -1,4 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+
+import {
+  VERIFICATION_EVENT_SIGNAL_SELECT,
+} from "@/lib/verification-events-schema";
 import {
   ARTWORK_CONFIRMATION_EVENT_TYPES,
   isArtistConfirmationEventType,
@@ -139,7 +143,7 @@ export async function getArtworkParticipationLayers(
 
   const { data: vrows } = await supabase
     .from("verification_events")
-    .select("source, status, verification_method")
+    .select(VERIFICATION_EVENT_SIGNAL_SELECT)
     .eq("artwork_id", artworkId)
     .order("created_at", { ascending: false })
     .limit(12);

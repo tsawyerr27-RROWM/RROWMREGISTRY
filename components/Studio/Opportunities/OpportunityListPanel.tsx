@@ -8,6 +8,7 @@ import {
 } from "@/lib/opportunity-editor";
 import { fillMessage } from "@/lib/locale-messages";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { rrowmButton, rrowmSurface } from "@/styles/rrowm-theme";
 
 type Props = {
   briefs: OpportunityBriefRow[];
@@ -47,7 +48,7 @@ export function OpportunityListPanel({
         <button
           type="button"
           onClick={onCreate}
-          className="shrink-0 rounded-xl border border-neutral-900/[0.08] bg-neutral-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800"
+          className={`shrink-0 ${rrowmButton.primaryEconomic}`}
         >
           {t("studio.opportunities.create")}
         </button>
@@ -72,10 +73,10 @@ export function OpportunityListPanel({
             return (
               <li key={brief.id}>
                 <div
-                  className={`rounded-2xl border p-4 transition ${
+                  className={`p-4 transition ${
                     active
-                      ? "border-emerald-900/20 bg-emerald-50/40 shadow-sm"
-                      : "border-neutral-900/[0.06] bg-white/70 hover:border-neutral-900/10 hover:bg-white"
+                      ? `${rrowmSurface.l2} ring-1 ring-[color:color-mix(in_srgb,var(--rrowm-zone-accent)_28%,transparent)]`
+                      : `${rrowmSurface.l3} hover:shadow-[0_12px_30px_rgba(40,25,10,0.08)]`
                   }`}
                 >
                   <button

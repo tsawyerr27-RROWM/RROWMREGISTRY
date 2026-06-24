@@ -62,7 +62,7 @@ export function isLatestOwnershipAssigned(
   ev: Record<string, unknown> | null | undefined
 ): boolean {
   if (!ev) return false;
-  const uid = ev.to_user_id ?? ev.to_owner_id;
+  const uid = ev.to_user_id;
   if (typeof uid === "string" && uid.length > 0) return true;
   const name = ev.to_name;
   return typeof name === "string" && name.trim().length > 0;
@@ -120,7 +120,7 @@ export function formatOwnershipOwnerPrimary(
   ev: Record<string, unknown>,
   ctx?: OwnershipLedgerViewerContext
 ): string {
-  const uidRaw = ev.to_user_id ?? ev.to_owner_id;
+  const uidRaw = ev.to_user_id;
   const uid =
     typeof uidRaw === "string" && uidRaw.length > 0 ? uidRaw : null;
 

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { getCanonicalOwner } from "@/lib/canonical-ownership-engine";
 import type { DealRow } from "@/lib/deals";
 import { otherDealParticipant } from "@/lib/deal-permissions";
 
@@ -188,16 +189,17 @@ export async function resolveLicensingParticipants(
 
   const { data: art } = await service
     .from("artworks")
-    .select("artist_id, current_owner_id")
+    .select("artist_id")
     .eq("id", artworkId)
     .maybeSingle();
 
-  if (!art?.artist_id && !art?.current_owner_id) {
+  const canonical = await getCanonicalOwner(service, artworkId);
+  const ownerId = String(canonical.userId ?? "").trim();
+  const artistId = String(art?.artist_id ?? "").trim();
+
+  if (!artistId && !ownerId) {
     return { ok: false, reason: "Linked artwork could not be resolved." };
   }
-
-  const ownerId = String(art.current_owner_id ?? "").trim();
-  const artistId = String(art.artist_id ?? "").trim();
 
   let licensorUserId: string | null = null;
   if (ownerId && participants.includes(ownerId)) {

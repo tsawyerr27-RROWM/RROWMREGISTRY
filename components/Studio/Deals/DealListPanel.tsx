@@ -4,7 +4,10 @@ import { useMemo } from "react";
 
 import type { DealRow } from "@/lib/deals";
 import { dealStatusLabel } from "@/lib/deal-status";
-import { counterpartyUserIdForDeal, DEAL_PARTICIPANT_FALLBACK } from "@/lib/deal-participant-labels";
+import {
+  counterpartyUserIdForDeal,
+  DEAL_PARTICIPANT_FALLBACK,
+} from "@/lib/deal-participant-labels";
 import type { DealTabId } from "@/components/Studio/Deals/StudioDealsWorkspace";
 import { RrowmTabs } from "@/components/ui/RrowmTabs";
 import { rrowmButton, rrowmEconomicSurface, rrowmSurface } from "@/styles/rrowm-theme";
@@ -125,31 +128,35 @@ export function DealListPanel({
 
   return (
     <section
-      className={`${rrowmEconomicSurface.listPanel}`}
-      aria-label="Deal list"
+      className={rrowmEconomicSurface.dealSelectorStrip}
+      aria-label="Deal selector"
     >
-      <div className="flex items-start justify-between gap-4">
-        <h2 className="font-serif text-xl font-normal tracking-tight text-neutral-950">
-          Deals
-        </h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <RrowmTabs
+          items={tabs}
+          activeId={activeTab}
+          onChange={onTabChange}
+          variant="tonal"
+          ariaLabel="Deal folders"
+        />
+        {onCreateDeal ? (
+          <button
+            type="button"
+            onClick={onCreateDeal}
+            className={`${rrowmButton.secondary} shrink-0 text-[13px]`}
+          >
+            New deal
+          </button>
+        ) : null}
       </div>
 
-      <RrowmTabs
-        items={tabs}
-        activeId={activeTab}
-        onChange={onTabChange}
-        variant="tonal"
-        className="mt-5"
-        ariaLabel="Deal folders"
-      />
-
-      <div className="mt-6 min-h-0">
+      <div className="mt-4 min-w-0">
         {loading ? (
           <p className="text-[13px] text-neutral-500">Loading deals.</p>
         ) : loadError ? (
           <p className="text-[13px] leading-relaxed text-neutral-600">{loadError}</p>
         ) : list.length === 0 ? (
-          <div className={`${rrowmSurface.l3} px-5 py-8 text-center`}>
+          <div className={`${rrowmSurface.l3} px-4 py-5 text-center`}>
             <p className="text-[13px] leading-relaxed text-neutral-500">
               No deals in this view.
             </p>
@@ -157,14 +164,14 @@ export function DealListPanel({
               <button
                 type="button"
                 onClick={onCreateDeal}
-                className={`mt-4 ${rrowmButton.primaryEconomic}`}
+                className={`mt-3 ${rrowmButton.primaryEconomic}`}
               >
                 New deal
               </button>
             ) : null}
           </div>
         ) : (
-          <div className="max-h-[calc(100dvh-24rem)] space-y-2 overflow-y-auto pr-1">
+          <div className="-mx-1 flex gap-2 overflow-x-auto overscroll-x-contain px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5">
             {list.map((deal) => {
               const selected = deal.id === selectedDealId;
               return (
@@ -172,24 +179,25 @@ export function DealListPanel({
                   key={deal.id}
                   type="button"
                   onClick={() => onSelectDealId(deal.id)}
-                  className={`w-full px-4 py-3 text-left transition ${
+                  aria-current={selected ? "true" : undefined}
+                  className={`min-w-[11rem] max-w-[16rem] shrink-0 px-3.5 py-3 text-left transition ${
                     selected
                       ? `${rrowmSurface.l2} ring-1 ring-[color:color-mix(in_srgb,var(--rrowm-zone-accent)_30%,transparent)]`
-                      : `${rrowmSurface.l3} hover:shadow-[0_12px_30px_rgba(40,25,10,0.08)]`
+                      : `${rrowmSurface.l3} hover:shadow-[0_8px_22px_rgba(40,25,10,0.07)]`
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="truncate font-serif text-[15px] font-normal tracking-tight text-neutral-950">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-serif text-[14px] font-normal leading-snug tracking-tight text-neutral-950">
                       {dealDisplayTitle(deal)}
                     </p>
-                    <p className="shrink-0 text-[11px] tabular-nums text-neutral-500">
+                    <p className="shrink-0 text-[10px] tabular-nums text-neutral-400">
                       {dealWhen(deal)}
                     </p>
                   </div>
-                  <p className="mt-1 truncate text-[12px] text-neutral-500">
+                  <p className="mt-1 text-[11px] leading-relaxed text-neutral-500">
                     {dealCounterpartyLabel(userId, deal, counterpartyLabels)}
                   </p>
-                  <p className="mt-2 truncate text-[12px] text-neutral-600">
+                  <p className="mt-1.5 text-[11px] leading-relaxed text-neutral-600">
                     {dealTypeLabel(String(deal.type ?? ""))} ·{" "}
                     {dealStatusLabel(String(deal.status ?? ""))}
                   </p>
@@ -202,4 +210,3 @@ export function DealListPanel({
     </section>
   );
 }
-

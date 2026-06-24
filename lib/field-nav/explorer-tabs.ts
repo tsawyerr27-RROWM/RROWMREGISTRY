@@ -3,6 +3,7 @@ import {
   FIELD_EXPLORER_CREATIVES,
   FIELD_EXPLORER_ORGANISATIONS,
   FIELD_EXPLORER_RECORDS,
+  FIELD_OPPORTUNITIES,
   type FieldExplorerTabId,
 } from "@/lib/field-nav/paths";
 
@@ -28,5 +29,10 @@ export const FIELD_EXPLORER_TABS: readonly FieldExplorerTab[] = [
     id: "organisations",
     href: FIELD_EXPLORER_ORGANISATIONS,
     labelKey: "field.explorer.tab.organisations",
+  },
+  {
+    id: "opportunities",
+    href: FIELD_OPPORTUNITIES,
+    labelKey: "field.explorer.tab.opportunities",
   },
 ] as const;

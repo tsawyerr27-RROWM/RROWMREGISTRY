@@ -8,16 +8,14 @@ import {
   resolveDealExecution,
   type LicensingExecutionRecord,
 } from "@/lib/deal-execution";
+import { onDealExecuted } from "@/lib/deal-lifecycle-engine";
 import { upsertDealExecutionRecord } from "@/lib/deal-execution-records";
 import { otherDealParticipant } from "@/lib/deal-permissions";
 import { mapDealRow } from "@/lib/deals";
-import { logActivityEvent } from "@/lib/log-activity";
-import { notifyDealExecutionRecorded } from "@/lib/notification-hooks/deal-execution";
 import {
   findRightsLicenseByDealId,
   insertRightsLicense,
   resolveLicensingParticipants,
-  usageTypeLabel,
   validateLicensingExecutionInput,
 } from "@/lib/rights-licenses";
 import { guardRegistryMutation } from "@/lib/registry-action-security/guards";
@@ -365,32 +363,17 @@ export async function POST(
     );
   }
 
-  const title = String(deal.title ?? "").trim() || "Licensing deal";
+  const mappedDeal = mapDealRow(updated as Record<string, unknown>);
 
-  await logActivityEvent({
-    userId: user.id,
-    type: "rights_license_activated",
-    message: `License activated: ${title} · ${usageTypeLabel(validated.value.usageType)}`,
-    artworkId,
-    metadata: {
-      deal_id: dealId,
-      rights_license_id: inserted.id,
-      registry_id: registryId,
-      usage_type: validated.value.usageType,
-      territory: validated.value.territory,
-    },
-  });
-
-  await notifyDealExecutionRecorded({
-    dealId,
+  await onDealExecuted({
+    deal: mappedDeal,
     actorUserId: user.id,
-    kind: "licensing",
-    body: `${usageTypeLabel(validated.value.usageType)} license activated for ${title}.`,
-    client: service,
+    execution,
+    clients: { service, user: supabase },
   });
 
   const state = await resolveLicensingExecutionState({
-    deal: mapDealRow(updated as Record<string, unknown>),
+    deal: mappedDeal,
     userId: user.id,
     service,
   });

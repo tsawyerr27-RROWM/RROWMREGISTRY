@@ -19,12 +19,11 @@ export type NarrativeCheckpoint = {
 
 /** Default rail — home / landing (`app/page.tsx`) */
 export const LANDING_NARRATIVE_CHECKPOINTS: NarrativeCheckpoint[] = [
-  { id: "net-hero", color: "#7c3aed", label: "Record initiates" },
-  { id: "net-system", color: "#2563eb", label: "Identity linked" },
-  { id: "net-trust", color: "#475569", label: "Policy read" },
-  { id: "net-portfolio", color: "#0ea5e9", label: "Portfolio mapped" },
-  { id: "net-personas", color: "#9333ea", label: "Constituencies" },
-  { id: "net-cta", color: "#111827", label: "Network ready" },
+  { id: "net-hero", color: "#7c3aed", label: "Platform" },
+  { id: "net-pillars", color: "#2563eb", label: "Four pillars" },
+  { id: "net-roles", color: "#9333ea", label: "Role value" },
+  { id: "net-products", color: "#0ea5e9", label: "Surfaces" },
+  { id: "net-cta", color: "#111827", label: "Begin" },
 ];
 
 /** About overview — IDs must match `MotionReveal` wrappers on `app/about/page.tsx` */

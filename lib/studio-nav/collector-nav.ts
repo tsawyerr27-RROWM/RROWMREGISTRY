@@ -4,6 +4,7 @@ import type { WorkspaceNavItem } from "@/components/Studio/WorkspaceShell";
 import { deferredRouterPush } from "@/lib/deferred-app-router";
 import { COLLECTOR_SECTION_LABEL_KEYS } from "@/lib/studio-nav/labels";
 import { appendPersonalArchiveNavItem } from "@/lib/studio-nav/personal-archive";
+import { insertCollectorUtilityNavItems } from "@/lib/studio-nav/studio-utility-nav";
 import type { StudioNavTranslate } from "@/lib/studio-nav/types";
 
 export const COLLECTOR_NAV_SECTIONS = [
@@ -33,12 +34,14 @@ export function buildCollectorNavItems(
 ): WorkspaceNavItem[] {
   const { attentionItemCount = 0 } = flags;
 
+  const sectionItems = COLLECTOR_NAV_SECTIONS.map((id) => ({
+    id,
+    label: t(COLLECTOR_SECTION_LABEL_KEYS[id]),
+    showDot: id === "attention" && attentionItemCount > 0,
+  }));
+
   return appendPersonalArchiveNavItem(
-    COLLECTOR_NAV_SECTIONS.map((id) => ({
-      id,
-      label: t(COLLECTOR_SECTION_LABEL_KEYS[id]),
-      showDot: id === "attention" && attentionItemCount > 0,
-    })),
+    insertCollectorUtilityNavItems(sectionItems, t),
     t
   );
 }

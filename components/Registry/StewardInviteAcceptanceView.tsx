@@ -19,7 +19,7 @@ function StewardInviteSeal() {
       <div className="absolute inset-0 rounded-full border border-neutral-400/70 bg-[#fafaf8]" />
       <div className="absolute inset-3 rounded-full border border-neutral-600/60" />
       <div className="absolute inset-6 rounded-full border border-neutral-700/50" />
-      <span className="relative text-[9px] font-medium uppercase tracking-[0.2em] text-neutral-500">
+      <span className="relative text-[11px] font-medium tracking-[0.2em] text-neutral-500">
         RROWM
       </span>
     </div>
@@ -150,10 +150,7 @@ export function StewardInviteAcceptanceView() {
         <div className="px-6 py-10 sm:px-10 sm:py-12">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0 flex-1">
-              <p className="text-sm text-neutral-500">
-                {t("registry.stewardAccept.kicker")}
-              </p>
-              <h1 className="mt-3 font-serif text-3xl font-normal tracking-tight text-neutral-950 md:text-4xl">
+              <h1 className="font-serif text-3xl font-normal tracking-tight text-neutral-950 md:text-4xl">
                 {t("registry.stewardAccept.heading")}
               </h1>
               <p className="mt-4 text-sm leading-relaxed text-neutral-600">
@@ -164,7 +161,7 @@ export function StewardInviteAcceptanceView() {
           </div>
 
           <section className="mt-10 border-t border-neutral-900/[0.06] pt-8">
-            <p className="text-xs font-medium uppercase tracking-[0.14em] text-neutral-500">
+            <p className="text-sm font-medium text-neutral-700">
               {t("registry.stewardAccept.recordLabel")}
             </p>
             {preview.registryId ? (

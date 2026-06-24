@@ -16,6 +16,7 @@ import { isSystemRole, productRoleLabel } from "@/lib/studio-terminology";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import type { OpportunityApplicationStatus } from "@/lib/field-opportunity-applications";
 import type { MessageKey } from "@/lib/locale-messages";
+import { economicSectionCard } from "@/styles/rrowm-theme";
 
 type Props = {
   applications: OrganisationOpportunityApplicationListItem[];
@@ -92,16 +93,14 @@ export function OpportunityApplicationsPanel({
   }
 
   function tabClass(active: boolean): string {
-    return `rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-      active
-        ? "border-neutral-950 bg-neutral-950 text-white"
-        : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
-    }`;
+    return active
+      ? "rounded-full border border-[color:color-mix(in_srgb,var(--rrowm-zone-accent)_35%,transparent)] bg-[color:color-mix(in_srgb,var(--rrowm-zone-accent)_12%,var(--rrowm-zone-elevated))] px-3 py-1.5 text-xs font-medium text-[color:var(--rrowm-zone-secondary)] shadow-[0_6px_18px_rgba(40,25,10,0.06)]"
+      : "rounded-full border border-[color:var(--rrowm-zone-border)] bg-[color:var(--rrowm-zone-elevated)] px-3 py-1.5 text-xs font-medium text-neutral-700 transition hover:border-[color:color-mix(in_srgb,var(--rrowm-zone-accent)_25%,transparent)] hover:bg-white";
   }
 
   return (
-    <section className="rounded-2xl border border-neutral-900/[0.06] bg-white/80 p-6 md:p-8">
-      <h3 className="text-sm font-semibold uppercase tracking-[0.1em] text-neutral-500">
+    <section className={economicSectionCard()}>
+      <h3 className="font-serif text-xl font-normal tracking-tight text-neutral-950">
         {t("studio.opportunities.section.applications")}
       </h3>
       <p className="mt-2 text-sm text-neutral-600">
@@ -116,7 +115,7 @@ export function OpportunityApplicationsPanel({
                 key={key}
                 className="rounded-xl border border-neutral-900/[0.06] bg-neutral-50/70 px-4 py-3"
               >
-                <dt className="text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-500">
+                <dt className="text-[13px] font-medium text-neutral-600">
                   {t(labelKey)}
                 </dt>
                 <dd className="mt-1 text-2xl font-semibold tabular-nums text-neutral-950">
@@ -190,7 +189,7 @@ export function OpportunityApplicationsPanel({
                         {application.applicant_name}
                       </p>
                       {application.eligibility_override_requested ? (
-                        <span className="rounded-full border border-amber-900/15 bg-amber-50 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.08em] text-amber-950">
+                        <span className="rounded-full border border-amber-900/15 bg-amber-50 px-2.5 py-0.5 text-[10px] font-medium text-amber-950">
                           {t("studio.opportunities.applicationsEligibilityOverrideBadge")}
                         </span>
                       ) : null}

@@ -14,6 +14,14 @@ export const NOTIFICATION_TYPES = [
   "registry_transfer_recorded",
   "registry_authorship_invite_received",
   "registry_custody_invite_received",
+  "deal_message_received",
+  "deal_status_changed",
+  "deal_execution_recorded",
+  "representation_relationship_activated",
+  "provenance_exhibition_recorded",
+  "ownership_claim_required",
+  "ownership_confirmation_required",
+  "ownership_transfer_completed",
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
@@ -354,6 +362,7 @@ export function resolveNotificationHref(notification: NotificationRow): string |
 
   const opportunityId = metadataString(notification.metadata, "opportunity_id");
   const registryId = metadataString(notification.metadata, "registry_id");
+  const dealId = metadataString(notification.metadata, "deal_id");
 
   switch (notification.type) {
     case "opportunity_application_received":
@@ -374,6 +383,25 @@ export function resolveNotificationHref(notification: NotificationRow): string |
     case "registry_authorship_invite_received":
     case "registry_custody_invite_received":
       return href;
+    case "deal_message_received":
+    case "deal_status_changed":
+    case "deal_execution_recorded":
+    case "representation_relationship_activated":
+    case "provenance_exhibition_recorded":
+    case "ownership_confirmation_required":
+      return dealId
+        ? `/studio/deals?deal=${encodeURIComponent(dealId)}`
+        : "/studio/deals";
+    case "ownership_claim_required":
+      return href ?? (dealId
+        ? `/studio/deals?deal=${encodeURIComponent(dealId)}`
+        : registryId
+          ? `/registry/${encodeURIComponent(registryId)}/ledger`
+          : "/studio/collector");
+    case "ownership_transfer_completed":
+      return href ?? (registryId
+        ? `/registry/${encodeURIComponent(registryId)}/ledger`
+        : "/studio/collector");
     default:
       return null;
   }
@@ -392,6 +420,7 @@ export type NotificationMetadataHints = {
   registryId?: string;
   inviteId?: string;
   inviteKind?: string;
+  dealId?: string;
   href?: string;
 };
 
@@ -406,6 +435,7 @@ export function notificationMetadata(
   if (hints.registryId) metadata.registry_id = hints.registryId;
   if (hints.inviteId) metadata.invite_id = hints.inviteId;
   if (hints.inviteKind) metadata.invite_kind = hints.inviteKind;
+  if (hints.dealId) metadata.deal_id = hints.dealId;
   if (hints.href) metadata.href = hints.href;
   return metadata;
 }

@@ -44,6 +44,7 @@
   --ds-z-base: 0;
   --ds-z-content: 10;
   --ds-z-floating: 50;
+  --ds-z-tooltip: 500;
   --ds-z-modal-backdrop: 100;
   --ds-z-modal: 110;
 
@@ -58,6 +59,58 @@
   --rrowm-atmo-slate-glow: rgba(210, 222, 238, 0.62);
   --rrowm-atmo-amber-veil: rgba(248, 228, 196, 0.42);
   --rrowm-atmo-plum-veil: rgba(214, 204, 228, 0.38);
+
+  /* PR-DESIGN.1.1 — near-white zonal canvases */
+  --rrowm-field-bg: #fcfbf9;
+  --rrowm-field-surface: #ffffff;
+  --rrowm-field-elevated: #ffffff;
+  --rrowm-field-accent: #c8922d;
+  --rrowm-field-secondary: #5c4a32;
+  --rrowm-field-border: rgba(185, 145, 90, 0.14);
+
+  --rrowm-registry-bg: #fcfbf8;
+  --rrowm-registry-surface: #ffffff;
+  --rrowm-registry-elevated: #ffffff;
+  --rrowm-registry-accent: #8b6b3e;
+  --rrowm-registry-secondary: #54483a;
+  --rrowm-registry-border: rgba(110, 85, 55, 0.12);
+
+  --rrowm-studio-bg: #fafaf8;
+  --rrowm-studio-surface: #ffffff;
+  --rrowm-studio-elevated: #ffffff;
+  --rrowm-studio-accent: #4d5b8a;
+  --rrowm-studio-secondary: #2e3448;
+  --rrowm-studio-border: rgba(80, 90, 120, 0.1);
+
+  --rrowm-economic-bg: #fcfaf7;
+  --rrowm-economic-surface: #ffffff;
+  --rrowm-economic-elevated: #ffffff;
+  --rrowm-economic-accent: #a97a50;
+  --rrowm-economic-secondary: #3d465c;
+  --rrowm-economic-highlight: #7a4b32;
+  --rrowm-economic-border: rgba(169, 122, 80, 0.14);
+
+  /* PR-DESIGN.1.1 — signature floating block */
+  --rrowm-float-bg: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.97),
+    rgba(248, 244, 238, 0.95)
+  );
+  --rrowm-float-border: rgba(185, 145, 90, 0.14);
+  --rrowm-float-shadow:
+    0 18px 45px rgba(25, 20, 10, 0.06),
+    0 2px 8px rgba(25, 20, 10, 0.03);
+  --rrowm-float-shadow-hover:
+    0 24px 56px rgba(25, 20, 10, 0.09),
+    0 4px 12px rgba(25, 20, 10, 0.04);
+  --rrowm-float-radius: 1.75rem;
+  --rrowm-float-radius-hero: 1.75rem;
+  --rrowm-float-radius-compact: 1.25rem;
+
+  --rrowm-shadow-warm-sm: 0 8px 20px rgba(40, 25, 10, 0.05);
+  --rrowm-shadow-warm-md: 0 12px 30px rgba(40, 25, 10, 0.06);
+  --rrowm-shadow-warm-lg: 0 20px 48px rgba(40, 25, 10, 0.08);
+  --rrowm-shadow-warm-inset: inset 0 1px 0 rgba(255, 255, 255, 0.92);
 }
 
 /* Depth stack — plain classes; do not use Tailwind arbitrary z-index with these CSS variables. */
@@ -66,6 +119,9 @@
 }
 .ds-z-floating {
   z-index: var(--ds-z-floating);
+}
+.ds-z-tooltip {
+  z-index: var(--ds-z-tooltip);
 }
 .ds-z-modal-backdrop {
   z-index: var(--ds-z-modal-backdrop);
@@ -124,6 +180,109 @@ html[data-rrowm-invite-signup="1"] [data-rrowm-chrome-suppress-invite-signup] {
       #f2f4f7 38%,
       #e8ebf0 100%
     );
+}
+
+/** PR-DESIGN.1.1 — Field (public discovery) — near-white canvas */
+.rrowm-zone-field {
+  --rrowm-zone-bg: var(--rrowm-field-bg);
+  --rrowm-zone-surface: var(--rrowm-field-surface);
+  --rrowm-zone-elevated: var(--rrowm-field-elevated);
+  --rrowm-zone-accent: var(--rrowm-field-accent);
+  --rrowm-zone-secondary: var(--rrowm-field-secondary);
+  --rrowm-zone-border: var(--rrowm-field-border);
+  --rrowm-float-border: rgba(185, 145, 90, 0.14);
+  background-color: var(--rrowm-zone-bg);
+}
+
+/** PR-DESIGN.1.1 — Registry (trust layer) */
+.rrowm-zone-registry {
+  --rrowm-zone-bg: var(--rrowm-registry-bg);
+  --rrowm-zone-surface: var(--rrowm-registry-surface);
+  --rrowm-zone-elevated: var(--rrowm-registry-elevated);
+  --rrowm-zone-accent: var(--rrowm-registry-accent);
+  --rrowm-zone-secondary: var(--rrowm-registry-secondary);
+  --rrowm-zone-border: var(--rrowm-registry-border);
+  --rrowm-float-border: rgba(110, 85, 55, 0.12);
+  background-color: var(--rrowm-zone-bg);
+}
+
+/** PR-DESIGN.1.1 — Studio (authenticated workspace) */
+.rrowm-zone-studio {
+  --rrowm-zone-bg: var(--rrowm-studio-bg);
+  --rrowm-zone-surface: var(--rrowm-studio-surface);
+  --rrowm-zone-elevated: var(--rrowm-studio-elevated);
+  --rrowm-zone-accent: var(--rrowm-studio-accent);
+  --rrowm-zone-secondary: var(--rrowm-studio-secondary);
+  --rrowm-zone-border: var(--rrowm-studio-border);
+  --rrowm-float-border: rgba(80, 90, 120, 0.1);
+  background-color: var(--rrowm-zone-bg);
+}
+
+/** PR-DESIGN.1.1 — Economic (deals / opportunities) */
+.rrowm-zone-economic {
+  --rrowm-zone-bg: var(--rrowm-economic-bg);
+  --rrowm-zone-surface: var(--rrowm-economic-surface);
+  --rrowm-zone-elevated: var(--rrowm-economic-elevated);
+  --rrowm-zone-accent: var(--rrowm-economic-accent);
+  --rrowm-zone-secondary: var(--rrowm-economic-secondary);
+  --rrowm-zone-border: var(--rrowm-economic-border);
+  --rrowm-float-border: rgba(169, 122, 80, 0.14);
+  background-color: var(--rrowm-zone-bg);
+}
+
+/** PR-DESIGN.1.1 — signature floating block primitive */
+.rrowm-floating-block {
+  border-radius: var(--rrowm-float-radius);
+  border: 1px solid var(--rrowm-float-border, rgba(185, 145, 90, 0.14));
+  background: var(--rrowm-float-bg);
+  box-shadow: var(--rrowm-float-shadow);
+}
+
+.rrowm-floating-block--hero {
+  border-radius: var(--rrowm-float-radius-hero);
+}
+
+.rrowm-floating-block--compact {
+  border-radius: var(--rrowm-float-radius-compact);
+}
+
+.rrowm-floating-block--section {
+  border-radius: 2rem;
+}
+
+.rrowm-floating-block--interactive {
+  transition:
+    transform 500ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 500ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 300ms ease;
+}
+
+.rrowm-floating-block--interactive:hover {
+  transform: translateY(-2px) scale(1.005);
+  box-shadow: var(--rrowm-float-shadow-hover);
+  border-color: color-mix(in srgb, var(--rrowm-float-border, rgba(185, 145, 90, 0.14)) 160%, rgba(185, 145, 90, 0.22));
+}
+
+/** Legacy surface aliases — map to floating blocks */
+.rrowm-surface-l1 {
+  border-radius: 2rem;
+  border: 1px solid var(--rrowm-float-border, var(--rrowm-zone-border));
+  background: var(--rrowm-float-bg);
+  box-shadow: var(--rrowm-float-shadow);
+}
+
+.rrowm-surface-l2 {
+  border-radius: var(--rrowm-float-radius);
+  border: 1px solid var(--rrowm-float-border, var(--rrowm-zone-border));
+  background: var(--rrowm-float-bg);
+  box-shadow: var(--rrowm-float-shadow);
+}
+
+.rrowm-surface-l3 {
+  border-radius: var(--rrowm-float-radius-compact);
+  border: 1px solid var(--rrowm-float-border, var(--rrowm-zone-border));
+  background: var(--rrowm-float-bg);
+  box-shadow: var(--rrowm-float-shadow);
 }
 
 /* Landing / About — editorial shell marker (tonal tokens + motion live in child layers) */

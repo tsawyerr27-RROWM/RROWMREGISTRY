@@ -22,6 +22,12 @@ import {
   buildCreativeRelationshipContextPanels,
   type FieldRelationshipContextPanelData,
 } from "@/lib/field-relationship-context";
+import {
+  countArtistExhibitions,
+  countCreativeActiveLicenses,
+  loadActiveCreativeRepresentation,
+  type CreativeRepresentationSummary,
+} from "@/lib/presence-economic-stats";
 
 export type CreativePresenceGallery = {
   name: string;
@@ -69,9 +75,14 @@ export type CreativePresencePageData = {
   registryPractices: CreativePracticeChip[];
   practiceExplorerHref: string | null;
   isProfileOwner: boolean;
+  isProfilePublic: boolean;
+  sessionUserId: string | null;
   showOwnerPracticeGuidance: boolean;
   stewardshipItems: Array<{ id: string; labelKey: MessageKey; complete: boolean }>;
   contextPanels: FieldRelationshipContextPanelData[];
+  activeRepresentation: CreativeRepresentationSummary | null;
+  exhibitionCount: number;
+  activeLicenseCount: number;
 };
 
 type ArtistRow = {
@@ -280,6 +291,13 @@ export async function loadCreativePresencePageData(
         ? REGISTRY_FILTER_LABELS.participationPending
         : null;
 
+  const [activeRepresentation, exhibitionCount, activeLicenseCount] =
+    await Promise.all([
+      loadActiveCreativeRepresentation(supabase, artist.id),
+      countArtistExhibitions(supabase, artist.id),
+      countCreativeActiveLicenses(supabase, artist.id),
+    ]);
+
   return {
     artist: {
       id: artist.id,
@@ -308,6 +326,8 @@ export async function loadCreativePresencePageData(
     registryPractices,
     practiceExplorerHref,
     isProfileOwner,
+    isProfilePublic: presence.profile,
+    sessionUserId: args.sessionUserId ?? null,
     showOwnerPracticeGuidance,
     stewardshipItems,
     contextPanels: buildCreativeRelationshipContextPanels({
@@ -316,6 +336,9 @@ export async function loadCreativePresencePageData(
       practiceExplorerHref,
       primaryPracticeSlug: primaryPractice,
     }),
+    activeRepresentation,
+    exhibitionCount,
+    activeLicenseCount,
   };
 }
 

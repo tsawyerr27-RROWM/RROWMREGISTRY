@@ -86,12 +86,16 @@ export default function HeroSection() {
             className="lg:col-span-7 lg:col-start-1"
             style={{ y: contentY, opacity: contentOpacity }}
           >
-            <h1 className="mt-7 max-w-[min(100%,46rem)] font-serif text-[clamp(2.5rem,7.4vw,5.2rem)] font-normal leading-[0.985] tracking-[-0.02em] text-neutral-950 md:mt-8 lg:max-w-[min(100%,52rem)]">
+            <h1 className="max-w-[min(100%,46rem)] font-serif text-[clamp(2.5rem,7.4vw,5.2rem)] font-normal leading-[0.985] tracking-[-0.02em] text-neutral-950 lg:max-w-[min(100%,52rem)]">
               {t("landing.hero.title")}
             </h1>
 
-            <p className="mt-10 max-w-[38rem] text-[15px] leading-[1.85] text-neutral-600 md:text-base md:leading-[1.85]">
-              {t("landing.hero.lede")}
+            <p className="mt-10 max-w-[38rem] text-[14px] leading-relaxed text-neutral-600 md:text-[15px]">
+              {t("landing.hero.audience")}
+            </p>
+
+            <p className="mt-3 max-w-[38rem] text-[14px] leading-relaxed text-neutral-500 md:text-[15px]">
+              {t("landing.hero.why")}
             </p>
 
             <nav
@@ -118,7 +122,7 @@ export default function HeroSection() {
             aria-hidden
           >
             <span className="font-serif text-[clamp(3.5rem,13.5vw,10.5rem)] font-light leading-[0.82] tracking-[-0.03em] text-neutral-950/[0.065]">
-              Record
+              RROWM
             </span>
             <span className="mt-6 block h-px w-[min(100%,14rem)] bg-gradient-to-r from-transparent via-neutral-300/60 to-neutral-300/20" />
           </div>

@@ -11,17 +11,17 @@ type Props = {
 
 export function DealTermsPanel({ deal }: Props) {
   return (
-    <div className={`${rrowmDealSurface.sidePanel} flex min-h-0 flex-col`}>
-      <div className="flex items-baseline justify-between gap-4">
-        <h3 className="font-serif text-lg font-normal tracking-tight text-neutral-950">
-          Current terms
+    <div className={`${rrowmDealSurface.referencePanel} min-w-0`}>
+      <div className="mt-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <h3 className="font-serif text-base font-normal tracking-tight text-neutral-950">
+          Structured terms
         </h3>
-        <p className="text-[12px] text-neutral-500">
+        <p className="text-[11px] text-neutral-500">
           {dealStatusLabel(String(deal.status ?? ""))}
         </p>
       </div>
 
-      <div className={`${rrowmSurface.l3} mt-5 min-h-0 flex-1 p-5`}>
+      <div className={`${rrowmSurface.l3} mt-4 p-4`}>
         <DealTermsRenderer deal={deal} />
       </div>
     </div>

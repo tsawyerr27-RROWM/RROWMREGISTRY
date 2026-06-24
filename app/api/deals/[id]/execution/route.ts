@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { isCurrentOwner } from "@/lib/canonical-ownership-engine";
 import {
   acquisitionRecipientUserId,
   buildDealExecutionNote,
@@ -12,46 +13,19 @@ import {
   resolveUserEmail,
   type DealExecutionRecord,
 } from "@/lib/deal-execution";
+import {
+  resolveOwnershipLoopForDealExecution,
+} from "@/lib/acquisition-ownership-loop";
+import { onDealExecuted } from "@/lib/deal-lifecycle-engine";
 import { upsertDealExecutionRecord } from "@/lib/deal-execution-records";
 import { otherDealParticipant } from "@/lib/deal-permissions";
 import { mapDealRow } from "@/lib/deals";
-import {
-  buildProvenanceContinuationEmail,
-  categoryLabelForEmail,
-} from "@/lib/emails/provenance-continuation-invite";
-import {
-  hintForResendDeliveryError,
-  sendResendEmail,
-} from "@/lib/emails/send-email";
-import { buildRegistryStewardInvitePublicUrl } from "@/lib/registry-steward-invite";
-import { getSiteUrl } from "@/lib/site-url";
 import { generateInviteToken, inviteExpiryDate } from "@/lib/invite-token";
-import { logActivityEvent } from "@/lib/log-activity";
-import { notifyDealExecutionRecorded } from "@/lib/notification-hooks/deal-execution";
 import { guardRegistryMutation } from "@/lib/registry-action-security/guards";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
 
 export const runtime = "nodejs";
-
-async function holderLabelForUserId(
-  service: ReturnType<typeof createSupabaseServiceClient>,
-  userId: string
-): Promise<string> {
-  const { data: cp } = await service
-    .from("collector_profiles")
-    .select("display_name")
-    .eq("user_id", userId)
-    .maybeSingle();
-  const dn = String(cp?.display_name ?? "").trim();
-  if (dn) return dn;
-  const email = await resolveUserEmail(service, userId);
-  if (email) {
-    const local = email.split("@")[0];
-    if (local) return local;
-  }
-  return "Recorded custodian";
-}
 
 function badRequest(message: string) {
   return NextResponse.json({ error: message }, { status: 400 });
@@ -87,6 +61,45 @@ async function loadDealContext(
   return { deal };
 }
 
+async function buildAcquisitionPanelState(args: {
+  deal: ReturnType<typeof mapDealRow>;
+  userId: string;
+  service: ReturnType<typeof createSupabaseServiceClient>;
+  artworkId: string;
+  execution: DealExecutionRecord | null;
+  registryId: string | null;
+  artworkTitle: string | null;
+  canInitiate: boolean;
+  reason: string | null;
+}) {
+  const acquisitionExecution =
+    args.execution && "provenance_transfer_id" in args.execution
+      ? args.execution
+      : null;
+
+  const ownershipLoop = acquisitionExecution
+    ? await resolveOwnershipLoopForDealExecution(args.service, {
+        dealId: args.deal.id,
+        artworkId: args.artworkId,
+        userId: args.userId,
+        registryId: args.registryId,
+        execution: acquisitionExecution,
+      })
+    : null;
+
+  return buildDealExecutionPanelState({
+    deal: args.deal,
+    userId: args.userId,
+    execution: args.execution,
+    registryId: args.registryId,
+    artworkTitle: args.artworkTitle,
+    canInitiate: args.canInitiate,
+    reason: args.reason,
+    restrictToKind: "acquisition",
+    ownershipLoop,
+  });
+}
+
 async function resolveExecutionState(args: {
   deal: ReturnType<typeof mapDealRow>;
   userId: string;
@@ -108,34 +121,36 @@ async function resolveExecutionState(args: {
   let reason: string | null = null;
 
   if (!artworkId) {
-    return buildDealExecutionPanelState({
+    return buildAcquisitionPanelState({
       deal,
       userId,
+      service,
+      artworkId,
       execution,
       registryId,
       artworkTitle,
       canInitiate: false,
       reason: "No linked artwork on this deal.",
-      restrictToKind: "acquisition",
     });
   }
 
   const { data: art } = await service
     .from("artworks")
-    .select("id, title, registry_id, verification_status, current_owner_id")
+    .select("id, title, registry_id, verification_status")
     .eq("id", artworkId)
     .maybeSingle();
 
   if (!art?.id) {
-    return buildDealExecutionPanelState({
+    return buildAcquisitionPanelState({
       deal,
       userId,
+      service,
+      artworkId,
       execution,
       registryId,
       artworkTitle,
       canInitiate: false,
       reason: "Linked artwork could not be found.",
-      restrictToKind: "acquisition",
     });
   }
 
@@ -173,34 +188,36 @@ async function resolveExecutionState(args: {
   }
 
   if (!isAcquisitionDealExecutable(deal)) {
-    return buildDealExecutionPanelState({
+    return buildAcquisitionPanelState({
       deal,
       userId,
+      service,
+      artworkId,
       execution,
       registryId,
       artworkTitle,
       canInitiate: false,
       reason: null,
-      restrictToKind: "acquisition",
     });
   }
 
   if (execution && "provenance_transfer_id" in execution && execution.provenance_transfer_id) {
-    return buildDealExecutionPanelState({
+    return buildAcquisitionPanelState({
       deal,
       userId,
+      service,
+      artworkId,
       execution,
       registryId,
       artworkTitle,
       canInitiate: false,
       reason: null,
-      restrictToKind: "acquisition",
     });
   }
 
   if (String(art.verification_status ?? "") !== "verified") {
     reason = "The linked work must be verified before stewardship can transfer.";
-  } else if (String(art.current_owner_id ?? "") !== userId) {
+  } else if (!(await isCurrentOwner(service, userId, artworkId))) {
     reason =
       "Only the recorded custodian for this work may initiate the transfer.";
   } else {
@@ -217,15 +234,16 @@ async function resolveExecutionState(args: {
     }
   }
 
-  return buildDealExecutionPanelState({
+  return buildAcquisitionPanelState({
     deal,
     userId,
+    service,
+    artworkId,
     execution,
     registryId,
     artworkTitle,
     canInitiate,
     reason,
-    restrictToKind: "acquisition",
   });
 }
 
@@ -327,7 +345,7 @@ export async function POST(
 
   const { data: art } = await service
     .from("artworks")
-    .select("id, title, registry_id, verification_status, current_owner_id")
+    .select("id, title, registry_id, verification_status")
     .eq("id", artworkId)
     .maybeSingle();
 
@@ -340,7 +358,7 @@ export async function POST(
       { status: 400 }
     );
   }
-  if (String(art.current_owner_id ?? "") !== user.id) {
+  if (!(await isCurrentOwner(service, user.id, artworkId))) {
     return NextResponse.json(
       {
         error:
@@ -422,7 +440,15 @@ export async function POST(
     recipient_user_id: recipientUserId,
   };
 
-  await upsertDealExecutionRecord(service, { dealId, execution });
+  try {
+    await upsertDealExecutionRecord(service, { dealId, execution });
+  } catch (error) {
+    console.error("[deal execution] execution record failure", error);
+    return NextResponse.json(
+      { error: "Failed to record execution lifecycle" },
+      { status: 500 }
+    );
+  }
 
   const terms = mergeExecutionIntoTerms(
     deal.terms && typeof deal.terms === "object" && !Array.isArray(deal.terms)
@@ -447,56 +473,20 @@ export async function POST(
     );
   }
 
-  const title = String(art.title ?? "").trim() || "Untitled work";
+  const mappedDeal = mapDealRow(updated as Record<string, unknown>);
 
-  const fromParticipantLabel = await holderLabelForUserId(service, user.id);
-  const acceptLink = buildRegistryStewardInvitePublicUrl(token, getSiteUrl());
-  const { subject, html, text } = buildProvenanceContinuationEmail({
-    artworkTitle: title,
-    registryId: registryId ?? "",
-    recipientEmail,
-    fromParticipantLabel,
-    categoryLabel: categoryLabelForEmail("sale"),
-    acceptLink,
-  });
-
-  const sent = await sendResendEmail({
-    kind: "registry_notification",
-    to: recipientEmail,
-    subject,
-    html,
-    text,
-  });
-
-  if (!sent.ok) {
-    const hint = hintForResendDeliveryError(sent.message);
-    console.error("[deals/execution] Resend", sent.status, sent.message, hint);
-  }
-
-  await logActivityEvent({
-    userId: user.id,
-    type: "provenance_transfer_initiated",
-    message: `Acquisition deal execution: ${title}${registryId ? ` (${registryId})` : ""}`,
-    artworkId,
-    metadata: {
-      deal_id: dealId,
-      registry_id: registryId,
-      transfer_id: String(row.id),
-      transfer_type: "sale",
-      recipient_user_id: recipientUserId,
-    },
-  });
-
-  await notifyDealExecutionRecorded({
-    dealId,
+  await onDealExecuted({
+    deal: mappedDeal,
     actorUserId: user.id,
-    kind: "acquisition",
-    body: `Stewardship transfer initiated for ${title}.`,
-    client: service,
+    execution: {
+      type: "acquisition",
+      ...execution,
+    },
+    clients: { service, user: supabase },
   });
 
   const state = await resolveExecutionState({
-    deal: mapDealRow(updated as Record<string, unknown>),
+    deal: mappedDeal,
     userId: user.id,
     service,
   });

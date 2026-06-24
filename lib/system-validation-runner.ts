@@ -2233,3 +2233,13 @@ export async function runSystemValidation(
   return { ...base, pass, failure_reasons };
 }
 
+export {
+  runOwnershipSurfaceValidation,
+  type OwnershipSurfaceMismatch,
+  type OwnershipSurfaceValidationReport,
+} from "./ownership-surface-validation";
+
+export {
+  runOwnershipIntegrityAudit,
+  type OwnershipIntegrityAuditReport,
+} from "./ownership-integrity-audit";

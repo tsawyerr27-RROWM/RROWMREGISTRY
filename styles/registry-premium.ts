@@ -5,10 +5,10 @@
 
 export const registryPremium = {
   paper: {
-    screen: "bg-[#f7f4ef]",
-    panel: "bg-[#fafaf8]",
+    screen: "bg-[color:var(--rrowm-registry-bg)]",
+    panel: "bg-[color:var(--rrowm-registry-surface)]",
     gradient:
-      "bg-gradient-to-br from-[#f7f4ef] via-[#fafaf8] to-[#f0ebe3]",
+      "bg-gradient-to-br from-[color:var(--rrowm-registry-bg)] via-[color:var(--rrowm-registry-surface)] to-[#f0ebe3]",
   },
   ink: {
     primary: "text-neutral-950",
@@ -18,7 +18,7 @@ export const registryPremium = {
   },
   frame: {
     outer:
-      "rounded-sm border border-neutral-300/70 bg-white shadow-[0_36px_88px_-36px_rgba(15,23,42,0.12)] print:shadow-none",
+      "rounded-sm border border-[color:var(--rrowm-registry-border)] bg-white shadow-[0_12px_30px_rgba(40,25,10,0.06)] print:shadow-none",
     inner: "border border-neutral-300/50",
     ornament: "registry-document-ornament",
   },

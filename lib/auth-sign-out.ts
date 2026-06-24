@@ -77,6 +77,21 @@ export async function signOutSafely(): Promise<{ ok: boolean; note?: string }> {
   return signOutInFlight;
 }
 
+/**
+ * Clears the session then performs a full-page navigation.
+ * Prefer this over client router navigation after sign-out — more reliable on mobile
+ * and avoids stale SSR session cookies on the next view.
+ */
+export async function signOutAndRedirect(
+  redirectTo = "/login"
+): Promise<{ ok: boolean; note?: string }> {
+  const result = await signOutSafely();
+  if (typeof window !== "undefined") {
+    window.location.assign(redirectTo);
+  }
+  return result;
+}
+
 export function getAuthStorageMode(): string | null {
   if (typeof window === "undefined") return null;
   try {

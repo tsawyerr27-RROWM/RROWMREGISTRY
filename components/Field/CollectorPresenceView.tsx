@@ -16,6 +16,7 @@ import {
 } from "@/lib/field-nav";
 import { fillMessage } from "@/lib/locale-messages";
 import { registryLedgerHref } from "@/lib/registry-nav";
+import { rrowmFieldCard } from "@/styles/rrowm-theme";
 
 type Props = {
   data: CollectorPresencePageData;
@@ -85,7 +86,7 @@ export function CollectorPresenceView({ data }: Props) {
       </section>
 
       <section className="mt-10 max-w-3xl">
-        <div className="rounded-2xl border border-neutral-900/[0.06] bg-white/75 p-5 shadow-sm md:p-6">
+        <div className={`${rrowmFieldCard.prestige} max-w-3xl`}>
           <h2 className="font-serif text-lg font-normal text-neutral-950">
             {t("field.presence.collector.stewardshipHeading")}
           </h2>
@@ -166,7 +167,7 @@ export function CollectorPresenceView({ data }: Props) {
         </div>
 
         {works.length === 0 ? (
-          <div className="mt-10 rounded-3xl border border-black/[0.06] bg-white/70 px-8 py-14 text-center shadow-sm">
+          <div className={`mt-10 ${rrowmFieldCard.empty}`}>
             <p className="text-sm text-neutral-600">
               {t("field.presence.collector.emptyHoldings")}
             </p>
@@ -186,7 +187,7 @@ export function CollectorPresenceView({ data }: Props) {
 
               return (
                 <li key={work.id}>
-                  <article className="group flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-black/[0.06] bg-white/90 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.2)] transition duration-300 hover:-translate-y-1 hover:border-black/[0.08]">
+                  <article className={`group flex h-full flex-col ${rrowmFieldCard.portfolio}`}>
                     <Link
                       href={work.recordHref}
                       className="relative block aspect-[4/3] overflow-hidden bg-neutral-100"
@@ -312,7 +313,7 @@ export function CollectorPresenceView({ data }: Props) {
         </section>
       ) : null}
 
-      <section className="mx-auto mt-20 max-w-2xl rounded-3xl border border-black/[0.06] bg-white/70 px-8 py-10 text-center shadow-sm md:mt-24 md:px-12">
+      <section className={`mx-auto mt-20 max-w-2xl md:mt-24 ${rrowmFieldCard.empty}`}>
         <p className="text-base leading-relaxed text-neutral-700">
           {t("field.presence.collector.closingLede")}
         </p>

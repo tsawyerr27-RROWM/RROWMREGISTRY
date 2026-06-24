@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { isCurrentOwner } from "@/lib/canonical-ownership-engine";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
 
@@ -27,7 +28,7 @@ export async function GET(req: Request) {
   const service = createSupabaseServiceClient();
   const { data: art, error } = await service
     .from("artworks")
-    .select("id, title, registry_id, verification_status, current_owner_id")
+    .select("id, title, registry_id, verification_status")
     .eq("registry_id", registryId)
     .maybeSingle();
 
@@ -40,8 +41,8 @@ export async function GET(req: Request) {
       { status: 200 }
     );
   }
-  const ownerId = art.current_owner_id as string | null;
-  if (!ownerId || ownerId !== user.id) {
+  const isCustodian = await isCurrentOwner(service, user.id, String(art.id));
+  if (!isCustodian) {
     return NextResponse.json(
       { eligible: false, reason: "not_custodian" },
       { status: 200 }

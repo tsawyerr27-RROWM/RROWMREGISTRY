@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { logActivityEvent } from "@/lib/log-activity";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 
@@ -115,9 +116,20 @@ export async function POST(req: Request) {
         : (data as { id?: string })
       : null;
 
+  const artworkId = row?.id ? String(row.id) : null;
+  const regSuffix = ` (${registryId})`;
+
+  void logActivityEvent({
+    userId: user.id,
+    type: "institution_artwork_registered",
+    message: `Catalogue work filed: ${title}${regSuffix}`,
+    artworkId,
+    metadata: { title, registry_id: registryId },
+  });
+
   return NextResponse.json({
     ok: true,
     artwork: row ?? data ?? null,
-    artwork_id: row?.id ?? null,
+    artwork_id: artworkId,
   });
 }

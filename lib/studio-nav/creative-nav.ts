@@ -4,6 +4,7 @@ import type { WorkspaceNavItem } from "@/components/Studio/WorkspaceShell";
 import { deferredRouterPush } from "@/lib/deferred-app-router";
 import { CREATIVE_SECTION_LABEL_KEYS } from "@/lib/studio-nav/labels";
 import { appendPersonalArchiveNavItem } from "@/lib/studio-nav/personal-archive";
+import { insertCreativeUtilityNavItems } from "@/lib/studio-nav/studio-utility-nav";
 import type { StudioNavTranslate } from "@/lib/studio-nav/types";
 
 export const CREATIVE_NAV_SECTIONS = [
@@ -42,14 +43,16 @@ export function buildCreativeNavItems(
 ): WorkspaceNavItem[] {
   const { governanceAttention = false, ownershipSaleSignalCount = 0 } = flags;
 
+  const sectionItems = CREATIVE_NAV_SECTIONS.map((id) => ({
+    id,
+    label: t(CREATIVE_SECTION_LABEL_KEYS[id]),
+    showDot:
+      (id === "Records" && governanceAttention) ||
+      (id === "Ownership" && ownershipSaleSignalCount > 0),
+  }));
+
   return appendPersonalArchiveNavItem(
-    CREATIVE_NAV_SECTIONS.map((id) => ({
-      id,
-      label: t(CREATIVE_SECTION_LABEL_KEYS[id]),
-      showDot:
-        (id === "Records" && governanceAttention) ||
-        (id === "Ownership" && ownershipSaleSignalCount > 0),
-    })),
+    insertCreativeUtilityNavItems(sectionItems, t),
     t
   );
 }

@@ -10,6 +10,8 @@ type Props = {
   limit?: number;
   emptyMessage?: string;
   loadingMessage?: string;
+  /** When this value changes, the feed refetches (e.g. after catalogue mutations). */
+  refreshKey?: number;
   /** compact: gallery sidebar; default: artist/collector shells */
   variant?: "default" | "compact";
 };
@@ -19,10 +21,11 @@ export function WorkspaceSidebarActivityFeed({
   limit = 10,
   emptyMessage,
   loadingMessage,
+  refreshKey = 0,
   variant = "default",
 }: Props) {
   const { t } = useLocalePreferences();
-  const { items, loading } = useAccountActivityFeed(userId, limit);
+  const { items, loading } = useAccountActivityFeed(userId, limit, refreshKey);
 
   const resolvedEmpty = emptyMessage ?? t("studio.shell.noActivity");
   const resolvedLoading = loadingMessage ?? t("collector.activity.loading");

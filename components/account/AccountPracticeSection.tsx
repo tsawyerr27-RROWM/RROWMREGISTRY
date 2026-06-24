@@ -5,6 +5,7 @@ import {
   AccountSubsection,
   ToggleRow,
 } from "@/components/account/account-ui";
+import { rrowmFloatingBlock } from "@/styles/rrowm-theme";
 import { PRACTICE_TYPES, practiceLabel } from "@/lib/practice-types";
 import { MAX_DECLARED_PRACTICES } from "@/lib/studio-practice-settings";
 
@@ -54,10 +55,10 @@ export function AccountPracticeSection({
       title="Practice"
       description="Declare how you work on The Field. Registry-evidence practices are inferred from verified records and remain read-only."
     >
-      <div className="liquid-glass-tile flex flex-col gap-10 px-4 py-6 md:px-6">
+      <div className={`${rrowmFloatingBlock.compact} flex flex-col gap-10 px-4 py-6 md:px-6`}>
         <AccountSubsection
           title="Declared practices"
-          description={`Select up to ${MAX_DECLARED_PRACTICES} practices from the canonical taxonomy. Saved explicitly in Studio — never inferred automatically.`}
+          description={`Select up to ${MAX_DECLARED_PRACTICES} practices from the canonical taxonomy. Saved explicitly in Studio, never inferred automatically.`}
         >
           <div className="flex flex-wrap gap-2">
             {PRACTICE_TYPES.map((practice) => {
@@ -69,10 +70,10 @@ export function AccountPracticeSection({
                   type="button"
                   disabled={disabled}
                   onClick={() => toggleDeclared(practice.slug)}
-                  className={`rounded-full border px-3 py-1.5 text-sm transition ${
-                    selected
-                      ? "border-neutral-900/20 bg-neutral-950 text-white"
-                      : "border-neutral-900/10 bg-white/60 text-neutral-700 hover:border-neutral-900/15"
+                className={`rounded-xl border px-4 py-3 text-sm transition ${
+                  selected
+                    ? "border-neutral-900/20 bg-neutral-950 text-white shadow-[0_4px_14px_rgba(25,20,10,0.08)]"
+                    : "border-neutral-900/[0.08] bg-white text-neutral-700 hover:border-neutral-900/15 hover:shadow-[0_2px_8px_rgba(25,20,10,0.04)]"
                   } ${disabled && !selected ? "cursor-not-allowed opacity-50" : ""}`}
                   aria-pressed={selected}
                 >
@@ -96,7 +97,7 @@ export function AccountPracticeSection({
               {declaredSlugs.map((slug) => (
                 <label
                   key={slug}
-                  className="flex cursor-pointer items-center gap-3 rounded-xl border border-neutral-900/[0.06] bg-white/40 px-4 py-3 text-sm text-neutral-800"
+                  className="flex cursor-pointer items-center gap-3 rounded-xl border border-neutral-900/[0.08] bg-white px-4 py-3 text-sm text-neutral-800 shadow-[0_2px_8px_rgba(25,20,10,0.03)]"
                 >
                   <input
                     type="radio"
@@ -130,7 +131,7 @@ export function AccountPracticeSection({
         {registryEvidenceSlugs.length > 0 ? (
           <AccountSubsection
             title="From verified Registry records"
-            description="Read-only — inferred from verified work mediums. Declared practices describe how you work; registry evidence reflects what is on file."
+            description="Read-only. Inferred from verified work mediums. Declared practices describe how you work; registry evidence reflects what is on file."
           >
             <div className="flex flex-wrap gap-1.5">
               {registryEvidenceSlugs.map((slug) => (

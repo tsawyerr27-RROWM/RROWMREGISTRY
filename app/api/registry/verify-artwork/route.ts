@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 
+import { logActivityEvent } from "@/lib/log-activity";
 import { notifyRegistryVerificationApproved } from "@/lib/notification-hooks/registry";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 
 export const runtime = "nodejs";
@@ -67,7 +69,31 @@ export async function POST(req: Request) {
   }
 
   if (!wasVerified) {
-    void notifyRegistryVerificationApproved({ artworkId });
+    void notifyRegistryVerificationApproved({
+      artworkId,
+      excludeUserId: user.id,
+    });
+
+    const service = createSupabaseServiceClient();
+    const { data: art } = await service
+      .from("artworks")
+      .select("title, registry_id")
+      .eq("id", artworkId)
+      .maybeSingle();
+    const title = String(art?.title || "").trim() || "Artwork";
+    const reg = art?.registry_id ? ` (${art.registry_id})` : "";
+
+    void logActivityEvent({
+      userId: user.id,
+      type: "artwork_verified",
+      message: `Artwork verified: ${title}${reg}`,
+      artworkId,
+      metadata: {
+        title,
+        registry_id: art?.registry_id ?? null,
+        via: "gallery",
+      },
+    });
   }
 
   return NextResponse.json({ ok: true });

@@ -14,10 +14,23 @@ import {
   consumePendingCollectorSection,
 } from "@/lib/studio-nav";
 import { fillMessage } from "@/lib/locale-messages";
+import type { PendingAcquisitionRow } from "@/lib/acquisition-ownership-loop";
+import {
+  mergeCollectorPortfolioRows,
+  pendingAcquisitionToGhostRow,
+  type CollectorPortfolioRow,
+} from "@/lib/collector-pending-works";
 import {
   getCollectorOwnedArtworkIds,
   sortPortfolioRows,
 } from "@/lib/collector-portfolio";
+import { getTransferredArtworkIds } from "@/lib/ownership-resolver";
+import { OWNERSHIP_EVENT_COLLECTOR_STATUS_SELECT } from "@/lib/ownership-events-schema";
+import {
+  resolvePortfolioBadge,
+  type CollectorPortfolioFilter,
+} from "@/lib/ownership-surface-state";
+import { OwnershipStateBadge } from "@/components/ownership/OwnershipStateBadge";
 import {
   latestOwnershipSystemStatus,
   normalizeVerificationStatus,
@@ -30,22 +43,34 @@ import { testModeEnabled } from "@/lib/test-mode";
 import { TestDataControls } from "@/components/Admin/TestDataControls";
 import { CollectorStudioActivityPreview } from "@/components/Studio/CollectorStudioActivityPreview";
 import { CollectorWorkspaceHero } from "@/components/Studio/CollectorWorkspaceHero";
+import { CollectorWorkspaceOverview } from "@/components/Studio/CollectorWorkspaceOverview";
+import { StudioCatalogueMetricsPanels } from "@/components/Studio/StudioCatalogueMetricsPanels";
+import {
+  StudioContentSlab,
+  studioOverviewStackClass,
+} from "@/components/Studio/StudioContentSlab";
+import { DataInsightModal } from "@/components/Insights/DataInsightModal";
+import { getDashboardInsights } from "@/lib/insights";
+import {
+  fetchStudioCatalogueMetrics,
+  type StudioCatalogueMetrics,
+} from "@/lib/studio-catalogue-metrics";
+import {
+  buildHealthInsightBreakdown,
+  buildValueInsightBreakdown,
+} from "@/lib/studio-insight-breakdown";
+import {
+  translateInsightBarCategory,
+  translateRoleInsight,
+} from "@/lib/insights-i18n";
+import { formatCurrency } from "@/lib/formatCurrency";
 import {
   certificateStatusMapToCollectorRecord,
   fetchCertificatePublicStatusByArtworkIds,
 } from "@/lib/fetch-certificate-public-status-map";
 
-type Row = {
-  id: string;
-  title: string | null;
-  registry_id: string | null;
-  image_url: string | null;
+type Row = CollectorPortfolioRow & {
   artist_id: string | null;
-  verification_status: string | null;
-  latest_value: number | null;
-  latest_currency: string | null;
-  latest_transfer_at: string | null;
-  created_at: string | null;
 };
 
 type CollectorProfile = {
@@ -72,11 +97,17 @@ export default function CollectorStudioPage() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
+  const [pendingAcquisitions, setPendingAcquisitions] = useState<
+    PendingAcquisitionRow[]
+  >([]);
   const [artistNames, setArtistNames] = useState<Record<string, string>>({});
   const [certByArtwork, setCertByArtwork] = useState<
     Record<string, { has_certificate: boolean; revoked: boolean }>
   >({});
   const [sortMode, setSortMode] = useState<"activity" | "value">("activity");
+  const [portfolioFilter, setPortfolioFilter] =
+    useState<CollectorPortfolioFilter>("current");
+  const [transferredRows, setTransferredRows] = useState<Row[]>([]);
   const [latestOwnershipByArt, setLatestOwnershipByArt] = useState<
     Record<string, { status: OwnershipSystemStatus; className: string }>
   >({});
@@ -103,6 +134,23 @@ export default function CollectorStudioPage() {
     "workspace" | "works" | "attention"
   >("workspace");
   const [isTransitioningSection, setIsTransitioningSection] = useState(false);
+  const [catalogueMetrics, setCatalogueMetrics] =
+    useState<StudioCatalogueMetrics | null>(null);
+  const [insightOpen, setInsightOpen] = useState<null | "value" | "health">(
+    null
+  );
+  const [insightLoading, setInsightLoading] = useState(false);
+  const [insightData, setInsightData] = useState<any[]>([]);
+  const [insightLines, setInsightLines] = useState<
+    { key: string; label: string }[]
+  >([]);
+  const [insightTitle, setInsightTitle] = useState("");
+  const [insightSubtitle, setInsightSubtitle] = useState("");
+  const [insightKind, setInsightKind] = useState<"line" | "bar">("line");
+  const [insightBreakdown, setInsightBreakdown] = useState<
+    { label: string; value: string }[]
+  >([]);
+  const [insightDataNotes, setInsightDataNotes] = useState<string[]>([]);
 
   useEffect(() => {
     const pending = consumePendingCollectorSection();
@@ -134,6 +182,20 @@ export default function CollectorStudioPage() {
 
       setUserId(uid);
 
+      const pendingRes = await fetch("/api/collector/pending-acquisitions", {
+        credentials: "include",
+      });
+      const pendingPayload = (await pendingRes.json().catch(() => ({}))) as {
+        pending_acquisitions?: PendingAcquisitionRow[];
+      };
+      const pendingList = Array.isArray(pendingPayload.pending_acquisitions)
+        ? pendingPayload.pending_acquisitions
+        : [];
+
+      if (!cancelled) {
+        setPendingAcquisitions(pendingList);
+      }
+
       const { data: cp } = await sb()
         .from("collector_profiles")
         .select(
@@ -143,8 +205,54 @@ export default function CollectorStudioPage() {
         .maybeSingle();
       if (!cancelled && cp) setCollectorProfile(cp);
 
+      const pendingCount = pendingList.length;
+
       const ownedIds = await getCollectorOwnedArtworkIds(sb(), uid);
-      if (ownedIds.length === 0) {
+
+      let heldRows: Row[] = [];
+
+      if (ownedIds.length > 0) {
+        const { data: artRows, error } = await sb()
+          .from("artwork_read_model")
+          .select(
+            "id, title, registry_id, image_url, artist_id, verification_status, latest_value, latest_currency, latest_transfer_at, created_at, initial_value, initial_currency, ownership_transfer_count, first_transfer_at"
+          )
+          .in("id", ownedIds);
+
+        if (error) {
+          console.error(error);
+          if (!cancelled) setLoading(false);
+          return;
+        }
+
+        heldRows = (artRows || []).map((row) => ({
+          ...(row as Row),
+          portfolio_status: "held" as const,
+        }));
+      }
+
+      const mergedRows = mergeCollectorPortfolioRows(heldRows, pendingList) as Row[];
+
+      let soldRows: Row[] = [];
+      const transferredIds = await getTransferredArtworkIds(sb(), uid);
+      if (transferredIds.length > 0) {
+        const { data: soldArt } = await sb()
+          .from("artwork_read_model")
+          .select(
+            "id, title, registry_id, image_url, artist_id, verification_status, latest_value, latest_currency, latest_transfer_at, created_at, initial_value, initial_currency, ownership_transfer_count, first_transfer_at"
+          )
+          .in("id", transferredIds);
+        soldRows = (soldArt || []).map((row) => ({
+          ...(row as Row),
+          portfolio_status: "sold" as const,
+        }));
+      }
+
+      if (!cancelled) {
+        setTransferredRows(soldRows);
+      }
+
+      if (mergedRows.length === 0 && soldRows.length === 0) {
         if (!cancelled) {
           setRows([]);
           setStudioAttention({
@@ -156,7 +264,7 @@ export default function CollectorStudioPage() {
             held: 0,
             verifiedOwnership: 0,
             pendingVerification: 0,
-            pendingTransfer: 0,
+            pendingTransfer: pendingCount,
             ownershipClaims: 0,
             certificatesAvailable: 0,
           });
@@ -168,20 +276,9 @@ export default function CollectorStudioPage() {
         return;
       }
 
-      const { data: artRows, error } = await sb()
-        .from("artwork_read_model")
-        .select(
-          "id, title, registry_id, image_url, artist_id, verification_status, latest_value, latest_currency, latest_transfer_at, created_at"
-        )
-        .in("id", ownedIds);
 
-      if (error) {
-        console.error(error);
-        if (!cancelled) setLoading(false);
-        return;
-      }
-
-      const list = (artRows || []) as Row[];
+      const list = heldRows;
+      const portfolioRows = mergedRows;
       const artistIds = [
         ...new Set(list.map((r) => r.artist_id).filter(Boolean)),
       ] as string[];
@@ -207,9 +304,7 @@ export default function CollectorStudioPage() {
 
       const { data: ownEv } = await sb()
         .from("ownership_events")
-        .select(
-          "artwork_id, verification_status, created_at, id, to_user_id, to_owner_id, to_name"
-        )
+        .select(OWNERSHIP_EVENT_COLLECTOR_STATUS_SELECT)
         .in("artwork_id", ownedIds)
         .order("created_at", { ascending: false })
         .order("id", { ascending: false });
@@ -250,7 +345,7 @@ export default function CollectorStudioPage() {
 
       const regById: Record<string, string> = {};
       const titleById: Record<string, string> = {};
-      for (const r of list) {
+      for (const r of portfolioRows) {
         titleById[r.id] = (r.title || "").trim() || t("collector.fallback.untitled");
         if (r.registry_id) regById[r.id] = r.registry_id;
       }
@@ -305,16 +400,27 @@ export default function CollectorStudioPage() {
       });
 
       setCollectionSnapshot({
-        held: list.length,
+        held: portfolioRows.length,
         verifiedOwnership,
         pendingVerification: unverifiedLinks.length,
-        pendingTransfer: unresolvedLinks.length,
+        pendingTransfer: unresolvedLinks.length + pendingCount,
         ownershipClaims: claimedLinks.length,
         certificatesAvailable,
       });
 
+      try {
+        const metrics = await fetchStudioCatalogueMetrics(sb(), {
+          role: "collector",
+          userId: uid,
+          artworks: list,
+        });
+        if (!cancelled) setCatalogueMetrics(metrics);
+      } catch {
+        if (!cancelled) setCatalogueMetrics(null);
+      }
+
       if (!cancelled) {
-        setRows(list);
+        setRows(heldRows);
         setLoading(false);
       }
     })();
@@ -323,10 +429,17 @@ export default function CollectorStudioPage() {
     };
   }, [sb]);
 
-  const sorted = useMemo(
-    () => sortPortfolioRows(rows, sortMode),
-    [rows, sortMode]
-  );
+  const sorted = useMemo(() => {
+    if (portfolioFilter === "pending") {
+      return pendingAcquisitions.map((item) =>
+        pendingAcquisitionToGhostRow(item)
+      ) as Row[];
+    }
+    if (portfolioFilter === "sold") {
+      return sortPortfolioRows(transferredRows, sortMode);
+    }
+    return sortPortfolioRows(rows, sortMode);
+  }, [portfolioFilter, pendingAcquisitions, transferredRows, rows, sortMode]);
 
   const portfolioForActivity = useMemo(
     () =>
@@ -401,6 +514,90 @@ export default function CollectorStudioPage() {
     [intelligenceItems.length, t]
   );
 
+  const openInsight = useCallback(
+    async (kind: "value" | "health") => {
+      if (!userId || rows.length === 0) return;
+      setInsightOpen(kind);
+      setInsightLoading(true);
+      setInsightData([]);
+      setInsightLines([]);
+      setInsightBreakdown([]);
+      setInsightDataNotes([]);
+
+      const artworkIds = rows.map((row) => row.id).filter(Boolean);
+      try {
+        const insights = await getDashboardInsights({
+          supabase: sb(),
+          userId,
+          artworkIds,
+        });
+
+        if (kind === "health") {
+          const h = insights.health;
+          const healthBreakdown = buildHealthInsightBreakdown({
+            health: h,
+            role: "collector",
+            t,
+          });
+          setInsightKind("bar");
+          setInsightTitle(t("studio.insight.title.health"));
+          setInsightSubtitle(
+            translateRoleInsight("collector", { health: h }, t)
+          );
+          setInsightData([
+            {
+              month: translateInsightBarCategory("fullyVerified", t),
+              events: h.fullyVerified,
+            },
+            {
+              month: translateInsightBarCategory("certified", t),
+              events: h.withCertificates,
+            },
+            {
+              month: translateInsightBarCategory("incomplete", t),
+              events: h.missingVerification,
+            },
+          ]);
+          setInsightBreakdown(healthBreakdown.breakdown);
+          setInsightDataNotes(healthBreakdown.dataNotes);
+          return;
+        }
+
+        const metrics =
+          catalogueMetrics ??
+          (await fetchStudioCatalogueMetrics(sb(), {
+            role: "collector",
+            userId,
+            artworks: rows,
+          }));
+        if (!catalogueMetrics) setCatalogueMetrics(metrics);
+
+        const { series, currencies } = insights.valueTrend;
+        const valueBreakdown = buildValueInsightBreakdown({
+          role: "collector",
+          metrics,
+          latestValues: insights.valueTrend.latestValues,
+          t,
+          formatCurrency,
+        });
+        setInsightKind("line");
+        setInsightTitle(t("studio.insight.title.valueCollector"));
+        setInsightSubtitle(
+          translateRoleInsight("collector", { valueTrend: insights.valueTrend }, t)
+        );
+        setInsightLines(currencies.map((c) => ({ key: c, label: c })));
+        setInsightData(series);
+        setInsightBreakdown(valueBreakdown.breakdown);
+        setInsightDataNotes(valueBreakdown.dataNotes);
+      } catch {
+        setInsightSubtitle(t("studio.insight.loadFailed"));
+      } finally {
+        setInsightLoading(false);
+      }
+    },
+    [catalogueMetrics, rows, sb, t, userId]
+  );
+
   if (loading || !userId) {
     return (
       <div className="ds-page-environment relative min-h-screen pt-28 text-neutral-900">
@@ -462,7 +659,7 @@ export default function CollectorStudioPage() {
             </div>
           ) : null}
 
-          <div className={testModeEnabled() ? "mt-8" : "mt-6"}>
+          <div className={`max-w-6xl pb-8 ${testModeEnabled() ? "mt-8" : "mt-6"} ${studioOverviewStackClass}`}>
             <CollectorWorkspaceHero
               displayName={displayName}
               location={locationLine}
@@ -477,83 +674,108 @@ export default function CollectorStudioPage() {
               }}
               onGoToSection={(section) => selectSection(section)}
             />
-          </div>
+            <CollectorWorkspaceOverview
+              snapshot={
+                snap
+                  ? {
+                      ...snap,
+                      attentionCount: intelligenceItems.length,
+                    }
+                  : null
+              }
+            />
 
-          <section className="mt-12 border-t border-neutral-900/10 pt-14">
-            <h2 className="sr-only">{t("collector.overview.srOnly")}</h2>
-            {snap && snap.held === 0 ? (
-              <p className="text-[17px] leading-[1.65] text-neutral-600">
-                {t("collector.overview.empty")}
-              </p>
-            ) : snap ? (
-              <div className="space-y-3 text-[17px] leading-[1.65] text-neutral-700">
-                <p>
-                  {fillMessage(t("collector.overview.held"), {
-                    count: String(snap.held),
-                    units:
-                      snap.held === 1
-                        ? t("collector.word.work")
-                        : t("collector.word.works"),
-                  })}
-                </p>
-                {snap.verifiedOwnership > 0 ? (
-                  <p>
-                    {fillMessage(t("collector.overview.verifiedOwnership"), {
-                      count: String(snap.verifiedOwnership),
-                      units:
-                        snap.verifiedOwnership === 1
-                          ? t("collector.word.record")
-                          : t("collector.word.records"),
-                    })}
-                  </p>
-                ) : null}
-                {snap.pendingTransfer > 0 ? (
-                  <p>
-                    {fillMessage(t("collector.overview.pendingTransfer"), {
-                      count: String(snap.pendingTransfer),
-                      units:
-                        snap.pendingTransfer === 1
-                          ? t("collector.word.transfer")
-                          : t("collector.word.transfers"),
-                    })}
-                  </p>
-                ) : null}
-                {snap.pendingVerification > 0 && snap.verifiedOwnership < snap.held ? (
-                  <p className="text-neutral-600">
-                    {fillMessage(t("collector.overview.notVerified"), {
-                      count: String(snap.pendingVerification),
-                      units:
-                        snap.pendingVerification === 1
-                          ? t("collector.word.record")
-                          : t("collector.word.records"),
-                    })}
-                  </p>
-                ) : null}
-                {snap.ownershipClaims > 0 ? (
-                  <p className="text-neutral-600">
-                    {fillMessage(t("collector.overview.openClaims"), {
-                      count: String(snap.ownershipClaims),
-                      units:
-                        snap.ownershipClaims === 1
-                          ? t("collector.word.claim")
-                          : t("collector.word.claims"),
-                    })}
-                  </p>
-                ) : null}
-                {snap.certificatesAvailable > 0 ? (
-                  <p className="text-neutral-600">
-                    {fillMessage(t("collector.overview.withCertificate"), {
-                      count: String(snap.certificatesAvailable),
-                      units:
-                        snap.certificatesAvailable === 1
-                          ? t("collector.word.work")
-                          : t("collector.word.works"),
-                    })}
-                  </p>
-                ) : null}
-              </div>
+            {pendingAcquisitions.length > 0 ? (
+              <StudioContentSlab
+                title="Pending acquisitions"
+                subtitle="Confirm receipt to complete ownership on the registry ledger."
+              >
+                <ul className="grid gap-3 sm:grid-cols-2">
+                  {pendingAcquisitions.slice(0, 4).map((item) => (
+                    <li
+                      key={item.provenance_transfer_id}
+                      className="flex gap-3 rounded-xl border border-amber-200/40 bg-amber-50/40 p-3"
+                    >
+                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-neutral-200/80">
+                        {item.image_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={item.image_url}
+                            alt=""
+                            className="h-full w-full object-cover opacity-80"
+                          />
+                        ) : null}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[14px] font-medium text-neutral-900">
+                          {(item.title || "").trim() || t("collector.fallback.untitled")}
+                        </p>
+                        <p className="text-[12px] text-neutral-500">
+                          Pending transfer · {item.registry_id || "–"}
+                        </p>
+                        {item.accept_href ? (
+                          <Link
+                            href={item.accept_href}
+                            className="mt-2 inline-flex rounded-lg bg-neutral-950 px-3 py-1.5 text-[12px] font-medium text-white transition hover:bg-neutral-800"
+                          >
+                            Confirm receipt
+                          </Link>
+                        ) : null}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </StudioContentSlab>
             ) : null}
-          </section>
+
+            {rows.length > 0 ? (
+              <>
+                <StudioContentSlab
+                  title={t("studio.overview.recordHealth")}
+                  subtitle={t("collector.overview.recordHealthSubtitle")}
+                >
+                  <button
+                    type="button"
+                    onClick={() => void openInsight("health")}
+                    className="grid w-full gap-4 text-left sm:grid-cols-3"
+                  >
+                    <div className="rounded-2xl border border-neutral-900/[0.06] bg-white/70 px-5 py-4">
+                      <p className="text-[13px] font-medium text-neutral-700">
+                        {t("collector.hero.verifiedOwnership")}
+                      </p>
+                      <p className="mt-2 font-serif text-2xl tabular-nums text-neutral-950">
+                        {snap && snap.held > 0
+                          ? `${Math.round((snap.verifiedOwnership / snap.held) * 100)}%`
+                          : "–"}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-neutral-900/[0.06] bg-white/70 px-5 py-4">
+                      <p className="text-[13px] font-medium text-neutral-700">
+                        {t("collector.hero.continuity")}
+                      </p>
+                      <p className="mt-2 font-serif text-2xl tabular-nums text-neutral-950">
+                        {intelligenceItems.length}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-neutral-900/[0.06] bg-white/70 px-5 py-4">
+                      <p className="text-[13px] font-medium text-neutral-700">
+                        {t("studio.insight.bar.certified")}
+                      </p>
+                      <p className="mt-2 font-serif text-2xl tabular-nums text-neutral-950">
+                        {snap?.certificatesAvailable ?? 0}
+                      </p>
+                    </div>
+                  </button>
+                </StudioContentSlab>
+
+                <StudioCatalogueMetricsPanels
+                  role="collector"
+                  metrics={catalogueMetrics}
+                  onOpenValueInsight={() => void openInsight("value")}
+                />
+              </>
+            ) : null}
+          </div>
         </>
       ) : null}
 
@@ -563,6 +785,29 @@ export default function CollectorStudioPage() {
             <h2 className="font-serif text-xl font-normal text-neutral-900">
               {t("collector.works.title")}
             </h2>
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="sr-only" htmlFor="collector-portfolio-filter">
+                Filter works
+              </label>
+              <select
+                id="collector-portfolio-filter"
+                value={portfolioFilter}
+                onChange={(e) =>
+                  setPortfolioFilter(e.target.value as CollectorPortfolioFilter)
+                }
+                className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-[13px] text-neutral-800"
+              >
+                <option value="current">
+                  Current ({rows.length})
+                </option>
+                <option value="pending">
+                  Pending ({pendingAcquisitions.length})
+                </option>
+                <option value="sold">
+                  Sold / transferred ({transferredRows.length})
+                </option>
+              </select>
+            </div>
             {sorted.length > 0 ? (
               <p className="text-xs text-neutral-400">
                 <span className="text-neutral-500">{t("collector.works.order")}</span>{" "}
@@ -595,7 +840,66 @@ export default function CollectorStudioPage() {
             ) : null}
           </div>
 
-          {sorted.length === 0 ? (
+          {pendingAcquisitions.length > 0 ? (
+            <div className="mt-8 space-y-3">
+              <h3 className="text-[13px] font-medium uppercase tracking-[0.12em] text-amber-900/70">
+                Pending acquisitions
+              </h3>
+              <ul className="space-y-3">
+                {pendingAcquisitions.map((item) => {
+                  const title =
+                    (item.title || "").trim() || t("collector.fallback.untitled");
+                  const reg = item.registry_id?.trim() || "–";
+                  return (
+                    <li
+                      key={item.provenance_transfer_id}
+                      className="rounded-2xl border border-amber-200/50 bg-gradient-to-br from-amber-50/70 via-white to-white p-4 shadow-[0_8px_24px_-16px_rgba(120,90,40,0.12)]"
+                    >
+                      <div className="flex gap-4">
+                        <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-neutral-200/80">
+                          {item.image_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={item.image_url}
+                              alt=""
+                              className="h-full w-full object-cover opacity-75"
+                            />
+                          ) : null}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-serif text-lg text-neutral-950">{title}</p>
+                          <p className="mt-1 font-mono text-[12px] text-neutral-500">{reg}</p>
+                          <p className="mt-2 text-[13px] text-neutral-600">
+                            Pending transfer — confirm receipt to complete ownership.
+                          </p>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {item.accept_href ? (
+                              <Link
+                                href={item.accept_href}
+                                className="rounded-xl bg-neutral-950 px-4 py-2 text-[13px] font-medium text-white transition hover:bg-neutral-800"
+                              >
+                                Confirm receipt
+                              </Link>
+                            ) : null}
+                            {item.deal_id ? (
+                              <Link
+                                href={`/studio/deals?deal=${encodeURIComponent(item.deal_id)}`}
+                                className="rounded-xl border border-neutral-900/10 bg-white px-4 py-2 text-[13px] font-medium text-neutral-800 transition hover:bg-neutral-50"
+                              >
+                                Open deal
+                              </Link>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
+
+          {sorted.length === 0 && pendingAcquisitions.length === 0 ? (
             <p className="mt-10 text-sm leading-relaxed text-neutral-500">
               {t("collector.works.emptyPrefix")}{" "}
               <Link
@@ -615,27 +919,46 @@ export default function CollectorStudioPage() {
                   r.artist_id && artistNames[r.artist_id]
                     ? artistNames[r.artist_id]
                     : t("collector.fallback.artist");
-                const ownEntry =
-                  latestOwnershipByArt[r.id] ?? {
-                    status: "unassigned" as OwnershipSystemStatus,
-                    className: ownershipStatusBadge("unassigned", "light").className,
-                  };
-                const ownLabel = translateOwnershipStatusLabel(
-                  ownEntry.status,
-                  t
-                );
+                const isPending = r.portfolio_status === "pending_transfer";
+                const surfaceBadge = resolvePortfolioBadge({
+                  portfolioStatus: r.portfolio_status,
+                });
+                const ownEntry = isPending
+                  ? {
+                      status: "claimed" as OwnershipSystemStatus,
+                      className: "text-amber-900/80 font-medium",
+                    }
+                  : latestOwnershipByArt[r.id] ?? {
+                      status: "unassigned" as OwnershipSystemStatus,
+                      className: ownershipStatusBadge("unassigned", "light").className,
+                    };
+                const ownLabel = isPending
+                  ? "Pending transfer"
+                  : translateOwnershipStatusLabel(ownEntry.status, t);
                 const ownClassName = ownEntry.className;
-                const href = r.registry_id
-                  ? `/collector-studio/artwork/${encodeURIComponent(r.registry_id)}`
-                  : "#";
-                const flagSale = signalMaps.pendingSale.has(r.id);
-                const flagUnver = signalMaps.unverified.has(r.id);
+                const href = isPending
+                  ? r.accept_href || (r.registry_id ? `/registry/${encodeURIComponent(r.registry_id)}/ledger` : "#")
+                  : r.registry_id
+                    ? `/collector-studio/artwork/${encodeURIComponent(r.registry_id)}`
+                    : "#";
+                const flagSale = !isPending && signalMaps.pendingSale.has(r.id);
+                const flagUnver = !isPending && signalMaps.unverified.has(r.id);
                 return (
-                  <li key={r.id}>
+                  <li key={r.id} className={isPending ? "opacity-80" : undefined}>
                     <Link
                       href={href}
-                      className="block py-7 outline-none transition first:pt-0 hover:[&_.work-title]:text-neutral-600 focus-visible:ring-1 focus-visible:ring-neutral-900/10"
+                      className={`block py-7 outline-none transition first:pt-0 hover:[&_.work-title]:text-neutral-600 focus-visible:ring-1 focus-visible:ring-neutral-900/10 ${isPending ? "border-l-2 border-amber-300/60 pl-4" : ""}`}
                     >
+                      <div className="flex gap-4">
+                        {r.image_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={r.image_url}
+                            alt=""
+                            className={`hidden h-16 w-16 shrink-0 rounded-lg object-cover sm:block ${isPending ? "opacity-70 grayscale-[20%]" : ""}`}
+                          />
+                        ) : null}
+                        <div className="min-w-0 flex-1">
                       <p className="work-title font-serif text-lg font-normal leading-snug text-neutral-950">
                         {title}
                       </p>
@@ -645,17 +968,22 @@ export default function CollectorStudioPage() {
                       </p>
                       <p className={`mt-3 text-sm ${ownClassName}`}>
                         {ownLabel}
-                        {flagSale ? (
-                          <span className="block pt-1 text-xs font-normal text-amber-900/80">
-                            {t("collector.works.transferPending")}
-                          </span>
-                        ) : null}
-                        {flagUnver ? (
-                          <span className="block pt-1 text-xs font-normal text-neutral-500">
-                            {t("collector.works.verificationOutstanding")}
-                          </span>
-                        ) : null}
                       </p>
+                      <div className="mt-2">
+                        <OwnershipStateBadge badge={surfaceBadge} />
+                      </div>
+                      {flagSale ? (
+                        <span className="block pt-1 text-xs font-normal text-amber-900/80">
+                          {t("collector.works.transferPending")}
+                        </span>
+                      ) : null}
+                      {flagUnver ? (
+                        <span className="block pt-1 text-xs font-normal text-neutral-500">
+                          {t("collector.works.verificationOutstanding")}
+                        </span>
+                      ) : null}
+                        </div>
+                      </div>
                     </Link>
                   </li>
                 );
@@ -691,6 +1019,20 @@ export default function CollectorStudioPage() {
         </section>
       ) : null}
     </StudioShell>
+
+    <DataInsightModal
+      open={insightOpen !== null}
+      onClose={() => setInsightOpen(null)}
+      title={insightTitle || t("studio.insight.fallbackTitle")}
+      subtitle={insightSubtitle || null}
+      chartLoading={insightLoading}
+      kind={insightKind}
+      data={insightData}
+      lines={insightLines}
+      barKey="events"
+      breakdown={insightBreakdown}
+      dataNotes={insightDataNotes}
+    />
     </>
   );
 }

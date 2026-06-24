@@ -39,6 +39,27 @@ function panelClass(tier: DealLedgerEvent["tier"]): string {
   return rrowmDealSurface.ledgerEventMinor;
 }
 
+function isMajorTier(tier: DealLedgerEvent["tier"]): boolean {
+  return tier === "major" || tier === "terminal";
+}
+
+function eventStackSpacing(
+  event: DealLedgerEvent,
+  index: number,
+  events: DealLedgerEvent[]
+): string {
+  if (index === 0) return "";
+  const prev = events[index - 1];
+  if (isMajorTier(event.tier) || isMajorTier(prev.tier)) {
+    return "mt-8 md:mt-10";
+  }
+  return "mt-2.5";
+}
+
+/** Editorial line length for correspondence and proposal bodies */
+const manuscriptBodyClass =
+  "max-w-[42rem] text-[15px] leading-[1.75] text-neutral-800 md:text-[16px] md:leading-[1.8]";
+
 function LedgerEventEntry({
   event,
   userId,
@@ -53,22 +74,22 @@ function LedgerEventEntry({
   return (
     <article className={panelClass(event.tier)}>
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <div>
+        <div className="min-w-0 max-w-[42rem]">
           <h4
             className={
               isMinor
                 ? "text-[13px] font-medium text-neutral-800"
-                : "font-serif text-lg font-normal tracking-tight text-neutral-950"
+                : "font-serif text-xl font-normal tracking-tight text-neutral-950 md:text-[1.35rem]"
             }
           >
             {title}
           </h4>
-          <p className="mt-1 text-[12px] text-neutral-500">
+          <p className="mt-1.5 text-[12px] text-neutral-500">
             {actorLabel(userId, event.actorUserId)}
           </p>
         </div>
         <time
-          className="text-[11px] tabular-nums text-neutral-500"
+          className="shrink-0 text-[11px] tabular-nums text-neutral-500"
           dateTime={event.timestamp}
         >
           {formatTimestamp(event.timestamp)}
@@ -78,27 +99,27 @@ function LedgerEventEntry({
       <p
         className={
           isMinor
-            ? "mt-2 text-[13px] leading-relaxed text-neutral-700"
-            : "mt-3 text-[14px] leading-relaxed text-neutral-700"
+            ? `mt-2.5 max-w-[42rem] text-[13px] leading-relaxed text-neutral-700`
+            : `mt-4 max-w-[42rem] text-[15px] leading-[1.7] text-neutral-700`
         }
       >
         {event.summary}
       </p>
 
       {body && event.type !== "message" ? (
-        <p className="mt-3 whitespace-pre-wrap border-t border-neutral-900/[0.06] pt-3 text-[14px] leading-relaxed text-neutral-800">
+        <p
+          className={`mt-4 whitespace-pre-wrap border-t border-neutral-900/[0.06] pt-4 ${manuscriptBodyClass}`}
+        >
           {body}
         </p>
       ) : null}
 
       {body && event.type === "message" ? (
-        <p className="mt-2 whitespace-pre-wrap text-[14px] leading-relaxed text-neutral-800">
-          {body}
-        </p>
+        <p className={`mt-3 whitespace-pre-wrap ${manuscriptBodyClass}`}>{body}</p>
       ) : null}
 
       {event.type === "revision" && event.metadata.revision_number != null ? (
-        <p className="mt-3 text-[12px] text-neutral-500">
+        <p className="mt-4 max-w-[42rem] text-[12px] text-neutral-500">
           Revision {String(event.metadata.revision_number)} archived on file.
         </p>
       ) : null}
@@ -139,43 +160,45 @@ export function DealNegotiationLedger({
   };
 
   return (
-    <div className="flex min-h-0 flex-col">
+    <div className="flex min-h-0 w-full flex-col">
       <div className="flex items-baseline justify-between gap-4">
-        <h3 className="font-serif text-xl font-normal tracking-tight text-neutral-950">
+        <h3 className="font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-[1.65rem]">
           Negotiation ledger
         </h3>
         <p className="text-[12px] text-neutral-500">{events.length} entries</p>
       </div>
 
       <div
-        className={`${rrowmDealSurface.ledger} mt-5 min-h-0 flex-1 overflow-y-auto`}
+        className={`${rrowmDealSurface.ledger} mt-6 min-h-0 flex-1 overflow-y-auto md:mt-7`}
       >
         {events.length === 0 ? (
-          <p className="text-[13px] leading-relaxed text-neutral-500">
+          <p className="max-w-[42rem] text-[14px] leading-relaxed text-neutral-500">
             No ledger entries recorded yet.
           </p>
         ) : (
-          <div className="space-y-5">
-            {events.map((event) => (
-              <LedgerEventEntry key={event.id} event={event} userId={userId} />
+          <div>
+            {events.map((event, index) => (
+              <div key={event.id} className={eventStackSpacing(event, index, events)}>
+                <LedgerEventEntry event={event} userId={userId} />
+              </div>
             ))}
           </div>
         )}
       </div>
 
-      <div className={`${rrowmDealSurface.correspondence} mt-6`}>
-        <h4 className="font-serif text-base font-normal tracking-tight text-neutral-950">
+      <div className={`${rrowmDealSurface.correspondence} mt-8 max-w-[42rem] md:mt-10`}>
+        <h4 className="font-serif text-lg font-normal tracking-tight text-neutral-950">
           Add correspondence
         </h4>
-        <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
+        <p className="mt-2 text-[14px] leading-relaxed text-neutral-600">
           Record a note in the negotiation ledger. Counterproposals are filed
           separately through the action bar.
         </p>
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          rows={3}
-          className={`${rrowmEconomicSurface.input} min-h-[5.5rem] resize-none leading-relaxed placeholder:text-neutral-400`}
+          rows={4}
+          className={`${rrowmEconomicSurface.input} mt-4 min-h-[6.5rem] resize-y leading-[1.7] placeholder:text-neutral-400`}
           placeholder="Write correspondence for the ledger."
         />
         {error ? (

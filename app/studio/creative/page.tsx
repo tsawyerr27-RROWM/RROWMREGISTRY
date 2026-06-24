@@ -31,6 +31,11 @@ import {
 } from "@/components/Dashboard/ArtworksSection";
 import { ArtistWorkspaceHero } from "@/components/Studio/ArtistWorkspaceHero";
 import {
+  StudioContentSlab,
+  StudioMetricTile,
+  studioOverviewStackClass,
+} from "@/components/Studio/StudioContentSlab";
+import {
   ArtistRepresentationReviewSection,
   type ArtistRepresentationReviewItem,
 } from "@/components/Studio/ArtistRepresentationReviewSection";
@@ -65,9 +70,26 @@ import {
 import { OwnershipLedgerActionConfirmModal } from "@/components/ownership/OwnershipLedgerActionConfirmModal";
 import { AddValueEventModal } from "@/components/Dashboard/AddValueEventModal";
 import { DataInsightModal } from "@/components/Insights/DataInsightModal";
-import { resolveArtworkOwnerId } from "@/lib/resolve-artwork-owner-id";
+import { StudioCatalogueMetricsPanels } from "@/components/Studio/StudioCatalogueMetricsPanels";
+import {
+  fetchStudioCatalogueMetrics,
+  type StudioCatalogueMetrics,
+} from "@/lib/studio-catalogue-metrics";
+import {
+  buildHealthInsightBreakdown,
+  buildValueInsightBreakdown,
+} from "@/lib/studio-insight-breakdown";
+import { pickLatestOwnershipEvent } from "@/lib/ownership-canonical";
+import {
+  getCanonicalOwner,
+  getCanonicalOwners,
+  getTransferredArtworkIds,
+  type CanonicalOwner,
+} from "@/lib/canonical-ownership-engine";
+import { OWNERSHIP_EVENT_TRANSFER_SUMMARY_SELECT } from "@/lib/ownership-events-schema";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { fieldCreativeHref } from "@/lib/field-nav";
+import { registryLedgerHref } from "@/lib/registry-nav";
 import { getDashboardInsights } from "@/lib/insights";
 import {
   translateInsightBarCategory,
@@ -196,6 +218,14 @@ export default function Dashboard() {
     { label: string; value: string }[]
   >([]);
   const [insightDataNotes, setInsightDataNotes] = useState<string[]>([]);
+  const [catalogueMetrics, setCatalogueMetrics] =
+    useState<StudioCatalogueMetrics | null>(null);
+  const [transferredArtworkIds, setTransferredArtworkIds] = useState<
+    Set<string>
+  >(new Set());
+  const [canonicalHolders, setCanonicalHolders] = useState<
+    Record<string, CanonicalOwner>
+  >({});
   const [ownershipHistory, setOwnershipHistory] = useState<any[]>([]);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [registerLoading, setRegisterLoading] = useState(false);
@@ -268,11 +298,30 @@ export default function Dashboard() {
     setArtworks(data || []);
     const artworkIds = (data || []).map((a: any) => a.id).filter(Boolean);
     if (artworkIds.length > 0) {
+      const [holders, transferredIds] = await Promise.all([
+        getCanonicalOwners(sb(), artworkIds),
+        getTransferredArtworkIds(sb(), artistId),
+      ]);
+      setCanonicalHolders(holders);
+      setTransferredArtworkIds(new Set(transferredIds));
       await fetchLatestOwnersForArtworks(artworkIds);
       await fetchSaleSignalsForArtworks(artworkIds);
+      try {
+        const metrics = await fetchStudioCatalogueMetrics(sb(), {
+          role: "artist",
+          userId: artistId,
+          artworks: data || [],
+        });
+        setCatalogueMetrics(metrics);
+      } catch {
+        setCatalogueMetrics(null);
+      }
     } else {
       setLatestOwners({});
+      setCanonicalHolders({});
+      setTransferredArtworkIds(new Set());
       setSaleSignals({});
+      setCatalogueMetrics(null);
     }
   };
 
@@ -399,6 +448,11 @@ export default function Dashboard() {
           artworkIds,
         });
         const h = insights.health;
+        const healthBreakdown = buildHealthInsightBreakdown({
+          health: h,
+          role: "artist",
+          t,
+        });
         setInsightKind("bar");
         setInsightTitle(t("studio.insight.title.health"));
         setInsightSubtitle(translateRoleInsight("artist", { health: h }, t));
@@ -416,24 +470,8 @@ export default function Dashboard() {
             events: h.missingVerification,
           },
         ]);
-        setInsightBreakdown([
-          {
-            label: t("studio.insight.breakdown.fullyVerifiedStrict"),
-            value: String(h.fullyVerified),
-          },
-          {
-            label: t("studio.insight.breakdown.withCertificate"),
-            value: String(h.withCertificates),
-          },
-          {
-            label: t("studio.insight.breakdown.missingVerification"),
-            value: String(h.missingVerification),
-          },
-        ]);
-        setInsightDataNotes([
-          t("studio.insight.note.healthNonAdditive"),
-          t("studio.insight.note.healthStrictArtist"),
-        ]);
+        setInsightBreakdown(healthBreakdown.breakdown);
+        setInsightDataNotes(healthBreakdown.dataNotes);
         return;
       }
 
@@ -442,7 +480,23 @@ export default function Dashboard() {
         userId: user.id,
         artworkIds,
       });
+      const metrics =
+        catalogueMetrics ??
+        (await fetchStudioCatalogueMetrics(sb(), {
+          role: "artist",
+          userId: user.id,
+          artworks: artworks || [],
+        }));
+      if (!catalogueMetrics) setCatalogueMetrics(metrics);
+
       const { series, currencies, latestValues } = insights.valueTrend;
+      const valueBreakdown = buildValueInsightBreakdown({
+        role: "artist",
+        metrics,
+        latestValues,
+        t,
+        formatCurrency,
+      });
       setInsightKind("line");
       setInsightTitle(t("studio.insight.title.valueArtist"));
       setInsightSubtitle(
@@ -450,17 +504,8 @@ export default function Dashboard() {
       );
       setInsightLines(currencies.map((c) => ({ key: c, label: c })));
       setInsightData(series);
-
-      const breakdown = Object.keys(latestValues)
-        .sort()
-        .map((c) => ({
-          label: fillMessage(t("studio.insight.breakdown.latestDeclared"), {
-            currency: c,
-          }),
-          value: formatCurrency(latestValues[c], c),
-        }));
-      setInsightBreakdown(breakdown);
-      setInsightDataNotes([t("studio.insight.note.valueBasisArtist")]);
+      setInsightBreakdown(valueBreakdown.breakdown);
+      setInsightDataNotes(valueBreakdown.dataNotes);
     } finally {
       setInsightLoading(false);
     }
@@ -469,9 +514,7 @@ export default function Dashboard() {
   const fetchLatestOwnersForArtworks = async (artworkIds: string[]) => {
     const { data, error } = await sb()
       .from("ownership_events")
-      .select(
-        "artwork_id, transfer_type, to_user_id, to_owner_id, to_name, to_type, created_at, id"
-      )
+      .select(OWNERSHIP_EVENT_TRANSFER_SUMMARY_SELECT)
       .in("artwork_id", artworkIds);
 
     if (error) {
@@ -495,22 +538,12 @@ export default function Dashboard() {
         artwork_id?: string | null;
         transfer_type?: string | null;
         to_user_id?: string | null;
-        to_owner_id?: string | null;
         to_name?: string | null;
         to_type?: string | null;
         created_at?: string | null;
         id?: string | null;
       }>
-    ) => {
-      if (!rows.length) return undefined;
-      return rows.reduce((best, row) => {
-        const ta = new Date(String(row.created_at || 0)).getTime();
-        const tb = new Date(String(best.created_at || 0)).getTime();
-        if (ta > tb) return row;
-        if (ta < tb) return best;
-        return String(row.id || "") > String(best.id || "") ? row : best;
-      });
-    };
+    ) => pickLatestOwnershipEvent(rows);
 
     const byArt = new Map<string, typeof data>();
     for (const row of data || []) {
@@ -525,7 +558,7 @@ export default function Dashboard() {
       if (!rows?.length) continue;
       const row = pickLatest(rows);
       if (!row) continue;
-      const uid = row.to_user_id ?? row.to_owner_id;
+      const uid = row.to_user_id;
       map[id] = {
         transfer_type: row.transfer_type ? String(row.transfer_type) : null,
         to_user_id: uid ? String(uid) : null,
@@ -804,6 +837,21 @@ useEffect(() => {
   void init();
 }, [guardUser?.userId, guardUser?.email, sb]);
 
+useEffect(() => {
+  if (!user?.id) {
+    setTransferredArtworkIds(new Set());
+    return;
+  }
+  let cancelled = false;
+  void (async () => {
+    const ids = await getTransferredArtworkIds(sb(), user.id);
+    if (!cancelled) setTransferredArtworkIds(new Set(ids));
+  })();
+  return () => {
+    cancelled = true;
+  };
+}, [user?.id, sb, artworks.length]);
+
 // 2️ FETCH VALUE + OWNERSHIP EVENTS
 useEffect(() => {
   if (!selectedArtwork) return;
@@ -833,7 +881,7 @@ useEffect(() => {
   // Reset the sale transfer UI when switching works / reopening ledger.
   setShowSaleTransferForm(false);
   const seller =
-    resolveArtworkOwnerId(selectedArtwork as Record<string, unknown>) ||
+    canonicalHolders[String(selectedArtwork.id)]?.userId ||
     selectedArtwork.artist_id ||
     "";
   setSaleTransferForm((prev) => ({
@@ -848,7 +896,7 @@ useEffect(() => {
     owner_name: "",
     owner_location: "",
   }));
-}, [showOwnershipLedgerModal, selectedArtwork]);
+}, [showOwnershipLedgerModal, selectedArtwork, canonicalHolders]);
 
   useEffect(() => {
     if (!showOwnershipLedgerModal || !selectedArtwork?.id || !user?.id) return;
@@ -939,15 +987,13 @@ useEffect(() => {
       const sig = saleSignals[id];
       const latest = latestOwners[id];
       const latestType = String((latest as any)?.transfer_type || "");
-      const soldByLatest =
-        latestType === "sale" || latestType === "auction" || latestType === "primary_sale" || latestType === "secondary_sale";
+      const holderId = canonicalHolders[id]?.userId ?? null;
 
-      const ownedByYou =
-        resolveArtworkOwnerId(a as Record<string, unknown>) === user?.id ||
-        (latest?.to_user_id ? String(latest.to_user_id) === String(user?.id || "") : false);
+      const ownedByYou = holderId === user?.id;
+      const soldOrTransferred = transferredArtworkIds.has(id);
 
       if (ownershipFilter === "needs_transfer") return Boolean(sig);
-      if (ownershipFilter === "sold") return soldByLatest;
+      if (ownershipFilter === "sold") return soldOrTransferred;
       if (ownershipFilter === "owned_by_you") return ownedByYou;
       return true;
     };
@@ -965,7 +1011,7 @@ useEffect(() => {
       return 0;
     });
     return arr;
-  }, [filteredArtworks, saleSignals, ownershipFilter, latestOwners, user?.id]);
+  }, [filteredArtworks, saleSignals, ownershipFilter, canonicalHolders, user?.id, transferredArtworkIds]);
 
   /** Ownership filter applied to artwork list filters, ignoring title search */
   const ownershipCountIgnoringSearch = useMemo(() => {
@@ -974,20 +1020,13 @@ useEffect(() => {
       const sig = saleSignals[id];
       const latest = latestOwners[id];
       const latestType = String((latest as any)?.transfer_type || "");
-      const soldByLatest =
-        latestType === "sale" ||
-        latestType === "auction" ||
-        latestType === "primary_sale" ||
-        latestType === "secondary_sale";
+      const holderId = canonicalHolders[id]?.userId ?? null;
 
-      const ownedByYou =
-        resolveArtworkOwnerId(a as Record<string, unknown>) === user?.id ||
-        (latest?.to_user_id
-          ? String(latest.to_user_id) === String(user?.id || "")
-          : false);
+      const ownedByYou = holderId === user?.id;
+      const soldOrTransferred = transferredArtworkIds.has(id);
 
       if (ownershipFilter === "needs_transfer") return Boolean(sig);
-      if (ownershipFilter === "sold") return soldByLatest;
+      if (ownershipFilter === "sold") return soldOrTransferred;
       if (ownershipFilter === "owned_by_you") return ownedByYou;
       return true;
     };
@@ -997,34 +1036,25 @@ useEffect(() => {
     artworksListFilteredNoSearch,
     saleSignals,
     ownershipFilter,
-    latestOwners,
+    canonicalHolders,
     user?.id,
+    transferredArtworkIds,
   ]);
 
   const ownershipFilterCounts = useMemo(() => {
-    const soldByLatest = (a: any) => {
-      const latest = latestOwners[String(a.id)];
-      const t = String((latest as any)?.transfer_type || "").toLowerCase();
-      return (
-        t === "sale" ||
-        t === "auction" ||
-        t === "primary_sale" ||
-        t === "secondary_sale"
-      );
-    };
-    const ownedByYou = (a: any) =>
-      resolveArtworkOwnerId(a as Record<string, unknown>) === user?.id ||
-      (latestOwners[String(a.id)]?.to_user_id
-        ? String(latestOwners[String(a.id)]?.to_user_id) === String(user?.id || "")
-        : false);
+    const holderFor = (a: any) =>
+      canonicalHolders[String(a.id)]?.userId ?? null;
+    const soldOrTransferred = (a: any) =>
+      transferredArtworkIds.has(String(a.id || ""));
+    const ownedByYou = (a: any) => holderFor(a) === user?.id;
 
     return {
       all: artworks.length,
       needs_transfer: artworks.filter((a) => Boolean(saleSignals[String(a.id)])).length,
-      sold: artworks.filter(soldByLatest).length,
+      sold: artworks.filter(soldOrTransferred).length,
       owned_by_you: artworks.filter(ownedByYou).length,
     };
-  }, [artworks, latestOwners, saleSignals, user?.id]);
+  }, [artworks, canonicalHolders, saleSignals, user?.id, transferredArtworkIds]);
 
   const filteredCertificates = useMemo(() => {
     let list = [...certifiedArtworksForUi];
@@ -1492,22 +1522,26 @@ useEffect(() => {
       return;
     }
 
+    const canonicalHolder = await getCanonicalOwner(sb(), claim.artwork_id);
+    const fromUserId =
+      canonicalHolder.userId ||
+      (latestRow?.to_user_id ? String(latestRow.to_user_id) : null) ||
+      user.id;
+
     if (latestRow?.id) {
       const { error: eventError } = await sb()
         .from("ownership_events")
-        .update({
+        .insert({
+          artwork_id: claim.artwork_id,
+          transfer_type: "collector_claim",
+          from_user_id: fromUserId,
           to_user_id: claim.collector_id,
-          to_name: null,
-          to_type: "collector",
           verification_status: "claimed",
           claim_source: "user",
-          verified_by: null,
-          verified_at: null,
-          verification_method: null,
           notes: claimNote,
           note: claimNote,
-        })
-        .eq("id", latestRow.id);
+          created_by: user.id,
+        });
 
       if (eventError) {
         console.error(eventError);
@@ -1521,6 +1555,7 @@ useEffect(() => {
         .insert({
           artwork_id: claim.artwork_id,
           transfer_type: "collector_claim",
+          from_user_id: fromUserId,
           to_user_id: claim.collector_id,
           verification_status: "claimed",
           claim_source: "user",
@@ -1755,103 +1790,6 @@ const percentLocked = totalWorks
   ? Math.round((lockedWorks / totalWorks) * 100)
   : 0;
 
-  // =============================
-// VALUE PROGRESSION
-// =============================
-
-const growthData = artworks
-  .filter(
-    (a) =>
-      a.initial_value &&
-      a.latest_value &&
-      a.initial_currency === a.latest_currency
-  )
-  .map((a) => {
-    const initial = Number(a.initial_value);
-    const latest = Number(a.latest_value);
-
-    if (!initial || initial === 0) return null;
-
-    const growth = ((latest - initial) / initial) * 100;
-
-    return {
-      id: a.id,
-      growth,
-    };
-  })
-  .filter(Boolean) as { id: string; growth: number }[];
-
-const averageGrowth =
-  growthData.length > 0
-    ? Math.round(
-        growthData.reduce((sum, g) => sum + g.growth, 0) /
-          growthData.length
-      )
-    : null;
-
-const growingWorks = growthData.filter((g) => g.growth > 0).length;
-const decliningWorks = growthData.filter((g) => g.growth < 0).length;
-
-// =============================
-// OWNERSHIP INTELLIGENCE
-// =============================
-
-const totalTransfers = artworks.reduce(
-  (sum, a) => sum + Number(a.ownership_transfer_count || 0),
-  0
-);
-
-const worksStillHeld = artworks.filter(
-  (a) => resolveArtworkOwnerId(a as Record<string, unknown>) === user?.id
-).length;
-
-const holdDurations = artworks
-  .filter((a) => a.first_transfer_at)
-  .map((a) => {
-    const first = new Date(a.first_transfer_at).getTime();
-    const latest = new Date(
-      a.latest_transfer_at || a.first_transfer_at
-    ).getTime();
-
-    return latest - first;
-  });
-
-const avgHoldDurationDays =
-  holdDurations.length > 0
-    ? holdDurations.reduce((sum, d) => sum + d, 0) /
-      holdDurations.length /
-      (1000 * 60 * 60 * 24)
-    : null;
-
-const mostTransferredArtwork =
-  artworks.length > 0
-    ? artworks.reduce((max, a) =>
-        (a.ownership_transfer_count || 0) >
-        (max.ownership_transfer_count || 0)
-          ? a
-          : max,
-      artworks[0])
-    : null;
-
-const longestHeldArtwork =
-  artworks.length > 0
-    ? artworks.reduce((max, a) => {
-        if (!a.first_transfer_at) return max;
-        const first = new Date(a.first_transfer_at).getTime();
-        const latest = new Date(
-          a.latest_transfer_at || a.first_transfer_at,
-        ).getTime();
-        const duration = latest - first;
-        if (!max) return { artwork: a, duration };
-        return duration > max.duration ? { artwork: a, duration } : max;
-      }, null as null | { artwork: any; duration: number })
-    : null;
-
-const fastestAppreciatingArtwork =
-  growthData.length > 0
-    ? growthData.reduce((max, g) => (g.growth > max.growth ? g : max), growthData[0])
-    : null;
-
 const averageByCurrency: Record<string, number> = Object.keys(
   totalsByCurrency
 ).reduce((acc: Record<string, number>, currency) => {
@@ -1862,8 +1800,6 @@ const averageByCurrency: Record<string, number> = Object.keys(
   if (count > 0) {
     acc[currency] = totalsByCurrency[currency] / count;
   }
-
-
 
   return acc;
 }, {});
@@ -1931,7 +1867,7 @@ return (
         ) : null}
         {/* STUDIO (overview) */}
         {isStudio && (
-          <div className="max-w-6xl space-y-14 pb-8">
+          <div className={`max-w-6xl pb-8 ${studioOverviewStackClass}`}>
             <ArtistWorkspaceHero
               displayName={
                 profile?.display_name?.trim() ||
@@ -1957,7 +1893,7 @@ return (
               onGoToAmendments={scrollToRepresentationAmendments}
             />
 
-            <DashboardSection
+            <StudioContentSlab
               title={t("studio.overview.valueCoverage.title")}
               subtitle={t("studio.overview.valueCoverage.subtitle")}
             >
@@ -1966,27 +1902,20 @@ return (
                   <div className="grid gap-4 sm:grid-cols-2">
                     {Object.keys(totalsByCurrency).length > 0 ? (
                       Object.keys(totalsByCurrency).map((currency) => (
-                        <button
+                        <StudioMetricTile
                           key={currency}
-                          type="button"
                           onClick={() => void openInsight("value")}
-                          className="cursor-pointer text-left"
-                        >
-                          <Metric
-                            label={fillMessage(t("studio.overview.totalValueCurrency"), {
-                              currency,
-                            })}
-                            value={formatCurrency(totalsByCurrency[currency], currency)}
-                            compact
-                          />
-                        </button>
+                          label={fillMessage(t("studio.overview.totalValueCurrency"), {
+                            currency,
+                          })}
+                          value={formatCurrency(totalsByCurrency[currency], currency)}
+                        />
                       ))
                     ) : (
                       <div className="sm:col-span-2">
-                        <Metric
+                        <StudioMetricTile
                           label={t("studio.overview.totalValue")}
                           value={t("studio.overview.noPricedWorks")}
-                          compact
                         />
                       </div>
                     )}
@@ -1994,7 +1923,7 @@ return (
                   {Object.keys(averageByCurrency).length > 0 && (
                     <div className="mt-4 grid gap-4 sm:grid-cols-2">
                       {Object.keys(averageByCurrency).map((currency) => (
-                        <Metric
+                        <StudioMetricTile
                           key={`avg-${currency}`}
                           label={fillMessage(t("studio.overview.avgValueCurrency"), {
                             currency,
@@ -2004,8 +1933,6 @@ return (
                             currency,
                             maximumFractionDigits: 0,
                           }).format(averageByCurrency[currency])}
-                          compact
-                          tone="neutral"
                         />
                       ))}
                     </div>
@@ -2014,9 +1941,9 @@ return (
                 <button
                   type="button"
                   onClick={() => void openInsight("health")}
-                  className="flex cursor-pointer flex-col gap-6 border-t border-black/[0.08] pt-8 text-left transition-opacity hover:opacity-85 lg:col-span-5 lg:border-t-0 lg:border-l lg:border-black/[0.08] lg:pl-10 lg:pt-0"
+                  className="flex cursor-pointer flex-col gap-6 border-t border-neutral-900/[0.06] pt-8 text-left transition-opacity hover:opacity-90 lg:col-span-5 lg:border-t-0 lg:border-l lg:border-neutral-900/[0.06] lg:pl-10 lg:pt-0"
                 >
-                  <p className="text-sm font-semibold text-neutral-500">
+                  <p className="text-[13px] font-medium text-neutral-700">
                     {t("studio.overview.recordHealth")}
                   </p>
                   <DashboardStatBar
@@ -2038,21 +1965,21 @@ return (
                   />
                 </button>
               </div>
-            </DashboardSection>
+            </StudioContentSlab>
 
             {/* Ownership requests */}
-            <DashboardSection
+            <StudioContentSlab
               title={t("studio.overview.ownershipRequests.title")}
               subtitle={t("studio.overview.ownershipRequests.subtitle")}
             >
               {ownershipClaims.length === 0 ? (
-                <div className="border-t border-dashed border-black/20 py-14 text-center">
+                <div className="rounded-2xl border border-dashed border-neutral-900/[0.10] bg-neutral-50/50 py-14 text-center">
                   <p className="text-[15px] leading-relaxed text-neutral-600">
                     {t("studio.overview.noPendingClaims")}
                   </p>
                 </div>
               ) : (
-                <div className="divide-y divide-black/[0.06]">
+                <div className="divide-y divide-neutral-900/[0.06]">
                   {ownershipClaims.map((claim) => (
                     <div key={claim.id} className="py-10 first:pt-2">
                       <p className="text-sm font-medium text-amber-800/90">
@@ -2110,118 +2037,13 @@ return (
                   ))}
                 </div>
               )}
-            </DashboardSection>
+            </StudioContentSlab>
 
-            {/* Value progression */}
-            <DashboardSection
-              title={t("studio.overview.valueProgression.title")}
-              subtitle={t("studio.overview.valueProgression.subtitle")}
-            >
-              <div className="grid gap-5 md:grid-cols-3">
-                {growthData.length > 0 ? (
-                  <>
-                    <Metric
-                      label={t("studio.overview.avgChange")}
-                      value={
-                        averageGrowth !== null
-                          ? `${averageGrowth > 0 ? "↑" : averageGrowth < 0 ? "↓" : ""} ${averageGrowth}%`
-                          : "–"
-                      }
-                      hint={t("studio.overview.avgChangeHint")}
-                      compact
-                    />
-                    <Metric
-                      label={t("studio.overview.worksIncreased")}
-                      value={growingWorks}
-                      compact
-                      tone="emerald"
-                    />
-                    <Metric
-                      label={t("studio.overview.decliningWorks")}
-                      value={decliningWorks}
-                      compact
-                      tone="amber"
-                    />
-                  </>
-                ) : (
-                  <div className="md:col-span-3">
-                    <Metric
-                      label={t("studio.overview.valueChange")}
-                      value={t("studio.overview.noProgressionData")}
-                      compact
-                    />
-                  </div>
-                )}
-              </div>
-            </DashboardSection>
-
-            {/* Ownership intelligence */}
-            <DashboardSection
-              title={t("studio.overview.ownershipIntel.title")}
-              subtitle={t("studio.overview.ownershipIntel.subtitle")}
-            >
-              <div className="grid gap-5 md:grid-cols-3">
-                <Metric
-                  label={t("studio.overview.totalTransfers")}
-                  value={totalTransfers}
-                  compact
-                />
-                <Metric
-                  label={t("studio.overview.worksYouHold")}
-                  value={worksStillHeld}
-                  compact
-                  tone="emerald"
-                />
-                <Metric
-                  label={t("studio.overview.avgHoldDays")}
-                  value={
-                    avgHoldDurationDays
-                      ? Math.round(avgHoldDurationDays)
-                      : "–"
-                  }
-                  compact
-                />
-              </div>
-            </DashboardSection>
-
-            {/* Registry insights */}
-            <DashboardSection
-              title={t("studio.overview.catalogueHighlights.title")}
-              subtitle={t("studio.overview.catalogueHighlights.subtitle")}
-            >
-              <div className="grid gap-5 md:grid-cols-3">
-                <Metric
-                  label={t("studio.overview.mostTransferred")}
-                  value={
-                    mostTransferredArtwork
-                      ? `${mostTransferredArtwork.title} · ${mostTransferredArtwork.ownership_transfer_count || 0}`
-                      : "–"
-                  }
-                  hint={t("studio.overview.mostTransferredHint")}
-                  compact
-                />
-                <Metric
-                  label={t("studio.overview.longestHeld")}
-                  value={
-                    longestHeldArtwork
-                      ? `${longestHeldArtwork.artwork.title} · ${Math.round(longestHeldArtwork.duration / (1000 * 60 * 60 * 24))}d`
-                      : "–"
-                  }
-                  hint={t("studio.overview.longestHeldHint")}
-                  compact
-                />
-                <Metric
-                  label={t("studio.overview.fastestAppreciating")}
-                  value={
-                    fastestAppreciatingArtwork
-                      ? `${fastestAppreciatingArtwork.growth}%`
-                      : "–"
-                  }
-                  hint={t("studio.overview.fastestAppreciatingHint")}
-                  compact
-                />
-              </div>
-            </DashboardSection>
+            <StudioCatalogueMetricsPanels
+              role="artist"
+              metrics={catalogueMetrics}
+              onOpenValueInsight={() => void openInsight("value")}
+            />
           </div>
         )}
 
@@ -2352,8 +2174,14 @@ return (
             onFilterChange={setOwnershipFilter}
             filterCounts={ownershipFilterCounts}
             filteredArtworks={ownershipArtworksForUi.map((a: any) => {
-              const o = latestOwners[String(a.id)];
-              return o ? { ...a, __latest_owner: o } : a;
+              const id = String(a.id || "");
+              const o = latestOwners[id];
+              return {
+                ...a,
+                ...(o ? { __latest_owner: o } : {}),
+                __canonical_holder_id: canonicalHolders[id]?.userId ?? null,
+                __is_transferred: transferredArtworkIds.has(id),
+              };
             })}
             totalOwnershipCount={ownershipCountIgnoringSearch}
             onArtworkClick={(artwork) => {
@@ -2588,11 +2416,17 @@ return (
                       });
                       showToast("success", t("studio.toast.recordingTransfer"));
 
+                      const sellerUserId =
+                        canonicalHolders[String(selectedArtwork.id)]?.userId ||
+                        String(saleTransferForm.seller_id || "").trim() ||
+                        null;
+
                       const { error: insertErr } = await sb()
                         .from("ownership_events")
                         .insert({
                           artwork_id: selectedArtwork.id,
                           transfer_type: "sale",
+                          from_user_id: sellerUserId,
                           to_user_id: buyerUserId,
                           to_name: buyerName,
                           to_type: buyerType,
@@ -2627,25 +2461,7 @@ return (
                       }
 
                       // Sale resolved by DB trigger resolve_sale_on_ownership() after this insert.
-                      // Do not PATCH value_events here: a separate update can hit immutability
-                      // rules on older value_events rows and return 400 while the insert succeeded.
-
-                      if (buyerUserId) {
-                        const { error: ownerUpdateErr } = await sb()
-                          .from("artworks")
-                          .update({
-                            current_owner_id: buyerUserId,
-                            test_owner_id: buyerUserId,
-                          })
-                          .eq("id", selectedArtwork.id);
-                        if (ownerUpdateErr) {
-                          showToast(
-                            "error",
-                            t("studio.toast.transferOwnerUpdateFailed")
-                          );
-                          return;
-                        }
-                      }
+                      // current_owner_id refreshed by trg_ownership_events_sync_current_owner.
 
                       // Refresh UI state (ledger + signals + list ordering)
                       await refreshSelectedArtworkEvents(selectedArtwork.id);
@@ -2874,7 +2690,7 @@ return (
                 <h2 className="mt-3 font-serif text-3xl font-normal leading-[1.1] tracking-tight text-neutral-950 md:text-[2.15rem]">
                   {selectedArtwork.registry_id ? (
                     <Link
-                      href={`/artwork/${encodeURIComponent(selectedArtwork.registry_id)}`}
+                      href={registryLedgerHref(selectedArtwork.registry_id)}
                       className="transition hover:text-emerald-800 hover:underline decoration-emerald-400/40 underline-offset-4"
                     >
                       {selectedArtwork.title}
@@ -3050,10 +2866,7 @@ return (
                             {subline}
                           </p>
                           {vStatus === "claimed" && user?.id ? (() => {
-                            const claimHolder =
-                              event.to_user_id ??
-                              (event as { to_owner_id?: string }).to_owner_id ??
-                              "";
+                            const claimHolder = event.to_user_id ?? "";
                             const claimedByYou =
                               claimHolder &&
                               String(claimHolder) === user.id;
@@ -3251,30 +3064,6 @@ return (
   </>
 );}
 
-function DashboardSection({
-  title,
-  subtitle,
-  children,
-}: {
-  title: string;
-  subtitle?: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="space-y-6">
-      <div className="border-b border-black/[0.06] pb-4">
-        {subtitle ? (
-          <InfoTooltip text={subtitle} />
-        ) : null}
-        <h3 className="text-sm font-semibold text-neutral-500">
-          {title}
-        </h3>
-      </div>
-      {children}
-    </section>
-  );
-}
-
 function DashboardStatBar({
   label,
   percent,
@@ -3299,46 +3088,12 @@ function DashboardStatBar({
       <p className="mt-1 text-sm text-neutral-400">
         {hint}
       </p>
-      <div className="mt-3 h-px overflow-hidden bg-neutral-200/80">
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-neutral-900/[0.06]">
         <div
-          className={`h-full transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${barClass}`}
+          className={`h-full rounded-full transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${barClass}`}
           style={{ width: `${w}%` }}
         />
       </div>
-    </div>
-  );
-}
-
-function Metric({
-  label,
-  value,
-  hint,
-  compact,
-  tone: _tone = "emerald",
-}: {
-  label: string;
-  value: any;
-  hint?: string;
-  compact?: boolean;
-  tone?: "emerald" | "neutral" | "amber";
-}) {
-  return (
-    <div className={compact ? "py-2" : "py-3"}>
-      <p className="text-sm font-medium text-neutral-500">
-        {label}
-        {hint ? (
-          <span title={hint} className="ml-1 cursor-help text-neutral-400">
-            ·
-          </span>
-        ) : null}
-      </p>
-      <p
-        className={`mt-2 font-serif font-normal tabular-nums tracking-tight text-neutral-950 ${
-          compact ? "text-2xl md:text-3xl" : "text-3xl md:text-4xl"
-        }`}
-      >
-        {value}
-      </p>
     </div>
   );
 }

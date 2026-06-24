@@ -105,7 +105,10 @@ export async function POST(req: Request) {
     }
 
     if (result.created) {
-      void notifyRegistryCertificateIssued({ artworkId });
+      void notifyRegistryCertificateIssued({
+        artworkId,
+        excludeUserId: activityUserId ?? undefined,
+      });
     }
 
     return NextResponse.json({

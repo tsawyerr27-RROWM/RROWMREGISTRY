@@ -37,7 +37,7 @@ function recordedCopy(kind: DealExecutionKind | null): string {
     case "licensing":
       return "The rights license is on file in the canonical rights ledger.";
     default:
-      return "Stewardship transfer has been filed against this acquisition. The continuation remains on the registry ledger.";
+      return "Transfer initiated. Ownership on the registry ledger updates when the buyer confirms receipt.";
   }
 }
 
@@ -50,7 +50,7 @@ function pendingCopy(kind: DealExecutionKind | null): string {
     case "licensing":
       return "Activate the rights grant for this accepted licensing deal and file it on the rights ledger.";
     default:
-      return "Record the transfer of stewardship for this accepted acquisition. This uses the existing provenance continuation flow and invites the acquiring participant to accept custody on the registry.";
+      return "Execute the acquisition transfer. The buyer will see a pending acquisition immediately and can confirm receipt to complete ownership.";
   }
 }
 
@@ -64,8 +64,16 @@ function ctaLabel(kind: DealExecutionKind | null, busy: boolean): string {
     case "licensing":
       return "Activate license";
     default:
-      return "Record transfer of stewardship";
+      return "Execute transfer";
   }
+}
+
+function ownershipLoopTitle(
+  loop: NonNullable<DealExecutionPanelState["ownership_loop"]>
+): string {
+  if (loop.status === "completed") return "Transfer complete";
+  if (loop.role === "buyer") return "Confirm receipt";
+  return "Transfer initiated";
 }
 
 export function DealExecutionPanel({ deal, onExecuted }: Props) {
@@ -113,8 +121,8 @@ export function DealExecutionPanel({ deal, onExecuted }: Props) {
 
   if (loading) {
     return (
-      <div className={rrowmDealSurface.sidePanel}>
-        <p className="text-[13px] text-neutral-500">Loading execution state.</p>
+      <div className={rrowmDealSurface.referencePanel}>
+        <p className="text-[12px] text-neutral-500">Loading execution state.</p>
       </div>
     );
   }
@@ -181,25 +189,51 @@ export function DealExecutionPanel({ deal, onExecuted }: Props) {
 
   return (
     <>
-      <div className={rrowmDealSurface.sidePanel}>
-        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-400">
-          Registry execution
-        </p>
-        <h3 className="mt-2 font-serif text-lg font-normal tracking-tight text-neutral-950">
+      <div className={rrowmDealSurface.referencePanel}>
+        <h3 className="font-serif text-base font-normal tracking-tight text-neutral-950">
           Filing on record
         </h3>
+        <p className="mt-1 text-[12px] text-neutral-500">Registry execution</p>
 
         {state.artwork_title ? (
-          <p className="mt-2 text-[13px] text-neutral-600">{state.artwork_title}</p>
+          <p className="mt-2 text-[12px] leading-relaxed text-neutral-600">
+            {state.artwork_title}
+          </p>
+        ) : null}
+
+        {state.ownership_loop ? (
+          <div className="mt-3 space-y-3 rounded-2xl border border-amber-200/50 bg-gradient-to-br from-amber-50/70 via-white to-white p-4 shadow-[0_8px_24px_-16px_rgba(120,90,40,0.16)]">
+            <p className="text-[13px] font-medium text-neutral-900">
+              {ownershipLoopTitle(state.ownership_loop)}
+            </p>
+            <p className="text-[12px] leading-relaxed text-neutral-600">
+              {state.ownership_loop.message}
+            </p>
+            {state.ownership_loop.action_href &&
+            state.ownership_loop.action_label ? (
+              <Link
+                href={state.ownership_loop.action_href}
+                className={`${rrowmButton.primaryEconomic} inline-flex w-full justify-center sm:w-auto`}
+              >
+                {state.ownership_loop.action_label}
+              </Link>
+            ) : null}
+          </div>
         ) : null}
 
         {state.recorded ? (
-          <div className="mt-4 space-y-3">
-            <p className="text-[14px] leading-relaxed text-neutral-800">
-              Execution recorded
+          <div className="mt-3 space-y-2">
+            <p className="text-[13px] font-medium text-neutral-800">
+              {state.ownership_loop?.status === "completed"
+                ? "Execution complete"
+                : "Execution recorded"}
             </p>
-            <p className="text-[13px] leading-relaxed text-neutral-600">
-              {recordedCopy(kind)}
+            <p className="text-[12px] leading-relaxed text-neutral-600">
+              {state.ownership_loop?.status === "completed"
+                ? recordedCopy(kind)
+                : kind === "acquisition"
+                  ? "Transfer initiated. The buyer must confirm receipt before ownership updates on the registry ledger."
+                  : recordedCopy(kind)}
             </p>
             {kind === "licensing" && state.rights_ledger_href ? (
               <Link
@@ -218,13 +252,11 @@ export function DealExecutionPanel({ deal, onExecuted }: Props) {
             ) : null}
           </div>
         ) : (
-          <div className="mt-4 space-y-4">
-            <p className="text-[13px] leading-relaxed text-neutral-600">
-              {pendingCopy(kind)}
-            </p>
+          <div className="mt-3 space-y-3">
+            <p className="text-[12px] leading-relaxed text-neutral-600">{pendingCopy(kind)}</p>
 
             {state.reason && !state.canInitiate ? (
-              <p className="text-[13px] leading-relaxed text-neutral-600">{state.reason}</p>
+              <p className="text-[12px] leading-relaxed text-neutral-600">{state.reason}</p>
             ) : null}
 
             {state.canInitiate ? (
@@ -238,7 +270,7 @@ export function DealExecutionPanel({ deal, onExecuted }: Props) {
                   }
                   openModal();
                 }}
-                className={`${rrowmButton.primaryEconomic} w-full`}
+                className={`${rrowmButton.primaryEconomic} w-full sm:w-auto`}
               >
                 {ctaLabel(kind, busy)}
               </button>
@@ -247,7 +279,7 @@ export function DealExecutionPanel({ deal, onExecuted }: Props) {
         )}
 
         {error ? (
-          <p className="mt-4 text-[13px] leading-relaxed text-neutral-700">{error}</p>
+          <p className="mt-3 text-[12px] leading-relaxed text-neutral-700">{error}</p>
         ) : null}
       </div>
 

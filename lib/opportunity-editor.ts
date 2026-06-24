@@ -54,8 +54,9 @@ export const EMPTY_OPPORTUNITY_FORM: OpportunityEditorForm = {
   invitation_only: false,
 };
 
-export const OPPORTUNITY_EDITOR_INPUT_CLASS =
-  "mt-2 w-full rounded-xl border border-neutral-900/[0.08] bg-white px-4 py-3 text-sm text-neutral-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-900/12";
+import { rrowmEconomicSurface } from "@/styles/rrowm-theme";
+
+export const OPPORTUNITY_EDITOR_INPUT_CLASS = rrowmEconomicSurface.input;
 
 export function toDatetimeLocal(iso: string | null): string {
   if (!iso) return "";

@@ -238,7 +238,7 @@ export function DisputeEvidenceSection({ disputeId }: { disputeId: string }) {
       {dispute ? (
         <section className="rounded-2xl border border-neutral-900/[0.06] bg-white/45 p-6 backdrop-blur-sm">
           <InfoTooltip text="Private challenge on your registry record. Status updates when staff complete review; evidence is append-only." />
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+          <p className="text-[13px] font-semibold text-neutral-800">
             Dispute
           </p>
           <div className="mt-4 space-y-2 text-sm text-neutral-800">
@@ -259,7 +259,7 @@ export function DisputeEvidenceSection({ disputeId }: { disputeId: string }) {
             </p>
             {dispute.resolution ? (
               <div className="mt-4 rounded-xl border border-neutral-300/70 bg-neutral-50/60 p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+                <p className="text-[13px] font-semibold text-neutral-800">
                   Resolution
                 </p>
                 <p className="mt-2 whitespace-pre-wrap text-sm text-neutral-800">
@@ -295,7 +295,7 @@ export function DisputeEvidenceSection({ disputeId }: { disputeId: string }) {
 
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <div className="rounded-xl border border-neutral-200/90 bg-white/70 p-4">
-            <h3 className="text-[13px] font-semibold uppercase tracking-wide text-neutral-500">
+            <h3 className="text-[13px] font-semibold text-neutral-800">
               Upload a file
             </h3>
             <p className="mt-2 text-[12px] text-neutral-500">
@@ -348,7 +348,7 @@ export function DisputeEvidenceSection({ disputeId }: { disputeId: string }) {
           </div>
 
           <div className="rounded-xl border border-neutral-200/90 bg-white/70 p-4">
-            <h3 className="text-[13px] font-semibold uppercase tracking-wide text-neutral-500">
+            <h3 className="text-[13px] font-semibold text-neutral-800">
               Add an external link
             </h3>
             <p className="mt-2 text-[12px] text-neutral-500">
@@ -387,7 +387,7 @@ export function DisputeEvidenceSection({ disputeId }: { disputeId: string }) {
         </div>
 
         <div className="mt-8">
-          <h3 className="text-[13px] font-semibold uppercase tracking-wide text-neutral-500">
+          <h3 className="text-[13px] font-semibold text-neutral-800">
             Submitted evidence
           </h3>
           {!hasAnyEvidence ? (

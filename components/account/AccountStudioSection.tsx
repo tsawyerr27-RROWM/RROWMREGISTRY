@@ -17,7 +17,7 @@ export function AccountStudioSection({ accent, onAccentChange, saving }: Props) 
     <AccountPanel
       id="account-studio"
       title="Studio preferences"
-      description="Private workspace settings. These affect your Studio only — not public pages."
+      description="Private workspace settings. These affect your Studio only, not public pages."
     >
       <div>
         <p className="text-sm font-medium text-neutral-900">Artworks grid accent</p>
@@ -41,8 +41,8 @@ export function AccountStudioSection({ accent, onAccentChange, saving }: Props) 
                 onClick={() => onAccentChange(opt.id)}
                 className={`group flex min-w-[7.5rem] flex-col items-center gap-2 rounded-xl border px-3 py-3 text-left transition ${
                   selected
-                    ? "border-neutral-900/25 bg-white/80 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)]"
-                    : "border-neutral-900/[0.08] bg-white/40 hover:border-neutral-900/15"
+                    ? "border-neutral-900/[0.12] bg-white shadow-[0_8px_24px_rgba(25,20,10,0.06)]"
+                    : "border-neutral-900/[0.08] bg-white/90 hover:border-neutral-900/12 hover:shadow-[0_4px_14px_rgba(25,20,10,0.04)]"
                 } disabled:opacity-50`}
               >
                 <span

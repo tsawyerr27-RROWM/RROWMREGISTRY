@@ -10,8 +10,7 @@ import {
   type WorkspaceNavItem,
 } from "@/components/Studio/WorkspaceShell";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
-import { signOutSafely } from "@/lib/auth-sign-out";
-import { deferredRouterPush } from "@/lib/deferred-app-router";
+import { signOutAndRedirect } from "@/lib/auth-sign-out";
 import {
   buildCollectorNavItems,
   buildCreativeNavItems,
@@ -180,12 +179,8 @@ export function StudioShell({
   };
 
   const handleSignOut = async () => {
-    await signOutSafely();
     const next = signOutNext ?? SIGN_OUT_NEXT[role];
-    deferredRouterPush(
-      router,
-      "/login?next=" + encodeURIComponent(next)
-    );
+    await signOutAndRedirect("/login?next=" + encodeURIComponent(next));
   };
 
   return (

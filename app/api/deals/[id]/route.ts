@@ -1,10 +1,19 @@
 import { NextResponse } from "next/server";
 
 import { canTransitionDealStatus, isDealStatus } from "@/lib/deal-status";
-import { otherDealParticipant } from "@/lib/deal-permissions";
+import {
+  canActorAcceptDealTerms,
+  canActorRespondToDealTerms,
+  otherDealParticipant,
+} from "@/lib/deal-permissions";
 import { mapDealMessageRow, mapDealRevisionRow, mapDealRow } from "@/lib/deals";
 import { notifyDealStatusChanged } from "@/lib/notification-hooks/deals";
+import {
+  onDealAccepted,
+  onDealCancelled,
+} from "@/lib/deal-lifecycle-engine";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
 
 export const runtime = "nodejs";
 
@@ -125,7 +134,7 @@ export async function PATCH(
   const { data: existing, error: loadError } = await supabase
     .from("deals")
     .select(
-      "id, status, participant_a_user_id, participant_b_user_id, updated_at"
+      "id, status, created_by_user_id, participant_a_user_id, participant_b_user_id, updated_at"
     )
     .eq("id", dealId)
     .maybeSingle();
@@ -162,6 +171,47 @@ export async function PATCH(
     );
   }
 
+  if (nextStatus === "accepted" || nextStatus === "rejected") {
+    let latestRevisionCreatedByUserId: string | null = null;
+    if (fromStatus === "countered") {
+      const { data: latestRevision, error: revisionError } = await supabase
+        .from("deal_revisions")
+        .select("created_by_user_id")
+        .eq("deal_id", dealId)
+        .order("revision_number", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (revisionError) {
+        return NextResponse.json({ error: revisionError.message }, { status: 500 });
+      }
+
+      latestRevisionCreatedByUserId = String(
+        (latestRevision as { created_by_user_id?: string } | null)?.created_by_user_id ??
+          ""
+      ).trim();
+    }
+
+    const createdByUserId = String((existing as { created_by_user_id?: string }).created_by_user_id ?? "");
+    const authArgs = {
+      actorUserId: user.id,
+      dealStatus: fromStatus,
+      participantAUserId: participantA,
+      participantBUserId: participantB,
+      createdByUserId,
+      latestRevisionCreatedByUserId,
+    };
+
+    const allowed =
+      nextStatus === "accepted"
+        ? canActorAcceptDealTerms(authArgs)
+        : canActorRespondToDealTerms(authArgs);
+
+    if (!allowed) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
+
   const now = new Date().toISOString();
   const { data: updated, error: updateError } = await supabase
     .from("deals")
@@ -186,6 +236,27 @@ export async function PATCH(
     toStatus: nextStatus,
   });
 
-  return NextResponse.json({ deal: mapDealRow(updated as Record<string, unknown>) });
+  const mappedDeal = mapDealRow(updated as Record<string, unknown>);
+  const service = createSupabaseServiceClient();
+
+  if (nextStatus === "accepted") {
+    void onDealAccepted({
+      deal: mappedDeal,
+      actorUserId: user.id,
+      fromStatus,
+      clients: { service, user: supabase },
+    });
+  }
+
+  if (nextStatus === "cancelled") {
+    void onDealCancelled({
+      deal: mappedDeal,
+      actorUserId: user.id,
+      fromStatus,
+      clients: { service, user: supabase },
+    });
+  }
+
+  return NextResponse.json({ deal: mappedDeal });
 }
 

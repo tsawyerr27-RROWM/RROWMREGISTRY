@@ -124,6 +124,7 @@ export function StudioSaleTransferModal({
             .insert({
               artwork_id: artworkId,
               transfer_type: "sale",
+              from_user_id: sellerId || null,
               to_user_id: buyerUid,
               to_name: buyerNm,
               to_type: buyerTp,
@@ -149,24 +150,6 @@ export function StudioSaleTransferModal({
             );
             setSubmitting(false);
             return;
-          }
-
-          if (buyerUid) {
-            const { error: ownerUpdateErr } = await supabase
-              .from("artworks")
-              .update({
-                current_owner_id: buyerUid,
-                test_owner_id: buyerUid,
-              })
-              .eq("id", artworkId);
-            if (ownerUpdateErr) {
-              onToast(
-                "error",
-                "Transfer recorded, but could not update current owner."
-              );
-              setSubmitting(false);
-              return;
-            }
           }
 
           await onSuccess();

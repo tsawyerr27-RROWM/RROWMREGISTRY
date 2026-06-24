@@ -1,7 +1,4 @@
-import {
-  loadOrganisationProfileOgBundle,
-  resolveProfileOgLines,
-} from "@/lib/profile-og";
+import { loadOrganisationProfileOgBundle } from "@/lib/profile-og";
 import {
   profileOgImageContentType,
   profileOgImageSize,
@@ -13,6 +10,7 @@ export const dynamic = "force-dynamic";
 
 export const size = profileOgImageSize();
 export const contentType = profileOgImageContentType();
+export const alt = "Organisation profile on RROWM";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -34,6 +32,7 @@ export default async function Image({ params }: Props) {
         footprintLine: null,
         secondaryLine: null,
         practiceLine: null,
+        rightsLine: null,
       },
       bio: null,
       indexable: false,
@@ -41,19 +40,4 @@ export default async function Image({ params }: Props) {
   }
 
   return renderProfileOgImage(bundle);
-}
-
-export async function generateImageMetadata({ params }: Props) {
-  const { slug } = await params;
-  const supabase = await createSupabaseServerClient();
-  const bundle = await loadOrganisationProfileOgBundle(supabase, slug);
-  const alt = bundle
-    ? resolveProfileOgLines(bundle.context).alt
-    : "Organisation profile on RROWM";
-
-  return {
-    alt,
-    size,
-    contentType,
-  };
 }

@@ -3,13 +3,15 @@
 import { useCallback, useMemo, useState } from "react";
 
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { useCanNativeShare } from "@/hooks/useCanNativeShare";
 import {
   buildCertificateShareText,
   buildCertificateShareTitle,
-  certificateShareAbsoluteOgImageUrl,
   certificateShareAbsoluteUrl,
+  certificateShareDownloadImagePath,
   type CertificateShareContext,
 } from "@/lib/certificate-share";
+import { triggerSameOriginDownload } from "@/lib/trigger-same-origin-download";
 
 type Props = {
   context: CertificateShareContext;
@@ -26,7 +28,7 @@ export function CertificateShareControl({ context, className = "" }: Props) {
     [context.registryId]
   );
   const shareImageUrl = useMemo(
-    () => certificateShareAbsoluteOgImageUrl(context.registryId),
+    () => certificateShareDownloadImagePath(context.registryId),
     [context.registryId]
   );
   const shareTitle = useMemo(
@@ -66,27 +68,19 @@ export function CertificateShareControl({ context, className = "" }: Props) {
     }
   }, [shareText, shareTitle, shareUrl]);
 
-  const downloadShareImage = useCallback(async () => {
+  const downloadShareImage = useCallback(() => {
     setDownloading(true);
+    const filename = `rrowm-certificate-${context.registryId}.png`;
     try {
-      const res = await fetch(shareImageUrl);
-      if (!res.ok) throw new Error("fetch failed");
-      const blob = await res.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = objectUrl;
-      anchor.download = `rrowm-certificate-${context.registryId}.png`;
-      anchor.click();
-      URL.revokeObjectURL(objectUrl);
+      triggerSameOriginDownload(shareImageUrl, filename);
     } catch {
       window.open(shareImageUrl, "_blank", "noopener,noreferrer");
     } finally {
-      setDownloading(false);
+      window.setTimeout(() => setDownloading(false), 600);
     }
   }, [context.registryId, shareImageUrl]);
 
-  const canNativeShare =
-    typeof navigator !== "undefined" && typeof navigator.share === "function";
+  const canNativeShare = useCanNativeShare();
 
   return (
     <div className={`flex flex-wrap items-center gap-3 ${className}`}>

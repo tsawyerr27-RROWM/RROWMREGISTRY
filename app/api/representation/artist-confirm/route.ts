@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { logActivityEvent } from "@/lib/log-activity";
+import { logActivityEvent, logActivityForGalleryStaff } from "@/lib/log-activity";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
     const service = createSupabaseServiceClient();
     const { data: art } = await service
       .from("artworks")
-      .select("title, registry_id")
+      .select("title, registry_id, filing_gallery_id")
       .eq("id", artworkId)
       .maybeSingle();
     const title = String(art?.title || "").trim() || "Artwork";
@@ -74,6 +74,19 @@ export async function POST(req: Request) {
       artworkId,
       metadata: { registry_id: art?.registry_id ?? null },
     });
+
+    const filingGalleryId = art?.filing_gallery_id
+      ? String(art.filing_gallery_id)
+      : null;
+    if (filingGalleryId) {
+      await logActivityForGalleryStaff({
+        galleryId: filingGalleryId,
+        type: "representation_confirmed",
+        message: `Confirmed representation: ${title}${reg}`,
+        artworkId,
+        metadata: { registry_id: art?.registry_id ?? null, title },
+      });
+    }
   }
 
   return NextResponse.json({ ok: true });

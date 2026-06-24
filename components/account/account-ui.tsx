@@ -5,11 +5,15 @@ import {
   type SystemRole,
 } from "@/lib/studio-terminology";
 import type { MessageKey } from "@/lib/locale-messages";
+import { rrowmFloatingBlock, rrowmSurface } from "@/styles/rrowm-theme";
 
 export const accountFieldClass =
-  "liquid-glass-inset mt-2 w-full border-0 px-4 py-3.5 text-[15px] text-neutral-900 shadow-none placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-900/15";
+  "mt-2 w-full rounded-xl border border-neutral-900/[0.08] bg-white px-4 py-3.5 text-[15px] text-neutral-900 shadow-[0_2px_8px_rgba(25,20,10,0.03)] placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10";
 
 export const accountTextareaClass = `${accountFieldClass} resize-none leading-relaxed`;
+
+/** Vertical rhythm below AccountPresenceHero (StudioHeroSlab) */
+export const accountBelowHeroClass = "mt-10 lg:mt-12";
 
 export function AccountPanel({
   id,
@@ -26,8 +30,8 @@ export function AccountPanel({
 }) {
   const base =
     variant === "subtle"
-      ? "rounded-xl border border-neutral-900/[0.05] bg-white/30 p-6 sm:p-7"
-      : "rounded-2xl border border-neutral-900/[0.05] bg-white/45 p-7 shadow-[0_12px_36px_-18px_rgba(15,23,42,0.07)] backdrop-blur-md sm:p-8";
+      ? `${rrowmFloatingBlock.compact} p-6 sm:p-7`
+      : `${rrowmSurface.l1} p-7 sm:p-8`;
 
   return (
     <section
@@ -106,8 +110,8 @@ export function AccountReadOnlyValue({
 }) {
   return (
     <p
-      className={`mt-2 rounded-2xl border border-neutral-900/[0.06] px-4 py-3.5 text-[15px] ${
-        muted ? "bg-black/[0.03] text-neutral-600" : "bg-white/50 text-neutral-900"
+      className={`mt-2 rounded-xl border border-neutral-900/[0.08] px-4 py-3.5 text-[15px] ${
+        muted ? "bg-neutral-50 text-neutral-600" : "bg-white text-neutral-900"
       }`}
     >
       {children}

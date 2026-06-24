@@ -67,7 +67,7 @@ export function resolveProfileOgLines(context: ProfileShareContext) {
     summary,
     description,
     title: `${context.displayName} · The Field`,
-    alt: `${context.displayName} — ${summary || surfaceLabel}`,
+    alt: `${context.displayName} · ${summary || surfaceLabel}`,
   };
 }
 
@@ -223,6 +223,11 @@ export async function loadCreativeProfileOgBundle(
     showOwnerPracticeGuidance: false,
     stewardshipItems: [],
     contextPanels: [],
+    isProfilePublic: presence.profile,
+    sessionUserId: null,
+    activeRepresentation: null,
+    exhibitionCount: 0,
+    activeLicenseCount: 0,
   });
 
   return {
@@ -318,6 +323,12 @@ export async function loadOrganisationProfileOgBundle(
       revokedCertificateCount: 0,
     },
     isProfileOwner: false,
+    isProfilePublic: presence.profile,
+    sessionUserId: null,
+    representedArtistCount: representedCreatives.length,
+    exhibitionCount: 0,
+    activeRightsAgreementCount: 0,
+    dealCounterparty: null,
     stewardshipItems: [],
     contextPanels: [],
   });
@@ -389,6 +400,8 @@ export async function loadCollectorProfileOgBundle(
       verifiedWorks,
       certificateCount: 0,
       revokedCertificateCount: 0,
+      acquisitionCount: 0,
+      completedTransferCount: 0,
     },
     works: [],
   });

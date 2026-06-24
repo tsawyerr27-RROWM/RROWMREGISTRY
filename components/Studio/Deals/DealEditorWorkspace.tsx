@@ -12,7 +12,9 @@ import { DealProposalReview } from "@/components/Deals/DealProposalReview";
 import { DealTermsForm } from "@/components/Deals/DealTermsForm";
 import { DealEditorSectionNav } from "@/components/Studio/Deals/DealEditorSectionNav";
 import type { NewDealDraftPreset } from "@/lib/deal-create-nav";
+import { acquisitionDealWorkLabel } from "@/lib/acquisition-deal-counterparty";
 import { DEAL_PARTICIPANT_FALLBACK } from "@/lib/deal-participant-labels";
+import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import {
   DEAL_EDITOR_CORRESPONDENCE_CLASS,
   DEAL_EDITOR_SECTION_CARD,
@@ -43,8 +45,27 @@ function emptyTermValues(intent: DealIntent | null): Record<string, string> {
   return Object.fromEntries(intent.fields.map((field) => [field.key, ""]));
 }
 
+function termValuesForIntent(
+  intent: DealIntent | null,
+  preset: NewDealDraftPreset
+): Record<string, string> {
+  const values = emptyTermValues(intent);
+  if (!intent) return values;
+
+  const workLabel =
+    String(preset.artworkTitle ?? "").trim() ||
+    (preset.artworkId ? preset.artworkId : "");
+
+  if (workLabel && intent.id === "acquisition_interest") {
+    values.subject = workLabel;
+  }
+
+  return values;
+}
+
 export function DealEditorWorkspace({ userId, preset, onBack }: Props) {
   const router = useRouter();
+  const sb = useSupabaseBrowserLazy();
   const sectionRefs = useRef<Partial<Record<DealEditorSectionId, HTMLElement | null>>>({});
 
   const presetCounterpartyId = String(preset.counterpartyUserId ?? "").trim();
@@ -57,9 +78,12 @@ export function DealEditorWorkspace({ userId, preset, onBack }: Props) {
   });
   const [selectedCounterparty, setSelectedCounterparty] =
     useState<ResolvedDealCounterparty | null>(null);
-  const [termValues, setTermValues] = useState<Record<string, string>>(() =>
-    preset.initialIntentId ? emptyTermValues(getDealIntent(preset.initialIntentId)) : {}
-  );
+  const [termValues, setTermValues] = useState<Record<string, string>>(() => {
+    const initialIntent = preset.initialIntentId
+      ? getDealIntent(preset.initialIntentId)
+      : null;
+    return termValuesForIntent(initialIntent, preset);
+  });
   const [correspondence, setCorrespondence] = useState("");
   const [activeSection, setActiveSection] = useState<DealEditorSectionId>("deal-type");
   const [error, setError] = useState<string | null>(null);
@@ -111,6 +135,42 @@ export function DealEditorWorkspace({ userId, preset, onBack }: Props) {
   }, []);
 
   useEffect(() => {
+    const artworkId = String(preset.artworkId ?? "").trim();
+    const presetTitle = String(preset.artworkTitle ?? "").trim();
+    if (!artworkId || presetTitle) return;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { data } = await sb()
+          .from("artworks")
+          .select("title, registry_id")
+          .eq("id", artworkId)
+          .maybeSingle<{ title: string | null; registry_id: string | null }>();
+
+        if (cancelled || !data) return;
+
+        const label = acquisitionDealWorkLabel({
+          title: data.title,
+          registryId: data.registry_id,
+        });
+        if (!label) return;
+
+        setTermValues((prev) => {
+          if (String(prev.subject ?? "").trim()) return prev;
+          return { ...prev, subject: label };
+        });
+      } catch {
+        // ignore — manual entry still available
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [preset.artworkId, preset.artworkTitle, sb]);
+
+  useEffect(() => {
     const nodes = sections
       .map((section) => sectionRefs.current[section.id])
       .filter((node): node is HTMLElement => Boolean(node));
@@ -137,7 +197,7 @@ export function DealEditorWorkspace({ userId, preset, onBack }: Props) {
 
   const handleIntentSelect = (next: DealIntent) => {
     setIntent(next);
-    setTermValues(emptyTermValues(next));
+    setTermValues(termValuesForIntent(next, preset));
     setError(null);
   };
 

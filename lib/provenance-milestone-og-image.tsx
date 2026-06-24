@@ -135,9 +135,8 @@ export function renderProvenanceMilestoneOgImage(bundle: ProvenanceMilestoneOgBu
                     style={{
                       fontSize: 16,
                       color: og.ink.muted,
-                      letterSpacing: "0.14em",
-                      textTransform: "uppercase",
-                    }}
+                      letterSpacing: "0.02em",
+                                          }}
                   >
                     Provenance milestone
                   </div>
@@ -224,8 +223,7 @@ export function renderProvenanceMilestoneOgImage(bundle: ProvenanceMilestoneOgBu
                     style={{
                       fontSize: 15,
                       letterSpacing: "0.24em",
-                      textTransform: "uppercase",
-                      color: og.ink.faint,
+                                            color: og.ink.faint,
                     }}
                   >
                     {og.wordmark}

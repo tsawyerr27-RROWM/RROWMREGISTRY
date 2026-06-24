@@ -9,11 +9,10 @@ import {
   type ExhibitionExecutionRecord,
   validateExhibitionExecutionInput,
 } from "@/lib/deal-execution";
+import { onDealExecuted } from "@/lib/deal-lifecycle-engine";
 import { upsertDealExecutionRecord } from "@/lib/deal-execution-records";
 import { otherDealParticipant } from "@/lib/deal-permissions";
 import { mapDealRow } from "@/lib/deals";
-import { logActivityEvent } from "@/lib/log-activity";
-import { notifyDealExecutionRecorded } from "@/lib/notification-hooks/deal-execution";
 import {
   buildExhibitionProvenanceMetadata,
   insertProvenanceEvidenceEvent,
@@ -353,32 +352,17 @@ export async function POST(
     );
   }
 
-  const title = String(art.title ?? "").trim() || "Untitled work";
+  const mappedDeal = mapDealRow(updated as Record<string, unknown>);
 
-  await logActivityEvent({
-    userId: user.id,
-    type: "provenance_evidence_recorded",
-    message: `Exhibition recorded: ${title} · ${validated.value.venue}${registryId ? ` (${registryId})` : ""}`,
-    artworkId,
-    metadata: {
-      deal_id: dealId,
-      registry_id: registryId,
-      provenance_event_id: inserted.id,
-      category: "exhibition",
-      venue: validated.value.venue,
-    },
-  });
-
-  await notifyDealExecutionRecorded({
-    dealId,
+  await onDealExecuted({
+    deal: mappedDeal,
     actorUserId: user.id,
-    kind: "exhibition",
-    body: `Exhibition at ${validated.value.venue} recorded for ${title}.`,
-    client: service,
+    execution,
+    clients: { service, user: supabase },
   });
 
   const state = await resolveExhibitionExecutionState({
-    deal: mapDealRow(updated as Record<string, unknown>),
+    deal: mappedDeal,
     userId: user.id,
     service,
   });

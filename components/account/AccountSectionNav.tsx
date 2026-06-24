@@ -60,7 +60,7 @@ export function AccountSectionNav({
           aria-label="Account sections"
           className="hidden lg:block lg:sticky lg:top-28 lg:self-start"
         >
-          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-400">
+          <p className="text-[13px] font-medium text-neutral-500">
             On this page
           </p>
           <ul className="mt-4 space-y-1">

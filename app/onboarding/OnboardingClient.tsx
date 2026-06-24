@@ -290,7 +290,12 @@ export function OnboardingClient() {
       <AuthPageShell
         title="How you take part"
         subtitle="Choose the role that best describes how you participate. You can refine details on the next screen."
-        cardBelow={null}
+        cardBelow={
+          <p className="text-[13px] leading-relaxed text-neutral-600">
+            Register works · Verify authorship · Preserve provenance · Enable
+            trusted cultural transactions
+          </p>
+        }
       >
         <div className="divide-y divide-black/[0.06]">
           {(

@@ -12,6 +12,10 @@ import {
 } from "@/lib/ownership-ledger-i18n";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
+import {
+  VERIFICATION_EVENT_ACTIVITY_SELECT,
+  verificationEventActivityLabel,
+} from "@/lib/verification-events-schema";
 
 export type CollectorStudioActivityPreviewProps = {
   userId: string;
@@ -84,7 +88,7 @@ export function CollectorStudioActivityPreview({
           .limit(20),
         supabase
           .from("verification_events")
-          .select("id, artwork_id, created_at, event_type, message")
+          .select(VERIFICATION_EVENT_ACTIVITY_SELECT)
           .in("artwork_id", artworkIds)
           .order("created_at", { ascending: false })
           .limit(10),
@@ -159,11 +163,7 @@ export function CollectorStudioActivityPreview({
         const aid = String(r.artwork_id || "");
         const reg = registryByArtworkId[aid];
         const title = titleByArtworkId[aid] || t("collector.fallback.work");
-        const kind = String(
-          (r as { message?: string }).message ||
-            (r as { event_type?: string }).event_type ||
-            "update"
-        );
+        const kind = verificationEventActivityLabel(r);
         merged.push({
           id: `e-${r.id}`,
           created_at: String(r.created_at || ""),

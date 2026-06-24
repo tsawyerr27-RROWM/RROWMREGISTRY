@@ -1,24 +1,39 @@
 /**
  * Enterprise marketing typography — restrained labels and measure.
- * Inspired by institutional fintech patterns (clear hierarchy, minimal ornament).
+ * Editorial hierarchy: serif headings + sentence-case subcopy (no eyebrow kickers).
  */
 
-/** Small caps section labels — light surfaces */
-export const editorialEyebrowOnLight =
-  "text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500";
+/** Section lead — sentence subcopy below a heading */
+export const editorialSectionLeadOnLight =
+  "text-sm leading-relaxed text-neutral-600";
 
-/** Softer label on tinted / secondary bands */
-export const editorialEyebrowOnLightMuted =
-  "text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400";
+/** Softer lead on tinted / secondary bands */
+export const editorialSectionLeadMuted =
+  "text-sm leading-relaxed text-neutral-500";
 
-/** Labels on dark / ink chapters */
-export const editorialEyebrowOnInk =
-  "text-[11px] font-semibold uppercase tracking-[0.22em] text-violet-200/80";
+/** Lead on dark / ink chapters */
+export const editorialSectionLeadOnInk =
+  "text-sm leading-relaxed text-violet-100/80";
 
-/** Accent label on light marketing panels (e.g. cyan chapter) */
-export const editorialEyebrowAccentCyan =
-  "text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-800/55";
+/** Accent lead on light marketing panels */
+export const editorialSectionLeadAccentCyan =
+  "text-sm leading-relaxed text-cyan-900/70";
+
+/** Zone / chapter label — sentence case, not uppercase micro-type */
+export const editorialOverlineOnLight =
+  "text-sm font-medium text-neutral-500";
+
+/** @deprecated Use editorialOverlineOnLight */
+export const editorialEyebrowOnLight = editorialOverlineOnLight;
+
+/** @deprecated Use editorialSectionLeadMuted */
+export const editorialEyebrowOnLightMuted = editorialSectionLeadMuted;
+
+/** @deprecated Use editorialSectionLeadOnInk */
+export const editorialEyebrowOnInk = editorialSectionLeadOnInk;
+
+/** @deprecated Use editorialSectionLeadAccentCyan */
+export const editorialEyebrowAccentCyan = editorialSectionLeadAccentCyan;
 
 /** Comfortable reading width for body columns */
-export const editorialMeasure =
-  "max-w-[min(100%,42rem)]";
+export const editorialMeasure = "max-w-[min(100%,42rem)]";

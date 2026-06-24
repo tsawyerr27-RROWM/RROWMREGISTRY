@@ -23,6 +23,7 @@ export default async function PublicRegistryLedgerPage({
     <PublicRegistryRecordView
       artwork={data.artwork}
       artistName={data.artistName}
+      artistUserId={data.artistUserId}
       artistSlug={data.artistSlug}
       verificationGalleryName={data.verificationGalleryName}
       edition={data.edition}
@@ -34,8 +35,12 @@ export default async function PublicRegistryLedgerPage({
       sessionUserId={data.sessionUserId}
       provenanceBundle={data.provenanceBundle}
       provenanceInsights={data.provenanceInsights}
+      rightsLedger={data.rightsLedger}
       shareUrl={data.shareUrl}
       claimReturnPath={data.claimReturnPath}
+      ownershipClaimPath={data.ownershipClaimPath}
+      pendingAcquisitionOnArtwork={data.pendingAcquisitionOnArtwork}
+      ownershipTimeline={data.ownershipTimeline}
     />
   );
 }

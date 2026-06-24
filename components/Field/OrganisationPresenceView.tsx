@@ -11,6 +11,7 @@ import { OrganisationPresenceRegistryEvidence } from "@/components/Field/Organis
 import { ProfileShareControl } from "@/components/sharing/ProfileShareControl";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { buildStudioNewDealHref } from "@/lib/deal-create-nav";
 import type { OrganisationPresencePageData } from "@/lib/field-organisation-presence";
 import {
   fieldExplorerRecordsHref,
@@ -22,6 +23,7 @@ import { fillMessage } from "@/lib/locale-messages";
 import { registryLedgerHref } from "@/lib/registry-nav";
 import { artworkCardParticipationLabel } from "@/lib/representation-language";
 import { buildOrganisationProfileShareContext } from "@/lib/profile-presence-summary";
+import { rrowmFieldCard } from "@/styles/rrowm-theme";
 
 type Props = {
   data: OrganisationPresencePageData;
@@ -44,6 +46,9 @@ export function OrganisationPresenceView({ data }: Props) {
     artworks,
     footprint,
     isProfileOwner,
+    isProfilePublic,
+    sessionUserId,
+    dealCounterparty,
     stewardshipItems,
     contextPanels,
   } = data;
@@ -51,6 +56,10 @@ export function OrganisationPresenceView({ data }: Props) {
   const shareContext = useMemo(
     () => buildOrganisationProfileShareContext(data),
     [data]
+  );
+
+  const showProposeRepresentationCta = Boolean(
+    sessionUserId && isProfilePublic && !isProfileOwner && dealCounterparty?.userId
   );
 
   return (
@@ -71,7 +80,22 @@ export function OrganisationPresenceView({ data }: Props) {
         </div>
 
         <ProfilePresencePrestigeBand context={shareContext} />
-        <ProfileShareControl context={shareContext} className="mt-5" />
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <ProfileShareControl context={shareContext} />
+          {showProposeRepresentationCta && sessionUserId && dealCounterparty ? (
+            <Link
+              href={buildStudioNewDealHref({
+                counterpartyUserId: dealCounterparty.userId,
+                counterpartyLabel: dealCounterparty.label,
+                galleryId: dealCounterparty.galleryId,
+                initialIntentId: "representation_offer",
+              })}
+              className="inline-flex min-h-[44px] items-center rounded-xl border border-neutral-900/[0.08] bg-white/70 px-4 py-2.5 text-sm font-medium text-neutral-800 transition hover:border-neutral-900/[0.12] hover:bg-white"
+            >
+              Propose representation
+            </Link>
+          ) : null}
+        </div>
 
         <OrganisationPresenceRegistryEvidence
           footprint={footprint}
@@ -125,7 +149,7 @@ export function OrganisationPresenceView({ data }: Props) {
           </div>
 
           {representedCreatives.length === 0 ? (
-            <div className="mt-10 rounded-3xl border border-black/[0.06] bg-white/70 px-8 py-14 text-center shadow-sm">
+            <div className={`mt-10 ${rrowmFieldCard.empty}`}>
               <p className="text-sm text-neutral-600">
                 {t("field.presence.organisation.rosterEmpty")}
               </p>
@@ -134,7 +158,7 @@ export function OrganisationPresenceView({ data }: Props) {
             <ul className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {representedCreatives.map((creative) => (
                 <li key={creative.id}>
-                  <div className="flex h-full gap-4 rounded-2xl border border-black/[0.06] bg-white/90 p-5 shadow-sm transition hover:border-black/[0.08] hover:shadow-md">
+                  <div className={`flex h-full gap-4 ${rrowmFieldCard.metaBand}`}>
                     <div
                       className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-neutral-100 font-serif text-lg text-neutral-600"
                       aria-hidden
@@ -235,7 +259,7 @@ export function OrganisationPresenceView({ data }: Props) {
         </div>
 
         {footprint.totalRecords === 0 ? (
-          <div className="mt-10 rounded-3xl border border-black/[0.06] bg-white/70 px-8 py-14 text-center shadow-sm">
+          <div className={`mt-10 ${rrowmFieldCard.empty}`}>
             <p className="text-sm text-neutral-600">
               {t("field.organisation.noRecordsOnFile")}
             </p>
@@ -261,7 +285,7 @@ export function OrganisationPresenceView({ data }: Props) {
 
               return (
                 <li key={artwork.id}>
-                  <article className="group flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-black/[0.06] bg-white/90 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.2)] transition duration-300 hover:-translate-y-1 hover:border-black/[0.08]">
+                  <article className={`h-full ${rrowmFieldCard.portfolio}`}>
                     <Link
                       href={recordHref}
                       className="relative block aspect-[4/3] overflow-hidden bg-neutral-100"
@@ -391,7 +415,7 @@ export function OrganisationPresenceView({ data }: Props) {
         </section>
       ) : null}
 
-      <section className="mx-auto mt-20 max-w-2xl rounded-3xl border border-black/[0.06] bg-white/70 px-8 py-10 text-center shadow-sm md:mt-24 md:px-12">
+      <section className={`mx-auto mt-20 max-w-2xl md:mt-24 ${rrowmFieldCard.empty}`}>
         <p className="text-base leading-relaxed text-neutral-700">
           {t("field.presence.organisation.closingLede")}
         </p>

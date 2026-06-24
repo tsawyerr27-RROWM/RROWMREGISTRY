@@ -9,6 +9,8 @@ export {
   FIELD_PROGRAMMES,
   isFieldPath,
   isFieldExplorerPath,
+  isFieldOpportunitiesPath,
+  isFieldSubnavPath,
   fieldExplorerTabFromPath,
   type FieldExplorerTabId,
 } from "@/lib/field-nav/paths";

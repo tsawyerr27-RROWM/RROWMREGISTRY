@@ -43,6 +43,8 @@ export type CollectorPresenceFootprint = {
   verifiedWorks: number;
   certificateCount: number;
   revokedCertificateCount: number;
+  acquisitionCount: number;
+  completedTransferCount: number;
 };
 
 export type CollectorPresencePageData = {
@@ -82,6 +84,48 @@ type ArtworkReadRow = {
   created_at: string | null;
 };
 
+type CollectorEconomicStats = {
+  acquisitionCount: number;
+  completedTransferCount: number;
+};
+
+async function loadCollectorEconomicStats(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<CollectorEconomicStats> {
+  const { data, error } = await supabase.rpc("get_collector_economic_stats", {
+    p_user_id: userId,
+  });
+
+  if (error) {
+    warnSupabaseRpc("collector economic stats", error);
+    return { acquisitionCount: 0, completedTransferCount: 0 };
+  }
+
+  const raw =
+    data && typeof data === "object" && !Array.isArray(data)
+      ? (data as Record<string, unknown>)
+      : {};
+
+  return {
+    acquisitionCount: Number(raw.acquisition_count ?? 0) || 0,
+    completedTransferCount: Number(raw.completed_transfer_count ?? 0) || 0,
+  };
+}
+
+function emptyCollectorFootprint(
+  economic: CollectorEconomicStats
+): CollectorPresenceFootprint {
+  return {
+    visibleWorks: 0,
+    verifiedWorks: 0,
+    certificateCount: 0,
+    revokedCertificateCount: 0,
+    acquisitionCount: economic.acquisitionCount,
+    completedTransferCount: economic.completedTransferCount,
+  };
+}
+
 export async function loadCollectorPresencePageData(
   supabase: SupabaseClient,
   slug: string
@@ -119,6 +163,7 @@ export async function loadCollectorPresencePageData(
     profile.bio?.trim() && !anonymousPublic ? profile.bio.trim() : null;
 
   const stats = await getCollectorStats(supabase, profile.user_id);
+  const economicStats = await loadCollectorEconomicStats(supabase, profile.user_id);
   const stewardshipLines = collectorTemporalPresenceLines(
     stats
       ? {
@@ -144,12 +189,7 @@ export async function loadCollectorPresencePageData(
       showOwnershipDetails: presence.ownership,
       stats,
       stewardshipLines,
-      footprint: {
-        visibleWorks: 0,
-        verifiedWorks: 0,
-        certificateCount: 0,
-        revokedCertificateCount: 0,
-      },
+      footprint: emptyCollectorFootprint(economicStats),
       works: [],
     };
   }
@@ -270,6 +310,8 @@ export async function loadCollectorPresencePageData(
       verifiedWorks,
       certificateCount,
       revokedCertificateCount,
+      acquisitionCount: economicStats.acquisitionCount,
+      completedTransferCount: economicStats.completedTransferCount,
     },
     works,
   };

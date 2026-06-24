@@ -1,6 +1,7 @@
 "use client";
 
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { workspaceModal } from "@/styles/workspace-design";
 
@@ -49,6 +50,12 @@ export default function ModalShell({
   closeClassName,
   tone = "light",
 }: ModalShellProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (!isOpen) return;
     const previousOverflow = document.body.style.overflow;
@@ -58,11 +65,11 @@ export default function ModalShell({
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const preset = tonePresets[tone];
 
-  return (
+  return createPortal(
     <div
       className={overlayClassName ?? preset.overlay}
       onClick={onClose}
@@ -88,6 +95,7 @@ export default function ModalShell({
         </button>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

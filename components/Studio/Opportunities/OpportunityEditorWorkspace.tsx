@@ -27,6 +27,11 @@ import { useLocalePreferences } from "@/components/providers/LocalePreferencesPr
 import { OpportunityApplicationsPanel } from "@/components/Studio/Opportunities/OpportunityApplicationsPanel";
 import type { OrganisationOpportunityApplicationListItem } from "@/lib/field-opportunity-applications";
 import type { OpportunityApplicationStatus } from "@/lib/field-opportunity-applications";
+import {
+  economicSectionCard,
+  rrowmButton,
+  rrowmEconomicSurface,
+} from "@/styles/rrowm-theme";
 
 type Props = {
   mode: "create" | "edit";
@@ -109,8 +114,8 @@ export function OpportunityEditorWorkspace({
   const isPublished = brief?.visibility_state === "published";
 
   return (
-    <div className="min-h-0">
-      <header className="sticky top-[calc(5rem+env(safe-area-inset-top,0px))] z-20 -mx-1 mb-8 border-b border-neutral-900/[0.08] bg-[rgba(250,250,249,0.92)] px-1 pb-4 backdrop-blur-md">
+    <div className="rrowm-zone-economic min-h-0">
+      <header className={rrowmEconomicSurface.stickyHeader}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <button
@@ -187,7 +192,7 @@ export function OpportunityEditorWorkspace({
               type="button"
               disabled={busy || !canSave}
               onClick={onSave}
-              className="rounded-xl border border-neutral-900/[0.08] bg-neutral-950 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+              className={rrowmButton.primaryEconomic}
             >
               {busy ? t("common.saving") : t("studio.opportunities.saveDraft")}
             </button>
@@ -212,8 +217,8 @@ export function OpportunityEditorWorkspace({
           </>
         ) : (
           <>
-        <section className="rounded-2xl border border-neutral-900/[0.06] bg-white/80 p-6 md:p-8">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.1em] text-neutral-500">
+        <section className={economicSectionCard()}>
+          <h3 className="font-serif text-xl font-normal tracking-tight text-neutral-950">
             {t("studio.opportunities.section.basics")}
           </h3>
           <div className="mt-6 space-y-5">
@@ -244,8 +249,8 @@ export function OpportunityEditorWorkspace({
           </div>
         </section>
 
-        <section className="rounded-2xl border border-neutral-900/[0.06] bg-white/80 p-6 md:p-8">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.1em] text-neutral-500">
+        <section className={economicSectionCard()}>
+          <h3 className="font-serif text-xl font-normal tracking-tight text-neutral-950">
             {t("studio.opportunities.section.settings")}
           </h3>
           <div className="mt-6 space-y-5">
@@ -366,8 +371,8 @@ export function OpportunityEditorWorkspace({
           </div>
         </section>
 
-        <section className="rounded-2xl border border-neutral-900/[0.06] bg-white/80 p-6 md:p-8">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.1em] text-neutral-500">
+        <section className={economicSectionCard()}>
+          <h3 className="font-serif text-xl font-normal tracking-tight text-neutral-950">
             {t("studio.opportunities.eligibility.heading")}
           </h3>
           <p className="mt-2 text-sm text-neutral-600">

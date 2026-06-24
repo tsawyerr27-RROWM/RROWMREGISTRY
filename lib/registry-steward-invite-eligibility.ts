@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { isCurrentOwner } from "@/lib/canonical-ownership-engine";
 import {
   type RegistryStewardAuthorshipEligibility,
   type RegistryStewardCustodyEligibility,
@@ -19,7 +20,7 @@ async function loadArtworkForStewardInvite(
   const { data } = await service
     .from("artworks")
     .select(
-      "id, title, registry_id, catalogue_artist_name, artist_id, verification_status, current_owner_id, filing_gallery_id"
+      "id, title, registry_id, catalogue_artist_name, artist_id, verification_status, filing_gallery_id"
     )
     .eq("id", artworkId)
     .maybeSingle<RegistryStewardInviteArtwork>();
@@ -88,11 +89,12 @@ async function resolveAuthorshipEligibility(
 }
 
 async function resolveCustodyEligibility(
+  service: SupabaseClient,
   artwork: RegistryStewardInviteArtwork,
   userId: string
 ): Promise<RegistryStewardCustodyEligibility | null> {
   if (String(artwork.verification_status || "") !== "verified") return null;
-  if (!artwork.current_owner_id || artwork.current_owner_id !== userId) {
+  if (!(await isCurrentOwner(service, userId, artwork.id))) {
     return null;
   }
 
@@ -120,7 +122,7 @@ export async function resolveRegistryStewardInviteEligibility(
     const { data } = await service
       .from("artworks")
       .select(
-        "id, title, registry_id, catalogue_artist_name, artist_id, verification_status, current_owner_id, filing_gallery_id"
+        "id, title, registry_id, catalogue_artist_name, artist_id, verification_status, filing_gallery_id"
       )
       .eq("registry_id", args.registryId.trim())
       .maybeSingle<RegistryStewardInviteArtwork>();
@@ -131,7 +133,7 @@ export async function resolveRegistryStewardInviteEligibility(
 
   const [authorship, custody] = await Promise.all([
     resolveAuthorshipEligibility(supabase, service, artwork, userId),
-    resolveCustodyEligibility(artwork, userId),
+    resolveCustodyEligibility(service, artwork, userId),
   ]);
 
   const kinds: RegistryStewardInviteKind[] = [];

@@ -44,6 +44,24 @@ export function verificationShareAbsoluteOgImageUrl(
   return `${base}${verificationShareOgImagePath(registryId)}`;
 }
 
+/** Relative client download path (same-origin fetch; safe for SSR + local dev). */
+export function verificationShareDownloadImagePath(registryId: string): string {
+  const params = new URLSearchParams({ registry_id: registryId.trim() });
+  return `/api/og/verification?${params.toString()}`;
+}
+
+/** Client download endpoint (stable fetch target; avoids opengraph-image route quirks). */
+export function verificationShareDownloadImageUrl(
+  registryId: string,
+  origin?: string
+): string {
+  const path = verificationShareDownloadImagePath(registryId);
+  const base =
+    origin?.replace(/\/$/, "") ??
+    (typeof window !== "undefined" ? window.location.origin : getSiteUrl());
+  return `${base}${path}`;
+}
+
 export function resolveVerificationSharePublicity(
   isVerified: boolean
 ): VerificationSharePublicity {

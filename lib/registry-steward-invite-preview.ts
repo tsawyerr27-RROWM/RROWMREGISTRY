@@ -71,7 +71,7 @@ function resolvePreviewStatus(args: {
 
 function defaultRoleExplanation(kind: RegistryStewardInviteKind): string {
   if (kind === "authorship") {
-    return "Authenticate authorship and deepen the documentary record. The work is already on file — this is continuity participation, not upload approval.";
+    return "Authenticate authorship and deepen the documentary record. The work is already on file. This is continuity participation, not upload approval.";
   }
   return "Accept custody continuation so the chronology of this verified record can advance on the Registry ledger.";
 }

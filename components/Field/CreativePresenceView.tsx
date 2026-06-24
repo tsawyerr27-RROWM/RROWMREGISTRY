@@ -13,6 +13,7 @@ import { RegistryListPagination } from "@/components/Registry/RegistryListPagina
 import { ProfileShareControl } from "@/components/sharing/ProfileShareControl";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { buildStudioNewDealHref } from "@/lib/deal-create-nav";
 import type { CreativePresencePageData } from "@/lib/field-creative-presence";
 import {
   fieldExplorerRecordsHref,
@@ -24,6 +25,7 @@ import { registryLedgerHref } from "@/lib/registry-nav";
 import { artworkCardParticipationLabel } from "@/lib/representation-language";
 import { buildCreativeProfileShareContext } from "@/lib/profile-presence-summary";
 import { REGISTRY_PAGE_SIZE } from "@/lib/registry-list-params";
+import { rrowmFieldCard } from "@/styles/rrowm-theme";
 
 type Props = {
   data: CreativePresencePageData;
@@ -50,6 +52,8 @@ export function CreativePresenceView({ data }: Props) {
     registryPractices,
     practiceExplorerHref,
     isProfileOwner,
+    isProfilePublic,
+    sessionUserId,
     showOwnerPracticeGuidance,
     stewardshipItems,
     contextPanels,
@@ -60,6 +64,10 @@ export function CreativePresenceView({ data }: Props) {
     [data]
   );
 
+  const showProposeDealCta = Boolean(
+    sessionUserId && isProfilePublic && !isProfileOwner
+  );
+
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 md:py-14 lg:px-8">
       <section className="max-w-3xl">
@@ -68,7 +76,21 @@ export function CreativePresenceView({ data }: Props) {
         </h1>
 
         <ProfilePresencePrestigeBand context={shareContext} />
-        <ProfileShareControl context={shareContext} className="mt-5" />
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <ProfileShareControl context={shareContext} />
+          {showProposeDealCta ? (
+            <Link
+              href={buildStudioNewDealHref({
+                counterpartyUserId: artist.id,
+                counterpartyLabel: artist.display_name,
+                initialIntentId: "commission_work",
+              })}
+              className="inline-flex min-h-[44px] items-center rounded-xl border border-neutral-900/[0.08] bg-white/70 px-4 py-2.5 text-sm font-medium text-neutral-800 transition hover:border-neutral-900/[0.12] hover:bg-white"
+            >
+              Propose deal
+            </Link>
+          ) : null}
+        </div>
 
         <CreativePresenceRegistryEvidence
           participationLayers={participationLayers}
@@ -119,7 +141,7 @@ export function CreativePresenceView({ data }: Props) {
 
       {gallery && showOrganisationSection ? (
         <section className="mt-14 max-w-2xl">
-          <div className="rounded-3xl border border-black/[0.06] bg-white/80 p-8 shadow-sm backdrop-blur-sm md:p-10">
+          <div className={`${rrowmFieldCard.prestige} max-w-2xl`}>
             <h2 className="text-xl font-medium text-neutral-900">
               {gallery.href ? (
                 <Link
@@ -193,7 +215,7 @@ export function CreativePresenceView({ data }: Props) {
         </div>
 
         {total === 0 ? (
-          <div className="mt-14 rounded-3xl border border-black/[0.06] bg-white/70 px-8 py-14 text-center shadow-sm md:px-12">
+          <div className={`mt-14 ${rrowmFieldCard.empty}`}>
             <p className="text-sm text-neutral-600">
               {q.trim() || status !== "all"
                 ? t("field.presence.creative.emptyFiltered")
@@ -221,7 +243,7 @@ export function CreativePresenceView({ data }: Props) {
                 return (
                   <article
                     key={artwork.id}
-                    className="group flex flex-col overflow-hidden rounded-[1.75rem] border border-black/[0.06] bg-white/90 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.2)] transition duration-300 hover:-translate-y-1 hover:border-black/[0.08] hover:shadow-[0_28px_70px_-36px_rgba(0,0,0,0.25)]"
+                    className={rrowmFieldCard.portfolio}
                   >
                     <Link
                       href={recordHref}

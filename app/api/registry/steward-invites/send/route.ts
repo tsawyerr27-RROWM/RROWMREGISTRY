@@ -109,7 +109,7 @@ export async function POST(req: Request) {
   const { data: artwork } = await service
     .from("artworks")
     .select(
-      "id, title, registry_id, catalogue_artist_name, artist_id, verification_status, current_owner_id, filing_gallery_id"
+      "id, title, registry_id, catalogue_artist_name, artist_id, verification_status, filing_gallery_id"
     )
     .eq("id", eligibility.artwork.id)
     .maybeSingle();

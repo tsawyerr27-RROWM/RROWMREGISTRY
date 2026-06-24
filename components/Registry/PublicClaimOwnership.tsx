@@ -2,20 +2,26 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getSessionSafe, getSupabaseBrowserClient } from "@/lib/supabase";
+import { getSessionSafe } from "@/lib/supabase";
 import ModalShell from "@/components/ui/ModalShell";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import {
+  OWNERSHIP_CLAIM_NOTE_MIN_LENGTH,
+  type OwnershipClaimPath,
+} from "@/lib/ownership-claim-eligibility";
 
 type Props = {
   artworkId: string;
   registryId: string;
   loginNextPath: string;
+  initialClaimPath?: OwnershipClaimPath | null;
 };
 
 export function PublicClaimOwnership({
   artworkId,
   registryId,
   loginNextPath,
+  initialClaimPath = null,
 }: Props) {
   const { t } = useLocalePreferences();
   const [userId, setUserId] = useState<string | null | undefined>(undefined);
@@ -23,67 +29,103 @@ export function PublicClaimOwnership({
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [claimPath, setClaimPath] = useState<OwnershipClaimPath | null>(
+    initialClaimPath
+  );
+  const [pathLoading, setPathLoading] = useState(!initialClaimPath);
 
   useEffect(() => {
-    const supabase = getSupabaseBrowserClient();
+    if (initialClaimPath) {
+      setClaimPath(initialClaimPath);
+      setPathLoading(false);
+    }
+  }, [initialClaimPath]);
+
+  useEffect(() => {
     const run = async () => {
       const session = await getSessionSafe();
-      setUserId(session?.user?.id ?? null);
-    };
-    run();
-    const { data: sub } = supabase.auth.onAuthStateChange(
-      (_e: unknown, session: unknown) => {
-        setUserId((session as { user?: { id?: string } })?.user?.id ?? null);
+      const uid = session?.user?.id ?? null;
+      setUserId(uid);
+      if (!uid) {
+        setPathLoading(false);
+        return;
       }
-    );
-    return () => sub.subscription.unsubscribe();
-  }, []);
+
+      if (initialClaimPath) {
+        setClaimPath(initialClaimPath);
+        setPathLoading(false);
+        return;
+      }
+
+      setPathLoading(true);
+      try {
+        const res = await fetch(
+          `/api/registry/ownership-claim?artwork_id=${encodeURIComponent(artworkId)}`,
+          { credentials: "include" }
+        );
+        if (res.ok) {
+          const payload = (await res.json()) as { path?: OwnershipClaimPath };
+          if (payload.path) setClaimPath(payload.path);
+        } else {
+          setClaimPath(null);
+        }
+      } catch {
+        setClaimPath(null);
+      } finally {
+        setPathLoading(false);
+      }
+    };
+    void run();
+  }, [artworkId, initialClaimPath]);
 
   const loginHref = `/login?next=${encodeURIComponent(loginNextPath)}`;
 
   const submit = async () => {
     if (!userId) return;
     const trimmed = note.trim();
-    if (trimmed.length < 12) {
+    if (trimmed.length < OWNERSHIP_CLAIM_NOTE_MIN_LENGTH) {
       alert(
         "Please add a short explanation (at least 12 characters) for the artist to review."
       );
       return;
     }
     setLoading(true);
-    const supabase = getSupabaseBrowserClient();
-    const { data: existing } = await supabase
-      .from("ownership_claims")
-      .select("id")
-      .eq("artwork_id", artworkId)
-      .eq("collector_id", userId)
-      .eq("status", "pending")
-      .maybeSingle();
-
-    if (existing) {
+    try {
+      const res = await fetch("/api/registry/ownership-claim", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          artwork_id: artworkId,
+          note: trimmed,
+        }),
+      });
+      const payload = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        if (res.status === 409) {
+          const conflict = payload as {
+            code?: string;
+            accept_href?: string | null;
+            error?: string;
+          };
+          if (conflict.code === "use_provenance_accept" && conflict.accept_href) {
+            window.location.href = conflict.accept_href;
+            return;
+          }
+          alert(conflict.error || t("registry.record.claim.pending"));
+          return;
+        }
+        alert(payload.error || t("registry.record.claim.error"));
+        return;
+      }
+      setDone(true);
+      setOpen(false);
+      setNote("");
+    } catch {
+      alert(t("registry.record.claim.error"));
+    } finally {
       setLoading(false);
-      alert(t("registry.record.claim.pending"));
-      return;
     }
-
-    const { error } = await supabase.from("ownership_claims").insert({
-      artwork_id: artworkId,
-      collector_id: userId,
-      note: trimmed,
-      status: "pending",
-    });
-    setLoading(false);
-    if (error) {
-      console.error(error);
-      alert(error.message || t("registry.record.claim.error"));
-      return;
-    }
-    void supabase.rpc("ownership_certificate_verify", {
-      p_artwork_id: artworkId,
-    });
-    setDone(true);
-    setOpen(false);
-    setNote("");
   };
 
   if (userId === undefined) {
@@ -103,6 +145,46 @@ export function PublicClaimOwnership({
         {t("registry.record.claim.signIn")}
       </Link>
     );
+  }
+
+  if (pathLoading) {
+    return (
+      <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-center text-sm text-neutral-500">
+        Checking stewardship status…
+      </div>
+    );
+  }
+
+  if (claimPath?.kind === "already_owner") {
+    return (
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm text-emerald-800">
+        Stewardship for this work is already recorded to your account.
+      </div>
+    );
+  }
+
+  if (claimPath?.kind === "provenance_accept") {
+    const href = claimPath.accept_href;
+    return href ? (
+      <Link
+        href={href}
+        className="w-full rounded-xl border border-neutral-900 bg-neutral-950 px-4 py-3 text-center text-sm font-medium text-white transition hover:bg-neutral-800"
+      >
+        Accept acquisition
+      </Link>
+    ) : (
+      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm text-amber-900">
+        {claimPath.message}
+      </div>
+    );
+  }
+
+  if (claimPath?.kind === "blocked" || !claimPath) {
+    return null;
+  }
+
+  if (claimPath.kind !== "manual_eligible") {
+    return null;
   }
 
   return (

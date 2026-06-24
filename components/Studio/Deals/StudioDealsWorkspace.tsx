@@ -7,7 +7,7 @@ import type { DealRow } from "@/lib/deals";
 import { buildStudioNewDealHref } from "@/lib/deal-create-nav";
 import { DealListPanel } from "@/components/Studio/Deals/DealListPanel";
 import { DealWorkspace } from "@/components/Studio/Deals/DealWorkspace";
-import { rrowmButton, rrowmSurface, rrowmZoneClass } from "@/styles/rrowm-theme";
+import { rrowmButton, rrowmZoneClass } from "@/styles/rrowm-theme";
 import { workspace } from "@/styles/workspace-design";
 
 export type DealTabId = "incoming" | "outgoing" | "active" | "closed";
@@ -97,7 +97,7 @@ export function StudioDealsWorkspace({ userId, initialDealId = null }: Props) {
   const showEmptyWorkspace = !loading && !loadError && deals.length === 0;
 
   return (
-    <div className={`${rrowmZoneClass.economic} min-h-0`}>
+    <div className={`${rrowmZoneClass.economic} flex min-h-0 flex-col gap-6`}>
       <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <h1 className={workspace.type.sectionTitle}>Deals</h1>
@@ -114,7 +114,7 @@ export function StudioDealsWorkspace({ userId, initialDealId = null }: Props) {
         </button>
       </div>
 
-      <div className="grid min-h-0 grid-cols-1 gap-6 lg:grid-cols-[22rem_1fr] lg:gap-8 xl:grid-cols-[24rem_1fr]">
+      {!showEmptyWorkspace ? (
         <DealListPanel
           userId={userId}
           loading={loading}
@@ -127,35 +127,35 @@ export function StudioDealsWorkspace({ userId, initialDealId = null }: Props) {
           onSelectDealId={setSelectedDealId}
           onCreateDeal={openNewDeal}
         />
+      ) : null}
 
-        {showEmptyWorkspace ? (
-          <section
-            className={`${workspace.panel.shell} flex min-h-[22rem] flex-col items-center justify-center px-8 py-16 text-center`}
-            aria-label="Deal workspace"
+      {showEmptyWorkspace ? (
+        <section
+          className={`${workspace.panel.shell} flex min-h-[22rem] flex-col items-center justify-center px-8 py-16 text-center`}
+          aria-label="Deal workspace"
+        >
+          <h2 className="font-serif text-xl font-normal tracking-tight text-neutral-950">
+            No deals yet
+          </h2>
+          <p className="mt-3 max-w-sm text-[14px] leading-relaxed text-neutral-500">
+            Begin by registering a work, or start a private deal with any public
+            Field participant.
+          </p>
+          <button
+            type="button"
+            onClick={openNewDeal}
+            className="mt-6 inline-flex items-center rounded-xl border border-neutral-900/[0.08] bg-neutral-950 px-4 py-2.5 text-[13px] font-medium text-white transition hover:bg-neutral-900"
           >
-            <h2 className="font-serif text-xl font-normal tracking-tight text-neutral-950">
-              No deals yet
-            </h2>
-            <p className="mt-3 max-w-sm text-[14px] leading-relaxed text-neutral-500">
-              Begin by registering a work, or start a private deal with any public
-              Field participant.
-            </p>
-            <button
-              type="button"
-              onClick={openNewDeal}
-              className="mt-6 inline-flex items-center rounded-xl border border-neutral-900/[0.08] bg-neutral-950 px-4 py-2.5 text-[13px] font-medium text-white transition hover:bg-neutral-900"
-            >
-              New deal
-            </button>
-          </section>
-        ) : (
-          <DealWorkspace
-            userId={userId}
-            deal={selectedDeal}
-            onDealUpdated={() => void refreshDeals()}
-          />
-        )}
-      </div>
+            New deal
+          </button>
+        </section>
+      ) : (
+        <DealWorkspace
+          userId={userId}
+          deal={selectedDeal}
+          onDealUpdated={() => void refreshDeals()}
+        />
+      )}
     </div>
   );
 }

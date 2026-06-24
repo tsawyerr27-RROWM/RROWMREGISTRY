@@ -9,6 +9,7 @@ import {
   FIELD_EXPLORER,
   FIELD_EXPLORER_TABS,
   fieldExplorerTabFromPath,
+  isFieldSubnavPath,
 } from "@/lib/field-nav";
 
 export function FieldExplorerSubNav() {
@@ -17,7 +18,7 @@ export function FieldExplorerSubNav() {
   const { t } = useLocalePreferences();
   const activeTab = fieldExplorerTabFromPath(pathname);
 
-  if (!activeTab && pathname !== FIELD_EXPLORER) {
+  if (!activeTab && pathname !== FIELD_EXPLORER && !isFieldSubnavPath(pathname)) {
     return null;
   }
 

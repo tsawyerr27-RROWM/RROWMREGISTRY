@@ -67,7 +67,7 @@ export function PublicProvenancePreview({
                 key={ev.key}
                 className="border-b border-neutral-200/80 pb-3 last:border-0 last:pb-0"
               >
-                <p className="text-[11px] uppercase tracking-wide text-neutral-500">
+                <p className="text-[13px] text-neutral-500">
                   {formatArchivalDate(ev.dateIso, region.locale)}
                 </p>
                 <p className="mt-1 font-serif text-sm text-neutral-950">

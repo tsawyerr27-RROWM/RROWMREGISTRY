@@ -43,6 +43,12 @@ export function certificateShareAbsoluteOgImageUrl(
   return `${base}${certificateShareOgImagePath(registryId)}`;
 }
 
+/** Relative client download path (same-origin; safe for SSR + local dev). */
+export function certificateShareDownloadImagePath(registryId: string): string {
+  const params = new URLSearchParams({ registry_id: registryId.trim() });
+  return `/api/og/certificate?${params.toString()}`;
+}
+
 export function resolveCertificateSharePublicity(args: {
   isVerified: boolean;
   hasCertificate: boolean;

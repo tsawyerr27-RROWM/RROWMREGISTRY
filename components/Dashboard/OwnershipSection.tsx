@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
-import { resolveArtworkOwnerId } from "@/lib/resolve-artwork-owner-id";
+import { resolveHolderUserIdFromEvent } from "@/lib/ownership-canonical";
 import { ExperienceEmptyStateButton } from "@/components/ui/ExperienceEmptyState";
 import { WorkspaceRecordCard } from "@/components/Studio/WorkspaceRecordCard";
 import {
@@ -43,12 +44,7 @@ function currentHolderLabel(
     });
   }
 
-  const oid = resolveArtworkOwnerId(artwork);
-  if (!oid) return t("studio.ownership.unassigned");
-  if (oid === userId) return t("studio.ownership.you");
-  return fillMessage(t("studio.ownership.collectorId"), {
-    id: oid.slice(0, 6),
-  });
+  return t("studio.ownership.unassigned");
 }
 
 function latestEventIsSale(artwork: Record<string, unknown>): boolean {
@@ -67,10 +63,19 @@ function holderIsYou(
   userId: string | undefined
 ): boolean {
   if (!userId) return false;
+  const canonical = artwork.__canonical_holder_id;
+  if (typeof canonical === "string" && canonical.trim()) {
+    return canonical.trim() === userId;
+  }
   const latest = artwork.__latest_owner as LatestOwner | undefined;
-  if (latest?.to_user_id && String(latest.to_user_id) === String(userId))
-    return true;
-  return resolveArtworkOwnerId(artwork) === userId;
+  const holderId = latest
+    ? resolveHolderUserIdFromEvent(latest as Record<string, unknown>)
+    : null;
+  return holderId === userId;
+}
+
+function isTransferredOut(artwork: Record<string, unknown>): boolean {
+  return artwork.__is_transferred === true;
 }
 
 type OwnershipSectionProps = {
@@ -260,7 +265,8 @@ export function OwnershipSection({
                 (artwork as { ownership_transfer_count?: unknown })
                   .ownership_transfer_count ?? 0
               ) || 0;
-            const sold = latestEventIsSale(artwork);
+            const sold =
+              isTransferredOut(artwork) || latestEventIsSale(artwork);
             const youHold = holderIsYou(artwork, userId);
             const holder = currentHolderLabel(artwork, userId, t);
 
@@ -347,9 +353,19 @@ export function OwnershipSection({
                           </span>
                         )}
                       </div>
-                      <span className="shrink-0 rounded-xl bg-neutral-900 px-3 py-2 text-[11px] font-semibold text-white">
-                        {t("studio.ownership.ledgerLink")}
-                      </span>
+                      {registryId ? (
+                        <Link
+                          href={`/registry/${encodeURIComponent(registryId)}/ledger`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="shrink-0 rounded-xl bg-neutral-900 px-3 py-2 text-[11px] font-semibold text-white"
+                        >
+                          {t("studio.ownership.ledgerLink")}
+                        </Link>
+                      ) : (
+                        <span className="shrink-0 rounded-xl bg-neutral-300 px-3 py-2 text-[11px] font-semibold text-neutral-600">
+                          {t("studio.ownership.ledgerLink")}
+                        </span>
+                      )}
                     </div>
                   </>
                 }

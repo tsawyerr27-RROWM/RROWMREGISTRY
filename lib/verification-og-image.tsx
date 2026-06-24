@@ -86,9 +86,8 @@ function OgSeal({ tier }: { tier: ReturnType<typeof verificationOgSealTier> }) {
         style={{
           position: "relative",
           fontSize: 11,
-          letterSpacing: "0.18em",
-          textTransform: "uppercase",
-          color: og.ink.muted,
+          letterSpacing: "0.04em",
+                    color: og.ink.muted,
           fontWeight: 500,
         }}
       >
@@ -176,9 +175,8 @@ export function renderVerificationOgImage(bundle: VerificationOgBundle) {
                   style={{
                     fontSize: 17,
                     color: og.ink.muted,
-                    letterSpacing: "0.14em",
-                    textTransform: "uppercase",
-                  }}
+                    letterSpacing: "0.02em",
+                                      }}
                 >
                   {kicker}
                 </div>
@@ -255,8 +253,7 @@ export function renderVerificationOgImage(bundle: VerificationOgBundle) {
                   style={{
                     fontSize: 16,
                     letterSpacing: "0.24em",
-                    textTransform: "uppercase",
-                    color: og.ink.faint,
+                                        color: og.ink.faint,
                   }}
                 >
                   {og.wordmark}

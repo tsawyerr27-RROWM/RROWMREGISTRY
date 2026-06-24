@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 
+import { RightsLedgerSection } from "@/components/Rights/RightsLedgerSection";
 import { ArchivalProvenanceTimeline } from "@/components/provenance/ArchivalProvenanceTimeline";
 import { CertificateShareControl } from "@/components/certificate/CertificateShareControl";
 import { VerificationShareControl } from "@/components/Registry/VerificationShareControl";
@@ -14,9 +16,17 @@ import { RegistryTechnicalDetails } from "@/components/Registry/RegistryTechnica
 import { ShareRecordButton } from "@/components/Registry/ShareRecordButton";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { buildStudioNewDealHref } from "@/lib/deal-create-nav";
+import {
+  acquisitionDealWorkLabel,
+  resolveAcquisitionDealCounterparty,
+  shouldShowAcquisitionDealCta,
+} from "@/lib/acquisition-deal-counterparty";
+import type { OwnershipClaimPath } from "@/lib/ownership-claim-eligibility";
 import { fillMessage } from "@/lib/locale-messages";
 import type { ArchivalProvenanceBundle } from "@/lib/provenance-timeline";
 import type { ProvenanceInsight } from "@/lib/provenance-insights";
+import type { RightsLedgerGrouped } from "@/lib/rights-ledger";
 import {
   ownershipStatusBadge,
   type OwnershipSystemStatus,
@@ -25,10 +35,13 @@ import { translateProvenanceInsight } from "@/lib/archival-provenance-i18n";
 import { buildCertificateShareContext } from "@/lib/certificate-share";
 import { buildVerificationShareContext } from "@/lib/verification-share";
 import { fieldCreativeHref, fieldRecordHref } from "@/lib/field-nav";
+import { rrowmRegistrySection } from "@/styles/rrowm-theme";
 import {
   computeRegistryTrustPresentation,
   isRecordVerified,
 } from "@/lib/registry-trust-model";
+import { OwnershipEventsChronology } from "@/components/Registry/OwnershipEventsChronology";
+import type { OwnershipTimelineEntry } from "@/lib/canonical-ownership-engine";
 import { computeRegistryIntelligence } from "@/lib/registry-intelligence";
 
 export type PublicRegistryRecordProps = {
@@ -47,6 +60,7 @@ export type PublicRegistryRecordProps = {
     is_locked: boolean | null;
   };
   artistName: string;
+  artistUserId: string | null;
   artistSlug: string | null;
   verificationGalleryName: string | null;
   edition: {
@@ -67,8 +81,12 @@ export type PublicRegistryRecordProps = {
   sessionUserId: string | null;
   provenanceBundle: ArchivalProvenanceBundle;
   provenanceInsights: ProvenanceInsight[];
+  rightsLedger: RightsLedgerGrouped;
   shareUrl: string;
   claimReturnPath: string;
+  ownershipClaimPath?: OwnershipClaimPath | null;
+  pendingAcquisitionOnArtwork?: boolean;
+  ownershipTimeline?: OwnershipTimelineEntry[];
 };
 
 function ownershipLabel(
@@ -90,6 +108,7 @@ function ownershipLabel(
 export function PublicRegistryRecordView({
   artwork,
   artistName,
+  artistUserId,
   artistSlug,
   verificationGalleryName,
   edition,
@@ -101,10 +120,37 @@ export function PublicRegistryRecordView({
   sessionUserId,
   provenanceBundle,
   provenanceInsights,
+  rightsLedger,
   shareUrl,
   claimReturnPath,
+  ownershipClaimPath = null,
+  pendingAcquisitionOnArtwork = false,
+  ownershipTimeline = [],
 }: PublicRegistryRecordProps) {
   const { t } = useLocalePreferences();
+
+  const dealCounterparty = useMemo(
+    () =>
+      resolveAcquisitionDealCounterparty({
+        artistUserId,
+        artistName,
+        currentOwnerUserId: currentOwner.user_id,
+        currentOwnerDisplayName: currentOwner.display_name,
+      }),
+    [artistName, artistUserId, currentOwner.display_name, currentOwner.user_id]
+  );
+
+  const showExpressInterestCta = shouldShowAcquisitionDealCta({
+    sessionUserId,
+    counterpartyUserId: dealCounterparty?.userId ?? null,
+    currentOwnerUserId: currentOwner.user_id,
+    pendingAcquisitionOnArtwork,
+  });
+
+  const acquisitionWorkLabel = acquisitionDealWorkLabel({
+    title: artwork.title,
+    registryId: artwork.registry_id,
+  });
 
   const editionLine = (() => {
     if (!edition) return null;
@@ -205,22 +251,38 @@ export function PublicRegistryRecordView({
   });
 
   return (
-    <div className="ds-page-environment min-h-screen pt-20 text-neutral-900">
-      <main className="relative mx-auto max-w-6xl px-4 py-14 sm:px-6 md:py-20 lg:px-8">
+    <div className="rrowm-zone-registry text-neutral-900">
+      <main className="relative mx-auto max-w-6xl px-4 py-6 sm:px-6 md:py-8 lg:px-8">
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[min(52vh,28rem)] bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(16,185,129,0.07),transparent_58%),radial-gradient(ellipse_55%_45%_at_100%_0%,rgba(14,165,233,0.06),transparent_50%)]"
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[min(40vh,22rem)] bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(255,255,255,0.9),transparent_58%)]"
           aria-hidden
         />
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neutral-900/[0.06] bg-white/70 px-4 py-3 shadow-sm">
-          <p className="text-sm text-neutral-600">
+        <div className={`mb-8 flex flex-wrap items-center justify-between gap-3 ${rrowmRegistrySection.discovery}`}>
+          <p className="max-w-2xl text-sm text-neutral-600">
             {t("registry.record.ledgerDiscoveryNote")}
           </p>
-          <Link
-            href={fieldRecordHref(artwork.registry_id)}
-            className="inline-flex rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
-          >
-            {t("registry.record.openFieldRecord")}
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            {showExpressInterestCta && sessionUserId && dealCounterparty ? (
+              <Link
+                href={buildStudioNewDealHref({
+                  counterpartyUserId: dealCounterparty.userId,
+                  counterpartyLabel: dealCounterparty.label,
+                  artworkId: artwork.id,
+                  artworkTitle: acquisitionWorkLabel,
+                  initialIntentId: "acquisition_interest",
+                })}
+                className="inline-flex min-h-[44px] items-center rounded-xl border border-neutral-900/[0.08] bg-white/70 px-4 py-2.5 text-sm font-medium text-neutral-800 transition hover:border-neutral-900/[0.12] hover:bg-white"
+              >
+                Start acquisition deal
+              </Link>
+            ) : null}
+            <Link
+              href={fieldRecordHref(artwork.registry_id)}
+              className="inline-flex rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
+            >
+              {t("registry.record.openFieldRecord")}
+            </Link>
+          </div>
         </div>
 
         <RegistryTrustPanel
@@ -230,7 +292,7 @@ export function PublicRegistryRecordView({
         />
 
         {recordVerified ? (
-          <section className="mb-10 rounded-[1.15rem] border border-neutral-300/60 bg-gradient-to-br from-[#f7f4ef] via-[#fafaf8] to-[#f0ebe3] px-6 py-6 shadow-sm md:px-8">
+          <section className={`mb-10 ${rrowmRegistrySection.section}`}>
             <p className="text-sm font-medium text-neutral-800">
               {t("verification.share.sectionLabel")}
             </p>
@@ -243,7 +305,7 @@ export function PublicRegistryRecordView({
 
         <div className="mb-16 grid gap-10 lg:grid-cols-12 lg:gap-14 lg:items-start">
           <div className="lg:col-span-7">
-            <div className="liquid-glass-tile overflow-hidden rounded-[1.65rem] shadow-[0_28px_72px_-32px_rgba(15,23,42,0.18)] ring-1 ring-black/[0.06]">
+            <div className={`${rrowmRegistrySection.artworkFrame}`}>
               {artwork.image_url ? (
                 <div className="relative aspect-[4/5] w-full bg-gradient-to-br from-neutral-100 to-neutral-200/80">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -262,7 +324,7 @@ export function PublicRegistryRecordView({
           </div>
 
           <div className="flex flex-col gap-8 lg:col-span-5 lg:pt-1">
-            <div className="rounded-2xl border border-black/[0.06] bg-white/75 px-5 py-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)] backdrop-blur-sm md:px-6 md:py-6">
+            <div className={rrowmRegistrySection.metadata}>
               <p className="font-mono text-[11px] leading-relaxed tracking-tight text-neutral-500">
                 {artwork.registry_id}
               </p>
@@ -286,12 +348,23 @@ export function PublicRegistryRecordView({
                   "–"}
               </p>
             </div>
-            <div className="rounded-2xl border border-black/[0.05] bg-gradient-to-br from-neutral-50/95 to-white/80 px-5 py-5 md:px-6">
+            <div className={rrowmRegistrySection.ownership}>
               <p className={ownBadge.className}>{ownBadge.label}</p>
               <p className="mt-2 text-sm text-neutral-600">{heldByContent}</p>
             </div>
+            {ownershipTimeline.length > 0 ? (
+              <section className={`${rrowmRegistrySection.section} md:px-6 md:py-7`}>
+                <h2 className="font-serif text-lg font-normal text-neutral-950">
+                  Ownership chronology
+                </h2>
+                <OwnershipEventsChronology
+                  entries={ownershipTimeline}
+                  className="mt-4"
+                />
+              </section>
+            ) : null}
             {artwork.description ? (
-              <section className="rounded-2xl border border-black/[0.06] bg-white/60 px-5 py-6 shadow-sm md:px-6 md:py-7">
+              <section className={`${rrowmRegistrySection.section} md:px-6 md:py-7`}>
                 <h2 className="font-serif text-lg font-normal text-neutral-950">
                   {t("registry.record.aboutWork")}
                 </h2>
@@ -305,7 +378,7 @@ export function PublicRegistryRecordView({
 
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-14">
           <div className="space-y-10 lg:col-span-7">
-            <section className="liquid-glass-tile rounded-2xl p-6 md:p-8">
+            <section className={rrowmRegistrySection.section}>
               <h2 className="font-serif text-xl font-normal tracking-tight text-neutral-950">
                 {t("registry.record.specifications")}
               </h2>
@@ -345,7 +418,7 @@ export function PublicRegistryRecordView({
               </dl>
             </section>
 
-            <section className="rounded-[1.25rem] border border-neutral-900/[0.07] bg-[#fafaf8]/90 p-6 md:p-9">
+            <section className={rrowmRegistrySection.provenance}>
               <div className="border-b border-neutral-900/[0.06] pb-6">
                 <InfoTooltip text={t("registry.record.provenanceTooltip")} />
                 <h2 className="mt-3 font-serif text-[1.75rem] font-normal tracking-tight text-neutral-950 md:text-2xl">
@@ -365,7 +438,7 @@ export function PublicRegistryRecordView({
                     {provenanceInsights.map((ins, i) => (
                       <li
                         key={`${ins.type}-${ins.priority}-${i}`}
-                        className="rounded-xl border border-neutral-900/[0.06] bg-white/80 px-5 py-4 text-sm leading-relaxed text-neutral-700"
+                        className={`${rrowmRegistrySection.insight} text-sm leading-relaxed text-neutral-700`}
                       >
                         {translateProvenanceInsight(ins.message, t)}
                       </li>
@@ -381,10 +454,12 @@ export function PublicRegistryRecordView({
                 />
               </div>
             </section>
+
+            <RightsLedgerSection ledger={rightsLedger} />
           </div>
 
           <aside className="space-y-6 lg:col-span-5">
-            <div className="rounded-2xl border border-neutral-900/[0.06] bg-[#fafaf8]/80 p-8 md:p-9">
+            <div className={rrowmRegistrySection.certificate}>
               <h2 className="font-serif text-lg font-normal text-neutral-950">
                 {t("registry.record.certStatusTitle")}
               </h2>
@@ -441,7 +516,7 @@ export function PublicRegistryRecordView({
               timelineHash={artwork.timeline_hash}
             />
 
-            <div className="liquid-glass-tile rounded-2xl p-8">
+            <div className={rrowmRegistrySection.verification}>
               <h2 className="font-serif text-lg font-normal text-neutral-950">
                 {t("registry.record.verificationTitle")}
               </h2>
@@ -456,12 +531,15 @@ export function PublicRegistryRecordView({
                   artworkId={artwork.id}
                   registryId={artwork.registry_id}
                   loginNextPath={claimReturnPath}
+                  initialClaimPath={ownershipClaimPath}
                 />
-                <InviteRecordStewardControl
-                  artworkId={artwork.id}
-                  registryId={artwork.registry_id}
-                  sessionUserId={sessionUserId}
-                />
+                {!pendingAcquisitionOnArtwork ? (
+                  <InviteRecordStewardControl
+                    artworkId={artwork.id}
+                    registryId={artwork.registry_id}
+                    sessionUserId={sessionUserId}
+                  />
+                ) : null}
                 <ShareRecordButton url={shareUrl} />
               </div>
             </div>

@@ -8,6 +8,7 @@ import {
   registryTrustLevelMessageKey,
   registryTrustPillarMessageKey,
 } from "@/lib/registry-trust-model";
+import { rrowmFloatingBlock, rrowmRegistrySurface, rrowmSurface } from "@/styles/rrowm-theme";
 
 export type RegistryTrustPanelVariant = "hero" | "compact" | "modal";
 
@@ -27,10 +28,10 @@ export function RegistryTrustPanel({
 
   const shellClass =
     variant === "hero"
-      ? "p-8 shadow-[0_24px_64px_-40px_rgba(15,23,42,0.22)] md:p-10"
+      ? rrowmRegistrySurface.trustPanel
       : variant === "compact"
-        ? "p-6 md:p-7"
-        : "p-5";
+        ? rrowmRegistrySurface.trustCompact
+        : `${rrowmSurface.l3} p-5`;
 
   const levelClass =
     variant === "modal"
@@ -38,18 +39,21 @@ export function RegistryTrustPanel({
       : "font-serif text-3xl font-normal tracking-tight text-neutral-950 md:text-[2.125rem]";
 
   return (
-    <article
-      className={`rounded-[1.25rem] border border-neutral-900/[0.08] bg-gradient-to-br from-[#fafaf8] via-white to-[#f5f4f0]/90 ${shellClass} ${className}`}
-    >
+    <article className={`relative ${shellClass} ${className}`}>
+      <div
+        className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[color:color-mix(in_srgb,var(--rrowm-zone-accent)_40%,transparent)] to-transparent md:inset-x-10"
+        aria-hidden
+      />
+
       <div className="flex items-start gap-6 md:gap-8">
         <RegistryTrustSeal level={presentation.level} size={sealSize} />
         <div className="min-w-0 flex-1 pt-1">
-          <p className="text-sm text-neutral-600">
-            {t("registry.trust.panelLabel")}
-          </p>
-          <h2 className={`mt-2 ${levelClass}`}>
+          <h2 className={levelClass}>
             {t(registryTrustLevelMessageKey(presentation.level))}
           </h2>
+          <p className="mt-2 text-sm text-neutral-500">
+            {t("registry.trust.panelLabel")}
+          </p>
         </div>
       </div>
 
@@ -62,12 +66,14 @@ export function RegistryTrustPanel({
           {presentation.pillars.map((pillar) => (
             <li
               key={pillar.id}
-              className={pillar.active ? "text-neutral-800" : "text-neutral-400"}
+              className={`${rrowmFloatingBlock.compact} px-4 py-3 ${
+                pillar.active ? "text-neutral-800" : "text-neutral-400"
+              }`}
             >
               <span className="flex items-start gap-2.5 text-sm leading-snug">
                 <span
                   className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${
-                    pillar.active ? "bg-neutral-700" : "bg-neutral-300"
+                    pillar.active ? "bg-[color:var(--rrowm-zone-accent)]" : "bg-neutral-300"
                   }`}
                   aria-hidden
                 />

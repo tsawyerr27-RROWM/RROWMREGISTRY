@@ -4,7 +4,7 @@ import { StudioRouteGuard } from "@/components/Studio/StudioRouteGuard";
 
 function StudioLayoutFallback() {
   return (
-    <div className="ds-page-environment flex min-h-screen items-center justify-center pt-20">
+    <div className="ds-page-environment rrowm-zone-studio flex min-h-screen items-center justify-center pt-20">
       <p className="text-sm text-neutral-500">Loading…</p>
     </div>
   );

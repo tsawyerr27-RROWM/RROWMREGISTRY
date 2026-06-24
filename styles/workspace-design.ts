@@ -17,12 +17,12 @@ export const workspaceMotion = {
 /** Workspace page atmospheres */
 export const workspaceAtmosphere = {
   /** Default signed-in wash — collector, institutional, account */
-  environment: "ds-workspace-environment",
+  environment: "rrowm-zone-studio",
   /** Continuity: certificates, ownership ledger, provenance handoffs */
-  silver: "ds-silver-environment",
-  studio: "rrowm-grad-studio",
-  artworks: "rrowm-grad-artworks",
-  continuity: "rrowm-grad-continuity",
+  silver: "rrowm-zone-registry ds-silver-environment",
+  studio: "rrowm-zone-studio rrowm-grad-studio",
+  artworks: "rrowm-zone-studio rrowm-grad-artworks",
+  continuity: "rrowm-zone-registry rrowm-grad-continuity",
 } as const;
 
 /** Typography — Raleway UI + loaded serif for titles */
@@ -51,7 +51,7 @@ export const workspaceSpace = {
 
 /** Premium artwork card — image-first, minimal surface */
 export const workspaceCard = {
-  link: "ws-artwork-card group relative block overflow-hidden rounded-2xl border border-neutral-900/[0.05] bg-white/60 shadow-[0_16px_40px_-20px_rgba(15,23,42,0.08)] backdrop-blur-[6px] transition-[transform,box-shadow,border-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-neutral-900/[0.08] hover:shadow-[0_20px_48px_-20px_rgba(15,23,42,0.12)]",
+  link: "ws-artwork-card group relative block overflow-hidden rrowm-surface-l2 backdrop-blur-[2px] transition-[transform,box-shadow,border-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:shadow-[0_20px_48px_rgba(40,25,10,0.09)]",
   media: "relative aspect-[4/3] w-full overflow-hidden bg-neutral-100/80",
   mediaImg:
     "h-full w-full object-cover transition duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.02]",
@@ -67,7 +67,7 @@ export const workspaceCard = {
 /** Floating panels — account, settings, workspace sections */
 export const workspacePanel = {
   shell:
-    "rounded-2xl border border-neutral-900/[0.05] bg-white/55 p-7 shadow-[0_12px_36px_-18px_rgba(15,23,42,0.07)] backdrop-blur-md sm:p-8 md:p-9",
+    "rrowm-surface-l1 p-7 sm:p-8 md:p-9 backdrop-blur-[2px]",
   title: workspaceType.sectionTitle,
   description: "mt-3 max-w-2xl text-[15px] leading-relaxed text-neutral-500",
   body: "mt-10",

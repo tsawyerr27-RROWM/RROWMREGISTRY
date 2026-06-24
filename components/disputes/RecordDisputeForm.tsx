@@ -95,7 +95,7 @@ export function RecordDisputeForm({
 
   return (
     <div className="rounded-xl border border-neutral-200/90 bg-white/70 p-4 shadow-sm">
-      <h3 className="text-[13px] font-semibold uppercase tracking-wide text-neutral-500">
+      <h3 className="text-[13px] font-semibold text-neutral-800">
         Submit a challenge
       </h3>
       {contextLabel ? (

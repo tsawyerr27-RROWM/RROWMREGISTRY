@@ -85,9 +85,8 @@ function OgSeal({ tier }: { tier: ReturnType<typeof profileOgSealTier> }) {
         style={{
           position: "relative",
           fontSize: 11,
-          letterSpacing: "0.18em",
-          textTransform: "uppercase",
-          color: og.ink.muted,
+          letterSpacing: "0.04em",
+                    color: og.ink.muted,
           fontWeight: 500,
         }}
       >
@@ -209,8 +208,7 @@ export function renderProfileOgImage(bundle: ProfileOgBundle) {
                   style={{
                     fontSize: 16,
                     letterSpacing: "0.24em",
-                    textTransform: "uppercase",
-                    color: og.ink.faint,
+                                        color: og.ink.faint,
                   }}
                 >
                   {og.wordmark}

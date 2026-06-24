@@ -16,8 +16,11 @@ import {
   latestOwnershipSystemStatus,
   ownershipStatusBadge,
 } from "@/lib/ownership-ledger";
+import {
+  pickLatestOwnershipEvent,
+  resolveHolderUserIdFromEvent,
+} from "@/lib/ownership-canonical";
 import { formatValueEventLabel } from "@/lib/format-registry-labels";
-import { resolveArtworkOwnerId } from "@/lib/resolve-artwork-owner-id";
 import { getCollectorOwnedArtworkIds } from "@/lib/collector-portfolio";
 
 function isPublicSurfaceValueVisibility(visibility: string | null | undefined) {
@@ -172,6 +175,18 @@ export function StudioArtworkClient({ registryId }: Props) {
     };
   }, [cleanId, router, refresh, sb]);
 
+  const canonicalOwnerId = useMemo(() => {
+    const latest = pickLatestOwnershipEvent(
+      ownershipRows as Array<{
+        artwork_id?: string | null;
+        to_user_id?: string | null;
+        created_at?: string | null;
+        id?: string | null;
+      }>
+    );
+    return resolveHolderUserIdFromEvent(latest);
+  }, [ownershipRows]);
+
   const saleContext = useMemo(() => {
     if (!artwork?.id) return { unresolved: false as const, sale: null };
     const sales = valueRows.filter((v) =>
@@ -200,8 +215,22 @@ export function StudioArtworkClient({ registryId }: Props) {
     )
   );
 
-  const latest = ownershipRows[ownershipRows.length - 1];
-  const latestOwnershipStatus = latestOwnershipSystemStatus(latest ?? null);
+  const latestOwnershipRow = useMemo(
+    () =>
+      pickLatestOwnershipEvent(
+        ownershipRows as Array<{
+          artwork_id?: string | null;
+          to_user_id?: string | null;
+          created_at?: string | null;
+          id?: string | null;
+          verification_status?: string | null;
+        }>
+      ),
+    [ownershipRows]
+  );
+  const latestOwnershipStatus = latestOwnershipSystemStatus(
+    latestOwnershipRow ?? null
+  );
   const ownerBadge = ownershipStatusBadge(latestOwnershipStatus, "light");
 
   if (loading) {
@@ -333,16 +362,16 @@ export function StudioArtworkClient({ registryId }: Props) {
               </div>
             </div>
 
-            {latest && isOwner ? (
+            {latestOwnershipRow && isOwner ? (
               <div className="rounded-2xl border border-black/[0.06] bg-white/60 px-4 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                 <h2 className="text-base font-semibold text-neutral-900">
                   Verification
                 </h2>
                 <div className="group mt-3">
                   <OwnershipVerificationControls
-                    eventId={String((latest as { id?: string }).id)}
+                    eventId={String((latestOwnershipRow as { id?: string }).id)}
                     isLatest
-                    verificationStatus={(latest as { verification_status?: unknown }).verification_status}
+                    verificationStatus={(latestOwnershipRow as { verification_status?: unknown }).verification_status}
                     hasSession={Boolean(user)}
                     userIsAdmin={Boolean(profile?.is_admin)}
                     loginNextPath={`/collector-studio/artwork/${encodeURIComponent(cleanId)}`}
@@ -439,7 +468,7 @@ export function StudioArtworkClient({ registryId }: Props) {
           artworkId={String(artwork.id)}
           userId={user.id}
           sellerId={
-            resolveArtworkOwnerId(artwork) ||
+            canonicalOwnerId ||
             String(artwork.artist_id || "") ||
             user.id
           }

@@ -7,6 +7,7 @@ import {
   fieldExplorerCreativesHref,
   fieldExplorerOrganisationsHref,
   fieldExplorerRecordsHref,
+  fieldOpportunitiesHref,
   fieldRecordHref,
   type FieldExplorerTabId,
 } from "@/lib/field-nav";
@@ -67,7 +68,9 @@ export function fieldExplorerTabHref(
       ? fieldExplorerCreativesHref()
       : tab === "organisations"
         ? fieldExplorerOrganisationsHref()
-        : fieldExplorerRecordsHref();
+        : tab === "opportunities"
+          ? fieldOpportunitiesHref()
+          : fieldExplorerRecordsHref();
 
   if (!searchParams) return base;
 

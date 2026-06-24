@@ -1,5 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+
+import { getCanonicalOwner, getCanonicalOwners } from "@/lib/canonical-ownership-engine";
 import { normalizeVerificationStatus } from "@/lib/ownership-ledger";
+import { OWNERSHIP_EVENT_HOLDER_WITH_STATUS_SELECT } from "@/lib/ownership-events-schema";
 
 export type CurrentOwnerIdentity = {
   user_id: string | null;
@@ -56,36 +59,42 @@ function applyExposureRule(args: {
   };
 }
 
-/** Single artwork: current owner identity (server-side preferred). */
-export async function getCurrentOwner(
+async function loadLatestStatusRow(
   supabase: SupabaseClient,
   artworkId: string
-): Promise<CurrentOwnerIdentity> {
-  const { data: latest, error } = await supabase
+): Promise<LatestOwnershipRow | null> {
+  const { data, error } = await supabase
     .from("ownership_events")
-    .select("artwork_id, to_user_id, verification_status, created_at, id")
+    .select(OWNERSHIP_EVENT_HOLDER_WITH_STATUS_SELECT)
     .eq("artwork_id", artworkId)
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
     .limit(1)
     .maybeSingle<LatestOwnershipRow>();
 
-  if (error || !latest) {
-    // No ownership events → unassigned
+  if (error || !data) return null;
+  return data;
+}
+
+/** Public owner identity — holder from ledger; profile exposure rules unchanged. */
+export async function getCurrentOwner(
+  supabase: SupabaseClient,
+  artworkId: string
+): Promise<CurrentOwnerIdentity> {
+  const canonical = await getCanonicalOwner(supabase, artworkId);
+  const latest = await loadLatestStatusRow(supabase, artworkId);
+
+  if (!latest && !canonical.userId) {
     return emptyIdentity("recorded");
   }
 
   const verification_status = normalizeVerificationStatus(
-    latest.verification_status
+    latest?.verification_status
   );
-  const user_id =
-    typeof latest.to_user_id === "string" && latest.to_user_id.trim()
-      ? latest.to_user_id.trim()
-      : null;
+  const user_id = canonical.userId;
 
   if (!user_id) return emptyIdentity(verification_status);
 
-  // Only fetch profile when it could become visible.
   const { data: profile } =
     verification_status === "verified"
       ? await supabase
@@ -102,7 +111,7 @@ export async function getCurrentOwner(
   });
 }
 
-/** Batch for pages with many artworks (avoids per-artwork queries). */
+/** Batch public owner identities — ledger holder authority. */
 export async function getCurrentOwnersByArtworkId(
   supabase: SupabaseClient,
   artworkIds: string[]
@@ -111,9 +120,11 @@ export async function getCurrentOwnersByArtworkId(
   for (const id of artworkIds) out[id] = emptyIdentity("recorded");
   if (artworkIds.length === 0) return out;
 
+  const canonicalByArt = await getCanonicalOwners(supabase, artworkIds);
+
   const { data: all } = await supabase
     .from("ownership_events")
-    .select("artwork_id, to_user_id, verification_status, created_at, id")
+    .select(OWNERSHIP_EVENT_HOLDER_WITH_STATUS_SELECT)
     .in("artwork_id", artworkIds)
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
@@ -132,13 +143,10 @@ export async function getCurrentOwnersByArtworkId(
 
   for (const aid of artworkIds) {
     const latest = latestByArt.get(aid) || null;
-    if (!latest) continue;
-    const st = normalizeVerificationStatus(latest.verification_status);
+    const canonical = canonicalByArt[aid];
+    const st = normalizeVerificationStatus(latest?.verification_status);
     stByArt.set(aid, st);
-    const uid =
-      typeof latest.to_user_id === "string" && latest.to_user_id.trim()
-        ? latest.to_user_id.trim()
-        : null;
+    const uid = canonical?.userId ?? null;
     if (!uid) continue;
     uidByArt.set(aid, uid);
     if (st === "verified") holderIds.add(uid);
@@ -169,7 +177,6 @@ export async function getCurrentOwnersByArtworkId(
   return out;
 }
 
-/** Subtle typography for holder line (no badges). */
 export function heldByCredibilityClass(owner: CurrentOwnerIdentity): string {
   if (!owner.user_id) {
     return "text-neutral-500 font-normal";
@@ -200,4 +207,3 @@ export function formatHeldByLine(args: {
   if (owner.slug && owner.display_name) return `Held by ${owner.display_name}`;
   return "Private collection";
 }
-

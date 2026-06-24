@@ -12,6 +12,7 @@ type ArtworkNotificationContext = {
   title: string;
   registryId: string | null;
   artistUserId: string | null;
+  filingGalleryId: string | null;
 };
 
 function artworkTitleLabel(title: string | null | undefined): string {
@@ -42,7 +43,7 @@ async function loadArtworkNotificationContext(
 ): Promise<ArtworkNotificationContext | null> {
   const { data, error } = await service
     .from("artworks")
-    .select("id, title, registry_id, artist_id")
+    .select("id, title, registry_id, artist_id, filing_gallery_id")
     .eq("id", artworkId)
     .maybeSingle();
 
@@ -56,6 +57,9 @@ async function loadArtworkNotificationContext(
     title: String(data.title ?? ""),
     registryId: data.registry_id ? String(data.registry_id) : null,
     artistUserId: data.artist_id ? String(data.artist_id) : null,
+    filingGalleryId: data.filing_gallery_id
+      ? String(data.filing_gallery_id)
+      : null,
   };
 }
 
@@ -77,6 +81,23 @@ async function loadGalleryStaffUserIds(
   return (data ?? [])
     .map((row) => String(row.user_id ?? "").trim())
     .filter((userId) => userId && userId !== excludeUserId);
+}
+
+async function resolveGalleryIdForArtwork(
+  service: SupabaseClient,
+  context: ArtworkNotificationContext
+): Promise<string | null> {
+  if (context.filingGalleryId) return context.filingGalleryId;
+
+  if (!context.artistUserId) return null;
+
+  const { data: artist } = await service
+    .from("artists")
+    .select("gallery_id")
+    .eq("id", context.artistUserId)
+    .maybeSingle();
+
+  return artist?.gallery_id ? String(artist.gallery_id) : null;
 }
 
 async function notifyUsers(
@@ -112,18 +133,40 @@ async function notifyUsers(
   );
 }
 
-/** Notify the creative when record verification is established on the ledger. */
+function registryRecipients(
+  context: ArtworkNotificationContext,
+  staffUserIds: string[]
+): string[] {
+  const recipients = new Set<string>();
+  if (context.artistUserId) recipients.add(context.artistUserId);
+  for (const staffId of staffUserIds) recipients.add(staffId);
+  return [...recipients];
+}
+
+/** Notify the creative and filing organisation when record verification is established. */
 export async function notifyRegistryVerificationApproved(args: {
   artworkId: string;
   client?: SupabaseClient;
+  excludeUserId?: string;
 }): Promise<void> {
   try {
     const service = args.client ?? createSupabaseServiceClient();
     const context = await loadArtworkNotificationContext(service, args.artworkId);
-    if (!context?.artistUserId) return;
+    if (!context) return;
+
+    const staffIds = context.filingGalleryId
+      ? await loadGalleryStaffUserIds(
+          service,
+          context.filingGalleryId,
+          args.excludeUserId
+        )
+      : [];
+
+    const recipients = registryRecipients(context, staffIds);
+    if (recipients.length === 0) return;
 
     const label = artworkTitleLabel(context.title);
-    await notifyUsers(service, [context.artistUserId], {
+    await notifyUsers(service, recipients, {
       type: "registry_verification_approved",
       title: "Record verification on file",
       body: `${label} has been verified on the Registry ledger.`,
@@ -134,18 +177,30 @@ export async function notifyRegistryVerificationApproved(args: {
   }
 }
 
-/** Notify the creative when a certificate is first issued for a verified work. */
+/** Notify the creative and filing organisation when a certificate is first issued. */
 export async function notifyRegistryCertificateIssued(args: {
   artworkId: string;
   client?: SupabaseClient;
+  excludeUserId?: string;
 }): Promise<void> {
   try {
     const service = args.client ?? createSupabaseServiceClient();
     const context = await loadArtworkNotificationContext(service, args.artworkId);
-    if (!context?.artistUserId) return;
+    if (!context) return;
+
+    const staffIds = context.filingGalleryId
+      ? await loadGalleryStaffUserIds(
+          service,
+          context.filingGalleryId,
+          args.excludeUserId
+        )
+      : [];
+
+    const recipients = registryRecipients(context, staffIds);
+    if (recipients.length === 0) return;
 
     const label = artworkTitleLabel(context.title);
-    await notifyUsers(service, [context.artistUserId], {
+    await notifyUsers(service, recipients, {
       type: "registry_certificate_issued",
       title: "Certificate on file",
       body: `A registry certificate has been issued for ${label}.`,
@@ -168,13 +223,7 @@ export async function notifyRegistryAmendmentRequested(args: {
     const context = await loadArtworkNotificationContext(service, args.artworkId);
     if (!context) return;
 
-    const { data: artist } = await service
-      .from("artists")
-      .select("id, gallery_id")
-      .eq("id", context.artistUserId ?? "")
-      .maybeSingle();
-
-    const galleryId = artist?.gallery_id ? String(artist.gallery_id) : null;
+    const galleryId = await resolveGalleryIdForArtwork(service, context);
     const label = artworkTitleLabel(context.title);
     const metadata = artworkMetadata(context, {
       amendmentId: args.amendmentId,
@@ -230,6 +279,14 @@ export async function notifyRegistryTransferRecorded(args: {
     if (args.fromUserId) recipients.add(args.fromUserId);
     if (args.toUserId) recipients.add(args.toUserId);
     if (context.artistUserId) recipients.add(context.artistUserId);
+
+    if (context.filingGalleryId) {
+      const staffIds = await loadGalleryStaffUserIds(
+        service,
+        context.filingGalleryId
+      );
+      for (const staffId of staffIds) recipients.add(staffId);
+    }
 
     await notifyUsers(service, [...recipients], {
       type: "registry_transfer_recorded",

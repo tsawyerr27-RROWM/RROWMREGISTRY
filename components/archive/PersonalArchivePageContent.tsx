@@ -128,7 +128,7 @@ export function PersonalArchivePageContent() {
                   )}
                 </Link>
                 <div className="flex flex-1 flex-col p-5">
-                  <p className="font-mono text-[10px] uppercase tracking-wide text-neutral-400">
+                  <p className="font-mono text-[11px] text-neutral-400">
                     {item.registryId}
                   </p>
                   <h2 className="mt-2 font-serif text-lg font-normal text-neutral-950">

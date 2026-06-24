@@ -273,6 +273,12 @@ export async function upsertDealExecutionRecord(
     .select("id, created_at, updated_at, deal_id, kind, status, metadata")
     .single();
 
-  if (error || !data) return null;
+  if (error || !data) {
+    console.error("[deal_execution_records] upsert failed", {
+      error,
+      payload,
+    });
+    throw new Error(error?.message || "Failed to write deal execution record");
+  }
   return mapDealExecutionRecordRow(data as Record<string, unknown>);
 }

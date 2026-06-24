@@ -158,7 +158,7 @@ function RolePreview({
         <span className="text-sm font-medium text-neutral-800">{role.workspace}</span>
         <motion.span
           key={`${role.id}-pulse`}
-          className="flex items-center gap-2 text-[11px] font-medium tracking-wide text-neutral-500"
+          className="flex items-center gap-2 text-[11px] font-medium text-neutral-500"
           initial={false}
           animate={{ opacity: [0.72, 1, 0.72] }}
           transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
@@ -222,7 +222,7 @@ function RolePreview({
                       animate={{ opacity: 1, height: "auto" }}
                       exit={reduce ? undefined : { opacity: 0, height: 0 }}
                       transition={{ duration: 0.28, ease }}
-                      className="mt-3 overflow-hidden border-t border-[color-mix(in_srgb,var(--rrowm-atmo-rim)_55%,transparent)] pt-3 text-xs font-medium tracking-wide text-neutral-500"
+                      className="mt-3 overflow-hidden border-t border-[color-mix(in_srgb,var(--rrowm-atmo-rim)_55%,transparent)] pt-3 text-xs font-medium text-neutral-500"
                     >
                       {cap.preview}
                     </motion.p>

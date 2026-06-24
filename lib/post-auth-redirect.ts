@@ -15,6 +15,9 @@ export async function resolvePostAuthRedirectPath(
   userId: string,
   options?: { explicitNext?: string | null }
 ): Promise<string> {
+  const safeNext = sanitizeAuthReturnPath(options?.explicitNext);
+  if (safeNext === "/reset-password") return safeNext;
+
   const needOnboarding = await getOnboardingRedirectPath(supabase, userId);
   if (needOnboarding) return needOnboarding;
 
@@ -23,7 +26,6 @@ export async function resolvePostAuthRedirectPath(
   );
   if (artworkAuth) return artworkAuth;
 
-  const safeNext = sanitizeAuthReturnPath(options?.explicitNext);
   if (safeNext) return safeNext;
 
   const { data: actor } = await supabase

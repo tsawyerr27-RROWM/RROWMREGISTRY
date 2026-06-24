@@ -22,7 +22,13 @@ import {
   type RegisterModalArtwork,
 } from "@/components/Dashboard/RegisterModal";
 import { DataInsightModal } from "@/components/Insights/DataInsightModal";
+import { StudioCatalogueMetricsPanels } from "@/components/Studio/StudioCatalogueMetricsPanels";
 import { GalleryInstitutionalHero } from "@/components/gallery/GalleryInstitutionalHero";
+import {
+  StudioContentSlab,
+  StudioInsightTile,
+  studioOverviewStackClass,
+} from "@/components/Studio/StudioContentSlab";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { ArtistTierBadge } from "@/components/artist/ArtistTierBadge";
 import { GalleryInvitationsHub } from "@/components/gallery/GalleryInvitationsHub";
@@ -42,6 +48,14 @@ import {
 import { GalleryVerifyAttestationModal } from "@/components/gallery/GalleryVerifyAttestationModal";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { getDashboardInsights } from "@/lib/insights";
+import {
+  fetchStudioCatalogueMetrics,
+  type StudioCatalogueMetrics,
+} from "@/lib/studio-catalogue-metrics";
+import {
+  buildHealthInsightBreakdown,
+  buildValueInsightBreakdown,
+} from "@/lib/studio-insight-breakdown";
 import {
   translateInsightBarCategory,
   translateRoleInsight,
@@ -82,6 +96,7 @@ import {
   type ParticipationPendingWork,
 } from "@/components/gallery/GalleryParticipationPendingSection";
 import { ARTWORK_CONFIRMATION_EVENT_TYPES } from "@/lib/artwork-representation";
+import { pickLatestOwnershipEvent } from "@/lib/ownership-canonical";
 
 function formatShortWhen(iso: string | null | undefined): string {
   if (!iso) return "";
@@ -333,9 +348,12 @@ export default function GalleryDashboardPage() {
     { label: string; value: string }[]
   >([]);
   const [insightDataNotes, setInsightDataNotes] = useState<string[]>([]);
+  const [catalogueMetrics, setCatalogueMetrics] =
+    useState<StudioCatalogueMetrics | null>(null);
 
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [registerLoading, setRegisterLoading] = useState(false);
+  const [activityRefreshKey, setActivityRefreshKey] = useState(0);
   const [registerArtistId, setRegisterArtistId] = useState("");
   const [registerCatalogueArtistName, setRegisterCatalogueArtistName] =
     useState("");
@@ -635,7 +653,7 @@ export default function GalleryDashboardPage() {
       const [oeRes, veRes, verRes, certRes, listingRes] = await Promise.all([
         sb()
           .from("ownership_events")
-          .select("artwork_id, to_user_id, created_at")
+          .select("artwork_id, to_user_id, created_at, id")
           .in("artwork_id", artworkIds),
         sb()
           .from("value_events")
@@ -659,23 +677,40 @@ export default function GalleryDashboardPage() {
           .eq("status", "active"),
       ]);
 
+      const ownershipRowsByArt = new Map<
+        string,
+        Array<{
+          artwork_id: string;
+          to_user_id: string | null;
+          created_at: string | null;
+          id: string;
+        }>
+      >();
+
       for (const row of oeRes.data ?? []) {
         const r = row as {
           artwork_id: string;
           to_user_id: string | null;
           created_at: string | null;
+          id: string;
         };
         const aid = String(r.artwork_id);
-        ownershipByArtworkId[aid] = (ownershipByArtworkId[aid] ?? 0) + 1;
+        const list = ownershipRowsByArt.get(aid) ?? [];
+        list.push(r);
+        ownershipRowsByArt.set(aid, list);
         const at = r.created_at || "";
-        const existingAt = ownershipLastAtByArtworkId[aid];
-        if (!existingAt || at > existingAt) {
-          ownershipLastToUserIdByArtworkId[aid] = r.to_user_id ?? null;
-          ownershipLastAtByArtworkId[aid] = at;
-        }
         if (at) {
           const prev = lastActivityAtByArtworkId[aid];
           if (!prev || at > prev) lastActivityAtByArtworkId[aid] = at;
+        }
+      }
+
+      for (const [aid, rows] of ownershipRowsByArt) {
+        ownershipByArtworkId[aid] = rows.length;
+        const latest = pickLatestOwnershipEvent(rows);
+        ownershipLastToUserIdByArtworkId[aid] = latest?.to_user_id ?? null;
+        if (latest?.created_at) {
+          ownershipLastAtByArtworkId[aid] = latest.created_at;
         }
       }
 
@@ -771,6 +806,37 @@ export default function GalleryDashboardPage() {
       lastActivityAtByArtworkId,
       isListedByArtworkId,
     });
+
+    if (artworkIds.length > 0) {
+      try {
+        const [insights, metrics] = await Promise.all([
+          getDashboardInsights({
+            supabase: sb(),
+            userId: uid,
+            artworkIds,
+          }),
+          fetchStudioCatalogueMetrics(sb(), {
+            role: "gallery",
+            userId: uid,
+            artworks: list.map((row) => ({
+              id: row.id,
+              title: row.title,
+              created_at: row.created_at,
+            })),
+          }),
+        ]);
+        setInsightPack(insights);
+        setCatalogueMetrics(metrics);
+      } catch {
+        setInsightPack(null);
+        setCatalogueMetrics(null);
+      }
+    } else {
+      setInsightPack(null);
+      setCatalogueMetrics(null);
+    }
+
+    setActivityRefreshKey((k) => k + 1);
     setLoading(false);
   }, [sb]);
 
@@ -943,7 +1009,11 @@ export default function GalleryDashboardPage() {
     [artworks]
   );
 
-  const { items: accountActivityItems } = useAccountActivityFeed(userId, 1);
+  const { items: accountActivityItems } = useAccountActivityFeed(
+    userId,
+    1,
+    activityRefreshKey
+  );
 
   const latestActivityLine = useMemo(() => {
     const item = accountActivityItems[0];
@@ -1662,6 +1732,11 @@ export default function GalleryDashboardPage() {
 
       if (kind === "health") {
         const h = insights.health;
+        const healthBreakdown = buildHealthInsightBreakdown({
+          health: h,
+          role: "gallery",
+          t,
+        });
         setInsightKind("bar");
         setInsightTitle(t("studio.insight.title.health"));
         setInsightSubtitle(translateRoleInsight("gallery", { health: h }, t));
@@ -1679,28 +1754,32 @@ export default function GalleryDashboardPage() {
             events: h.missingVerification,
           },
         ]);
-        setInsightBreakdown([
-          {
-            label: t("studio.insight.breakdown.fullyVerifiedStrict"),
-            value: String(h.fullyVerified),
-          },
-          {
-            label: t("studio.insight.breakdown.withCertificate"),
-            value: String(h.withCertificates),
-          },
-          {
-            label: t("studio.insight.breakdown.missingVerification"),
-            value: String(h.missingVerification),
-          },
-        ]);
-        setInsightDataNotes([
-          t("studio.insight.note.healthNonAdditive"),
-          t("studio.insight.note.healthStrictGallery"),
-        ]);
+        setInsightBreakdown(healthBreakdown.breakdown);
+        setInsightDataNotes(healthBreakdown.dataNotes);
         return;
       }
 
+      const metrics =
+        catalogueMetrics ??
+        (await fetchStudioCatalogueMetrics(sb(), {
+          role: "gallery",
+          userId,
+          artworks: artworks.map((row) => ({
+            id: row.id,
+            title: row.title,
+            created_at: row.created_at,
+          })),
+        }));
+      if (!catalogueMetrics) setCatalogueMetrics(metrics);
+
       const { series, currencies } = insights.valueTrend;
+      const valueBreakdown = buildValueInsightBreakdown({
+        role: "gallery",
+        metrics,
+        latestValues: insights.valueTrend.latestValues,
+        t,
+        formatCurrency,
+      });
       setInsightKind("line");
       setInsightTitle(t("studio.insight.title.valueGallery"));
       setInsightSubtitle(
@@ -1708,16 +1787,8 @@ export default function GalleryDashboardPage() {
       );
       setInsightLines(currencies.map((c) => ({ key: c, label: c })));
       setInsightData(series);
-      const breakdown = Object.entries(insights.valueTrend.latestValues)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([c, v]) => ({
-          label: fillMessage(t("studio.insight.breakdown.latestDeclared"), {
-            currency: c,
-          }),
-          value: formatCurrency(v, c),
-        }));
-      setInsightBreakdown(breakdown);
-      setInsightDataNotes([t("studio.insight.note.valueBasisGallery")]);
+      setInsightBreakdown(valueBreakdown.breakdown);
+      setInsightDataNotes(valueBreakdown.dataNotes);
     } catch {
       setInsightSubtitle(t("studio.insight.loadFailed"));
     } finally {
@@ -1930,6 +2001,7 @@ export default function GalleryDashboardPage() {
     <WorkspaceSidebarActivityFeed
       userId={userId}
       variant="compact"
+      refreshKey={activityRefreshKey}
       emptyMessage={t("gallery.shell.noCatalogueActivity")}
     />
   ) : null;
@@ -2035,7 +2107,7 @@ export default function GalleryDashboardPage() {
           <>
             <TestDataControls />
 
-            <div className="mt-6">
+            <div className={`max-w-6xl pb-8 ${studioOverviewStackClass}`}>
           <GalleryInstitutionalHero
             orgName={orgName}
             slug={gallery.slug}
@@ -2068,13 +2140,12 @@ export default function GalleryDashboardPage() {
             onAboutWorkspace={() => setWorkspaceGuideOpen(true)}
             onGoToAmendments={scrollToGalleryAmendments}
           />
-        </div>
 
         {profileError ? (
-          <p className="mt-6 text-[13px] text-red-800">{profileError}</p>
+          <p className="text-[13px] text-red-800">{profileError}</p>
         ) : null}
         {successMessage ? (
-          <p className="mt-5 text-[13px] text-emerald-900/90">
+          <p className="text-[13px] text-emerald-900/90">
             {successMessage}{" "}
             <button
               type="button"
@@ -2096,30 +2167,24 @@ export default function GalleryDashboardPage() {
           />
         ) : null}
 
-        <section className="mt-10" aria-label={t("gallery.intelligence.title")}>
-          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 className="font-serif text-[1.35rem] font-normal text-neutral-950 md:text-[1.75rem]">
-                {t("gallery.intelligence.title")}
-              </h2>
-            </div>
-            {insightLoading ? (
+        <StudioContentSlab
+          title={t("gallery.intelligence.title")}
+          actions={
+            insightLoading ? (
               <span className="text-[11px] text-neutral-400">
                 {t("gallery.intelligence.syncing")}
               </span>
-            ) : null}
-          </div>
+            ) : null
+          }
+        >
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <button
-              type="button"
+            <StudioInsightTile
+              label={t("gallery.intelligence.registrationPace")}
               onClick={() => void openInsight("works")}
               disabled={worksCount === 0}
-              className="group rounded-2xl border border-neutral-900/[0.06] bg-white/50 p-5 text-left shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-sm transition hover:border-neutral-900/12 hover:bg-white/85 disabled:cursor-not-allowed disabled:opacity-45"
+              footer={t("gallery.intelligence.tapCatalogueDetail")}
             >
-              <p className="text-sm font-medium text-neutral-700">
-                {t("gallery.intelligence.registrationPace")}
-              </p>
-              <p className="mt-2 font-serif text-3xl tabular-nums leading-none text-neutral-950">
+              <p className="font-serif text-3xl tabular-nums leading-none text-neutral-950">
                 {worksCount}
               </p>
               <p className="mt-1 text-[12px] text-neutral-500">
@@ -2133,7 +2198,7 @@ export default function GalleryDashboardPage() {
                 </div>
               ) : (
                 <RrowmMiniBarChart
-                  className="mt-4 border-t border-black/[0.05] pt-3"
+                  className="mt-4 border-t border-neutral-900/[0.06] pt-3"
                   trackClassName="h-12"
                   minHeightPercent={12}
                   heightsPercent={registrationTrend.map(
@@ -2141,48 +2206,36 @@ export default function GalleryDashboardPage() {
                   )}
                 />
               )}
-              <p className="mt-3 text-[11px] leading-snug text-neutral-400">
-                {t("gallery.intelligence.tapCatalogueDetail")}
-              </p>
-            </button>
+            </StudioInsightTile>
 
-            <button
-              type="button"
+            <StudioInsightTile
+              label={t("gallery.intelligence.declaredValue")}
               onClick={() => void openInsight("value")}
               disabled={worksCount === 0}
-              className="group rounded-2xl border border-neutral-900/[0.06] bg-white/50 p-5 text-left shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-sm transition hover:border-neutral-900/12 hover:bg-white/85 disabled:cursor-not-allowed disabled:opacity-45"
+              footer={t("gallery.intelligence.multiCurrencyTap")}
             >
-              <p className="text-sm font-medium text-neutral-700">
-                {t("gallery.intelligence.declaredValue")}
-              </p>
-              <p className="mt-3 line-clamp-3 text-[13px] leading-relaxed text-neutral-700">
+              <p className="line-clamp-4 text-[13px] leading-relaxed text-neutral-700">
                 {valuePreviewLine ?? (
                   <span className="text-neutral-400">
                     {t("gallery.intelligence.noDeclaredValues")}
                   </span>
                 )}
               </p>
-              <p className="mt-4 text-[11px] leading-snug text-neutral-400">
-                {t("gallery.intelligence.multiCurrencyTap")}
-              </p>
-            </button>
+            </StudioInsightTile>
 
-            <button
-              type="button"
+            <StudioInsightTile
+              label={t("gallery.intelligence.recordHealth")}
               onClick={() => void openInsight("health")}
               disabled={worksCount === 0}
-              className="group rounded-2xl border border-neutral-900/[0.06] bg-white/50 p-5 text-left shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-sm transition hover:border-neutral-900/12 hover:bg-white/85 disabled:cursor-not-allowed disabled:opacity-45"
+              footer={t("gallery.intelligence.certificatesAndGaps")}
             >
-              <p className="text-sm font-medium text-neutral-700">
-                {t("gallery.intelligence.recordHealth")}
-              </p>
               {insightPack ? (
-                <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                <div className="grid grid-cols-3 gap-2 text-center">
                   <div>
                     <p className="font-serif text-xl tabular-nums text-neutral-950">
                       {insightPack.health.fullyVerified}
                     </p>
-                    <p className="mt-1 text-sm font-medium text-neutral-600">
+                    <p className="mt-1 text-[11px] font-medium text-neutral-600">
                       {t("studio.insight.bar.fullyVerified")}
                     </p>
                   </div>
@@ -2190,7 +2243,7 @@ export default function GalleryDashboardPage() {
                     <p className="font-serif text-xl tabular-nums text-neutral-950">
                       {insightPack.health.withCertificates}
                     </p>
-                    <p className="mt-1 text-sm font-medium text-neutral-600">
+                    <p className="mt-1 text-[11px] font-medium text-neutral-600">
                       {t("studio.insight.bar.certified")}
                     </p>
                   </div>
@@ -2198,32 +2251,26 @@ export default function GalleryDashboardPage() {
                     <p className="font-serif text-xl tabular-nums text-amber-900/90">
                       {insightPack.health.missingVerification}
                     </p>
-                    <p className="mt-1 text-sm font-medium text-neutral-600">
+                    <p className="mt-1 text-[11px] font-medium text-neutral-600">
                       {t("gallery.intelligence.gaps")}
                     </p>
                   </div>
                 </div>
               ) : (
-                <p className="mt-4 text-[12px] text-neutral-400">
+                <p className="text-[12px] text-neutral-400">
                   {worksCount === 0
                     ? t("gallery.intelligence.noData")
                     : t("gallery.intelligence.loadingBreakdown")}
                 </p>
               )}
-              <p className="mt-4 text-[11px] leading-snug text-neutral-400">
-                {t("gallery.intelligence.certificatesAndGaps")}
-              </p>
-            </button>
+            </StudioInsightTile>
 
-            <button
-              type="button"
+            <StudioInsightTile
+              label={t("gallery.hero.institutionalVerification")}
               onClick={() => setActiveSection("verification")}
-              className="rounded-2xl border border-neutral-900/[0.06] bg-gradient-to-br from-white/80 to-neutral-50/90 p-5 text-left shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-sm transition hover:border-neutral-900/12"
+              footer={t("gallery.intelligence.openVerification")}
             >
-              <p className="text-sm font-medium text-neutral-700">
-                {t("gallery.hero.institutionalVerification")}
-              </p>
-              <p className="mt-2 font-serif text-3xl tabular-nums leading-none text-neutral-950">
+              <p className="font-serif text-3xl tabular-nums leading-none text-neutral-950">
                 {verificationPct}
                 <span className="text-lg text-neutral-400">%</span>
               </p>
@@ -2245,14 +2292,17 @@ export default function GalleryDashboardPage() {
                   {t("gallery.intelligence.queueClear")}
                 </p>
               )}
-              <p className="mt-4 text-[11px] leading-snug text-neutral-400">
-                {t("gallery.intelligence.openVerification")}
-              </p>
-            </button>
+            </StudioInsightTile>
           </div>
-        </section>
+        </StudioContentSlab>
 
-        <section className="mt-8 rounded-xl border border-white/70 bg-white/45 px-4 py-3.5 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-sm">
+        <StudioCatalogueMetricsPanels
+          role="gallery"
+          metrics={catalogueMetrics}
+          onOpenValueInsight={() => void openInsight("value")}
+        />
+
+        <StudioContentSlab compact headerless title="">
           <div className="flex flex-col gap-1.5 text-[13px] leading-snug text-neutral-600 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-6 sm:gap-y-1">
             <p className="tabular-nums">
               {fillMessage(t("gallery.summary.representedWorks"), {
@@ -2275,7 +2325,8 @@ export default function GalleryDashboardPage() {
               </p>
             )}
           </div>
-        </section>
+        </StudioContentSlab>
+            </div>
           </>
         ) : null}
 

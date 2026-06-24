@@ -96,7 +96,7 @@ export default function AdminPage() {
           (typeof body?.error === "string" && body.error.trim()) ||
           (typeof body?.message === "string" && body.message.trim()) ||
           (isHtml
-            ? `Login failed (HTTP ${res.status}). API route not found — restart the dev server or redeploy.`
+            ? `Login failed (HTTP ${res.status}). API route not found. Restart the dev server or redeploy.`
             : raw.trim() && raw.length <= 300
               ? raw.trim()
               : null) ||

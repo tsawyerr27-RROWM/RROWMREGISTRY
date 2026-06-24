@@ -260,7 +260,7 @@ export function RepresentationAmendmentsSection({
                           ))}
                         </ul>
                       ) : null}
-                      <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-500">
+                      <p className="mt-3 text-[13px] font-medium text-neutral-600">
                         {statusLabel(row.status, t)}
                       </p>
                       {row.resolution_notes ? (

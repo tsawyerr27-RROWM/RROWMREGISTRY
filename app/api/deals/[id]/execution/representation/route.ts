@@ -8,11 +8,10 @@ import {
   resolveDealExecution,
   type RepresentationExecutionRecord,
 } from "@/lib/deal-execution";
+import { onDealExecuted } from "@/lib/deal-lifecycle-engine";
 import { upsertDealExecutionRecord } from "@/lib/deal-execution-records";
 import { otherDealParticipant } from "@/lib/deal-permissions";
 import { mapDealRow } from "@/lib/deals";
-import { logActivityEvent } from "@/lib/log-activity";
-import { notifyDealExecutionRecorded } from "@/lib/notification-hooks/deal-execution";
 import {
   insertRepresentationRelationship,
   loadGalleryDisplayName,
@@ -326,31 +325,17 @@ export async function POST(
     );
   }
 
-  const galleryName = (await loadGalleryDisplayName(service, galleryId)) ?? "Organisation";
+  const mappedDeal = mapDealRow(updated as Record<string, unknown>);
 
-  await logActivityEvent({
-    userId: user.id,
-    type: "representation_relationship_recorded",
-    message: `Representation recorded: ${galleryName}`,
-    artworkId: deal.artwork_id,
-    metadata: {
-      deal_id: dealId,
-      relationship_id: inserted.id,
-      gallery_id: galleryId,
-      artist_user_id: artistUserId,
-    },
-  });
-
-  await notifyDealExecutionRecorded({
-    dealId,
+  await onDealExecuted({
+    deal: mappedDeal,
     actorUserId: user.id,
-    kind: "representation",
-    body: `Representation with ${galleryName} recorded on file.`,
-    client: service,
+    execution,
+    clients: { service, user: supabase },
   });
 
   const state = await resolveRepresentationExecutionState({
-    deal: mapDealRow(updated as Record<string, unknown>),
+    deal: mappedDeal,
     userId: user.id,
     service,
   });

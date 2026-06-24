@@ -11,6 +11,12 @@ import type { ParticipationLayer } from "@/lib/get-artwork-participation-layers"
 import { parsePublicPresence } from "@/lib/public-presence";
 import { REPRESENTATION_PHRASES } from "@/lib/representation-language";
 import { warnSupabaseRpc } from "@/lib/supabase-rpc-error";
+import {
+  countActiveRepresentedArtists,
+  countOrganisationActiveRightsAgreements,
+  countOrganisationExhibitions,
+  resolveOrganisationDealCounterparty,
+} from "@/lib/presence-economic-stats";
 
 export type OrganisationPresenceCreative = {
   id: string;
@@ -60,6 +66,16 @@ export type OrganisationPresencePageData = {
   artworks: OrganisationPresenceArtwork[];
   footprint: OrganisationPresenceFootprint;
   isProfileOwner: boolean;
+  isProfilePublic: boolean;
+  sessionUserId: string | null;
+  representedArtistCount: number;
+  exhibitionCount: number;
+  activeRightsAgreementCount: number;
+  dealCounterparty: {
+    userId: string;
+    label: string;
+    galleryId: string | null;
+  } | null;
   stewardshipItems: Array<{ id: string; labelKey: MessageKey; complete: boolean }>;
   contextPanels: FieldRelationshipContextPanelData[];
 };
@@ -336,6 +352,19 @@ export async function loadOrganisationPresencePageData(
         ]
       : [];
 
+  const artistUserIds = allArtists.map((artist) => artist.id).filter(Boolean);
+  const [representedArtistCount, exhibitionCount, activeRightsAgreementCount] =
+    await Promise.all([
+      countActiveRepresentedArtists(supabase, gallery.id),
+      countOrganisationExhibitions(supabase, artistUserIds),
+      countOrganisationActiveRightsAgreements(supabase, gallery.id),
+    ]);
+
+  let dealCounterparty: OrganisationPresencePageData["dealCounterparty"] = null;
+  if (sessionUserId && !isProfileOwner) {
+    dealCounterparty = await resolveOrganisationDealCounterparty(supabase, gallery.slug);
+  }
+
   return {
     organisation: {
       id: gallery.id,
@@ -357,6 +386,12 @@ export async function loadOrganisationPresencePageData(
     artworks,
     footprint,
     isProfileOwner,
+    isProfilePublic: presence.profile,
+    sessionUserId: sessionUserId ?? null,
+    representedArtistCount,
+    exhibitionCount,
+    activeRightsAgreementCount,
+    dealCounterparty,
     stewardshipItems,
     contextPanels: buildOrganisationRelationshipContextPanels({
       organisationName: displayName,

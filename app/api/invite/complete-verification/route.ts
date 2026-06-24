@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getArtistTier } from "@/lib/artist-tier";
 import { buildArtistVerifiedGalleryEmail } from "@/lib/emails/artist-verified-gallery-notify";
 import { sendResendEmail } from "@/lib/emails/send-email";
+import { logActivityForGalleryStaff } from "@/lib/log-activity";
 import { getSiteUrl } from "@/lib/site-url";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
@@ -174,23 +175,18 @@ export async function POST() {
     }
   }
 
-  const firstAdmin = admins[0];
-  if (firstAdmin) {
-    const { error: logErr } = await service.rpc("log_activity_event", {
-      p_user_id: firstAdmin.userId,
-      p_type: "gallery_invite_artist_onboarded",
-      p_message: `${artistDisp} completed registry onboarding for ${galleryName}.`,
-      p_artwork_id: null,
-      p_metadata: {
-        artist_user_id: user.id,
-        gallery_id: invite.gallery_id,
-        invite_id: invite.id,
-      },
-    });
-    if (logErr) {
-      console.warn("[invite/complete-verification] log_activity_event", logErr);
-    }
-  }
+  await logActivityForGalleryStaff({
+    galleryId: invite.gallery_id,
+    type: "gallery_invite_artist_onboarded",
+    message: `${artistDisp} completed registry onboarding for ${galleryName}.`,
+    metadata: {
+      artist_user_id: user.id,
+      gallery_id: invite.gallery_id,
+      invite_id: invite.id,
+      artist: artistDisp,
+      gallery: galleryName,
+    },
+  });
 
   return NextResponse.json({
     ok: true,

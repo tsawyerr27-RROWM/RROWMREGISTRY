@@ -78,9 +78,8 @@ function OgSeal({ tier }: { tier: ReturnType<typeof certificateOgSealTier> }) {
         style={{
           position: "relative",
           fontSize: 11,
-          letterSpacing: "0.18em",
-          textTransform: "uppercase",
-          color: og.ink.muted,
+          letterSpacing: "0.04em",
+                    color: og.ink.muted,
           fontWeight: 500,
         }}
       >
@@ -162,9 +161,8 @@ export function renderCertificateOgImage(bundle: CertificateOgBundle) {
                   style={{
                     fontSize: 18,
                     color: og.ink.muted,
-                    letterSpacing: "0.14em",
-                    textTransform: "uppercase",
-                  }}
+                    letterSpacing: "0.02em",
+                                      }}
                 >
                   Registry certificate
                 </div>
@@ -229,8 +227,7 @@ export function renderCertificateOgImage(bundle: CertificateOgBundle) {
                   style={{
                     fontSize: 16,
                     letterSpacing: "0.24em",
-                    textTransform: "uppercase",
-                    color: og.ink.faint,
+                                        color: og.ink.faint,
                   }}
                 >
                   {og.wordmark}

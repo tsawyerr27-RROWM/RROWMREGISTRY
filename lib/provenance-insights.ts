@@ -1,4 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+
+import {
+  VERIFICATION_EVENT_INSIGHTS_SELECT,
+} from "@/lib/verification-events-schema";
 import { normalizeVerificationStatus } from "@/lib/ownership-ledger";
 
 export type ProvenanceInsight = {
@@ -33,7 +37,7 @@ export async function getProvenanceInsights(args: {
   ] = await Promise.all([
     supabase
       .from("verification_events")
-      .select("id, status, source, verification_method")
+      .select(VERIFICATION_EVENT_INSIGHTS_SELECT)
       .eq("artwork_id", artworkId)
       .order("created_at", { ascending: false })
       .limit(12),

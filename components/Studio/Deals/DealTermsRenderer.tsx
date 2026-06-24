@@ -152,7 +152,7 @@ function unknownRows(
 
 function section(title: string, rows: Row[]) {
   return (
-    <div>
+    <div className="min-w-0">
       <h4 className="font-serif text-base font-normal tracking-tight text-neutral-950">
         {title}
       </h4>
@@ -160,10 +160,12 @@ function section(title: string, rows: Row[]) {
         {rows.map((r) => (
           <div
             key={r.label}
-            className="grid grid-cols-1 gap-1 border-b border-neutral-900/[0.06] pb-3 sm:grid-cols-[10rem_1fr] sm:gap-4"
+            className="grid min-w-0 grid-cols-1 gap-1 border-b border-neutral-900/[0.06] pb-3 sm:grid-cols-[minmax(0,9rem)_minmax(0,1fr)] sm:gap-4"
           >
             <dt className="text-[12px] font-medium text-neutral-600">{r.label}</dt>
-            <dd className="text-[13px] leading-relaxed text-neutral-800">{r.value}</dd>
+            <dd className="min-w-0 break-words whitespace-normal text-[13px] leading-relaxed text-neutral-800">
+              {r.value}
+            </dd>
           </div>
         ))}
       </dl>
@@ -235,7 +237,7 @@ export function DealTermsRenderer({ deal }: Props) {
   const extra = unknownRows(terms, knownKeys);
 
   return (
-    <div className="space-y-8">
+    <div className="min-w-0 space-y-8">
       {section(`${typeTitle} terms`, primaryRows)}
       {extra.length > 0 ? section("Additional terms", extra) : null}
     </div>

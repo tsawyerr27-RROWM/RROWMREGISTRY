@@ -75,8 +75,8 @@ export default function PrivacyPage() {
         </LegalP>
         <LegalH3>Account lifecycle and audit data</LegalH3>
         <LegalP>
-          When you manage your account — including deactivation, data export,
-          or deletion requests — we process security and audit information
+          When you manage your account, including deactivation, data export,
+          or deletion requests, we process security and audit information
           (such as timestamps, event types, and technical metadata like IP
           address and browser user agent) to protect the service, demonstrate
           compliance, and maintain an immutable record of account lifecycle
@@ -241,8 +241,8 @@ export default function PrivacyPage() {
       <section className="flex flex-col gap-4">
         <LegalH2>Your rights</LegalH2>
         <LegalP>
-          Depending on where you live — including under the UK GDPR, EU GDPR,
-          and comparable laws — you may have rights to access, rectify, erase,
+          Depending on where you live, including under the UK GDPR, EU GDPR,
+          and comparable laws, you may have rights to access, rectify, erase,
           restrict, or object to certain processing, and to data portability.
         </LegalP>
         <LegalH3>How to exercise your rights</LegalH3>

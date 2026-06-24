@@ -19,7 +19,7 @@ export function sha256Hex(input: HashInput): string {
 /** Short display form: first + last chars. */
 export function shortHex(hash: string, head = 8, tail = 8): string {
   const h = String(hash || "").trim();
-  if (!h) return "—";
+  if (!h) return "n/a";
   if (h.length <= head + tail + 1) return h;
   return `${h.slice(0, head)}…${h.slice(-tail)}`;
 }

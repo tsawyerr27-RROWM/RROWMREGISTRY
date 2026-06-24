@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { getCanonicalOwner } from "@/lib/canonical-ownership-engine";
 import { logActivityEvent } from "@/lib/log-activity";
 import {
   buildOwnershipClaimNotes,
@@ -97,7 +98,7 @@ export async function POST(req: Request) {
 
   const { data: art, error: artErr } = await service
     .from("artworks")
-    .select("id, title, registry_id, verification_status, current_owner_id")
+    .select("id, title, registry_id, verification_status")
     .eq("id", artworkId)
     .maybeSingle();
 
@@ -111,9 +112,8 @@ export async function POST(req: Request) {
     );
   }
 
-  const custodianId = art.current_owner_id
-    ? String(art.current_owner_id)
-    : null;
+  const canonicalOwner = await getCanonicalOwner(service, artworkId);
+  const custodianId = canonicalOwner.userId;
   if (custodianId && custodianId !== user.id) {
     return NextResponse.json(
       {
@@ -166,6 +166,7 @@ export async function POST(req: Request) {
     .insert({
       artwork_id: artworkId,
       transfer_type: "collector_claim",
+      from_user_id: custodianId,
       to_user_id: user.id,
       created_by: user.id,
       notes,
@@ -260,7 +261,7 @@ export async function POST(req: Request) {
 
   void notifyRegistryTransferRecorded({
     artworkId,
-    fromUserId: art.current_owner_id ? String(art.current_owner_id) : null,
+    fromUserId: custodianId,
     toUserId: user.id,
   });
 

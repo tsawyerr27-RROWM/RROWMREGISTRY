@@ -12,6 +12,10 @@ import {
 } from "@/lib/accept-artwork-auth-invite-client";
 import { deferredRouterReplace } from "@/lib/deferred-app-router";
 import { resolvePostAuthRedirectPath } from "@/lib/post-auth-redirect";
+import {
+  buildAuthCallbackUrl,
+  PASSWORD_RESET_RETURN_PATH,
+} from "@/lib/auth-callback-url";
 import { sanitizeAuthReturnPath } from "@/lib/auth-return-path";
 import { AuthPageShell } from "@/components/auth/AuthPageShell";
 import {
@@ -54,6 +58,17 @@ export function LoginClient() {
     if (nextParam) persistArtworkAuthInviteFromReturnPath(nextParam);
   }, [nextParam]);
 
+  useEffect(() => {
+    if (searchParams.get("view") === "forgot") {
+      setView("forgot");
+    }
+    const authError = searchParams.get("error");
+    if (authError === "auth_callback" || authError === "auth_confirm") {
+      setView("forgot");
+      setErr("That reset link is invalid or has expired. Request a new one below.");
+    }
+  }, [searchParams]);
+
   const signupHref = useMemo(() => {
     const q = new URLSearchParams();
     if (nextParam) q.set("next", nextParam);
@@ -95,7 +110,7 @@ export function LoginClient() {
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
     if (!user) {
-      deferredRouterReplace(router, nextParam || "/studio/creative");
+      deferredRouterReplace(router, nextParam || "/onboarding");
       return;
     }
 
@@ -120,10 +135,8 @@ export function LoginClient() {
     }
     setSubmitting(true);
     const supabase = sb();
-    const origin =
-      typeof window !== "undefined" ? window.location.origin : "";
     const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
-      redirectTo: `${origin}/auth/callback?next=${encodeURIComponent("/reset-password")}`,
+      redirectTo: buildAuthCallbackUrl(PASSWORD_RESET_RETURN_PATH),
     });
     setSubmitting(false);
     if (error) {
