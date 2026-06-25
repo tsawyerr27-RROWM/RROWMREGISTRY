@@ -38,29 +38,9 @@ export async function middleware(request: NextRequest) {
 
   const {
     data: { user },
-    error: authError,
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
-
-  if (process.env.NODE_ENV === "development") {
-    const cookieNames = request.cookies.getAll().map((c) => c.name);
-    const hasSupabaseCookie = cookieNames.some((name) =>
-      name.includes("-auth-token")
-    );
-    const supabase_cookie_names = cookieNames.filter((name) =>
-      name.includes("-auth-token")
-    );
-    console.info("[RROWM middleware auth]", {
-      pathname,
-      has_user: Boolean(user),
-      auth_error: authError?.message ?? null,
-      cookie_count: cookieNames.length,
-      has_supabase_cookie: hasSupabaseCookie,
-      supabase_cookie_names,
-      skipped_studio_guard: studioLayoutGuardSkipsPath(pathname),
-    });
-  }
 
   if (
     pathname.startsWith("/studio") &&
