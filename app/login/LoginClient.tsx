@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { setRememberMe } from "@/lib/supabase";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { acceptPendingGalleryInvite } from "@/lib/accept-gallery-invite-client";
 import {
@@ -49,7 +48,6 @@ export function LoginClient() {
   const [view, setView] = useState<View>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMeState] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [infoMsg, setInfoMsg] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -92,7 +90,6 @@ export function LoginClient() {
       return;
     }
     setSubmitting(true);
-    setRememberMe(rememberMe);
     const supabase = sb();
     const { error } = await supabase.auth.signInWithPassword({
       email: cleanEmail,
@@ -237,17 +234,6 @@ export function LoginClient() {
               placeholder="••••••••"
             />
           </div>
-          <label className="flex cursor-pointer items-center gap-3 select-none">
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMeState(e.target.checked)}
-              className="h-4 w-4 rounded border-black/20 text-neutral-950 focus:ring-neutral-900/20"
-            />
-            <span className="text-[13px] text-neutral-700 sm:text-sm">
-              {t("auth.rememberMe")}
-            </span>
-          </label>
           {err ? (
             <p className="rounded-lg border border-red-200/80 bg-red-50/90 px-3 py-2.5 text-[13px] text-red-800 sm:text-sm">
               {err}

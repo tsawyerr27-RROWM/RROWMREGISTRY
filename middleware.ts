@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
+import { studioLayoutGuardSkipsPath } from "@/lib/studio-route-access";
+
 const ADMIN_ROUTE_PREFIXES = ["/admin", "/internal"];
 
 function isAdminRoute(pathname: string): boolean {
@@ -8,11 +10,11 @@ function isAdminRoute(pathname: string): boolean {
 }
 
 /**
- * Supabase SSR session refresh + admin route gate.
+ * Supabase SSR session refresh + studio/admin route gates.
  *
  * Every request refreshes auth cookies so server components see the session.
- * Admin/internal routes additionally require authentication — unauthenticated
- * visitors are redirected to /login.
+ * Studio routes require authentication — unauthenticated visitors are redirected
+ * to /login with a return path. Admin/internal routes use the admin session gate.
  */
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
@@ -36,7 +38,39 @@ export async function middleware(request: NextRequest) {
 
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
+
+  const pathname = request.nextUrl.pathname;
+
+  if (process.env.NODE_ENV === "development") {
+    const cookieNames = request.cookies.getAll().map((c) => c.name);
+    const hasSupabaseCookie = cookieNames.some((name) =>
+      name.includes("-auth-token")
+    );
+    const supabase_cookie_names = cookieNames.filter((name) =>
+      name.includes("-auth-token")
+    );
+    console.info("[RROWM middleware auth]", {
+      pathname,
+      has_user: Boolean(user),
+      auth_error: authError?.message ?? null,
+      cookie_count: cookieNames.length,
+      has_supabase_cookie: hasSupabaseCookie,
+      supabase_cookie_names,
+      skipped_studio_guard: studioLayoutGuardSkipsPath(pathname),
+    });
+  }
+
+  if (
+    pathname.startsWith("/studio") &&
+    !studioLayoutGuardSkipsPath(pathname) &&
+    !user
+  ) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
 
   if (isAdminRoute(request.nextUrl.pathname)) {
     const isAdminApi = request.nextUrl.pathname.startsWith("/api/admin/");

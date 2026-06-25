@@ -4,11 +4,10 @@ import {
   createContext,
   useContext,
   useEffect,
-  useMemo,
   useState,
   type ReactNode,
 } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { deferredRouterReplace } from "@/lib/deferred-app-router";
@@ -34,16 +33,9 @@ export function useStudioGuardUser(): StudioGuardUser | null {
 export function StudioRouteGuard({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const sb = useSupabaseBrowserLazy();
   const [phase, setPhase] = useState<GuardPhase>("pending");
   const [guardUser, setGuardUser] = useState<StudioGuardUser | null>(null);
-
-  const returnPath = useMemo(() => {
-    const qs = searchParams?.toString();
-    if (!pathname) return "/studio/creative";
-    return qs ? `${pathname}?${qs}` : pathname;
-  }, [pathname, searchParams]);
 
   const skipGuard = studioLayoutGuardSkipsPath(pathname);
 
@@ -58,17 +50,10 @@ export function StudioRouteGuard({ children }: { children: ReactNode }) {
       try {
         const supabase = sb();
         const { data: sessionData } = await supabase.auth.getSession();
+        const session = sessionData?.session;
+        if (!session) return;
 
-        if (!sessionData?.session) {
-          const redirectTarget =
-            "/login?next=" + encodeURIComponent(returnPath);
-          if (!cancelled) {
-            deferredRouterReplace(router, redirectTarget);
-          }
-          return;
-        }
-
-        const uid = sessionData.session.user.id;
+        const uid = session.user.id;
         const onboardingPath = await getOnboardingRedirectPath(supabase, uid);
         if (onboardingPath) {
           if (!cancelled) deferredRouterReplace(router, onboardingPath);
@@ -95,19 +80,20 @@ export function StudioRouteGuard({ children }: { children: ReactNode }) {
         if (!cancelled) {
           setGuardUser({
             userId: uid,
-            email: sessionData.session.user.email ?? null,
+            email: session.user.email ?? null,
           });
           setPhase("ready");
         }
-      } catch {
-        /* guard stays pending */
+      } catch (err) {
+        console.error("[StudioRouteGuard]", err);
+        if (!cancelled) deferredRouterReplace(router, "/login");
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [skipGuard, pathname, returnPath, router, sb]);
+  }, [skipGuard, pathname, router, sb]);
 
   if (skipGuard || phase === "ready") {
     return (
