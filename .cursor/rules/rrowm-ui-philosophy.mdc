@@ -1,0 +1,51 @@
+---
+description: RROWM UI philosophy — cultural infrastructure, not SaaS dashboards
+alwaysApply: true
+---
+
+# RROWM UI philosophy
+
+RROWM interfaces must feel like **interacting with cultural infrastructure**, not software dashboards.
+
+**Benchmark:** museum archive × financial terminal × cultural operating system — not “beautiful startup UI.”
+
+## Every interaction should reinforce
+
+- Records matter
+- Chronology is append-only
+- Ownership changes are meaningful
+- Filings carry weight
+- Authorship persists beyond sale
+
+## Avoid
+
+- Generic SaaS UI (feature cards, shallow grids, template nav)
+- Fast, light, or playful motion
+- Shallow feature-card layouts
+- Default empty states (“No data yet” with no institutional framing)
+- Decorative effects without semantic meaning
+
+## Prefer
+
+- **Cinematic transitions** — slow, deliberate, weighted (`v2-motion-reveal-slow`, `ledger-append`, `modal-float`)
+- **Archive metaphors** — filings, stamps, ledger spine, catalogue sheets
+- **Document-like surfaces** — `v2-surface-paper`, `archive-sheet`, `studio-filing-sheet` (70% paper, glass sparingly)
+- **Institutional typography** — Cormorant display, Inter UI, mono for IDs/timestamps/status
+- **Signal colors with meaning** — see `rrowm-semantic-signals.mdc` and `lib/registry-semantic-signals.ts`; never decoration-only
+
+## Consequential actions
+
+Registration, valuation, certification, and transfer must feel **filed, recorded, and consequential**:
+
+- Use filing language and mono metadata labels
+- Prefer append/reveal motion over bounce or slide gimmicks
+- Modals: glass shell + paper inner (`ModalShell` v2, `studio-filing-form`)
+- Empty states: institutional copy + clear next filing step — not generic placeholders
+
+## Implementation anchors
+
+- Primitives: `styles/rrowm-v2.ts`, `styles/registry-v2.ts`, `styles/studio-v2.ts`
+- Registry surfaces: ceremonial record hero, chronology filings, lineage nodes
+- Studio surfaces: deal command center, catalogue sheets, execution stamps
+
+When redesigning UI, **preserve business logic and registry semantics**; change presentation and chrome only unless explicitly asked otherwise.

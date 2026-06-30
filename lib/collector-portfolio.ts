@@ -4,13 +4,33 @@ import { getOwnedArtworkIds } from "@/lib/canonical-ownership-engine";
 
 /**
  * Artwork IDs where the user is the effective current holder per latest
- * ownership_events row (to_user_id).
+ * ownership_events row (to_user_id). Prefers the security-definer RPC used by
+ * registry; falls back to the JS engine only when the RPC is unavailable.
  */
 export async function getCollectorOwnedArtworkIds(
   supabase: SupabaseClient,
   userId: string
 ): Promise<string[]> {
-  return getOwnedArtworkIds(supabase, userId);
+  const uid = String(userId ?? "").trim();
+  if (!uid) return [];
+
+  const { data, error } = await supabase.rpc(
+    "list_collector_owned_artwork_ids",
+    { p_user_id: uid }
+  );
+
+  if (!error && Array.isArray(data)) {
+    return data.map((id) => String(id)).filter(Boolean);
+  }
+
+  if (error) {
+    console.warn(
+      "[collector-portfolio] list_collector_owned_artwork_ids",
+      error.message
+    );
+  }
+
+  return getOwnedArtworkIds(supabase, uid);
 }
 
 export function sortPortfolioRows<

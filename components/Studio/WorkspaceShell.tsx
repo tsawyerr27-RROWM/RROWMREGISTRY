@@ -98,14 +98,14 @@ export function WorkspaceShell({
     activityHeading ?? t("studio.shell.activity");
 
   const navItemClass = (active: boolean) =>
-    `${workspace.nav.item} rounded-xl px-3 py-2.5 -mx-3 ${
+    `${workspace.nav.item} v2-motion-hover-subtle rounded-xl px-3 py-2.5 -mx-3 ${
       active
         ? isLight
-          ? `${workspace.type.navItemActive} bg-gradient-to-r from-neutral-950/[0.08] via-[#151a24]/[0.06] to-transparent ring-1 ring-neutral-900/[0.06]`
-          : "text-sm font-medium text-white bg-white/[0.08]"
+          ? `${workspace.type.navItemActive} v2-surface-archive-sheet bg-[var(--v2-cobalt-signal-dim)]/30 pl-4`
+          : "v2-type-label text-white bg-white/[0.08]"
         : isLight
-          ? `${workspace.type.navItemIdle} hover:bg-neutral-900/[0.03]`
-          : "text-sm font-medium text-white/60 hover:text-white hover:bg-white/[0.04]"
+          ? `${workspace.type.navItemIdle} hover:bg-black/[0.03]`
+          : "v2-type-label text-white/60 hover:text-white hover:bg-white/[0.04]"
     } transition-[background-color,color] duration-300`;
 
   const navLabel = (item: WorkspaceNavItem, active: boolean) => (
@@ -124,19 +124,21 @@ export function WorkspaceShell({
 
   return (
     <div
-      className={`relative min-h-[100dvh] pt-[calc(5rem+env(safe-area-inset-top,0px))] transition-[background] duration-500 ease-out ${atmosphereClassName}`}
+      className={`relative min-h-[100dvh] pt-[calc(5.5rem+env(safe-area-inset-top,0px))] transition-[background] duration-500 ease-out ${atmosphereClassName}`}
     >
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-neutral-900/10 to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-[calc(5rem+env(safe-area-inset-top,0px))] flex justify-center"
         aria-hidden
-      />
+      >
+        <span className="v2-surface-signal-line h-8 opacity-35" />
+      </div>
       <div
-        className={`relative z-10 mx-auto flex w-full max-w-[1600px] min-h-[calc(100dvh-5rem-env(safe-area-inset-top,0px))] ${
-          isLight ? "text-neutral-800" : "text-white"
+        className={`relative z-10 mx-auto flex w-full min-w-0 max-w-[1600px] min-h-[calc(100dvh-5.5rem-env(safe-area-inset-top,0px))] ${
+          isLight ? "text-[var(--v2-ink-soft)]" : "text-white"
         }`}
       >
-        <aside className="hidden w-[18.5rem] shrink-0 px-6 py-10 lg:block lg:w-[20rem] lg:px-8 xl:px-10 xl:py-12">
-          <div className="sticky top-24 py-2 pr-6 transition-colors duration-300 xl:pr-8">
+        <aside className="hidden w-[280px] shrink-0 py-10 pl-5 pr-3 lg:block xl:py-12">
+          <div className="rrowm-workspace-sidebar v2-surface-paper v2-radius-card sticky top-28 p-5 py-6 pr-4 transition-colors duration-300 xl:pr-5">
             <div className="flex flex-col gap-3 text-[13px]">
               {navItems.map((item) => {
                 const active =
@@ -171,18 +173,18 @@ export function WorkspaceShell({
             </div>
 
             <div
-              className={`mt-10 pt-6 ${isLight ? "border-t border-black/10" : ""}`}
+              className={`mt-10 border-t pt-6 ${isLight ? "border-[var(--v2-border)]" : "border-white/10"}`}
             >
               {sidebarFooter}
             </div>
 
             {sidebarActivity ? (
               <div
-                className={`mt-8 pt-6 ${isLight ? "border-t border-black/10" : ""}`}
+                className={`mt-8 border-t pt-6 ${isLight ? "border-[var(--v2-border)]" : "border-white/10"}`}
               >
                 <p
-                  className={`text-sm font-medium ${
-                    isLight ? "text-neutral-500" : "text-white/70"
+                  className={`v2-type-label ${
+                    isLight ? "text-[var(--v2-cool-grey)]" : "text-white/70"
                   }`}
                 >
                   {resolvedActivityHeading}
@@ -206,7 +208,7 @@ export function WorkspaceShell({
         </aside>
 
         <div
-          className={`flex min-h-0 flex-1 flex-col px-5 pb-16 pt-8 transition-all duration-300 md:px-10 md:pt-10 lg:px-14 xl:px-24 xl:pb-24 xl:pt-12 ${
+          className={`flex min-h-0 min-w-0 w-full flex-1 flex-col px-4 pb-16 pt-8 transition-all duration-300 md:px-6 md:pt-10 lg:px-8 xl:pb-20 xl:px-10 xl:pt-10 ${
             isTransitioning ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"
           }`}
         >
@@ -215,13 +217,13 @@ export function WorkspaceShell({
               const active =
                 activeId === item.id ||
                 Boolean(item.href && pathname?.startsWith(item.href));
-              const tabClass = `shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition-[background-color,color] duration-200 ${
+              const tabClass = `v2-motion-hover-subtle shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ${
                 active
                   ? isLight
-                    ? "bg-neutral-950/[0.08] text-neutral-950 ring-1 ring-neutral-900/[0.06]"
+                    ? "v2-surface-glass-light text-[var(--v2-near-black)]"
                     : "bg-white/[0.1] text-white"
                   : isLight
-                    ? "text-neutral-500 hover:bg-neutral-900/[0.03] hover:text-neutral-800"
+                    ? "text-[var(--v2-cool-grey)] hover:bg-black/[0.03] hover:text-[var(--v2-ink-soft)]"
                     : "text-white/55 hover:bg-white/[0.04] hover:text-white/90"
               }`;
               const tabInner = (
@@ -259,7 +261,7 @@ export function WorkspaceShell({
 
           <div
             className={`mb-8 flex flex-col gap-4 border-b pb-6 lg:hidden ${
-              isLight ? "border-neutral-900/[0.06]" : "border-white/10"
+              isLight ? "border-[var(--v2-border)]" : "border-white/10"
             }`}
           >
             <div className="text-[13px]">{sidebarFooter}</div>

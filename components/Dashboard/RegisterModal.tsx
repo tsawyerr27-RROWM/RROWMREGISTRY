@@ -1,9 +1,15 @@
 "use client";
 
+import { useRef } from "react";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import ModalShell from "@/components/ui/ModalShell";
 import { CurrencyCombobox } from "@/components/ui/CurrencyCombobox";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import {
+  consequenceSurfaceFromTarget,
+  triggerConsequenceFeedback,
+} from "@/lib/consequence-feedback-runtime";
+import { studioFilingForm } from "@/styles/studio-filing-form";
 
 export type RegisterModalArtwork = {
   title: string;
@@ -18,23 +24,13 @@ export type RegisterModalArtwork = {
   value_type: string;
 };
 
-/** `liquid-glass-inset` sets border-radius:0 in globals — force round corners */
-const fieldClass =
-  "liquid-glass-inset !rounded-2xl w-full px-4 py-3.5 text-[15px] leading-snug text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/15";
-
-const selectClass = `${fieldClass} appearance-none`;
-
-const textareaClass =
-  "w-full rounded-2xl border border-neutral-200/90 bg-white/90 px-4 py-3.5 text-[15px] leading-snug text-neutral-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/15 resize-none";
-
-const labelClass =
-  "mb-2 block text-sm font-semibold text-neutral-500";
-
-const btnPrimary =
-  "flex-1 rounded-2xl bg-neutral-950 px-6 py-4 text-sm font-semibold text-white transition-colors hover:bg-neutral-800 disabled:opacity-50";
-
-const btnSecondary =
-  "liquid-glass-inset !rounded-2xl px-6 py-4 text-sm font-semibold text-neutral-800 transition-colors hover:bg-white/70";
+/** Filing form field primitives — see styles/studio-filing-form.ts */
+const fieldClass = studioFilingForm.field;
+const selectClass = studioFilingForm.select;
+const textareaClass = studioFilingForm.textarea;
+const labelClass = studioFilingForm.label;
+const btnPrimary = studioFilingForm.primary;
+const btnSecondary = studioFilingForm.secondary;
 
 type RegisterModalProps = {
   isOpen: boolean;
@@ -73,6 +69,7 @@ export function RegisterModal({
   variant = "default",
 }: RegisterModalProps) {
   const { t } = useLocalePreferences();
+  const submitRef = useRef<HTMLButtonElement>(null);
   const isGallery = variant === "gallery";
   const rosterOptions =
     isGallery && Array.isArray(representedArtistOptions)
@@ -88,25 +85,38 @@ export function RegisterModal({
   const galleryMediaOk = !isGallery || Boolean(newArtwork.imageFile);
   const artistOk = isGallery ? catalogueNameOk && galleryMediaOk : true;
 
+  const handleRegister = () => {
+    const target = submitRef.current;
+    triggerConsequenceFeedback("registryCommit", {
+      target,
+      surface: consequenceSurfaceFromTarget(target),
+    });
+    onRegister();
+  };
+
   return (
     <ModalShell
       isOpen={isOpen}
       onClose={onClose}
       tone="light"
-      panelClassName="max-h-[90vh] w-full max-w-2xl overflow-auto"
+      panelClassName="max-h-[90vh] w-full max-w-2xl overflow-hidden"
     >
-      <div className="p-10 md:p-12">
+      <div className="max-h-[calc(90vh-2rem)] overflow-auto p-6 md:p-8">
         {variant === "gallery" ? (
           <>
             <InfoTooltip text="Issues a registry identifier and opens the canonical artwork record, the same documentary object an artist would file. Your institution attestation layers onto the chronology; the artist may later authenticate authorship and deepen detail. Not an approval or upload queue." />
-            <h2 className="font-serif text-[1.75rem] font-normal leading-tight tracking-[-0.01em] text-neutral-950 md:text-[1.85rem]">
+            <p className={studioFilingForm.label}>Registry filing</p>
+            <h2 className={studioFilingForm.sectionTitle}>
               {t("studio.register.titleGallery")}
             </h2>
           </>
         ) : (
-          <h2 className="font-serif text-[1.75rem] font-normal leading-tight tracking-[-0.01em] text-neutral-950 md:text-[1.85rem]">
-            {t("studio.register.titleNew")}
-          </h2>
+          <>
+            <p className={studioFilingForm.label}>Registry filing</p>
+            <h2 className={studioFilingForm.sectionTitle}>
+              {t("studio.register.titleNew")}
+            </h2>
+          </>
         )}
 
         <div className={`space-y-6 ${variant === "gallery" ? "mt-10" : "mt-8"}`}>
@@ -314,25 +324,26 @@ export function RegisterModal({
               }
               className={selectClass}
             >
-              <option value="initial">{t("studio.form.eventInitial")}</option>
-              <option value="primary_sale">
-                {t("studio.form.eventPrimarySale")}
+              <option value="initial_valuation">
+                {t("studio.form.eventInitialValuation")}
               </option>
-              <option value="secondary_sale">
-                {t("studio.form.eventSecondarySale")}
+              <option value="valuation">{t("studio.form.eventValuation")}</option>
+              <option value="exhibition_value">
+                {t("studio.form.eventExhibitionValue")}
+              </option>
+              <option value="listing_value">
+                {t("studio.form.eventListingValue")}
               </option>
               <option value="appraisal">{t("studio.form.eventAppraisal")}</option>
-              <option value="internal_estimate">
-                {t("studio.form.eventInternalEstimate")}
-              </option>
             </select>
           </div>
         </div>
 
         <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:gap-4">
           <button
+            ref={submitRef}
             type="button"
-            onClick={onRegister}
+            onClick={handleRegister}
             disabled={!newArtwork.title || registerLoading || !artistOk}
             className={`${btnPrimary} sm:flex-1`}
           >

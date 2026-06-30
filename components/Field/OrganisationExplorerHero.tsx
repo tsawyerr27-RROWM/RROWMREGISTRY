@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { FieldExplorerHeroShell } from "@/components/Field/FieldExplorerHeroShell";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fieldVerifyHref } from "@/lib/field-nav";
 
@@ -28,44 +29,35 @@ export function OrganisationExplorerHero({
     verified === "verified" ||
     represented === "represented";
 
+  const metaParts: string[] = [];
+  if (total > 0) {
+    metaParts.push(
+      `${total} ${total === 1 ? "Organisation" : "Organisations"}`
+    );
+  }
+  if (trimmedQ) {
+    metaParts.push(
+      `${t("field.explorer.organisations.searching")} “${trimmedQ}”`
+    );
+  }
+  if (hasFilters) {
+    metaParts.push(t("field.explorer.organisations.filtered"));
+  }
+
   return (
-    <section className="relative mt-2 overflow-hidden rounded-[1.25rem] border border-neutral-900/[0.05] bg-gradient-to-br from-[#f8faf9] via-white to-emerald-50/35 shadow-[0_16px_40px_-20px_rgba(15,23,42,0.08),inset_0_1px_0_0_rgba(255,255,255,0.9)]">
-      <div
-        className="pointer-events-none absolute -right-24 top-0 h-80 w-80 rounded-full bg-emerald-400/12 blur-[90px]"
-        aria-hidden
-      />
-      <div className="relative max-w-3xl p-8 lg:p-12 xl:p-14">
-        <h1 className="font-serif text-[2.125rem] font-normal leading-[1.06] tracking-tight text-neutral-950 md:text-5xl md:leading-[1.05]">
-          {t("field.explorer.organisations.headline")}
-        </h1>
-        <p className="mt-6 max-w-2xl text-base leading-relaxed text-neutral-600">
-          {t("field.explorer.organisations.lede")}
-        </p>
-        {total > 0 || hasFilters || trimmedQ ? (
-          <p className="mt-8 text-[12px] text-neutral-500">
-            {total > 0 ? (
-              <>
-                {total} {total === 1 ? "Organisation" : "Organisations"}
-              </>
-            ) : null}
-            {trimmedQ ? (
-              <>
-                {total > 0 ? " · " : null}
-                {t("field.explorer.organisations.searching")} “{trimmedQ}”
-              </>
-            ) : null}
-            {hasFilters ? ` · ${t("field.explorer.organisations.filtered")}` : null}
-          </p>
-        ) : null}
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link
-            href={fieldVerifyHref()}
-            className="inline-flex rounded-2xl border border-neutral-200 bg-white px-5 py-2.5 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
-          >
-            {t("field.explorer.link.verifyHub")}
-          </Link>
-        </div>
-      </div>
-    </section>
+    <FieldExplorerHeroShell
+      indexLabel={t("field.explorer.tab.organisations")}
+      title={t("field.explorer.organisations.headline")}
+      lede={t("field.explorer.organisations.lede")}
+      meta={metaParts.length > 0 ? metaParts.join(" · ") : undefined}
+      actions={
+        <Link
+          href={fieldVerifyHref()}
+          className="v2-cta-secondary inline-flex !min-h-0 px-5 py-2.5 text-xs"
+        >
+          {t("field.explorer.link.verifyHub")}
+        </Link>
+      }
+    />
   );
 }

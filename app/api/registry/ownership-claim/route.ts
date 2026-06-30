@@ -93,6 +93,7 @@ export async function POST(req: Request) {
       };
 
   const path = await resolveOwnershipClaimPath(supabase, user.id, artworkId, pathOptions);
+
   if (path.kind === "already_owner") {
     return NextResponse.json(
       { error: "You already hold stewardship for this work on the registry ledger." },

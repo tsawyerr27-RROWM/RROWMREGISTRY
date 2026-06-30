@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "About · RROWM Registry",
+  title: "About · RROWM",
   description:
-    "How the RROWM registry works: public record, authenticated certificates, ownership privacy, and system properties.",
+    "Institutional record of RROWM: cultural infrastructure for authorship, stewardship, chronology, and the Studio · Registry · Field ecosystem.",
 };
 
 export default function AboutLayout({

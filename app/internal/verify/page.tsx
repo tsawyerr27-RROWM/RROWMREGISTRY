@@ -4,6 +4,7 @@ import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { deferredRouterPush } from "@/lib/deferred-app-router";
+import { triggerConsequenceFeedback } from "@/lib/consequence-feedback-runtime";
 import Image from "next/image";
 
 type PendingArtwork = {
@@ -76,6 +77,7 @@ export default function InternalVerify() {
         }
 
         setArtworks((prev) => prev.filter((a) => a.id !== artwork.id));
+        triggerConsequenceFeedback("sealCommit");
       } finally {
         setApproving(null);
       }

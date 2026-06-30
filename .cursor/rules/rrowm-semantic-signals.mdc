@@ -1,0 +1,39 @@
+---
+description: RROWM semantic signal colors — registry meaning, not UI state
+alwaysApply: true
+---
+
+# RROWM semantic signal rule
+
+UI signals must map to **registry meaning**, not generic UI state.
+
+Do **not** use colors primarily to indicate arbitrary component state (hover, selected tab, “info” badge, etc.). Color is part of the **registry language**.
+
+## Canonical mappings
+
+| Event | Signal |
+|-------|--------|
+| Registration | cobalt |
+| Valuation | violet / cool signal |
+| Sale | ember |
+| Transfer / stewardship | lime |
+| Certification / verification | monochrome seal |
+| Correction / exception | amber |
+
+A transfer should feel like a transfer everywhere. A sale should feel like a sale everywhere.
+
+## Must stay consistent across
+
+Chronology entries · event stamps · CTAs (when event-specific) · badges · notifications · modal headers · ledger surfaces · certificate markers
+
+## Implementation
+
+- **Source of truth:** `lib/registry-semantic-signals.ts` (`semanticSignalBarClass`, `semanticStampClass`, `semanticDotClass`, `notificationSemanticEvent`)
+- **Chronology / ownership:** `lib/registry-event-visual.ts` (maps narrative kinds → semantic events)
+- **Acquisition filing timeline:** `lib/acquisition-filing-visual.ts` (step → semantic event for execution UI)
+- **Semantic motion:** `styles/semantic-motion.ts` (event → motion preset; CSS + Framer)
+- **Consequence feedback:** `styles/consequence-feedback.ts` (consequential action acknowledgement)
+- **CSS tokens:** `app/globals.css` (`--v2-*-signal`, `.v2-signal-bar--*`, `.registry-event-stamp--*`)
+- **Primitives:** `styles/rrowm-v2.ts` (`v2Signal`)
+
+When adding UI accent color, ask: *which registry event does this represent?* If none, use neutral paper/graphite — not a semantic signal.

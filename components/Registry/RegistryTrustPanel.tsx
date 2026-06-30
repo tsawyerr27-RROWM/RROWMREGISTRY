@@ -8,7 +8,8 @@ import {
   registryTrustLevelMessageKey,
   registryTrustPillarMessageKey,
 } from "@/lib/registry-trust-model";
-import { rrowmFloatingBlock, rrowmRegistrySurface, rrowmSurface } from "@/styles/rrowm-theme";
+import { rrowmSurface } from "@/styles/rrowm-theme";
+import { registryV2 } from "@/styles/registry-v2";
 
 export type RegistryTrustPanelVariant = "hero" | "compact" | "modal";
 
@@ -28,15 +29,17 @@ export function RegistryTrustPanel({
 
   const shellClass =
     variant === "hero"
-      ? rrowmRegistrySurface.trustPanel
+      ? `${registryV2.surface.filingMajor} p-8 md:p-10`
       : variant === "compact"
-        ? rrowmRegistrySurface.trustCompact
+        ? `${registryV2.surface.filing} p-6 md:p-7`
         : `${rrowmSurface.l3} p-5`;
 
   const levelClass =
     variant === "modal"
-      ? "font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-[1.75rem]"
-      : "font-serif text-3xl font-normal tracking-tight text-neutral-950 md:text-[2.125rem]";
+      ? `${registryV2.type.sectionTitle} text-2xl md:text-[1.75rem]`
+      : variant === "compact"
+        ? `${registryV2.type.sectionTitle} text-xl md:text-2xl`
+        : `${registryV2.type.recordTitle} text-3xl md:text-[2.125rem]`;
 
   return (
     <article className={`relative ${shellClass} ${className}`}>
@@ -51,29 +54,29 @@ export function RegistryTrustPanel({
           <h2 className={levelClass}>
             {t(registryTrustLevelMessageKey(presentation.level))}
           </h2>
-          <p className="mt-2 text-sm text-neutral-500">
+          <p className={`${registryV2.type.metaLabel} mt-2`}>
             {t("registry.trust.panelLabel")}
           </p>
         </div>
       </div>
 
-      <p className="mt-6 max-w-2xl text-sm leading-relaxed text-neutral-600 md:mt-7">
+      <p className={`${registryV2.type.metaValue} mt-6 max-w-2xl md:mt-7`}>
         {t(presentation.explanationKey)}
       </p>
 
-      <div className="mt-8 border-t border-neutral-900/[0.06] pt-6 md:mt-9">
+      <div className="mt-8 border-t border-[var(--v2-border)] pt-6 md:mt-9">
         <ul className="grid gap-3 sm:grid-cols-2">
           {presentation.pillars.map((pillar) => (
             <li
               key={pillar.id}
-              className={`${rrowmFloatingBlock.compact} px-4 py-3 ${
-                pillar.active ? "text-neutral-800" : "text-neutral-400"
+              className={`${registryV2.surface.metadataField} ${
+                pillar.active ? "text-[var(--v2-ink)]" : "text-[var(--v2-cool-grey)]"
               }`}
             >
-              <span className="flex items-start gap-2.5 text-sm leading-snug">
+              <span className={`flex items-start gap-2.5 ${registryV2.type.metaValue} text-sm`}>
                 <span
                   className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${
-                    pillar.active ? "bg-[color:var(--rrowm-zone-accent)]" : "bg-neutral-300"
+                    pillar.active ? "bg-[var(--v2-cobalt-signal)]" : "bg-[var(--v2-border-strong)]"
                   }`}
                   aria-hidden
                 />

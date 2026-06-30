@@ -14,6 +14,14 @@ import {
   studioArtworksAccentTheme,
 } from "@/lib/studio-artworks-accent";
 import { ArtworkDeclaredValueBlock } from "@/components/Studio/ArtworkDeclaredValueBlock";
+import {
+  canRecordValueEvent,
+  resolveValuationDisabledReason,
+  resolveValueChronologyPhase,
+} from "@/lib/can-record-value-event";
+import type { MessageKey } from "@/lib/locale-messages";
+import { studioCatalogueSheetClass, studioV2 } from "@/styles/studio-v2";
+import { semanticStampClass } from "@/lib/registry-semantic-signals";
 
 export type ArtworksListFilter =
   | "all"
@@ -37,7 +45,29 @@ type ArtworksSectionProps = {
   studioArtworksAccent?: StudioArtworksAccentId;
   /** Gallery name for represented works — shows info tooltip on price */
   representingInstitutionName?: string | null;
+  viewerUserId?: string | null;
+  canonicalHolders?: Record<string, { userId: string | null } | null | undefined>;
+  completedSalesByArtworkId?: Record<string, boolean>;
 };
+
+function valuePhaseBadgeLabel(
+  phase: "price_discovery" | "market_evidence",
+  t: (key: MessageKey) => string
+): string {
+  return phase === "price_discovery"
+    ? t("studio.artworks.phaseBadge.priceDiscovery")
+    : t("studio.artworks.phaseBadge.marketEvidence");
+}
+
+function valuationDisabledMessageKey(args: {
+  userId?: string | null;
+  artistId?: string | null;
+  hasCompletedSale?: boolean;
+}): MessageKey {
+  return resolveValuationDisabledReason(args) === "artist_primary_only"
+    ? "studio.artworks.valuationArtistPrimaryOnly"
+    : "studio.artworks.valuationMarketDriven";
+}
 
 function StudioWorkMark({
   className = "",
@@ -87,6 +117,9 @@ export function ArtworksSection({
   onAddValueEventClick,
   studioArtworksAccent = "violet",
   representingInstitutionName,
+  viewerUserId,
+  canonicalHolders = {},
+  completedSalesByArtworkId = {},
 }: ArtworksSectionProps) {
   const { t } = useLocalePreferences();
   const accent = useMemo(
@@ -98,7 +131,7 @@ export function ArtworksSection({
     totalArtworkCount > 0 && filteredArtworks.length === 0;
 
   return (
-    <div className="space-y-12">
+    <div className={`${studioV2.scope} space-y-12`}>
       {!isTrulyEmpty ? (
         <StudioSearchRow
           tone="light"
@@ -139,7 +172,30 @@ export function ArtworksSection({
 
       {!noSearchMatches && filteredArtworks.length > 0 ? (
         <div className={workspace.space.grid}>
-          {filteredArtworks.map((artwork) => (
+          {filteredArtworks.map((artwork) => {
+            const artworkId = String(artwork.id ?? "");
+            const hasCompletedSale = Boolean(completedSalesByArtworkId[artworkId]);
+            const valuePhase = resolveValueChronologyPhase({ hasCompletedSale });
+            const phaseBadge = valuePhaseBadgeLabel(valuePhase, t);
+            const canRecordValue = canRecordValueEvent({
+              userId: viewerUserId,
+              artworkId,
+              artistId: artwork.artist_id,
+              hasCompletedSale,
+            });
+            const artistPrimaryOnly =
+              !hasCompletedSale &&
+              resolveValuationDisabledReason({
+                userId: viewerUserId,
+                artistId: artwork.artist_id,
+                hasCompletedSale,
+              }) === "artist_primary_only";
+            const sheetClass = studioCatalogueSheetClass({
+              hasCompletedSale,
+              artistPrimaryOnly,
+            });
+
+            return (
             <div
               key={artwork.id}
               role="button"
@@ -150,14 +206,9 @@ export function ArtworksSection({
                   onArtworkClick(artwork);
                 }
               }}
-              className={`${workspace.card.link} border-l-[3px] ${accent.borderLeft}`}
+              className={`${sheetClass} ${workspace.card.link} v2-motion-hover-subtle`}
               onClick={() => onArtworkClick(artwork)}
             >
-              <div
-                className={`pointer-events-none absolute inset-x-0 top-0 z-10 h-px bg-gradient-to-r from-transparent ${accent.hairline} to-transparent`}
-                aria-hidden
-              />
-
               <div className={workspace.card.media}>
                 {artwork.image_url ? (
                   <img
@@ -191,7 +242,10 @@ export function ArtworksSection({
               </div>
 
               <div className={workspace.card.surface}>
-                <h3 className={workspace.type.cardTitle}>
+                <p className={studioV2.type.monoId}>
+                  {artwork.registry_id || t("studio.artworks.noRecordId")}
+                </p>
+                <h3 className={`${workspace.type.cardTitle} mt-2`}>
                   <button
                     type="button"
                     onClick={(e) => {
@@ -211,6 +265,19 @@ export function ArtworksSection({
 
               <div className={workspace.card.reveal}>
                 <div className="flex flex-wrap items-center gap-2">
+                  {hasCompletedSale ? (
+                    <span className={semanticStampClass("sale")}>
+                      Out of holdings
+                    </span>
+                  ) : artistPrimaryOnly ? (
+                    <span className={semanticStampClass("registration")}>
+                      Artist primary
+                    </span>
+                  ) : (
+                    <span className={semanticStampClass("transfer")}>
+                      In holdings
+                    </span>
+                  )}
                   {artwork.verification_status === "verified" ? (
                     <span
                       className="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 ring-1 ring-emerald-200/80"
@@ -224,6 +291,9 @@ export function ArtworksSection({
                       {t("studio.artworks.notVerified")}
                     </span>
                   )}
+                  <span className="inline-flex rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-medium text-violet-900 ring-1 ring-violet-200/90">
+                    {phaseBadge}
+                  </span>
                 </div>
 
                 <ArtworkDeclaredValueBlock
@@ -237,32 +307,46 @@ export function ArtworksSection({
                   }
                 />
 
-                <div className="mt-auto flex flex-shrink-0 items-center justify-between gap-3 border-t border-neutral-200/80 pt-4">
+                <div className="mt-auto flex flex-shrink-0 items-center justify-between gap-3 border-t border-[var(--v2-border)] pt-4">
                   <div className="min-w-0">
                     {artwork.registry_id ? (
-                      <span className="inline-block max-w-full truncate rounded-lg bg-neutral-100/90 px-2.5 py-1.5 font-mono text-[10px] leading-tight text-neutral-800 ring-1 ring-neutral-200/90">
+                      <span className={`${studioV2.type.monoId} inline-block max-w-full truncate`}>
                         {artwork.registry_id}
                       </span>
                     ) : (
-                      <span className="text-[10px] text-neutral-400">
+                      <span className={studioV2.type.monoId}>
                         {t("studio.artworks.noRecordId")}
                       </span>
                     )}
                   </div>
                   <button
                     type="button"
+                    disabled={!canRecordValue}
+                    title={
+                      canRecordValue
+                        ? undefined
+                        : t(
+                            valuationDisabledMessageKey({
+                              userId: viewerUserId,
+                              artistId: artwork.artist_id,
+                              hasCompletedSale,
+                            })
+                          )
+                    }
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (!canRecordValue) return;
                       onAddValueEventClick(artwork);
                     }}
-                    className={`shrink-0 rounded-xl ${accent.recordBtn}`}
+                    className="v2-cta-secondary shrink-0 !min-h-0 px-3 py-2 text-[10px] disabled:cursor-not-allowed disabled:opacity-45"
                   >
                     {t("studio.artworks.recordValue")}
                   </button>
                 </div>
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       ) : isTrulyEmpty ? (
         <div

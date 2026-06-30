@@ -11,6 +11,10 @@ import {
   resolveNotificationHref,
   type NotificationRow,
 } from "@/lib/notifications";
+import {
+  notificationSemanticEvent,
+  semanticDotClass,
+} from "@/lib/registry-semantic-signals";
 import { STUDIO_INBOX_HREF } from "@/lib/studio-nav/studio-utility-nav";
 
 type Props = {
@@ -43,22 +47,27 @@ function formatRelativeTime(iso: string, locale: string): string {
 }
 
 function notificationItemClass(unread: boolean): string {
+  const base = [
+    "group block w-full rounded-2xl border p-3.5 text-left",
+    "transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+    "hover:-translate-y-0.5",
+  ];
+
   if (unread) {
     return [
-      "group block w-full rounded-2xl border border-amber-200/60 p-3.5 text-left",
-      "bg-gradient-to-br from-amber-50/80 via-white to-white",
-      "shadow-[0_8px_24px_-16px_rgba(120,90,40,0.2)] ring-1 ring-amber-100/90",
-      "transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
-      "hover:-translate-y-0.5 hover:border-amber-200/80",
-      "hover:shadow-[0_14px_32px_-16px_rgba(120,90,40,0.24)]",
+      ...base,
+      "border-[var(--v2-border-strong)] bg-white",
+      "shadow-[0_8px_24px_-16px_rgba(15,23,42,0.12)] ring-1 ring-[var(--v2-border)]",
+      "hover:border-[var(--v2-border-strong)]",
+      "hover:shadow-[0_14px_32px_-16px_rgba(15,23,42,0.14)]",
     ].join(" ");
   }
 
   return [
-    "group block w-full rounded-2xl border border-neutral-900/[0.06] p-3.5 text-left",
-    "bg-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_4px_16px_-12px_rgba(15,23,42,0.08)]",
-    "transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
-    "hover:-translate-y-0.5 hover:border-neutral-900/[0.1]",
+    ...base,
+    "border-neutral-900/[0.06] bg-white/90",
+    "shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_4px_16px_-12px_rgba(15,23,42,0.08)]",
+    "hover:border-neutral-900/[0.1]",
     "hover:shadow-[0_12px_28px_-14px_rgba(15,23,42,0.12)]",
   ].join(" ");
 }
@@ -187,20 +196,23 @@ export function NotificationInboxPanel({
     const href = resolveNotificationHref(notification);
     const unread = isNotificationUnread(notification);
     const timeLabel = formatRelativeTime(notification.created_at, region.locale);
+    const semanticEvent = notificationSemanticEvent(notification.type);
 
     const content = (
       <div className="flex items-start gap-3">
         <span
-          className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${
-            unread
-              ? "bg-amber-700/80 shadow-[0_0_0_3px_rgba(180,130,60,0.12)]"
-              : "bg-transparent"
+          className={`mt-2 ${semanticDotClass(semanticEvent)} ${
+            unread ? "" : "opacity-70"
           }`}
           aria-hidden
         />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <p className="font-serif text-[15px] font-normal leading-snug text-neutral-950">
+            <p
+              className={`font-serif text-[15px] leading-snug text-neutral-950 ${
+                unread ? "font-medium" : "font-normal"
+              }`}
+            >
               {notification.title}
             </p>
             {timeLabel ? (
@@ -300,7 +312,7 @@ export function NotificationInboxPanel({
     >
       <header className="relative shrink-0 pb-3">
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[color:rgba(185,145,90,0.38)] to-transparent"
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--v2-border-strong)] to-transparent"
           aria-hidden
         />
         <div className="flex items-start justify-between gap-4 pt-0.5">
@@ -309,7 +321,7 @@ export function NotificationInboxPanel({
               {t("notifications.inbox.title")}
             </h2>
             {unreadCount > 0 ? (
-              <p className="mt-1 text-[11px] font-medium text-amber-900/70">
+              <p className="mt-1 text-[11px] font-medium text-[var(--v2-ink-muted)]">
                 {unreadCount} unread
               </p>
             ) : null}
@@ -353,7 +365,7 @@ export function NotificationInboxPanel({
       </div>
 
       {notifications.length > 0 ? (
-        <footer className="relative z-[2] mt-3 shrink-0 border-t border-[color:rgba(185,145,90,0.12)] pt-3">
+        <footer className="relative z-[2] mt-3 shrink-0 border-t border-[var(--v2-border)] pt-3">
           <Link
             href={STUDIO_INBOX_HREF}
             onClick={(event) => {
@@ -361,7 +373,7 @@ export function NotificationInboxPanel({
               deferredRouterPush(router, STUDIO_INBOX_HREF);
               onNavigate?.();
             }}
-            className="inline-flex items-center text-[13px] font-medium text-neutral-800 underline decoration-[color:rgba(185,145,90,0.35)] underline-offset-4 transition hover:text-neutral-950 hover:decoration-[color:rgba(185,145,90,0.55)]"
+            className="inline-flex items-center text-[13px] font-medium text-neutral-800 underline decoration-[var(--v2-border-strong)] underline-offset-4 transition hover:text-neutral-950 hover:decoration-[var(--v2-ink-muted)]"
           >
             {t("notifications.inbox.viewAll")}
           </Link>

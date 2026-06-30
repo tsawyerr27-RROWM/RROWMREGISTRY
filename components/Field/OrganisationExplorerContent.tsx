@@ -4,15 +4,20 @@ import Link from "next/link";
 
 import { OrganisationExplorerFilters } from "@/components/Field/OrganisationExplorerFilters";
 import { FieldExplorerDiscoveryStrip } from "@/components/Field/FieldExplorerDiscoveryStrip";
+import { FieldExplorerResultsToolbar } from "@/components/Field/FieldExplorerResultsToolbar";
+import { FieldV2EmptyState } from "@/components/Field/FieldV2EmptyState";
 import { OrganisationExplorerPagination } from "@/components/Field/OrganisationExplorerPagination";
 import { OrganisationPresenceCard } from "@/components/Field/OrganisationPresenceCard";
+import { useFieldExplorerDensity } from "@/hooks/useFieldExplorerDensity";
 import type { OrganisationExplorerRow } from "@/lib/fetch-organisation-explorer-list";
 import type {
   OrganisationExplorerRepresentedFilter,
   OrganisationExplorerSort,
   OrganisationExplorerVerifiedFilter,
 } from "@/lib/field-organisation-explorer-params";
+import { fieldExplorerDensityGridClass } from "@/lib/field-explorer-density";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { registryV2 } from "@/styles/registry-v2";
 
 type Props = {
   basePath: string;
@@ -40,6 +45,7 @@ export function OrganisationExplorerContent({
   formKey,
 }: Props) {
   const { t } = useLocalePreferences();
+  const { density, setDensity } = useFieldExplorerDensity("organisations");
   const hasActiveFilters =
     Boolean(q.trim()) ||
     Boolean(location.trim()) ||
@@ -59,41 +65,44 @@ export function OrganisationExplorerContent({
       />
 
       {total === 0 ? (
-        <div className="mt-14 rounded-[1.25rem] border border-neutral-900/[0.06] bg-white/70 px-8 py-14 text-center shadow-sm md:px-12">
-          <p className="text-sm leading-relaxed text-neutral-600">
-            {hasActiveFilters
+        <FieldV2EmptyState
+          message={
+            hasActiveFilters
               ? t("field.explorer.organisations.empty.filtered")
-              : t("field.explorer.organisations.empty.none")}
-          </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            {hasActiveFilters ? (
+              : t("field.explorer.organisations.empty.none")
+          }
+          actions={
+            hasActiveFilters ? (
               <>
-                <Link
-                  href={basePath}
-                  className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
-                >
+                <Link href={basePath} className="v2-cta-secondary !min-h-0 px-5 py-2.5 text-xs">
                   {t("field.explorer.organisations.empty.clearFilters")}
                 </Link>
-                <Link
-                  href={basePath}
-                  className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
-                >
+                <Link href={basePath} className="v2-cta-secondary !min-h-0 px-5 py-2.5 text-xs">
                   {t("field.explorer.organisations.empty.browseAll")}
                 </Link>
               </>
             ) : (
-              <Link
-                href="/get-started"
-                className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
-              >
+              <Link href="/get-started" className="v2-cta-primary !min-h-0 px-5 py-2.5 text-xs">
                 {t("nav.takePart")}
               </Link>
-            )}
-          </div>
-        </div>
+            )
+          }
+        />
       ) : (
         <>
-          <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
+          <FieldExplorerResultsToolbar
+            density={density}
+            onDensityChange={setDensity}
+            leading={
+              <p className={registryV2.type.monoId}>
+                {total} {total === 1 ? "Organisation" : "Organisations"}
+              </p>
+            }
+          />
+          <div
+            className={fieldExplorerDensityGridClass(density, "organisations")}
+            data-density={density}
+          >
             {rows.map((row) => (
               <OrganisationPresenceCard key={row.id} row={row} />
             ))}

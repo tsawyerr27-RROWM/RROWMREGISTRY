@@ -113,26 +113,13 @@ function resolveEffectiveHolder(
 }
 
 function isWorkHeldByUser(args: {
-  role: StudioCatalogueRole;
   userId: string;
   artwork: ArtworkMetricsRow;
   latestHolderByArt: Map<string, string | null>;
-  transferCount: number;
 }): boolean {
-  const { role, userId, artwork, latestHolderByArt, transferCount } = args;
+  const { userId, artwork, latestHolderByArt } = args;
   const holder = resolveEffectiveHolder(artwork, latestHolderByArt);
-  if (holder === userId) return true;
-
-  // Match studio ownership filters: authored inventory with no transfers yet.
-  if (role === "artist" && transferCount === 0) {
-    const authored = String(artwork.artist_id || "") === userId;
-    const holder = resolveEffectiveHolder(artwork, latestHolderByArt);
-    if (authored && (holder === userId || holder === null)) {
-      return true;
-    }
-  }
-
-  return false;
+  return holder === userId;
 }
 
 function computePerWorkGrowth(
@@ -229,29 +216,18 @@ function summarizeValueProgression(
 }
 
 function computeHoldDaysForWork(args: {
-  role: StudioCatalogueRole;
   artwork: ArtworkMetricsRow;
   userId: string;
   ownershipEvents: OwnershipEventRow[];
   latestHolderByArt: Map<string, string | null>;
-  transferCount: number;
 }): number | null {
-  const {
-    role,
-    artwork,
-    userId,
-    ownershipEvents,
-    latestHolderByArt,
-    transferCount,
-  } = args;
+  const { artwork, userId, ownershipEvents, latestHolderByArt } = args;
   const artworkId = String(artwork.id);
   if (
     !isWorkHeldByUser({
-      role,
       userId,
       artwork,
       latestHolderByArt,
-      transferCount,
     })
   ) {
     return null;
@@ -338,11 +314,9 @@ export function buildStudioCatalogueMetrics(args: {
   } else {
     worksHeld = artworks.filter((row) =>
       isWorkHeldByUser({
-        role,
         userId,
         artwork: row,
         latestHolderByArt,
-        transferCount: transferCounts.get(String(row.id)) || 0,
       })
     ).length;
   }
@@ -356,12 +330,10 @@ export function buildStudioCatalogueMetrics(args: {
   } else {
     for (const artwork of artworks) {
       const days = computeHoldDaysForWork({
-        role,
         artwork,
         userId,
         ownershipEvents,
         latestHolderByArt,
-        transferCount: transferCounts.get(String(artwork.id)) || 0,
       });
       if (days != null) holdSamples.push(days);
     }
@@ -410,12 +382,10 @@ export function buildStudioCatalogueMetrics(args: {
   } else {
     for (const artwork of artworks) {
       const holdDays = computeHoldDaysForWork({
-        role,
         artwork,
         userId,
         ownershipEvents,
         latestHolderByArt,
-        transferCount: transferCounts.get(String(artwork.id)) || 0,
       });
       if (holdDays == null) continue;
       if (!longestHeld || holdDays > longestHeld.holdDays) {

@@ -7,6 +7,7 @@ import { GalleryVerifyAttestationModal } from "@/components/gallery/GalleryVerif
 import { VerificationShareControl } from "@/components/Registry/VerificationShareControl";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fieldVerifyRecordHref } from "@/lib/field-nav";
+import { triggerConsequenceFeedback } from "@/lib/consequence-feedback-runtime";
 import { buildVerificationShareContext } from "@/lib/verification-share";
 
 type Props = {
@@ -50,6 +51,7 @@ export function ProvenanceGalleryVerify({
     }
     setOpen(false);
     setVerifiedJustNow(true);
+    triggerConsequenceFeedback("sealCommit");
   };
 
   const shareContext = buildVerificationShareContext({

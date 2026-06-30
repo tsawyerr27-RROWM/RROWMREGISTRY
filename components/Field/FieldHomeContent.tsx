@@ -2,86 +2,95 @@
 
 import Link from "next/link";
 
+import { FieldV2Container } from "@/components/Field/FieldV2Container";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import {
   fieldExplorerCreativesHref,
+  fieldExplorerHref,
   fieldExplorerOrganisationsHref,
   fieldExplorerRecordsHref,
+  fieldOpportunitiesHref,
   fieldVerifyHref,
 } from "@/lib/field-nav";
-import { narrativeLayout } from "@/styles/narrative-layout";
-
-const gutter = narrativeLayout.gutter;
+import { fieldV2 } from "@/styles/field-v2";
 
 export function FieldHomeContent() {
   const { t } = useLocalePreferences();
 
+  const portals = [
+    {
+      href: fieldExplorerRecordsHref(),
+      label: t("field.explorer.tab.records"),
+      body: t("field.explorer.records.orientation"),
+      signal: "registration" as const,
+    },
+    {
+      href: fieldExplorerCreativesHref(),
+      label: t("field.explorer.tab.creatives"),
+      body: t("field.explorer.creatives.orientation"),
+      signal: "valuation" as const,
+    },
+    {
+      href: fieldExplorerOrganisationsHref(),
+      label: t("field.explorer.tab.organisations"),
+      body: t("field.explorer.organisations.orientation"),
+      signal: "transfer" as const,
+    },
+    {
+      href: fieldOpportunitiesHref(),
+      label: t("field.explorer.tab.opportunities"),
+      body: t("field.opportunities.orientation"),
+      signal: "sale" as const,
+    },
+  ];
+
   return (
-    <div className={`${gutter} pb-20 pt-8 md:pb-28 md:pt-12`}>
-      <header className="max-w-3xl">
-        <h1 className="font-serif text-[2.125rem] font-normal leading-[1.06] tracking-tight text-neutral-950 md:text-5xl md:leading-[1.05]">
+    <FieldV2Container className="pt-4 md:pt-6">
+      <header className={`relative ${fieldV2.surface.filingMajor} p-8 lg:p-12 xl:p-14`}>
+        <p className={fieldV2.type.metaLabel}>{t("nav.fieldCommand")}</p>
+        <h1 className={`${fieldV2.type.recordTitle} mt-4 max-w-3xl`}>
           {t("field.home.title")}
         </h1>
-        <p className="mt-8 max-w-2xl text-lg leading-relaxed text-neutral-600">
+        <p className={`${fieldV2.type.metaValue} mt-6 max-w-2xl text-base`}>
           {t("field.home.lede")}
         </p>
-      </header>
-
-      <div className="mt-16 grid gap-8 md:grid-cols-2 lg:mt-20 lg:gap-10">
-        <section className="rounded-[1.25rem] border border-neutral-900/[0.06] bg-white/60 p-8 shadow-[0_16px_40px_-24px_rgba(15,23,42,0.12)] backdrop-blur-sm">
-          <h2 className="font-serif text-2xl font-normal tracking-tight text-neutral-950">
-            {t("field.home.explorerHeading")}
-          </h2>
-          <p className="mt-4 text-sm leading-relaxed text-neutral-600">
-            {t("field.home.explorerBody")}
-          </p>
-          <ul className="mt-6 flex flex-col gap-2 text-sm font-medium">
-            <li>
-              <Link
-                href={fieldExplorerCreativesHref()}
-                className="text-emerald-900 underline decoration-emerald-900/25 underline-offset-[3px] hover:decoration-emerald-900/50"
-              >
-                {t("field.explorer.tab.creatives")}
-              </Link>
-            </li>
-            <li>
-              <Link
-                href={fieldExplorerOrganisationsHref()}
-                className="text-emerald-900 underline decoration-emerald-900/25 underline-offset-[3px] hover:decoration-emerald-900/50"
-              >
-                {t("field.explorer.tab.organisations")}
-              </Link>
-            </li>
-            <li>
-              <Link
-                href={fieldExplorerRecordsHref()}
-                className="text-emerald-900 underline decoration-emerald-900/25 underline-offset-[3px] hover:decoration-emerald-900/50"
-              >
-                {t("field.explorer.tab.records")}
-              </Link>
-            </li>
-          </ul>
-        </section>
-
-        <section className="rounded-[1.25rem] border border-neutral-900/[0.06] bg-white/60 p-8 shadow-[0_16px_40px_-24px_rgba(15,23,42,0.12)] backdrop-blur-sm">
-          <h2 className="font-serif text-2xl font-normal tracking-tight text-neutral-950">
-            {t("field.home.verifyHeading")}
-          </h2>
-          <p className="mt-4 text-sm leading-relaxed text-neutral-600">
-            {t("field.home.verifyBody")}
-          </p>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Link
+            href={fieldExplorerHref()}
+            className="v2-cta-primary inline-flex !min-h-0 px-5 py-2.5 text-xs"
+          >
+            {t("field.explorer.hub.title")}
+          </Link>
           <Link
             href={fieldVerifyHref()}
-            className="mt-6 inline-flex text-sm font-medium text-emerald-900 underline decoration-emerald-900/25 underline-offset-[3px] hover:decoration-emerald-900/50"
+            className="v2-cta-secondary inline-flex !min-h-0 px-5 py-2.5 text-xs"
           >
             {t("field.home.verifyLink")}
           </Link>
-        </section>
+        </div>
+      </header>
+
+      <div className="mt-12 grid gap-5 md:grid-cols-2">
+        {portals.map((portal) => (
+          <Link
+            key={portal.href}
+            href={portal.href}
+            className={`${fieldV2.surface.indexCard} group block p-7 md:p-8 ${fieldV2.motion.hover}`}
+          >
+            <p className={fieldV2.type.metaLabel}>{portal.label}</p>
+            <p
+              className={`${fieldV2.type.sectionTitle} mt-3 text-xl md:text-2xl`}
+            >
+              {portal.label}
+            </p>
+            <p className={`${fieldV2.type.metaValue} mt-3`}>{portal.body}</p>
+          </Link>
+        ))}
       </div>
 
-      <p className="mt-16 max-w-3xl text-sm leading-relaxed text-neutral-500">
+      <p className={`${fieldV2.type.metaValue} mt-14 max-w-2xl text-sm`}>
         {t("field.home.registryNote")}
       </p>
-    </div>
+    </FieldV2Container>
   );
 }

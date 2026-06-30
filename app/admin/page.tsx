@@ -66,42 +66,14 @@ export default function AdminPage() {
         }),
       });
 
-      const contentType = res.headers.get("content-type") ?? "";
-      const raw = await res.text();
-      let body: { error?: string; message?: string } | null = null;
-      if (contentType.includes("application/json") && raw) {
-        try {
-          body = JSON.parse(raw) as { error?: string; message?: string };
-        } catch (parseErr) {
-          console.error("[admin login] response JSON parse failed", parseErr, raw);
-        }
-      } else if (raw) {
-        console.error("[admin login] non-JSON response", {
-          status: res.status,
-          contentType,
-          bodyPreview: raw.slice(0, 200),
-        });
-      }
-
-      console.error("[admin login] response", {
-        status: res.status,
-        statusText: res.statusText,
-        contentType,
-        body: body ?? (raw || null),
-      });
-
       if (!res.ok) {
-        const isHtml = raw.trimStart().startsWith("<!DOCTYPE") || raw.trimStart().startsWith("<html");
-        const detail =
+        const body = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        setLoginError(
           (typeof body?.error === "string" && body.error.trim()) ||
-          (typeof body?.message === "string" && body.message.trim()) ||
-          (isHtml
-            ? `Login failed (HTTP ${res.status}). API route not found. Restart the dev server or redeploy.`
-            : raw.trim() && raw.length <= 300
-              ? raw.trim()
-              : null) ||
-          `Login failed (HTTP ${res.status}).`;
-        setLoginError(detail);
+            "Invalid credentials."
+        );
         setSubmitting(false);
         return;
       }
@@ -109,7 +81,6 @@ export default function AdminPage() {
       setSubmitting(false);
       setPhase("console");
     } catch (err) {
-      console.error("[admin login] exception", err);
       setLoginError(
         err instanceof Error ? err.message : "An unexpected error occurred."
       );
@@ -152,7 +123,8 @@ export default function AdminPage() {
                 Admin access
               </h1>
               <p className="mt-1.5 text-sm text-white/40">
-                Restricted to authorised personnel
+                Uses server admin credentials (ADMIN_USERNAME / ADMIN_PASSWORD),
+                not your studio login
               </p>
             </div>
 
@@ -172,7 +144,7 @@ export default function AdminPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-[15px] text-white placeholder:text-white/20 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10"
-                  placeholder="Username"
+                  placeholder="ADMIN_USERNAME value"
                 />
               </div>
               <div>

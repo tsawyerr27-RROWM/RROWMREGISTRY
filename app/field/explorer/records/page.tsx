@@ -1,3 +1,4 @@
+import { FieldV2Container } from "@/components/Field/FieldV2Container";
 import { RecordExplorerContent } from "@/components/Field/RecordExplorerContent";
 import { RecordExplorerHero } from "@/components/Field/RecordExplorerHero";
 import { fetchRecordExplorerList } from "@/lib/fetch-record-explorer-list";
@@ -41,7 +42,7 @@ export default async function FieldExplorerRecordsPage({ searchParams }: Props) 
   const formKey = `${q}|${sort}|${creative}|${organisation}|${practice}|${verified}|${certificate}`;
 
   return (
-    <div className="mx-auto w-full max-w-[min(100%,88rem)] px-4 pb-20 sm:px-6 lg:px-8">
+    <FieldV2Container className="pt-4 md:pt-6">
       <RecordExplorerHero
         searchQuery={q}
         total={total}
@@ -65,6 +66,6 @@ export default async function FieldExplorerRecordsPage({ searchParams }: Props) 
         certificate={certificate}
         formKey={formKey}
       />
-    </div>
+    </FieldV2Container>
   );
 }

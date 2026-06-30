@@ -26,6 +26,7 @@ export {
   navigateToStudioSection,
   consumePendingCreativeSection,
   consumePendingStudioSection,
+  primeCreativeSectionFromUrlQuery,
 } from "@/lib/studio-nav/creative-nav";
 
 export {

@@ -1,0 +1,56 @@
+---
+description: RROWM master product, registry semantics, design, and engineering context
+alwaysApply: true
+---
+
+# RROWM master context
+
+RROWM is **registry infrastructure for cultural works** — not a marketplace, CRM, portfolio site, or generic SaaS.
+
+## Product purpose
+
+Create **canonical truth** for cultural works: one persistent record per work that accumulates history over time.
+
+Registry semantics **outrank UI convenience**.
+
+### Governs
+
+Authorship · stewardship · provenance · certification · ownership transfer · chronology · market history
+
+### Registry rules (non-negotiable)
+
+- Sold works **stay** in the artist’s authored catalogue; they **leave** owned holdings
+- Chronology is **append-only**; historical records are **immutable**
+- Ownership follows the **canonical ledger**, not UI assumptions
+- Value chronology follows **market lifecycle rules**, not arbitrary edits
+- Corrections file forward; they do not overwrite history
+
+## Design identity
+
+**40%** cultural institution (museum / archive / trust) · **35%** luxury editorial · **25%** enterprise infrastructure
+
+Users should feel: trust, authority, cultural relevance, precision, premium quality.
+
+**UI philosophy (always):** interfaces are cultural infrastructure, not SaaS dashboards — see `rrowm-ui-philosophy.mdc`. **Semantic signals (always):** color maps to registry events — see `rrowm-semantic-signals.mdc`.
+
+### Never
+
+- Generic startup SaaS or Tailwind-template aesthetics
+- Gradients, blobs, flashy web3, playful/gimmicky UI
+- Beauty that reduces clarity or trust
+
+### Always
+
+- Visual silence, whitespace, archival precision
+- bone/parchment backgrounds · warm ivory surfaces · charcoal type · bronze accent · espresso dark sections
+- Serif display (Cormorant / editorial class) · clean sans body (Inter / Suisse class)
+- Motion: slow, deliberate, subtle — respect `prefers-reduced-motion`; v2 tokens (`revealSlow`, `ledgerAppend`, `modalFloat`)
+
+References: SSScript (cinematic), Pulze (clarity), Premier (trust), Aesop (luxury minimal), Bloomberg Terminal (execution density).
+
+## Engineering
+
+- Production-ready, modular, maintainable TypeScript
+- **Preserve business logic and registry semantics** unless explicitly asked to change them
+- Accessible, responsive, minimal scope in diffs
+- Reuse existing conventions; do not over-engineer

@@ -50,7 +50,9 @@ export function translateValueEventType(
   if (key === "secondary_sale") return t("studio.form.eventSecondarySale");
   if (key === "appraisal") return t("studio.form.eventAppraisal");
   if (key === "internal_estimate") return t("studio.form.eventInternalEstimate");
+  if (key === "value_correction") return t("studio.ledger.valueType.correction");
   if (key === "sale") return t("studio.ledger.valueType.sale");
+  if (key === "sale_value") return t("studio.ledger.valueType.sale");
   if (key === "auction") return t("studio.ledger.valueType.auction");
   return formatValueEventLabel(valueType);
 }

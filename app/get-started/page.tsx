@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+
 import { GetStartedView } from "@/components/get-started/GetStartedView";
+import { LandingPageShell } from "@/components/LandingPage/redesign";
 
 export const metadata: Metadata = {
   title: "Take part · RROWM Registry",
@@ -8,5 +10,9 @@ export const metadata: Metadata = {
 };
 
 export default function GetStartedPage() {
-  return <GetStartedView />;
+  return (
+    <LandingPageShell>
+      <GetStartedView />
+    </LandingPageShell>
+  );
 }

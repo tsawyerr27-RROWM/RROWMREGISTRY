@@ -7,14 +7,19 @@ import {
   buildDealExecutionPanelState,
   findDealExecutionTransfer,
   isAcquisitionDealExecutable,
-  mapProvenanceStatusToExecution,
   mergeExecutionIntoTerms,
   resolveDealExecution,
   resolveUserEmail,
+  type AcquisitionExecutionRecord,
   type DealExecutionRecord,
+  type ExecutionBlockReason,
 } from "@/lib/deal-execution";
 import {
+  hydrateAcquisitionExecutionFromTransfer,
+  resolveAcquisitionTransferForDeal,
   resolveOwnershipLoopForDealExecution,
+  toAcquisitionTransferContext,
+  type TransferRow,
 } from "@/lib/acquisition-ownership-loop";
 import { onDealExecuted } from "@/lib/deal-lifecycle-engine";
 import { upsertDealExecutionRecord } from "@/lib/deal-execution-records";
@@ -61,43 +66,74 @@ async function loadDealContext(
   return { deal };
 }
 
+async function loadLinkedTransfer(args: {
+  service: ReturnType<typeof createSupabaseServiceClient>;
+  deal: ReturnType<typeof mapDealRow>;
+  artworkId: string;
+  execution: AcquisitionExecutionRecord | null;
+}): Promise<TransferRow | null> {
+  return resolveAcquisitionTransferForDeal(args.service, {
+    dealId: args.deal.id,
+    artworkId: args.artworkId,
+    provenanceTransferId: args.execution?.provenance_transfer_id,
+  });
+}
+
 async function buildAcquisitionPanelState(args: {
   deal: ReturnType<typeof mapDealRow>;
   userId: string;
   service: ReturnType<typeof createSupabaseServiceClient>;
   artworkId: string;
   execution: DealExecutionRecord | null;
+  transfer: TransferRow | null;
   registryId: string | null;
   artworkTitle: string | null;
   canInitiate: boolean;
   reason: string | null;
+  reasonCode?: ExecutionBlockReason | null;
+  canResolveVerification?: boolean;
 }) {
   const acquisitionExecution =
     args.execution && "provenance_transfer_id" in args.execution
-      ? args.execution
+      ? (args.execution as AcquisitionExecutionRecord)
       : null;
 
-  const ownershipLoop = acquisitionExecution
-    ? await resolveOwnershipLoopForDealExecution(args.service, {
-        dealId: args.deal.id,
-        artworkId: args.artworkId,
-        userId: args.userId,
-        registryId: args.registryId,
-        execution: acquisitionExecution,
-      })
-    : null;
+  const hydratedExecution = hydrateAcquisitionExecutionFromTransfer({
+    deal: args.deal,
+    execution: acquisitionExecution,
+    transfer: args.transfer,
+    registryId: args.registryId,
+  });
 
-  return buildDealExecutionPanelState({
+  const ownershipLoop =
+    hydratedExecution || args.transfer
+      ? await resolveOwnershipLoopForDealExecution(args.service, {
+          deal: args.deal,
+          artworkId: args.artworkId,
+          userId: args.userId,
+          registryId: args.registryId,
+          execution: hydratedExecution,
+        })
+      : null;
+
+  const panel = buildDealExecutionPanelState({
     deal: args.deal,
     userId: args.userId,
-    execution: args.execution,
+    execution: hydratedExecution,
     registryId: args.registryId,
     artworkTitle: args.artworkTitle,
     canInitiate: args.canInitiate,
     reason: args.reason,
+    reasonCode: args.reasonCode,
+    canResolveVerification: args.canResolveVerification,
     restrictToKind: "acquisition",
     ownershipLoop,
   });
+
+  return {
+    ...panel,
+    acquisition_transfer: toAcquisitionTransferContext(args.transfer),
+  };
 }
 
 async function resolveExecutionState(args: {
@@ -115,10 +151,19 @@ async function resolveExecutionState(args: {
   if (execution && !("provenance_transfer_id" in execution)) {
     execution = null;
   }
-  let registryId: string | null = execution?.registry_id ?? null;
+
+  let acquisitionExecution =
+    execution && "provenance_transfer_id" in execution
+      ? (execution as AcquisitionExecutionRecord)
+      : null;
+
+  let registryId: string | null = acquisitionExecution?.registry_id ?? null;
   let artworkTitle: string | null = null;
   let canInitiate = false;
   let reason: string | null = null;
+  let reasonCode: ExecutionBlockReason | null = null;
+  let canResolveVerification = false;
+  let transfer: TransferRow | null = null;
 
   if (!artworkId) {
     return buildAcquisitionPanelState({
@@ -126,11 +171,13 @@ async function resolveExecutionState(args: {
       userId,
       service,
       artworkId,
-      execution,
+      execution: acquisitionExecution,
+      transfer: null,
       registryId,
       artworkTitle,
       canInitiate: false,
       reason: "No linked artwork on this deal.",
+      reasonCode: "unknown",
     });
   }
 
@@ -146,46 +193,45 @@ async function resolveExecutionState(args: {
       userId,
       service,
       artworkId,
-      execution,
+      execution: acquisitionExecution,
+      transfer: null,
       registryId,
       artworkTitle,
       canInitiate: false,
       reason: "Linked artwork could not be found.",
+      reasonCode: "unknown",
     });
   }
 
   artworkTitle = String(art.title ?? "").trim() || null;
   registryId = String(art.registry_id ?? "").trim() || registryId;
 
-  if (!execution) {
-    const transfer = await findDealExecutionTransfer(service, {
-      artworkId,
-      dealId: deal.id,
+  transfer = await loadLinkedTransfer({
+    service,
+    deal,
+    artworkId,
+    execution: acquisitionExecution,
+  });
+
+  if (!acquisitionExecution && transfer) {
+    acquisitionExecution = hydrateAcquisitionExecutionFromTransfer({
+      deal,
+      execution: null,
+      transfer,
+      registryId,
     });
-    if (transfer) {
-      execution = {
-        provenance_transfer_id: transfer.id,
-        registry_id: transfer.registry_id,
-        recorded_at: new Date().toISOString(),
-        recorded_by_user_id: userId,
-        status: mapProvenanceStatusToExecution(transfer.status),
-        recipient_user_id: acquisitionRecipientUserId(deal, userId),
-      };
-    }
-  } else if (execution && "provenance_transfer_id" in execution && execution.provenance_transfer_id) {
-    const { data: transfer } = await service
-      .from("provenance_transfers")
-      .select("id, status")
-      .eq("id", execution.provenance_transfer_id)
-      .maybeSingle();
-    if (transfer?.status) {
-      execution = {
-        ...execution,
-        status: mapProvenanceStatusToExecution(String(transfer.status)),
-        registry_id: registryId,
-      };
-    }
+  } else if (acquisitionExecution && transfer) {
+    acquisitionExecution = hydrateAcquisitionExecutionFromTransfer({
+      deal,
+      execution: acquisitionExecution,
+      transfer,
+      registryId,
+    });
   }
+
+  const hasRecordedTransfer = Boolean(
+    acquisitionExecution?.provenance_transfer_id || transfer?.id
+  );
 
   if (!isAcquisitionDealExecutable(deal)) {
     return buildAcquisitionPanelState({
@@ -193,7 +239,8 @@ async function resolveExecutionState(args: {
       userId,
       service,
       artworkId,
-      execution,
+      execution: acquisitionExecution,
+      transfer,
       registryId,
       artworkTitle,
       canInitiate: false,
@@ -201,13 +248,14 @@ async function resolveExecutionState(args: {
     });
   }
 
-  if (execution && "provenance_transfer_id" in execution && execution.provenance_transfer_id) {
+  if (hasRecordedTransfer) {
     return buildAcquisitionPanelState({
       deal,
       userId,
       service,
       artworkId,
-      execution,
+      execution: acquisitionExecution,
+      transfer,
       registryId,
       artworkTitle,
       canInitiate: false,
@@ -216,18 +264,26 @@ async function resolveExecutionState(args: {
   }
 
   if (String(art.verification_status ?? "") !== "verified") {
-    reason = "The linked work must be verified before stewardship can transfer.";
+    reason =
+      "This artwork must be verified before stewardship transfer can be executed.";
+    reasonCode = "artwork_unverified";
+    if (await isCurrentOwner(service, userId, artworkId)) {
+      canResolveVerification = true;
+    }
   } else if (!(await isCurrentOwner(service, userId, artworkId))) {
     reason =
       "Only the recorded custodian for this work may initiate the transfer.";
+    reasonCode = "not_current_owner";
   } else {
     const recipientUserId = acquisitionRecipientUserId(deal, userId);
     if (!recipientUserId) {
       reason = "Could not resolve the acquiring participant.";
+      reasonCode = "unknown";
     } else {
       const recipientEmail = await resolveUserEmail(service, recipientUserId);
       if (!recipientEmail) {
         reason = "The acquiring participant must have a contact email on file.";
+        reasonCode = "missing_recipient_email";
       } else {
         canInitiate = true;
       }
@@ -239,11 +295,14 @@ async function resolveExecutionState(args: {
     userId,
     service,
     artworkId,
-    execution,
+    execution: acquisitionExecution,
+    transfer,
     registryId,
     artworkTitle,
     canInitiate,
     reason,
+    reasonCode,
+    canResolveVerification,
   });
 }
 
@@ -326,7 +385,7 @@ export async function POST(
   });
   if (existing && "provenance_transfer_id" in existing && existing.provenance_transfer_id) {
     return NextResponse.json(
-      { error: "Execution already recorded for this deal." },
+      { error: "Transfer already filed for this deal." },
       { status: 409 }
     );
   }
@@ -338,7 +397,7 @@ export async function POST(
   });
   if (priorTransfer) {
     return NextResponse.json(
-      { error: "Execution already recorded for this deal." },
+      { error: "Transfer already filed for this deal." },
       { status: 409 }
     );
   }
@@ -468,7 +527,7 @@ export async function POST(
 
   if (updateError || !updated) {
     return NextResponse.json(
-      { error: updateError?.message ?? "Transfer recorded but deal update failed." },
+      { error: updateError?.message ?? "Transfer filed but deal update failed." },
       { status: 500 }
     );
   }

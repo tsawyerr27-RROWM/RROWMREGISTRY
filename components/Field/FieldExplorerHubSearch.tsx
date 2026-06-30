@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fieldV2 } from "@/styles/field-v2";
 import {
   FIELD_SEARCH_QUERY_PARAM,
   resolveFieldHubSearchRoute,
@@ -29,7 +30,7 @@ export function FieldExplorerHubSearch() {
         router.push(route.href);
       }}
     >
-      <label htmlFor="field-explorer-hub-q" className="text-sm font-medium text-neutral-800">
+      <label htmlFor="field-explorer-hub-q" className={fieldV2.form.label}>
         {t("field.explorer.hub.searchLabel")}
       </label>
       <div className="mt-2 flex flex-col gap-3 sm:flex-row">
@@ -41,11 +42,11 @@ export function FieldExplorerHubSearch() {
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t("field.explorer.hub.searchPlaceholder")}
           autoComplete="off"
-          className="min-w-0 flex-1 rounded-xl border border-neutral-900/[0.08] bg-white/90 px-4 py-3.5 text-sm text-neutral-900 shadow-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-emerald-900/12"
+          className={`min-w-0 flex-1 ${fieldV2.form.field} !mt-0`}
         />
         <button
           type="submit"
-          className="shrink-0 rounded-xl bg-neutral-950 px-6 py-3.5 text-sm font-medium text-white transition hover:bg-neutral-800"
+          className="v2-cta-primary inline-flex shrink-0 !min-h-0 px-6 py-3.5 text-sm"
         >
           {t("field.explorer.hub.searchSubmit")}
         </button>

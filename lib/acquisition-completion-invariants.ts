@@ -152,7 +152,7 @@ export async function assertAcquisitionCompletionInvariants(
         .from("value_events")
         .select("id")
         .eq("artwork_id", artworkId)
-        .eq("value_type", "sale")
+        .in("value_type", ["sale", "sale_value"])
         .order("created_at", { ascending: false })
         .limit(1);
 

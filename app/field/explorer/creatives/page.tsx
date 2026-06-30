@@ -1,3 +1,4 @@
+import { FieldV2Container } from "@/components/Field/FieldV2Container";
 import { CreativeExplorerContent } from "@/components/Field/CreativeExplorerContent";
 import { CreativeExplorerHero } from "@/components/Field/CreativeExplorerHero";
 import { fetchCreativeExplorerList } from "@/lib/fetch-creative-explorer-list";
@@ -34,7 +35,7 @@ export default async function FieldExplorerCreativesPage({ searchParams }: Props
   const formKey = `${q}|${sort}|${practice}|${verified}`;
 
   return (
-    <div className="mx-auto w-full max-w-[min(100%,88rem)] px-4 pb-20 sm:px-6 lg:px-8">
+    <FieldV2Container className="pt-4 md:pt-6">
       <CreativeExplorerHero
         searchQuery={q}
         total={total}
@@ -52,6 +53,6 @@ export default async function FieldExplorerCreativesPage({ searchParams }: Props
         verified={verified}
         formKey={formKey}
       />
-    </div>
+    </FieldV2Container>
   );
 }

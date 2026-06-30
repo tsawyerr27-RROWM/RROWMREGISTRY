@@ -176,9 +176,14 @@ export default function CollectorStudioPage() {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const { data: sessionData } = await sb().auth.getSession();
-      const uid = sessionData?.session?.user?.id;
-      if (!uid) return;
+      const {
+        data: { user },
+      } = await sb().auth.getUser();
+      const uid = user?.id;
+      if (!uid) {
+        if (!cancelled) setLoading(false);
+        return;
+      }
 
       setUserId(uid);
 
@@ -928,14 +933,13 @@ export default function CollectorStudioPage() {
                       status: "claimed" as OwnershipSystemStatus,
                       className: "text-amber-900/80 font-medium",
                     }
-                  : latestOwnershipByArt[r.id] ?? {
-                      status: "unassigned" as OwnershipSystemStatus,
-                      className: ownershipStatusBadge("unassigned", "light").className,
-                    };
+                  : (latestOwnershipByArt[r.id] ?? null);
                 const ownLabel = isPending
                   ? "Pending transfer"
-                  : translateOwnershipStatusLabel(ownEntry.status, t);
-                const ownClassName = ownEntry.className;
+                  : ownEntry
+                    ? translateOwnershipStatusLabel(ownEntry.status, t)
+                    : null;
+                const ownClassName = ownEntry?.className;
                 const href = isPending
                   ? r.accept_href || (r.registry_id ? `/registry/${encodeURIComponent(r.registry_id)}/ledger` : "#")
                   : r.registry_id
@@ -966,9 +970,11 @@ export default function CollectorStudioPage() {
                       <p className="mt-3 font-mono text-xs tracking-tight text-neutral-400">
                         {reg}
                       </p>
-                      <p className={`mt-3 text-sm ${ownClassName}`}>
-                        {ownLabel}
-                      </p>
+                      {ownLabel ? (
+                        <p className={`mt-3 text-sm ${ownClassName}`}>
+                          {ownLabel}
+                        </p>
+                      ) : null}
                       <div className="mt-2">
                         <OwnershipStateBadge badge={surfaceBadge} />
                       </div>

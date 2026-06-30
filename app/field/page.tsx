@@ -1,7 +1,5 @@
-import { permanentRedirect } from "next/navigation";
-
-import { FIELD_EXPLORER } from "@/lib/field-nav/paths";
+import { FieldHomeContent } from "@/components/Field/FieldHomeContent";
 
 export default function FieldHomePage() {
-  permanentRedirect(FIELD_EXPLORER);
+  return <FieldHomeContent />;
 }

@@ -35,7 +35,6 @@ import { translateProvenanceInsight } from "@/lib/archival-provenance-i18n";
 import { buildCertificateShareContext } from "@/lib/certificate-share";
 import { buildVerificationShareContext } from "@/lib/verification-share";
 import { fieldCreativeHref, fieldRecordHref } from "@/lib/field-nav";
-import { rrowmRegistrySection } from "@/styles/rrowm-theme";
 import {
   computeRegistryTrustPresentation,
   isRecordVerified,
@@ -43,6 +42,8 @@ import {
 import { OwnershipEventsChronology } from "@/components/Registry/OwnershipEventsChronology";
 import type { OwnershipTimelineEntry } from "@/lib/canonical-ownership-engine";
 import { computeRegistryIntelligence } from "@/lib/registry-intelligence";
+import { RegistryRecordHero } from "@/components/Registry/RegistryRecordHero";
+import { registryV2 } from "@/styles/registry-v2";
 
 export type PublicRegistryRecordProps = {
   artwork: {
@@ -58,6 +59,7 @@ export type PublicRegistryRecordProps = {
     verification_hash: string | null;
     timeline_hash: string | null;
     is_locked: boolean | null;
+    created_at?: string | null;
   };
   artistName: string;
   artistUserId: string | null;
@@ -250,15 +252,29 @@ export function PublicRegistryRecordView({
     isVerified: recordVerified,
   });
 
+  const verificationStatusLabel = recordVerified
+    ? t("registry.record.trust.verifiedHeadline")
+    : t("registry.record.trust.unverifiedHeadline");
+
+  const creationDate = (() => {
+    const d = artwork.created_at ?? "";
+    if (!d) return "—";
+    const parsed = new Date(d);
+    if (Number.isNaN(parsed.getTime())) return "—";
+    return parsed.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  })();
+
   return (
-    <div className="rrowm-zone-registry text-neutral-900">
-      <main className="relative mx-auto max-w-6xl px-4 py-6 sm:px-6 md:py-8 lg:px-8">
+    <div className={`${registryV2.scope} rrowm-zone-registry text-[var(--v2-ink)]`}>
+      <main className={`${registryV2.surface.page} relative mx-auto max-w-6xl px-4 py-6 sm:px-6 md:py-10 lg:px-8`}>
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[min(40vh,22rem)] bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(255,255,255,0.9),transparent_58%)]"
-          aria-hidden
-        />
-        <div className={`mb-8 flex flex-wrap items-center justify-between gap-3 ${rrowmRegistrySection.discovery}`}>
-          <p className="max-w-2xl text-sm text-neutral-600">
+          className={`mb-8 flex flex-wrap items-center justify-between gap-3 ${registryV2.surface.filing} px-4 py-3 md:px-5`}
+        >
+          <p className={`${registryV2.type.metaValue} max-w-2xl text-sm`}>
             {t("registry.record.ledgerDiscoveryNote")}
           </p>
           <div className="flex flex-wrap items-center gap-3">
@@ -271,31 +287,53 @@ export function PublicRegistryRecordView({
                   artworkTitle: acquisitionWorkLabel,
                   initialIntentId: "acquisition_interest",
                 })}
-                className="inline-flex min-h-[44px] items-center rounded-xl border border-neutral-900/[0.08] bg-white/70 px-4 py-2.5 text-sm font-medium text-neutral-800 transition hover:border-neutral-900/[0.12] hover:bg-white"
+                className="v2-cta-secondary !min-h-0 !px-4 !py-2.5 !text-xs"
               >
                 Start acquisition deal
               </Link>
             ) : null}
             <Link
               href={fieldRecordHref(artwork.registry_id)}
-              className="inline-flex rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
+              className="v2-cta-secondary !min-h-0 !px-4 !py-2.5 !text-xs"
             >
               {t("registry.record.openFieldRecord")}
             </Link>
           </div>
         </div>
 
-        <RegistryTrustPanel
-          presentation={trustPresentation}
-          variant="hero"
-          className="mb-10"
+        <RegistryRecordHero
+          imageUrl={artwork.image_url}
+          title={artwork.title || t("field.record.title")}
+          artistName={artistName}
+          artistHref={artistSlug ? fieldCreativeHref(artistSlug) : null}
+          registryId={artwork.registry_id}
+          noImageLabel={t("registry.card.noImage")}
+          fields={[
+            {
+              label: t("registry.record.field.verification"),
+              value: verificationStatusLabel,
+            },
+            {
+              label: t("registry.record.field.steward"),
+              value: heldByContent,
+            },
+            {
+              label: t("registry.record.field.creationDate"),
+              value: creationDate,
+            },
+            {
+              label: t("registry.record.field.year"),
+              value: String(artwork.year || "–"),
+            },
+          ]}
+          trustPanel={
+            <RegistryTrustPanel presentation={trustPresentation} variant="compact" />
+          }
         />
 
         {recordVerified ? (
-          <section className={`mb-10 ${rrowmRegistrySection.section}`}>
-            <p className="text-sm font-medium text-neutral-800">
-              {t("verification.share.sectionLabel")}
-            </p>
+          <section className={`mb-12 mt-10 ${registryV2.surface.filing} p-6 md:p-8`}>
+            <p className={registryV2.type.metaLabel}>{t("verification.share.sectionLabel")}</p>
             <VerificationShareControl
               context={verificationShareContext}
               className="mt-4"
@@ -303,125 +341,76 @@ export function PublicRegistryRecordView({
           </section>
         ) : null}
 
-        <div className="mb-16 grid gap-10 lg:grid-cols-12 lg:gap-14 lg:items-start">
-          <div className="lg:col-span-7">
-            <div className={`${rrowmRegistrySection.artworkFrame}`}>
-              {artwork.image_url ? (
-                <div className="relative aspect-[4/5] w-full bg-gradient-to-br from-neutral-100 to-neutral-200/80">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={artwork.image_url}
-                    alt=""
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              ) : (
-                <div className="flex aspect-[4/5] items-center justify-center bg-gradient-to-br from-neutral-100 via-neutral-50 to-neutral-200/60 text-sm text-neutral-500">
-                  {t("registry.card.noImage")}
-                </div>
-              )}
+        {ownershipTimeline.length > 0 ? (
+          <section className={`mb-16 ${registryV2.surface.filing} p-6 md:p-9`}>
+            <div className="v2-surface-archive-sheet pl-5 md:pl-6">
+              <h2 className={registryV2.type.sectionTitle}>
+                {t("registry.record.ownershipLineage")}
+              </h2>
+              <p className={`${registryV2.type.metaValue} mt-3 max-w-2xl`}>
+                {ownBadge.label}
+              </p>
             </div>
-          </div>
+            <OwnershipEventsChronology
+              entries={ownershipTimeline}
+              className="mt-8"
+            />
+          </section>
+        ) : null}
 
-          <div className="flex flex-col gap-8 lg:col-span-5 lg:pt-1">
-            <div className={rrowmRegistrySection.metadata}>
-              <p className="font-mono text-[11px] leading-relaxed tracking-tight text-neutral-500">
-                {artwork.registry_id}
-              </p>
-              <h1 className="mt-3 font-serif text-4xl font-normal leading-[1.08] tracking-tight text-neutral-950 md:text-[2.75rem] md:leading-[1.06]">
-                {artwork.title}
-              </h1>
-              <p className="mt-4 text-lg text-neutral-700">
-                {artistSlug ? (
-                  <Link
-                    href={fieldCreativeHref(artistSlug)}
-                    className="transition hover:text-neutral-900 hover:underline"
-                  >
-                    {artistName}
-                  </Link>
-                ) : (
-                  artistName
-                )}
-              </p>
-              <p className="mt-2 text-sm text-neutral-500">
-                {[artwork.year, artwork.medium].filter(Boolean).join(" · ") ||
-                  "–"}
-              </p>
-            </div>
-            <div className={rrowmRegistrySection.ownership}>
-              <p className={ownBadge.className}>{ownBadge.label}</p>
-              <p className="mt-2 text-sm text-neutral-600">{heldByContent}</p>
-            </div>
-            {ownershipTimeline.length > 0 ? (
-              <section className={`${rrowmRegistrySection.section} md:px-6 md:py-7`}>
-                <h2 className="font-serif text-lg font-normal text-neutral-950">
-                  Ownership chronology
-                </h2>
-                <OwnershipEventsChronology
-                  entries={ownershipTimeline}
-                  className="mt-4"
-                />
-              </section>
-            ) : null}
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-14">
+          <div className="space-y-10 lg:col-span-7">
             {artwork.description ? (
-              <section className={`${rrowmRegistrySection.section} md:px-6 md:py-7`}>
-                <h2 className="font-serif text-lg font-normal text-neutral-950">
+              <section className={`${registryV2.surface.filing} p-6 md:p-8`}>
+                <h2 className={registryV2.type.sectionTitle}>
                   {t("registry.record.aboutWork")}
                 </h2>
-                <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-neutral-600">
+                <p className={`${registryV2.type.metaValue} mt-5 whitespace-pre-wrap`}>
                   {artwork.description}
                 </p>
               </section>
             ) : null}
-          </div>
-        </div>
 
-        <div className="grid gap-12 lg:grid-cols-12 lg:gap-14">
-          <div className="space-y-10 lg:col-span-7">
-            <section className={rrowmRegistrySection.section}>
-              <h2 className="font-serif text-xl font-normal tracking-tight text-neutral-950">
+            <section className={`${registryV2.surface.filing} p-6 md:p-8`}>
+              <h2 className={registryV2.type.sectionTitle}>
                 {t("registry.record.specifications")}
               </h2>
-              <dl className="mt-6 divide-y divide-black/[0.06] text-sm">
+              <dl className="mt-6 divide-y divide-[var(--v2-border)]">
                 <div className="flex justify-between gap-6 py-4 first:pt-0">
-                  <dt className="text-neutral-500">
-                    {t("registry.record.field.medium")}
-                  </dt>
-                  <dd className="max-w-[60%] text-right text-neutral-900">
+                  <dt className={registryV2.type.metaLabel}>{t("registry.record.field.medium")}</dt>
+                  <dd className={`${registryV2.type.monoId} max-w-[60%] text-right`}>
                     {artwork.medium || "–"}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-6 py-4">
-                  <dt className="text-neutral-500">
+                  <dt className={registryV2.type.metaLabel}>
                     {t("registry.record.field.dimensions")}
                   </dt>
-                  <dd className="max-w-[60%] text-right text-neutral-900">
+                  <dd className={`${registryV2.type.monoId} max-w-[60%] text-right`}>
                     {artwork.dimensions || "–"}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-6 py-4">
-                  <dt className="text-neutral-500">
-                    {t("registry.record.field.year")}
-                  </dt>
-                  <dd className="text-right text-neutral-900">
+                  <dt className={registryV2.type.metaLabel}>{t("registry.record.field.year")}</dt>
+                  <dd className={`${registryV2.type.monoId} text-right`}>
                     {artwork.year || "–"}
                   </dd>
                 </div>
                 {editionLine ? (
                   <div className="flex justify-between gap-6 py-4">
-                    <dt className="text-neutral-500">
+                    <dt className={registryV2.type.metaLabel}>
                       {t("registry.record.field.edition")}
                     </dt>
-                    <dd className="text-right text-neutral-900">{editionLine}</dd>
+                    <dd className={`${registryV2.type.monoId} text-right`}>{editionLine}</dd>
                   </div>
                 ) : null}
               </dl>
             </section>
 
-            <section className={rrowmRegistrySection.provenance}>
-              <div className="border-b border-neutral-900/[0.06] pb-6">
+            <section className={`${registryV2.surface.filing} p-6 md:p-9`}>
+              <div className="v2-surface-archive-sheet pl-5 md:pl-6">
                 <InfoTooltip text={t("registry.record.provenanceTooltip")} />
-                <h2 className="mt-3 font-serif text-[1.75rem] font-normal tracking-tight text-neutral-950 md:text-2xl">
+                <h2 className={`${registryV2.type.sectionTitle} mt-3`}>
                   {t("registry.record.provenance")}
                 </h2>
               </div>
@@ -430,15 +419,15 @@ export function PublicRegistryRecordView({
                 className="mt-8"
               />
               {provenanceInsights.length > 0 ? (
-                <div className="mt-8 border-b border-neutral-900/[0.06] pb-8">
-                  <h3 className="font-serif text-lg font-normal text-neutral-900">
+                <div className="mt-8 border-t border-[var(--v2-border)] pt-8">
+                  <h3 className="v2-type-display text-lg text-[var(--v2-ink)]">
                     {t("registry.record.recordInsights")}
                   </h3>
                   <ul className="mt-4 space-y-3">
                     {provenanceInsights.map((ins, i) => (
                       <li
                         key={`${ins.type}-${ins.priority}-${i}`}
-                        className={`${rrowmRegistrySection.insight} text-sm leading-relaxed text-neutral-700`}
+                        className={`${registryV2.surface.metadataField} ${registryV2.type.metaValue}`}
                       >
                         {translateProvenanceInsight(ins.message, t)}
                       </li>
@@ -459,13 +448,13 @@ export function PublicRegistryRecordView({
           </div>
 
           <aside className="space-y-6 lg:col-span-5">
-            <div className={rrowmRegistrySection.certificate}>
-              <h2 className="font-serif text-lg font-normal text-neutral-950">
+            <div className={`${registryV2.surface.filingMajor} p-6 md:p-8`}>
+              <h2 className={registryV2.type.sectionTitle}>
                 {t("registry.record.certStatusTitle")}
               </h2>
-              <div className="mt-6 space-y-3 text-sm">
+              <div className={`${registryV2.type.metaValue} mt-6 space-y-3`}>
                 {!hasCertificate ? (
-                  <p className="font-medium text-neutral-900">
+                  <p className="font-medium text-[var(--v2-ink)]">
                     {t("registry.record.certNotRecorded")}
                   </p>
                 ) : certRevoked ? (
@@ -478,7 +467,7 @@ export function PublicRegistryRecordView({
                     ) : null}
                   </div>
                 ) : (
-                  <p className="font-medium text-neutral-900">
+                  <p className="font-medium text-[var(--v2-ink)]">
                     {t("registry.record.certRecorded")}
                   </p>
                 )}
@@ -492,19 +481,19 @@ export function PublicRegistryRecordView({
 
               {hasCertificate ? (
                 <div className="mt-5">
-                  <p className="mb-3 text-xs font-medium text-neutral-700">
+                  <p className={`${registryV2.type.metaLabel} mb-3`}>
                     {t("certificate.share.sectionLabel")}
                   </p>
                   <CertificateShareControl context={certificateShareContext} />
                 </div>
               ) : null}
 
-              <p className="mt-4 text-xs text-neutral-500">
+              <p className={`${registryV2.type.monoId} mt-4`}>
                 {t("registry.record.certFootnote")}
               </p>
               <Link
                 href={`/login?next=${encodeURIComponent(`/certificate/${artwork.registry_id}`)}`}
-                className="mt-4 block rounded-xl border border-neutral-200/90 bg-white px-4 py-3 text-center text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
+                className="v2-cta-secondary mt-4 block w-full !min-h-0 py-3 text-center text-xs"
               >
                 {t("registry.card.viewCertLogin")}
               </Link>
@@ -516,14 +505,14 @@ export function PublicRegistryRecordView({
               timelineHash={artwork.timeline_hash}
             />
 
-            <div className={rrowmRegistrySection.verification}>
-              <h2 className="font-serif text-lg font-normal text-neutral-950">
+            <div className={`${registryV2.surface.filing} p-6 md:p-8`}>
+              <h2 className={registryV2.type.sectionTitle}>
                 {t("registry.record.verificationTitle")}
               </h2>
               <div className="mt-6 flex flex-col gap-3">
                 <Link
                   href={`/verify/${encodeURIComponent(artwork.registry_id)}`}
-                  className="rounded-xl bg-neutral-950 px-4 py-3 text-center text-sm font-medium text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)] transition hover:bg-neutral-800"
+                  className="v2-cta-primary block py-3 text-center text-xs"
                 >
                   {t("registry.card.verifyCert")}
                 </Link>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { resolveHolderUserIdFromEvent } from "@/lib/ownership-canonical";
+import type { CreativeOwnershipFilter } from "@/lib/creative-studio-ownership-filters";
 import { ExperienceEmptyStateButton } from "@/components/ui/ExperienceEmptyState";
 import { WorkspaceRecordCard } from "@/components/Studio/WorkspaceRecordCard";
 import {
@@ -15,6 +16,11 @@ import {
   type MessageKey,
 } from "@/lib/locale-messages";
 import { workspace } from "@/styles/workspace-design";
+import {
+  semanticAccentBorderClass,
+  semanticStampClass,
+} from "@/lib/registry-semantic-signals";
+import { registryV2 } from "@/styles/registry-v2";
 
 type LatestOwner = {
   transfer_type?: string | null;
@@ -78,19 +84,23 @@ function isTransferredOut(artwork: Record<string, unknown>): boolean {
   return artwork.__is_transferred === true;
 }
 
+function isPendingOutboundTransfer(artwork: Record<string, unknown>): boolean {
+  return artwork.__pending_outbound_transfer === true;
+}
+
 type OwnershipSectionProps = {
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  filter: "all" | "needs_transfer" | "sold" | "owned_by_you";
-  onFilterChange: (value: "all" | "needs_transfer" | "sold" | "owned_by_you") => void;
+  filter: CreativeOwnershipFilter;
+  onFilterChange: (value: CreativeOwnershipFilter) => void;
   filterCounts: {
-    all: number;
-    needs_transfer: number;
-    sold: number;
     owned_by_you: number;
+    needs_transfer: number;
+    sold_transferred: number;
+    full_catalogue: number;
   };
   filteredArtworks: Record<string, unknown>[];
-  /** Rows matching ownership + artwork filters before search — empty vs no-match */
+  /** Rows matching ownership filter before search — empty vs no-match */
   totalOwnershipCount: number;
   onArtworkClick: (artwork: Record<string, unknown>) => void;
   onRegisterClick: () => void;
@@ -99,6 +109,7 @@ type OwnershipSectionProps = {
     string,
     { value_event_id: string; value_type: string; created_at: string }
   >;
+  outboundPendingArtworkIds?: Set<string>;
 };
 
 function TransferDots({
@@ -157,6 +168,7 @@ export function OwnershipSection({
   onRegisterClick,
   userId,
   saleSignals,
+  outboundPendingArtworkIds,
 }: OwnershipSectionProps) {
   const { t } = useLocalePreferences();
   const isTrulyEmpty = totalOwnershipCount === 0;
@@ -166,53 +178,52 @@ export function OwnershipSection({
   return (
     <div className="space-y-12">
       {!isTrulyEmpty ? (
-        <StudioSearchRow
-          searchQuery={searchQuery}
-          onSearchChange={onSearchChange}
-          searchPlaceholder={t("studio.search.byTitle")}
-          aside={
-            <>
-              <label className="sr-only" htmlFor="ownership-filter">
-                {t("studio.filter.ownership")}
-              </label>
-              <select
-                id="ownership-filter"
-                value={filter}
-                onChange={(e) =>
-                  onFilterChange(
-                    e.target.value as
-                      | "all"
-                      | "needs_transfer"
-                      | "sold"
-                      | "owned_by_you"
-                  )
-                }
-                className={studioFilterSelectClass("light")}
-              >
-                <option value="all">
-                  {fillMessage(t("studio.ownership.filterAll"), {
-                    count: String(filterCounts.all),
-                  })}
-                </option>
-                <option value="needs_transfer">
-                  {fillMessage(t("studio.ownership.filterNeedsTransfer"), {
-                    count: String(filterCounts.needs_transfer),
-                  })}
-                </option>
-                <option value="sold">
-                  {fillMessage(t("studio.ownership.filterSold"), {
-                    count: String(filterCounts.sold),
-                  })}
-                </option>
-                <option value="owned_by_you">
-                  {fillMessage(t("studio.ownership.filterHeldByYou"), {
-                    count: String(filterCounts.owned_by_you),
-                  })}
-                </option>
-              </select>
-            </>
-          }
-        />
+        <>
+          <StudioSearchRow
+            searchQuery={searchQuery}
+            onSearchChange={onSearchChange}
+            searchPlaceholder={t("studio.search.byTitle")}
+            aside={
+              <>
+                <label className="sr-only" htmlFor="ownership-filter">
+                  {t("studio.filter.ownership")}
+                </label>
+                <select
+                  id="ownership-filter"
+                  value={filter}
+                  onChange={(e) =>
+                    onFilterChange(e.target.value as CreativeOwnershipFilter)
+                  }
+                  className={studioFilterSelectClass("light")}
+                >
+                  <option value="owned_by_you">
+                    {fillMessage(t("studio.ownership.filterHeldByYou"), {
+                      count: String(filterCounts.owned_by_you),
+                    })}
+                  </option>
+                  <option value="needs_transfer">
+                    {fillMessage(t("studio.ownership.filterNeedsTransfer"), {
+                      count: String(filterCounts.needs_transfer),
+                    })}
+                  </option>
+                  <option value="sold_transferred">
+                    {fillMessage(t("studio.ownership.filterSoldTransferred"), {
+                      count: String(filterCounts.sold_transferred),
+                    })}
+                  </option>
+                  <option value="full_catalogue">
+                    {fillMessage(t("studio.ownership.filterFullCatalogue"), {
+                      count: String(filterCounts.full_catalogue),
+                    })}
+                  </option>
+                </select>
+              </>
+            }
+          />
+          <p className="-mt-8 text-[13px] leading-relaxed text-neutral-500">
+            {t("studio.ownership.filterSemanticsHelp")}
+          </p>
+        </>
       ) : null}
 
       {noMatches ? (
@@ -260,6 +271,12 @@ export function OwnershipSection({
 
             const saleSignal = saleSignals?.[String((artwork as { id?: unknown }).id)];
             const hasSaleSignal = Boolean(saleSignal);
+            const pendingOutbound =
+              isPendingOutboundTransfer(artwork) ||
+              Boolean(
+                artworkIdRaw != null &&
+                  outboundPendingArtworkIds?.has(String(artworkIdRaw))
+              );
             const transferCount =
               Number(
                 (artwork as { ownership_transfer_count?: unknown })
@@ -270,11 +287,13 @@ export function OwnershipSection({
             const youHold = holderIsYou(artwork, userId);
             const holder = currentHolderLabel(artwork, userId, t);
 
-            const accentBorder = hasSaleSignal
-              ? "border-l-amber-500/70"
-              : youHold && !hasSaleSignal
-                ? "border-l-emerald-500/60"
-                : "border-l-neutral-300";
+            const accentBorder = pendingOutbound
+              ? semanticAccentBorderClass("transfer")
+              : hasSaleSignal || sold
+                ? semanticAccentBorderClass("sale")
+                : youHold && !hasSaleSignal
+                  ? semanticAccentBorderClass("transfer")
+                  : "border-l-neutral-300";
 
             const transfersKey =
               transferCount === 1
@@ -298,24 +317,41 @@ export function OwnershipSection({
                 reveal={
                   <>
                     {hasSaleSignal ? (
-                      <p className="mb-3 rounded-lg border border-amber-200/90 bg-amber-50 px-2.5 py-2 text-xs font-semibold text-amber-900">
+                      <p
+                        className={`mb-3 rounded-lg border px-2.5 py-2 text-xs font-semibold ${semanticStampClass("sale")}`}
+                      >
                         {t("studio.ownership.saleLogged")}
                       </p>
                     ) : null}
                     <div className="mb-3 flex flex-wrap gap-1.5">
                       {(artwork as { verification_status?: string })
                         .verification_status === "verified" ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 ring-1 ring-emerald-200/80">
+                        <span
+                          className={`${registryV2.type.stamp} ${semanticStampClass("certification")}`}
+                        >
                           {t("studio.artworks.verified")}
                         </span>
                       ) : null}
-                      {sold ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-800 ring-1 ring-rose-200/80">
-                          {t("studio.ownership.lastEventSale")}
+                      {pendingOutbound ? (
+                        <span
+                          className={`${registryV2.type.stamp} ${semanticStampClass("transfer")}`}
+                        >
+                          Transfer pending
                         </span>
                       ) : null}
-                      {youHold ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 ring-1 ring-emerald-200/80">
+                      {sold && !pendingOutbound ? (
+                        <span
+                          className={`${registryV2.type.stamp} ${semanticStampClass("sale")}`}
+                        >
+                          {isTransferredOut(artwork)
+                            ? "Sold / transferred"
+                            : t("studio.ownership.lastEventSale")}
+                        </span>
+                      ) : null}
+                      {youHold && !pendingOutbound ? (
+                        <span
+                          className={`${registryV2.type.stamp} ${semanticStampClass("transfer")}`}
+                        >
                           {t("studio.ownership.inYourCustody")}
                         </span>
                       ) : null}

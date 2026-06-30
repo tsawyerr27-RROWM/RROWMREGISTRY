@@ -8,9 +8,11 @@ import {
   counterpartyUserIdForDeal,
   DEAL_PARTICIPANT_FALLBACK,
 } from "@/lib/deal-participant-labels";
-import type { DealTabId } from "@/components/Studio/Deals/StudioDealsWorkspace";
+import type { DealInboxTabId } from "@/lib/deal-inbox";
+import { bucketDeals } from "@/lib/deal-inbox";
 import { RrowmTabs } from "@/components/ui/RrowmTabs";
-import { rrowmButton, rrowmEconomicSurface, rrowmSurface } from "@/styles/rrowm-theme";
+import { studioV2 } from "@/styles/studio-v2";
+import { semanticStampClass } from "@/lib/registry-semantic-signals";
 
 type Props = {
   userId: string;
@@ -18,34 +20,12 @@ type Props = {
   loadError: string | null;
   deals: DealRow[];
   counterpartyLabels?: Record<string, string>;
-  activeTab: DealTabId;
-  onTabChange: (tab: DealTabId) => void;
+  activeTab: DealInboxTabId;
+  onTabChange: (tab: DealInboxTabId) => void;
   selectedDealId: string | null;
   onSelectDealId: (id: string) => void;
   onCreateDeal?: () => void;
 };
-
-type DealBucket = {
-  incoming: DealRow[];
-  outgoing: DealRow[];
-  active: DealRow[];
-  closed: DealRow[];
-};
-
-function isClosedStatus(status: string): boolean {
-  const s = String(status || "").toLowerCase().trim();
-  return s === "closed" || s === "cancelled" || s === "rejected";
-}
-
-function isActiveStatus(status: string): boolean {
-  const s = String(status || "").toLowerCase().trim();
-  return (
-    s === "accepted" ||
-    s === "proposed" ||
-    s === "under_review" ||
-    s === "countered"
-  );
-}
 
 function dealDisplayTitle(deal: DealRow): string {
   const t = String(deal.title ?? "").trim();
@@ -93,31 +73,9 @@ export function DealListPanel({
   onSelectDealId,
   onCreateDeal,
 }: Props) {
-  const buckets: DealBucket = useMemo(() => {
-    const incoming: DealRow[] = [];
-    const outgoing: DealRow[] = [];
-    const active: DealRow[] = [];
-    const closed: DealRow[] = [];
+  const buckets = useMemo(() => bucketDeals(deals, userId), [deals, userId]);
 
-    for (const d of deals) {
-      const createdBy = String(d.created_by_user_id ?? "").trim();
-      const status = String(d.status ?? "").trim();
-
-      if (isClosedStatus(status)) {
-        closed.push(d);
-        continue;
-      }
-      if (isActiveStatus(status)) {
-        active.push(d);
-      }
-      if (createdBy && createdBy !== userId) incoming.push(d);
-      if (createdBy && createdBy === userId) outgoing.push(d);
-    }
-
-    return { incoming, outgoing, active, closed };
-  }, [deals, userId]);
-
-  const tabs: { id: DealTabId; label: string; count: number }[] = [
+  const tabs: { id: DealInboxTabId; label: string; count: number }[] = [
     { id: "incoming", label: "Incoming", count: buckets.incoming.length },
     { id: "outgoing", label: "Outgoing", count: buckets.outgoing.length },
     { id: "active", label: "Active", count: buckets.active.length },
@@ -127,11 +85,9 @@ export function DealListPanel({
   const list = buckets[activeTab];
 
   return (
-    <section
-      className={rrowmEconomicSurface.dealSelectorStrip}
-      aria-label="Deal selector"
-    >
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <aside className={`${studioV2.surface.inboxRail} min-w-0`} aria-label="Deal inbox">
+      <div className="border-b border-[var(--v2-border)] px-3 py-3">
+        <p className={`${studioV2.type.railLabel} text-[9px] tracking-[0.22em]`}>Inbox</p>
         <RrowmTabs
           items={tabs}
           activeId={activeTab}
@@ -143,70 +99,69 @@ export function DealListPanel({
           <button
             type="button"
             onClick={onCreateDeal}
-            className={`${rrowmButton.secondary} shrink-0 text-[13px]`}
+            className="v2-cta-secondary mt-2.5 w-full !min-h-0 py-2 text-[9px]"
           >
             New deal
           </button>
         ) : null}
       </div>
 
-      <div className="mt-4 min-w-0">
+      <div className="min-h-0 flex-1 overflow-y-auto p-2">
         {loading ? (
-          <p className="text-[13px] text-neutral-500">Loading deals.</p>
+          <p className={studioV2.type.metaValue}>Loading deals.</p>
         ) : loadError ? (
-          <p className="text-[13px] leading-relaxed text-neutral-600">{loadError}</p>
+          <p className={studioV2.type.metaValue}>{loadError}</p>
         ) : list.length === 0 ? (
-          <div className={`${rrowmSurface.l3} px-4 py-5 text-center`}>
-            <p className="text-[13px] leading-relaxed text-neutral-500">
-              No deals in this view.
-            </p>
-            {onCreateDeal && deals.length === 0 ? (
-              <button
-                type="button"
-                onClick={onCreateDeal}
-                className={`mt-3 ${rrowmButton.primaryEconomic}`}
-              >
-                New deal
-              </button>
-            ) : null}
+          <div className={`${studioV2.surface.filingSheet} px-3 py-5 text-center`}>
+            <p className={studioV2.type.metaValue}>No deals in this view.</p>
           </div>
         ) : (
-          <div className="-mx-1 flex gap-2 overflow-x-auto overscroll-x-contain px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5">
+          <ul className="space-y-1">
             {list.map((deal) => {
               const selected = deal.id === selectedDealId;
+              const isAcquisition =
+                String(deal.type ?? "").toLowerCase() === "acquisition";
               return (
-                <button
-                  key={deal.id}
-                  type="button"
-                  onClick={() => onSelectDealId(deal.id)}
-                  aria-current={selected ? "true" : undefined}
-                  className={`min-w-[11rem] max-w-[16rem] shrink-0 px-3.5 py-3 text-left transition ${
-                    selected
-                      ? `${rrowmSurface.l2} ring-1 ring-[color:color-mix(in_srgb,var(--rrowm-zone-accent)_30%,transparent)]`
-                      : `${rrowmSurface.l3} hover:shadow-[0_8px_22px_rgba(40,25,10,0.07)]`
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-serif text-[14px] font-normal leading-snug tracking-tight text-neutral-950">
-                      {dealDisplayTitle(deal)}
+                <li key={deal.id}>
+                  <button
+                    type="button"
+                    onClick={() => onSelectDealId(deal.id)}
+                    aria-current={selected ? "true" : undefined}
+                    className={`studio-deal-inbox-item ${
+                      selected
+                        ? "studio-deal-inbox-item--active"
+                        : "studio-deal-inbox-item--idle"
+                    }`}
+                  >
+                    <div className="flex min-w-0 items-start justify-between gap-2">
+                      <p className="v2-type-display min-w-0 truncate text-left text-[13px] leading-snug text-[var(--v2-ink)]">
+                        {dealDisplayTitle(deal)}
+                      </p>
+                      <p className={`${studioV2.type.inboxItem} shrink-0 tabular-nums`}>
+                        {dealWhen(deal)}
+                      </p>
+                    </div>
+                    <p className={`${studioV2.type.metaValue} mt-1 text-left text-[11px] leading-snug`}>
+                      {dealCounterpartyLabel(userId, deal, counterpartyLabels)}
                     </p>
-                    <p className="shrink-0 text-[10px] tabular-nums text-neutral-400">
-                      {dealWhen(deal)}
-                    </p>
-                  </div>
-                  <p className="mt-1 text-[11px] leading-relaxed text-neutral-500">
-                    {dealCounterpartyLabel(userId, deal, counterpartyLabels)}
-                  </p>
-                  <p className="mt-1.5 text-[11px] leading-relaxed text-neutral-600">
-                    {dealTypeLabel(String(deal.type ?? ""))} ·{" "}
-                    {dealStatusLabel(String(deal.status ?? ""))}
-                  </p>
-                </button>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                      {isAcquisition ? (
+                        <span className={semanticStampClass("sale")}>
+                          Acquisition
+                        </span>
+                      ) : null}
+                      <span className={studioV2.type.inboxItem}>
+                        {dealTypeLabel(String(deal.type ?? ""))} ·{" "}
+                        {dealStatusLabel(String(deal.status ?? ""))}
+                      </span>
+                    </div>
+                  </button>
+                </li>
               );
             })}
-          </div>
+          </ul>
         )}
       </div>
-    </section>
+    </aside>
   );
 }

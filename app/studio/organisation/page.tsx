@@ -16,6 +16,7 @@ import {
   ORGANISATION_SECTION_LABEL_KEYS,
 } from "@/lib/studio-nav";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
+import { triggerConsequenceFeedback } from "@/lib/consequence-feedback-runtime";
 import { TestDataControls } from "@/components/Admin/TestDataControls";
 import {
   RegisterModal,
@@ -369,7 +370,7 @@ export default function GalleryDashboardPage() {
     imageFile: null,
     declared_value: "",
     currency: "",
-    value_type: "initial",
+    value_type: "initial_valuation",
   });
 
   const load = useCallback(async () => {
@@ -1536,6 +1537,10 @@ export default function GalleryDashboardPage() {
           catalogue_artist_name: catalogueName || null,
           artist_id: linkedArtistId,
           pending_artist_email: registerPendingArtistEmail.trim() || null,
+          declared_value: newArtwork.declared_value || null,
+          currency: newArtwork.currency || null,
+          value_type: newArtwork.value_type || "initial_valuation",
+          visibility_level: newArtwork.visibility_level,
         }),
       });
       const regBody = (await regRes.json().catch(() => ({}))) as {
@@ -1564,23 +1569,6 @@ export default function GalleryDashboardPage() {
           .eq("registry_id", registryId)
           .limit(1);
         artworkIdForValue = latestArtworks?.[0]?.id ?? null;
-      }
-
-      if (newArtwork.declared_value && artworkIdForValue) {
-        const { error: valueErr } = await sb().rpc("add_value_event", {
-          p_artwork_id: artworkIdForValue,
-          p_declared_value: Number(newArtwork.declared_value),
-          p_currency: String(newArtwork.currency || "").toUpperCase(),
-          p_value_type: newArtwork.value_type || "initial",
-          p_visibility_level: newArtwork.visibility_level,
-          p_note: null,
-        });
-        if (valueErr) {
-          console.warn(
-            "[gallery register] value event",
-            summarizeRpcError(valueErr)
-          );
-        }
       }
 
       const institutionFilingOk = true;
@@ -1622,7 +1610,7 @@ export default function GalleryDashboardPage() {
         imageFile: null,
         declared_value: "",
         currency: "",
-        value_type: "initial",
+        value_type: "initial_valuation",
       });
       await load();
     } catch (e) {
@@ -1676,6 +1664,7 @@ export default function GalleryDashboardPage() {
     }
     setVerifyTarget(null);
     setSuccessMessage(t("gallery.toast.verifySuccess"));
+    triggerConsequenceFeedback("sealCommit");
     await load();
   };
 
@@ -1968,6 +1957,7 @@ export default function GalleryDashboardPage() {
             ? t("gallery.toast.certificateFiled")
             : t("gallery.toast.certificateAlreadyOnFile")
         );
+        triggerConsequenceFeedback("sealCommit");
         await load();
       } catch {
         setProfileError(t("gallery.toast.certificateRetryFailed"));

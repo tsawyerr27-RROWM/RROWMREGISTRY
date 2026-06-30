@@ -37,8 +37,8 @@ const SIGN_OUT_NEXT: Record<StudioRole, string> = {
 
 const DEFAULT_ATMOSPHERE: Record<StudioRole, string> = {
   artist: workspace.atmosphere.environment,
-  collector: "ds-page-environment",
-  gallery: "ds-page-environment",
+  collector: workspace.atmosphere.environment,
+  gallery: workspace.atmosphere.environment,
 };
 
 export type StudioShellProps = {

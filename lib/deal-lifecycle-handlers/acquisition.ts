@@ -235,6 +235,9 @@ export const acquisitionHandler: DealLifecycleHandler = {
         deal: ctx.deal,
         artworkId,
         ownershipEventId: ctx.ownershipEventId ?? null,
+        sellerUserId: sellerUserId,
+        buyerUserId: buyerUserId,
+        completedAt: now,
       });
     } catch (valueError) {
       console.error("[provenance accept] deal_value_failed", {

@@ -1,16 +1,22 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import type { DealRow } from "@/lib/deals";
 import { buildStudioNewDealHref } from "@/lib/deal-create-nav";
+import {
+  bucketDeals,
+  dealBelongsToInboxTab,
+  pickDefaultDealId,
+  resolveDealInboxTab,
+  type DealInboxTabId,
+} from "@/lib/deal-inbox";
 import { DealListPanel } from "@/components/Studio/Deals/DealListPanel";
 import { DealWorkspace } from "@/components/Studio/Deals/DealWorkspace";
-import { rrowmButton, rrowmZoneClass } from "@/styles/rrowm-theme";
-import { workspace } from "@/styles/workspace-design";
+import { studioV2 } from "@/styles/studio-v2";
 
-export type DealTabId = "incoming" | "outgoing" | "active" | "closed";
+export type { DealInboxTabId as DealTabId };
 
 type Props = {
   userId: string;
@@ -25,6 +31,9 @@ function sortByUpdatedAtDesc(a: DealRow, b: DealRow): number {
 
 export function StudioDealsWorkspace({ userId, initialDealId = null }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [deals, setDeals] = useState<DealRow[]>([]);
@@ -32,7 +41,20 @@ export function StudioDealsWorkspace({ userId, initialDealId = null }: Props) {
     Record<string, string>
   >({});
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<DealTabId>("active");
+  const [activeTab, setActiveTab] = useState<DealInboxTabId>("active");
+
+  const buckets = useMemo(() => bucketDeals(deals, userId), [deals, userId]);
+
+  const syncDealQuery = useCallback(
+    (dealId: string | null) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (dealId) params.set("deal", dealId);
+      else params.delete("deal");
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
 
   const openNewDeal = () => {
     router.push(buildStudioNewDealHref());
@@ -55,12 +77,22 @@ export function StudioDealsWorkspace({ userId, initialDealId = null }: Props) {
         return;
       }
       const rows = Array.isArray(payload.deals) ? payload.deals : [];
-      setDeals(rows.slice().sort(sortByUpdatedAtDesc));
+      const sorted = rows.slice().sort(sortByUpdatedAtDesc);
+      setDeals(sorted);
       setCounterpartyLabels(
         payload.counterpartyLabels && typeof payload.counterpartyLabels === "object"
           ? payload.counterpartyLabels
           : {}
       );
+
+      const preferred =
+        pickDefaultDealId(sorted, initialDealId) ??
+        pickDefaultDealId(sorted, searchParams.get("deal"));
+      setSelectedDealId(preferred);
+      if (preferred) {
+        const deal = sorted.find((row) => row.id === preferred);
+        if (deal) setActiveTab(resolveDealInboxTab(deal, userId));
+      }
     } catch {
       setDeals([]);
       setLoadError("Could not load deals.");
@@ -74,87 +106,110 @@ export function StudioDealsWorkspace({ userId, initialDealId = null }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const selectedDeal = useMemo(
-    () => deals.find((d) => d.id === selectedDealId) ?? null,
-    [deals, selectedDealId]
-  );
-
   useEffect(() => {
     if (deals.length === 0) return;
 
-    const candidate = String(initialDealId ?? "").trim();
-    if (candidate && deals.some((d) => d.id === candidate)) {
-      setSelectedDealId(candidate);
+    const candidate = String(initialDealId ?? searchParams.get("deal") ?? "").trim();
+    if (!candidate || !deals.some((deal) => deal.id === candidate)) return;
+
+    setSelectedDealId(candidate);
+    const deal = deals.find((row) => row.id === candidate);
+    if (deal) setActiveTab(resolveDealInboxTab(deal, userId));
+  }, [deals, initialDealId, searchParams, userId]);
+
+  useEffect(() => {
+    if (!selectedDealId) return;
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [selectedDealId]);
+
+  const selectedDeal = useMemo(
+    () => deals.find((deal) => deal.id === selectedDealId) ?? null,
+    [deals, selectedDealId]
+  );
+
+  const handleSelectDeal = (id: string) => {
+    setSelectedDealId(id);
+    syncDealQuery(id);
+    const deal = deals.find((row) => row.id === id);
+    if (deal) setActiveTab(resolveDealInboxTab(deal, userId));
+  };
+
+  const handleTabChange = (tab: DealInboxTabId) => {
+    setActiveTab(tab);
+    const list = buckets[tab];
+    if (selectedDealId && list.some((deal) => deal.id === selectedDealId)) {
       return;
     }
-
-    setSelectedDealId((prev) => {
-      if (prev && deals.some((d) => d.id === prev)) return prev;
-      return deals[0]?.id ?? null;
-    });
-  }, [deals, initialDealId]);
+    const nextId = list[0]?.id ?? null;
+    setSelectedDealId(nextId);
+    syncDealQuery(nextId);
+  };
 
   const showEmptyWorkspace = !loading && !loadError && deals.length === 0;
+  const tabList = buckets[activeTab];
+  const workspaceDeal =
+    selectedDeal && dealBelongsToInboxTab(selectedDeal, userId, activeTab)
+      ? selectedDeal
+      : tabList[0] ?? selectedDeal;
 
   return (
-    <div className={`${rrowmZoneClass.economic} flex min-h-0 flex-col gap-6`}>
-      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className={workspace.type.sectionTitle}>Deals</h1>
-          <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-neutral-500">
-            A private workspace for proposals, terms, and recorded correspondence.
+    <div className={`${studioV2.scope} studio-deals-workspace flex min-w-0 w-full flex-col gap-6`}>
+      <header className="relative mb-4 flex flex-wrap items-start justify-between gap-4">
+        <div className="relative min-w-0 v2-surface-archive-sheet pl-5 md:pl-6">
+          <p className={studioV2.type.railLabel}>Execution room</p>
+          <h1 className={`${studioV2.type.commandTitle} mt-3`}>Deals</h1>
+          <p className={`${studioV2.type.metaValue} mt-3 max-w-2xl`}>
+            A private command center for proposals, terms, correspondence, and
+            registry filings.
           </p>
         </div>
         <button
           type="button"
           onClick={openNewDeal}
-          className={rrowmButton.primaryEconomic}
+          className="v2-cta-primary !min-h-0 px-5 py-3 text-xs"
         >
           New deal
         </button>
-      </div>
-
-      {!showEmptyWorkspace ? (
-        <DealListPanel
-          userId={userId}
-          loading={loading}
-          loadError={loadError}
-          deals={deals}
-          counterpartyLabels={counterpartyLabels}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          selectedDealId={selectedDealId}
-          onSelectDealId={setSelectedDealId}
-          onCreateDeal={openNewDeal}
-        />
-      ) : null}
+      </header>
 
       {showEmptyWorkspace ? (
         <section
-          className={`${workspace.panel.shell} flex min-h-[22rem] flex-col items-center justify-center px-8 py-16 text-center`}
+          className={`${studioV2.surface.filingSheetMajor} flex min-h-[22rem] flex-col items-center justify-center px-8 py-16 text-center`}
           aria-label="Deal workspace"
         >
-          <h2 className="font-serif text-xl font-normal tracking-tight text-neutral-950">
-            No deals yet
-          </h2>
-          <p className="mt-3 max-w-sm text-[14px] leading-relaxed text-neutral-500">
+          <h2 className={studioV2.type.sectionTitle}>No deals on file</h2>
+          <p className={`${studioV2.type.metaValue} mt-3 max-w-sm`}>
             Begin by registering a work, or start a private deal with any public
             Field participant.
           </p>
           <button
             type="button"
             onClick={openNewDeal}
-            className="mt-6 inline-flex items-center rounded-xl border border-neutral-900/[0.08] bg-neutral-950 px-4 py-2.5 text-[13px] font-medium text-white transition hover:bg-neutral-900"
+            className="v2-cta-primary mt-6 !min-h-0 px-5 py-3 text-xs"
           >
             New deal
           </button>
         </section>
       ) : (
-        <DealWorkspace
-          userId={userId}
-          deal={selectedDeal}
-          onDealUpdated={() => void refreshDeals()}
-        />
+        <div className={`${studioV2.surface.commandGrid} studio-deals-workspace__layout min-w-0 w-full`}>
+          <DealListPanel
+            userId={userId}
+            loading={loading}
+            loadError={loadError}
+            deals={deals}
+            counterpartyLabels={counterpartyLabels}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            selectedDealId={workspaceDeal?.id ?? selectedDealId}
+            onSelectDealId={handleSelectDeal}
+            onCreateDeal={openNewDeal}
+          />
+          <DealWorkspace
+            userId={userId}
+            deal={workspaceDeal}
+            onDealUpdated={() => void refreshDeals()}
+          />
+        </div>
       )}
     </div>
   );

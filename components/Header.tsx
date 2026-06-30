@@ -10,24 +10,60 @@ import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { FooterRegionSelector } from "@/components/LandingPage/FooterRegionSelector";
 import { NotificationInboxBell } from "@/components/notifications/NotificationInboxBell";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
-import { fieldExplorerRecordsHref } from "@/lib/field-nav";
+import {
+  fieldExplorerHref,
+  fieldExplorerRecordsHref,
+} from "@/lib/field-nav";
 
 const LOGIN_FALLBACK = "/login";
+const COMMAND_BAR_THRESHOLD = 72;
 
-/** Scroll distance (px) after which the header is near minimum opacity */
-const FADE_RANGE = 420;
+function SearchIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+      />
+    </svg>
+  );
+}
+
+function ProfileIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+      />
+    </svg>
+  );
+}
 
 export default function Header() {
   const sb = useSupabaseBrowserLazy();
   const { regionId, setRegionId, t } = useLocalePreferences();
   const regionLabelId = useId();
   const pathname = usePathname();
-  /** Site chrome is hidden when printing certificates (Save as PDF / print). */
   const hideChromeWhenPrinting = pathname?.startsWith("/certificate") ?? false;
   const [scrollY, setScrollY] = useState(0);
-  const [hovered, setHovered] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
-  /** actor_profiles.role — drives studio destination */
   const [actorRole, setActorRole] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -35,14 +71,26 @@ export default function Header() {
   const isFieldSurface =
     pathname === "/field" || pathname?.startsWith("/field/");
 
+  const isHome = pathname === "/";
+
+  const isAuthPage =
+    pathname?.startsWith("/login") ||
+    pathname?.startsWith("/signup") ||
+    pathname?.startsWith("/get-started");
+
+  const isMarketingPublic =
+    isHome ||
+    isAuthPage ||
+    pathname === "/about" ||
+    pathname?.startsWith("/about/") ||
+    pathname === "/contact";
+
   const isRegistrySurface =
     pathname?.startsWith("/registry") ||
     pathname?.startsWith("/artist") ||
     pathname?.startsWith("/artwork") ||
     pathname?.startsWith("/verify") ||
     pathname?.startsWith("/certificate");
-
-  const isPublicDiscoverySurface = isFieldSurface || isRegistrySurface;
 
   const isAppShell =
     pathname?.startsWith("/dashboard") ||
@@ -56,10 +104,21 @@ export default function Header() {
     pathname === "/personal-archive" ||
     pathname?.startsWith("/admin");
 
-  const isAuthPage =
-    pathname?.startsWith("/login") ||
-    pathname?.startsWith("/signup") ||
-    pathname?.startsWith("/get-started");
+  const onStudio =
+    isAppShell ||
+    pathname === "/studio" ||
+    pathname?.startsWith("/dashboard");
+
+  const onRegistry =
+    isRegistrySurface ||
+    pathname?.startsWith("/field/explorer/records") ||
+    pathname?.startsWith("/field/record/");
+
+  const onAbout =
+    pathname === "/about" || pathname?.startsWith("/about/");
+
+  const onField =
+    isFieldSurface && !onRegistry && !onAbout;
 
   useEffect(() => {
     let ticking = false;
@@ -122,27 +181,18 @@ export default function Header() {
         ? "/studio/organisation"
         : "/studio/creative";
 
+  const studioNavHref = hydrated && session ? studioHref : LOGIN_FALLBACK;
+
   const loginHref =
     pathname && pathname !== "/login"
       ? `${LOGIN_FALLBACK}?next=${encodeURIComponent(pathname)}`
       : LOGIN_FALLBACK;
-
-  const fadeT = Math.min(1, scrollY / FADE_RANGE);
-  /** Whole header fades out as you scroll; hover brings it back for interaction */
-  const baseShellOpacity = Math.max(0.14, 1 - fadeT * 0.86);
-  const shellOpacity = hovered ? Math.max(baseShellOpacity, 0.96) : baseShellOpacity;
 
   const onArtistStudio =
     pathname === "/studio/creative" ||
     pathname === "/studio" ||
     pathname?.startsWith("/dashboard");
 
-  const onAbout =
-    pathname === "/about" || pathname?.startsWith("/about/");
-
-  const onField = isFieldSurface;
-
-  /** Certificates / Ownership studio uses a dark bg — dashboard page dispatches this */
   const [dashboardHeaderDark, setDashboardHeaderDark] = useState(false);
 
   useEffect(() => {
@@ -167,30 +217,12 @@ export default function Header() {
 
   const headerOnDarkStudio = onArtistStudio && dashboardHeaderDark;
 
-  /** Dark nav copy reads on frosted glass over light page content site-wide */
-  const linkClass = headerOnDarkStudio
-    ? "text-sm font-medium text-white hover:text-white/90 rrowm-motion transition-colors whitespace-nowrap [text-shadow:0_1px_3px_rgba(0,0,0,0.55)]"
-    : "text-sm font-medium text-neutral-800 hover:text-neutral-950 rrowm-motion transition-colors whitespace-nowrap [text-shadow:0_1px_0_rgba(255,255,255,0.65)]";
+  const commandBarFloated =
+    headerOnDarkStudio ||
+    scrollY > COMMAND_BAR_THRESHOLD ||
+    (isMarketingPublic && scrollY > 48);
 
-  const subtleClass = headerOnDarkStudio
-    ? "text-sm font-medium text-white/80 hover:text-white rrowm-motion transition-colors whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.45)]"
-    : "text-sm font-medium text-neutral-500 hover:text-neutral-900 rrowm-motion transition-colors whitespace-nowrap [text-shadow:0_1px_0_rgba(255,255,255,0.5)]";
-
-  /** Slightly richer frost on registry-style routes; still light enough for dark nav text */
-  const glassTint = headerOnDarkStudio
-    ? "from-black/55 via-black/30 to-black/12"
-    : isPublicDiscoverySurface
-      ? "from-white/[0.42] via-white/[0.14] to-white/[0.02]"
-      : isAppShell
-        ? "from-white/[0.38] via-white/[0.16] to-white/[0.04]"
-        : "from-white/[0.45] via-white/[0.12] to-transparent";
-
-  const borderGlass = headerOnDarkStudio
-    ? "shadow-[inset_0_-12px_24px_-16px_rgba(0,0,0,0.35)]"
-    : "shadow-[inset_0_-1px_0_0_rgba(255,255,255,0.55),inset_0_-16px_32px_-20px_rgba(148,163,184,0.12)]";
-
-  const handleMouseEnter = useCallback(() => setHovered(true), []);
-  const handleMouseLeave = useCallback(() => setHovered(false), []);
+  const commandBarTone: "light" | "dark" = commandBarFloated ? "dark" : "light";
 
   const handleSignOut = useCallback(async () => {
     if (signingOut) return;
@@ -202,171 +234,168 @@ export default function Header() {
     }
   }, [signingOut]);
 
+  const navLinkClass = (active: boolean) =>
+    `rrowm-command-bar-nav-link v2-motion-hover-subtle ${
+      active
+        ? "rrowm-command-bar-nav-link--active font-medium"
+        : "rrowm-command-bar-nav-link--idle"
+    }`;
+
+  const utilityLinkClass = commandBarFloated
+    ? "hidden text-[11px] font-medium tracking-wide text-white/70 transition hover:text-white sm:inline"
+    : "hidden text-[11px] font-medium tracking-wide text-neutral-500 transition hover:text-neutral-900 sm:inline";
+
+  const commandNavItems = [
+    { href: studioNavHref, label: t("nav.studio"), active: onStudio },
+    { href: fieldExplorerRecordsHref(), label: t("nav.registry"), active: onRegistry },
+    { href: "/field", label: t("nav.fieldCommand"), active: onField },
+    { href: "/about", label: t("nav.about"), active: onAbout },
+  ] as const;
+
   return (
     <header
       data-rrowm-chrome-suppress-invite-signup
-      className={`ds-z-floating fixed left-0 right-0 top-0 transition-opacity duration-500 ease-out${
-        hideChromeWhenPrinting ? " print:hidden" : ""
-      }`}
-      style={{ opacity: shellOpacity }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      className={`ds-z-floating fixed inset-x-0 top-0 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-5${
+        isMarketingPublic ? " rrowm-public" : ""
+      }${hideChromeWhenPrinting ? " print:hidden" : ""}`}
     >
-      {/* Liquid glass layer */}
       <div
-        className={`pointer-events-none absolute inset-0 bg-gradient-to-b ${glassTint} backdrop-blur-xl backdrop-saturate-[1.08] md:backdrop-blur-2xl ${borderGlass}`}
-        aria-hidden
-      />
-      {/* Specular highlight */}
-      <div
-        className={`pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent opacity-70 ${
-          headerOnDarkStudio ? "via-white/15" : "via-white/40"
-        } to-transparent`}
-        aria-hidden
-      />
-
-      <nav className="relative mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:gap-4 sm:px-6 sm:py-5 md:py-5">
-        <Link
-          href="/"
-          className="group relative z-10 flex shrink-0 items-center"
-          aria-label="RROWM home"
+        className={`rrowm-command-bar mx-auto max-w-[min(100%,88rem)] transition-[padding] duration-500 ${
+          commandBarFloated ? "rrowm-command-bar--floated" : "rrowm-command-bar--quiet"
+        }`}
+      >
+        <div
+          className={`relative overflow-hidden transition-[border-radius,padding,box-shadow] duration-500 ${
+            commandBarFloated
+              ? "v2-surface-glass-dark v2-shadow-cinematic v2-radius-pill px-4 py-2.5 sm:px-6 sm:py-3"
+              : "px-1 py-2 sm:px-2 sm:py-3"
+          }`}
         >
-          <RrowmLogo
-            priority
-            sizes="(max-width: 767px) min(160px, 42vw), 170px"
-            className={`h-11 w-auto max-w-[160px] object-contain object-left transition-opacity duration-300 md:h-12 md:max-w-[170px] group-hover:opacity-90 motion-reduce:transition-none ${
-              headerOnDarkStudio
-                ? "[filter:brightness(0)_invert(1)_drop-shadow(0_1px_1px_rgb(0_0_0/0.45))]"
-                : ""
-            }`}
+          <div
+            className="rrowm-command-bar__signal pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[var(--v2-cobalt-signal)] to-transparent opacity-40"
+            aria-hidden
           />
-        </Link>
 
-        <div className="relative z-10 hidden min-w-0 flex-1 items-center justify-center gap-8 md:flex md:gap-10">
-          <Link
-            href="/field"
-            className={
-              onField
-                ? `${linkClass} font-semibold underline decoration-neutral-400 underline-offset-4 ${
-                    headerOnDarkStudio ? "decoration-white/40" : ""
-                  }`
-                : linkClass
-            }
-          >
-            {t("nav.field")}
-          </Link>
-          <Link href={fieldExplorerRecordsHref()} className={linkClass}>
-            {t("nav.registry")}
-          </Link>
-          <Link
-            href="/about"
-            className={
-              onAbout
-                ? `${linkClass} font-semibold underline decoration-neutral-400 underline-offset-4 ${
-                    headerOnDarkStudio ? "decoration-white/40" : ""
-                  }`
-                : linkClass
-            }
-          >
-            {t("nav.about")}
-          </Link>
-        </div>
-
-        <div className="relative z-10 flex min-w-0 flex-1 items-center gap-3 overflow-x-auto px-1 [-ms-overflow-style:none] [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden">
-          <Link
-            href="/field"
-            className={
-              onField
-                ? `${linkClass} text-xs font-semibold underline decoration-neutral-400 underline-offset-4`
-                : `${linkClass} text-xs`
-            }
-          >
-            {t("nav.field")}
-          </Link>
-          <Link href={fieldExplorerRecordsHref()} className={`${linkClass} text-xs`}>
-            {t("nav.registry")}
-          </Link>
-          <Link
-            href="/about"
-            className={
-              onAbout
-                ? `${linkClass} text-xs font-semibold underline decoration-neutral-400 underline-offset-4`
-                : `${linkClass} text-xs`
-            }
-          >
-            {t("nav.about")}
-          </Link>
-          {hydrated && session ? (
-            <Link href="/studio/account" className={`${subtleClass} text-xs`}>
-              {t("nav.account")}
+          <nav className="relative flex items-center justify-between gap-3 sm:gap-4">
+            <Link
+              href="/"
+              className="group relative z-10 flex shrink-0 items-center v2-motion-hover-subtle"
+              aria-label="RROWM home"
+            >
+              <RrowmLogo
+                priority
+                sizes="(max-width: 767px) min(188px, 48vw), 220px"
+                className={`h-11 w-auto max-w-[min(188px,48vw)] object-contain object-left transition-[opacity,filter] duration-500 group-hover:opacity-90 motion-reduce:transition-none md:h-[3.35rem] md:max-w-[220px] ${
+                  commandBarFloated
+                    ? "[filter:brightness(0)_invert(1)_drop-shadow(0_1px_1px_rgb(0_0_0/0.45))]"
+                    : ""
+                }`}
+              />
             </Link>
-          ) : null}
-        </div>
 
-        <div className="relative z-10 flex shrink-0 items-center gap-2 sm:gap-3">
-          <div className="hidden min-w-[11rem] lg:block xl:min-w-[12rem]">
-            <span id={regionLabelId} className="sr-only">
-              {t("nav.regionLabel")}
-            </span>
-            <FooterRegionSelector
-              regionId={regionId}
-              onRegionChange={setRegionId}
-              labelId={regionLabelId}
-              menuPlacement="down"
-              className="md:max-w-none"
-            />
-          </div>
-          {hydrated && session ? (
-            <>
-              <NotificationInboxBell tone={headerOnDarkStudio ? "dark" : "light"} />
+            <div
+              className={`relative z-10 hidden min-w-0 flex-1 items-center justify-center md:flex ${
+                commandBarFloated ? "rrowm-command-bar-capsule gap-7 px-8 py-2" : "gap-8 lg:gap-10"
+              }`}
+            >
+              {commandNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={navLinkClass(item.active)}
+                  aria-current={item.active ? "page" : undefined}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+
+            <div className="relative z-10 flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden">
+              {commandNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`${navLinkClass(item.active)} text-[10px]`}
+                  aria-current={item.active ? "page" : undefined}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+
+            <div className="relative z-10 flex shrink-0 items-center gap-1 sm:gap-2">
               <Link
-                href="/studio/account"
-                className={`${subtleClass} hidden whitespace-nowrap sm:inline`}
+                href={fieldExplorerHref()}
+                className="rrowm-command-bar-icon-btn v2-motion-hover-subtle"
+                aria-label={t("nav.search")}
               >
-                {t("nav.myAccount")}
+                <SearchIcon className="h-[1.125rem] w-[1.125rem]" />
               </Link>
-              <Link
-                href={studioHref}
-                className={`hidden rounded-xl px-4 py-2 text-sm font-medium rrowm-motion transition-[transform,background-color,box-shadow] sm:inline-flex ${
-                  headerOnDarkStudio
-                    ? "bg-white text-neutral-950 shadow-[0_12px_36px_-16px_rgba(0,0,0,0.4)] hover:bg-white/95"
-                    : "border border-neutral-800/20 bg-neutral-100/90 text-neutral-900 shadow-[0_8px_24px_-18px_rgba(0,0,0,0.2)] hover:bg-neutral-200/90"
-                }`}
-              >
-                {t("nav.stewardship")}
-              </Link>
-              <button
-                type="button"
-                disabled={signingOut}
-                aria-busy={signingOut}
-                className={`relative z-20 min-h-[44px] min-w-[44px] touch-manipulation rounded-xl px-3 py-2 text-xs font-medium transition sm:min-h-0 sm:min-w-0 sm:px-4 sm:text-sm disabled:cursor-wait ${subtleClass}`}
-                onClick={() => void handleSignOut()}
-              >
-                {signingOut ? "Signing out…" : t("nav.signOut")}
-              </button>
-            </>
-          ) : (
-            <>
-              <Link
-                href={loginHref}
-                className={`${subtleClass} hidden sm:inline`}
-              >
-                {t("nav.signIn")}
-              </Link>
-              <Link
-                href="/get-started"
-                className={`rounded-xl px-5 py-2.5 text-sm font-medium shadow-[0_12px_32px_-18px_rgba(0,0,0,0.15)] rrowm-motion transition-[transform,background-color,box-shadow] ${
-                  isAuthPage
-                    ? "bg-white/70 text-neutral-900 backdrop-blur-md hover:bg-white/90"
-                    : "bg-neutral-950 text-white hover:bg-neutral-900"
-                }`}
-              >
-                {t("nav.takePart")}
-              </Link>
-            </>
-          )}
+
+              {hydrated && session ? (
+                <>
+                  <NotificationInboxBell tone={commandBarTone} />
+                  <Link
+                    href="/studio/account"
+                    className="rrowm-command-bar-icon-btn v2-motion-hover-subtle"
+                    aria-label={t("nav.myAccount")}
+                  >
+                    <ProfileIcon className="h-[1.125rem] w-[1.125rem]" />
+                  </Link>
+                  <span className="sr-only sm:not-sr-only sm:inline">
+                    <Link href="/studio/account" className={utilityLinkClass}>
+                      {t("nav.account")}
+                    </Link>
+                  </span>
+                  <div className="hidden min-w-[10rem] xl:block">
+                    <span id={regionLabelId} className="sr-only">
+                      {t("nav.regionLabel")}
+                    </span>
+                    <FooterRegionSelector
+                      regionId={regionId}
+                      onRegionChange={setRegionId}
+                      labelId={regionLabelId}
+                      menuPlacement="down"
+                      className="md:max-w-none"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    disabled={signingOut}
+                    aria-busy={signingOut}
+                    className={`min-h-[44px] touch-manipulation rounded-full px-3 py-2 text-[10px] font-medium uppercase tracking-[0.16em] transition disabled:cursor-wait sm:min-h-0 sm:px-3.5 ${
+                      commandBarFloated
+                        ? "text-white/55 hover:text-white/90 disabled:text-white/30"
+                        : "text-neutral-500 hover:text-neutral-900 disabled:text-neutral-300"
+                    }`}
+                    onClick={() => void handleSignOut()}
+                  >
+                    {signingOut ? "…" : t("nav.signOut")}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href={loginHref} className={utilityLinkClass}>
+                    {t("nav.signIn")}
+                  </Link>
+                  <Link
+                    href="/get-started"
+                    className={`v2-motion-hover-subtle rounded-full px-4 py-2 text-[11px] font-medium uppercase tracking-[0.14em] transition sm:px-5 sm:py-2.5 sm:text-xs ${
+                      commandBarFloated
+                        ? "border border-white/18 bg-white/10 text-white hover:bg-white/16"
+                        : isAuthPage
+                          ? "border border-black/8 bg-white/70 text-neutral-900 backdrop-blur-md hover:bg-white/90"
+                          : "border border-black/10 bg-neutral-950 text-white hover:bg-neutral-900"
+                    }`}
+                  >
+                    {t("nav.takePart")}
+                  </Link>
+                </>
+              )}
+            </div>
+          </nav>
         </div>
-      </nav>
+      </div>
     </header>
   );
 }

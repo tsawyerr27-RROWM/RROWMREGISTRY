@@ -195,10 +195,13 @@ export const rrowmEconomicSurface = {
 
 /** Deal workspace — negotiation ledger + reference panels */
 export const rrowmDealSurface = {
-  workspace: `${rrowmFloatingBlock.hero} overflow-hidden`,
-  header: "border-b border-neutral-900/[0.06] px-7 py-6 md:px-9 lg:px-11",
+  workspace: rrowmFloatingBlock.hero,
+  /** Header + action bar stick together below the site header */
+  stickyChrome:
+    "sticky top-[calc(5rem+env(safe-area-inset-top))] z-20 border-b border-neutral-900/[0.06] bg-white/88 shadow-[0_10px_36px_rgba(25,20,10,0.07)] backdrop-blur-md",
+  header: "px-7 py-6 md:px-9 lg:px-11",
   /** Full-width manuscript ledger — generous horizontal breathing room */
-  ledger: `${rrowmSurface.l1} min-h-0 p-7 md:p-10 lg:px-12 lg:py-11`,
+  ledger: `${rrowmSurface.l1} p-7 md:p-10 lg:px-12 lg:py-11`,
   ledgerEventMajor: `${rrowmFloatingBlock.base} px-6 py-6 md:px-8 md:py-7`,
   ledgerEventTerminal: `${rrowmFloatingBlock.hero} px-6 py-6 md:px-8 md:py-7`,
   ledgerEventMinor: `${rrowmFloatingBlock.compact} px-5 py-3.5 md:ml-10 md:max-w-[42rem]`,
@@ -206,9 +209,9 @@ export const rrowmDealSurface = {
   referencePanel: `${rrowmFloatingBlock.compact} p-4 md:p-5`,
   sidePanel: `${rrowmFloatingBlock.base} p-5`,
   correspondence: `${rrowmFloatingBlock.compact} p-6 md:p-7`,
-  /** Sticky status actions — sits below deal header, above ledger */
+  /** Status actions — nested inside stickyChrome below deal header */
   actionBar:
-    "sticky top-0 z-10 border-b border-neutral-900/[0.06] bg-white/88 px-7 py-4 shadow-[0_10px_36px_rgba(25,20,10,0.07)] backdrop-blur-md md:px-9 lg:px-11",
+    "border-t border-neutral-900/[0.06] px-7 py-4 md:px-9 lg:px-11",
 } as const;
 
 /** Registry record sections */

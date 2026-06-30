@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { DEAL_PARTICIPANT_FALLBACK } from "@/lib/deal-participant-labels";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
-import { rrowmDealSurface } from "@/styles/rrowm-theme";
+import { studioV2 } from "@/styles/studio-v2";
 
 type CounterpartyRole = "artist" | "collector" | "gallery" | "unknown";
 
@@ -248,10 +248,8 @@ export function DealCounterpartyPanel({ counterpartyUserId }: Props) {
   }
 
   return (
-    <div className={rrowmDealSurface.referencePanel}>
-      <h3 className="font-serif text-base font-normal tracking-tight text-neutral-950">
-        Counterparty
-      </h3>
+    <div className={`${studioV2.surface.filingSheet} p-5 md:p-6`}>
+      <h3 className={studioV2.type.sectionTitle}>Counterparty</h3>
       <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-neutral-900">

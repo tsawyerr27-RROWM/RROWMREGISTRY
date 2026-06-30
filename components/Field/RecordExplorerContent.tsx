@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 
-import { RecordExplorerCard } from "@/components/Field/RecordExplorerCard";
 import { FieldExplorerDiscoveryStrip } from "@/components/Field/FieldExplorerDiscoveryStrip";
+import { FieldExplorerResultsToolbar } from "@/components/Field/FieldExplorerResultsToolbar";
+import { RecordExplorerCard } from "@/components/Field/RecordExplorerCard";
 import { RecordExplorerFilters } from "@/components/Field/RecordExplorerFilters";
 import { RecordExplorerPagination } from "@/components/Field/RecordExplorerPagination";
+import { FieldV2EmptyState } from "@/components/Field/FieldV2EmptyState";
+import { useFieldExplorerDensity } from "@/hooks/useFieldExplorerDensity";
 import type { RecordExplorerRow } from "@/lib/fetch-record-explorer-list";
 import {
   recordExplorerQueryString,
@@ -13,7 +16,9 @@ import {
   type RecordExplorerSort,
   type RecordExplorerVerifiedFilter,
 } from "@/lib/field-record-explorer-params";
+import { fieldExplorerDensityGridClass } from "@/lib/field-explorer-density";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { registryV2 } from "@/styles/registry-v2";
 
 type Props = {
   basePath: string;
@@ -45,6 +50,7 @@ export function RecordExplorerContent({
   formKey,
 }: Props) {
   const { t } = useLocalePreferences();
+  const { density, setDensity } = useFieldExplorerDensity("records");
   const hasActiveFilters =
     Boolean(q.trim()) ||
     Boolean(creative) ||
@@ -82,41 +88,45 @@ export function RecordExplorerContent({
       />
 
       {total === 0 ? (
-        <div className="mt-14 rounded-[1.25rem] border border-neutral-900/[0.06] bg-white/70 px-8 py-14 text-center shadow-sm md:px-12">
-          <p className="text-sm leading-relaxed text-neutral-600">
-            {hasActiveFilters
+        <FieldV2EmptyState
+          message={
+            hasActiveFilters
               ? t("field.explorer.records.empty.filtered")
-              : t("field.explorer.records.empty.none")}
-          </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            {hasActiveFilters ? (
+              : t("field.explorer.records.empty.none")
+          }
+          actions={
+            hasActiveFilters ? (
               <>
-                <Link
-                  href={basePath}
-                  className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
-                >
+                <Link href={basePath} className="v2-cta-secondary !min-h-0 px-5 py-2.5 text-xs">
                   {t("field.explorer.records.empty.clearFilters")}
                 </Link>
-                <Link
-                  href={browseAllHref}
-                  className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
-                >
+                <Link href={browseAllHref} className="v2-cta-secondary !min-h-0 px-5 py-2.5 text-xs">
                   {t("field.explorer.records.empty.browseAll")}
                 </Link>
               </>
             ) : (
-              <Link
-                href="/get-started"
-                className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
-              >
+              <Link href="/get-started" className="v2-cta-primary !min-h-0 px-5 py-2.5 text-xs">
                 {t("nav.takePart")}
               </Link>
-            )}
-          </div>
-        </div>
+            )
+          }
+        />
       ) : (
         <>
-          <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
+          <FieldExplorerResultsToolbar
+            density={density}
+            onDensityChange={setDensity}
+            leading={
+              <p className={registryV2.type.monoId}>
+                {total} {total === 1 ? "record" : "records"}
+              </p>
+            }
+          />
+
+          <div
+            className={fieldExplorerDensityGridClass(density, "records")}
+            data-density={density}
+          >
             {rows.map((row) => (
               <RecordExplorerCard key={row.id} row={row} />
             ))}

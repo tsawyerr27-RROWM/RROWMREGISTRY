@@ -1,4 +1,5 @@
 import type { DealType } from "@/lib/deal-status";
+import { currencyLabel } from "@/lib/currencies";
 
 export type DealIntentId =
   | "commission_work"
@@ -14,6 +15,7 @@ export type DealTermFieldType =
   | "date"
   | "number"
   | "currency"
+  | "currency_code"
   | "select";
 
 export type DealTermField = {
@@ -31,6 +33,12 @@ export type DealIntent = {
   summary: string;
   dealType: DealType;
   fields: DealTermField[];
+};
+
+const CURRENCY_DEAL_TERM_FIELD: DealTermField = {
+  key: "currency",
+  label: "Currency",
+  type: "currency_code",
 };
 
 function titleFromSubject(terms: Record<string, string>): string | null {
@@ -64,18 +72,7 @@ export const DEAL_INTENTS: DealIntent[] = [
         type: "currency",
         placeholder: "0",
       },
-      {
-        key: "currency",
-        label: "Currency",
-        type: "select",
-        options: [
-          { value: "USD", label: "USD" },
-          { value: "EUR", label: "EUR" },
-          { value: "GBP", label: "GBP" },
-          { value: "CHF", label: "CHF" },
-          { value: "JPY", label: "JPY" },
-        ],
-      },
+      CURRENCY_DEAL_TERM_FIELD,
       {
         key: "deadline",
         label: "Target completion",
@@ -114,18 +111,7 @@ export const DEAL_INTENTS: DealIntent[] = [
         type: "currency",
         placeholder: "0",
       },
-      {
-        key: "currency",
-        label: "Currency",
-        type: "select",
-        options: [
-          { value: "USD", label: "USD" },
-          { value: "EUR", label: "EUR" },
-          { value: "GBP", label: "GBP" },
-          { value: "CHF", label: "CHF" },
-          { value: "JPY", label: "JPY" },
-        ],
-      },
+      CURRENCY_DEAL_TERM_FIELD,
       {
         key: "payment_terms",
         label: "Payment terms",
@@ -278,18 +264,7 @@ export const DEAL_INTENTS: DealIntent[] = [
         type: "currency",
         placeholder: "0",
       },
-      {
-        key: "currency",
-        label: "Currency",
-        type: "select",
-        options: [
-          { value: "USD", label: "USD" },
-          { value: "EUR", label: "EUR" },
-          { value: "GBP", label: "GBP" },
-          { value: "CHF", label: "CHF" },
-          { value: "JPY", label: "JPY" },
-        ],
-      },
+      CURRENCY_DEAL_TERM_FIELD,
       {
         key: "notes",
         label: "Notes",
@@ -367,6 +342,11 @@ export function buildDealTermsPayload(
       continue;
     }
 
+    if (field.type === "currency_code") {
+      terms[field.key] = raw.toUpperCase();
+      continue;
+    }
+
     terms[field.key] = raw;
   }
 
@@ -395,6 +375,9 @@ export function formatTermValue(
   }
   const raw = String(value).trim();
   if (!raw) return "Not specified";
+  if (field.type === "currency_code") {
+    return currencyLabel(raw);
+  }
   if (field.type === "select") {
     const match = field.options?.find((o) => o.value === raw);
     return match?.label ?? raw;
@@ -476,6 +459,10 @@ export function buildUpdatedTerms(
     if (field.type === "number" || field.type === "currency") {
       const n = Number(raw);
       terms[field.key] = Number.isFinite(n) ? n : raw;
+      continue;
+    }
+    if (field.type === "currency_code") {
+      terms[field.key] = raw.toUpperCase();
       continue;
     }
     terms[field.key] = raw;

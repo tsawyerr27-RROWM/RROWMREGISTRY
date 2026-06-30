@@ -6,7 +6,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivateLicenseModal } from "@/components/Studio/Deals/ActivateLicenseModal";
 import { RecordExhibitionModal } from "@/components/Studio/Deals/RecordExhibitionModal";
 import { RecordRepresentationModal } from "@/components/Studio/Deals/RecordRepresentationModal";
-import { fetchRegistryCsrfToken } from "@/lib/registry-action-security/fetch-csrf";
 import {
   dealExecutionKind,
   type DealExecutionKind,
@@ -133,45 +132,9 @@ export function DealExecutionPanel({ deal, onExecuted }: Props) {
 
   const kind = state.execution_kind;
 
-  const executeAcquisition = async () => {
-    setBusy(true);
-    setError(null);
-    try {
-      const csrfToken = await fetchRegistryCsrfToken();
-      if (!csrfToken) {
-        setError("Could not prepare a secure session. Refresh and try again.");
-        return;
-      }
-
-      const res = await fetch(executionEndpoint, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          "x-csrf-token": csrfToken,
-        },
-        body: JSON.stringify({}),
-      });
-      const payload = (await res.json().catch(() => ({}))) as {
-        error?: string;
-        state?: DealExecutionPanelState;
-      };
-      if (!res.ok) {
-        setError(payload.error || `Could not record transfer (${res.status}).`);
-        return;
-      }
-      if (payload.state) {
-        setState(payload.state);
-      } else {
-        await load();
-      }
-      onExecuted?.();
-    } catch {
-      setError("Could not record transfer.");
-    } finally {
-      setBusy(false);
-    }
-  };
+  if (kind === "acquisition") {
+    return null;
+  }
 
   const openModal = () => {
     if (kind === "exhibition") {
@@ -229,11 +192,7 @@ export function DealExecutionPanel({ deal, onExecuted }: Props) {
                 : "Execution recorded"}
             </p>
             <p className="text-[12px] leading-relaxed text-neutral-600">
-              {state.ownership_loop?.status === "completed"
-                ? recordedCopy(kind)
-                : kind === "acquisition"
-                  ? "Transfer initiated. The buyer must confirm receipt before ownership updates on the registry ledger."
-                  : recordedCopy(kind)}
+              {recordedCopy(kind)}
             </p>
             {kind === "licensing" && state.rights_ledger_href ? (
               <Link
@@ -263,13 +222,7 @@ export function DealExecutionPanel({ deal, onExecuted }: Props) {
               <button
                 type="button"
                 disabled={busy}
-                onClick={() => {
-                  if (kind === "acquisition") {
-                    void executeAcquisition();
-                    return;
-                  }
-                  openModal();
-                }}
+                onClick={() => openModal()}
                 className={`${rrowmButton.primaryEconomic} w-full sm:w-auto`}
               >
                 {ctaLabel(kind, busy)}

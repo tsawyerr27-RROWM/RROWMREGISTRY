@@ -12,6 +12,7 @@ import {
   type DealTermField,
 } from "@/lib/deal-intents";
 import { workspace } from "@/styles/workspace-design";
+import { studioFilingForm } from "@/styles/studio-filing-form";
 
 type Props = {
   isOpen: boolean;
@@ -20,8 +21,7 @@ type Props = {
   onSubmitted: () => void;
 };
 
-const summaryClass =
-  "mt-2 w-full resize-y rounded-xl border border-neutral-900/[0.08] bg-white/90 px-3.5 py-3 text-[15px] leading-relaxed text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-400 focus:bg-white min-h-[6rem]";
+const summaryClass = `${studioFilingForm.textarea} mt-2 min-h-[6rem]`;
 
 export function CounterProposalModal({ isOpen, onClose, deal, onSubmitted }: Props) {
   const [values, setValues] = useState<Record<string, string>>({});

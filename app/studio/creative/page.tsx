@@ -55,6 +55,7 @@ import { workspace } from "@/styles/workspace-design";
 import {
   buildCreativeNavItems,
   consumePendingStudioSection,
+  primeCreativeSectionFromUrlQuery,
 } from "@/lib/studio-nav";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fillMessage } from "@/lib/locale-messages";
@@ -69,6 +70,7 @@ import {
 } from "@/lib/ownership-ledger-i18n";
 import { OwnershipLedgerActionConfirmModal } from "@/components/ownership/OwnershipLedgerActionConfirmModal";
 import { AddValueEventModal } from "@/components/Dashboard/AddValueEventModal";
+import { ValueEventImmutableBadge } from "@/components/Studio/ValueEventImmutableBadge";
 import { DataInsightModal } from "@/components/Insights/DataInsightModal";
 import { StudioCatalogueMetricsPanels } from "@/components/Studio/StudioCatalogueMetricsPanels";
 import {
@@ -79,6 +81,12 @@ import {
   buildHealthInsightBreakdown,
   buildValueInsightBreakdown,
 } from "@/lib/studio-insight-breakdown";
+import {
+  CREATIVE_OWNERSHIP_FILTER_DEFAULT,
+  passesCreativeOwnershipFilter,
+  isSoldOrTransferredArtwork,
+  type CreativeOwnershipFilter,
+} from "@/lib/creative-studio-ownership-filters";
 import { pickLatestOwnershipEvent } from "@/lib/ownership-canonical";
 import {
   getCanonicalOwner,
@@ -86,6 +94,13 @@ import {
   getTransferredArtworkIds,
   type CanonicalOwner,
 } from "@/lib/canonical-ownership-engine";
+import { listOutboundPendingAcquisitionArtworkIds } from "@/lib/acquisition-seller-archive";
+import {
+  canRecordValueEvent,
+  resolveValuationDisabledReason,
+} from "@/lib/can-record-value-event";
+import { fetchCompletedSaleByArtworkIds } from "@/lib/has-completed-sale";
+import { isSaleLikeValueType } from "@/lib/deal-acquisition-value";
 import { OWNERSHIP_EVENT_TRANSFER_SUMMARY_SELECT } from "@/lib/ownership-events-schema";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { fieldCreativeHref } from "@/lib/field-nav";
@@ -113,19 +128,6 @@ import {
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
     value
-  );
-}
-
-function isSaleLikeValueType(valueType: string | null | undefined) {
-  const v = String(valueType || "")
-    .toLowerCase()
-    .trim()
-    .replaceAll("_", " ");
-  return (
-    v === "sale" ||
-    v === "auction" ||
-    v === "primary sale" ||
-    v === "secondary sale"
   );
 }
 
@@ -178,6 +180,7 @@ export default function Dashboard() {
   const [isTransitioningSection, setIsTransitioningSection] = useState(false);
 
   useEffect(() => {
+    primeCreativeSectionFromUrlQuery();
     const pending = consumePendingStudioSection();
     if (pending) setActiveSection(pending);
   }, []);
@@ -188,9 +191,8 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [artworksListFilter, setArtworksListFilter] =
     useState<ArtworksListFilter>("all");
-  const [ownershipFilter, setOwnershipFilter] = useState<
-    "all" | "needs_transfer" | "sold" | "owned_by_you"
-  >("all");
+  const [ownershipFilter, setOwnershipFilter] =
+    useState<CreativeOwnershipFilter>(CREATIVE_OWNERSHIP_FILTER_DEFAULT);
   const [certificatesListFilter, setCertificatesListFilter] =
     useState<CertificatesListFilter>("all");
   const [valueModalArtwork, setValueModalArtwork] = useState<any | null>(null);
@@ -198,7 +200,7 @@ export default function Dashboard() {
   const [valueForm, setValueForm] = useState({
     declared_value: "",
     currency: "",
-    value_type: "initial",
+    value_type: "initial_valuation",
     visibility_level: "private",
     note: "",
   });
@@ -223,10 +225,17 @@ export default function Dashboard() {
   const [transferredArtworkIds, setTransferredArtworkIds] = useState<
     Set<string>
   >(new Set());
+  const [outboundPendingArtworkIds, setOutboundPendingArtworkIds] = useState<
+    Set<string>
+  >(new Set());
   const [canonicalHolders, setCanonicalHolders] = useState<
     Record<string, CanonicalOwner>
   >({});
+  const [completedSalesByArtworkId, setCompletedSalesByArtworkId] = useState<
+    Record<string, boolean>
+  >({});
   const [ownershipHistory, setOwnershipHistory] = useState<any[]>([]);
+  const [provenanceHistory, setProvenanceHistory] = useState<any[]>([]);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [registerLoading, setRegisterLoading] = useState(false);
   const [selectedArtwork, setSelectedArtwork] = useState<any | null>(null);
@@ -272,7 +281,7 @@ export default function Dashboard() {
   imageFile: null as File | null,
   declared_value: "",
   currency: "",
-  value_type: "initial",
+  value_type: "initial_valuation",
 });
   const router = useRouter();
   const refreshSelectedArtworkEventsRef = useRef<
@@ -298,12 +307,17 @@ export default function Dashboard() {
     setArtworks(data || []);
     const artworkIds = (data || []).map((a: any) => a.id).filter(Boolean);
     if (artworkIds.length > 0) {
-      const [holders, transferredIds] = await Promise.all([
+      const [holders, transferredIds, outboundPendingIds, completedSales] =
+        await Promise.all([
         getCanonicalOwners(sb(), artworkIds),
         getTransferredArtworkIds(sb(), artistId),
+        listOutboundPendingAcquisitionArtworkIds(sb(), artistId),
+        fetchCompletedSaleByArtworkIds(sb(), artworkIds),
       ]);
       setCanonicalHolders(holders);
+      setCompletedSalesByArtworkId(completedSales);
       setTransferredArtworkIds(new Set(transferredIds));
+      setOutboundPendingArtworkIds(new Set(outboundPendingIds));
       await fetchLatestOwnersForArtworks(artworkIds);
       await fetchSaleSignalsForArtworks(artworkIds);
       try {
@@ -319,7 +333,9 @@ export default function Dashboard() {
     } else {
       setLatestOwners({});
       setCanonicalHolders({});
+      setCompletedSalesByArtworkId({});
       setTransferredArtworkIds(new Set());
+      setOutboundPendingArtworkIds(new Set());
       setSaleSignals({});
       setCatalogueMetrics(null);
     }
@@ -676,8 +692,21 @@ export default function Dashboard() {
       .eq("artwork_id", artworkId)
       .order("created_at", { ascending: true });
 
+    const { data: provenance } = await sb()
+      .from("provenance_events")
+      .select("*")
+      .eq("artwork_id", artworkId)
+      .order("occurred_at", { ascending: true });
+
     setValueHistory(values || []);
     setOwnershipHistory(ownership || []);
+    setProvenanceHistory(provenance || []);
+
+    const completedSales = await fetchCompletedSaleByArtworkIds(sb(), [artworkId]);
+    setCompletedSalesByArtworkId((prev) => ({
+      ...prev,
+      ...completedSales,
+    }));
   };
 
   refreshSelectedArtworkEventsRef.current = refreshSelectedArtworkEvents;
@@ -869,8 +898,15 @@ useEffect(() => {
       .eq("artwork_id", selectedArtwork.id)
       .order("created_at", { ascending: true });
 
+    const { data: provenance } = await sb()
+      .from("provenance_events")
+      .select("*")
+      .eq("artwork_id", selectedArtwork.id)
+      .order("occurred_at", { ascending: true });
+
     setValueHistory(values || []);
     setOwnershipHistory(ownership || []);
+    setProvenanceHistory(provenance || []);
   };
 
   fetchEvents();
@@ -982,24 +1018,24 @@ useEffect(() => {
   }, [artworksListFilteredNoSearch, searchQuery]);
 
   const ownershipArtworksForUi = useMemo(() => {
-    const passesOwnershipFilter = (a: any) => {
+    const q = searchQuery.trim().toLowerCase();
+    const pool = q
+      ? artworks.filter((a) => a.title?.toLowerCase().includes(q))
+      : artworks;
+
+    const arr = pool.filter((a) => {
       const id = String(a.id || "");
-      const sig = saleSignals[id];
-      const latest = latestOwners[id];
-      const latestType = String((latest as any)?.transfer_type || "");
-      const holderId = canonicalHolders[id]?.userId ?? null;
+      return passesCreativeOwnershipFilter({
+        artworkId: id,
+        filter: ownershipFilter,
+        canonicalHolderId: canonicalHolders[id]?.userId ?? null,
+        viewerUserId: user?.id,
+        hasSaleSignal: Boolean(saleSignals[id]),
+        transferredArtworkIds,
+        outboundPendingArtworkIds,
+      });
+    });
 
-      const ownedByYou = holderId === user?.id;
-      const soldOrTransferred = transferredArtworkIds.has(id);
-
-      if (ownershipFilter === "needs_transfer") return Boolean(sig);
-      if (ownershipFilter === "sold") return soldOrTransferred;
-      if (ownershipFilter === "owned_by_you") return ownedByYou;
-      return true;
-    };
-
-    // Sale signals should float to the top (signal, not alert).
-    const arr = [...filteredArtworks].filter(passesOwnershipFilter);
     arr.sort((a: any, b: any) => {
       const aSig = saleSignals[String(a.id)];
       const bSig = saleSignals[String(b.id)];
@@ -1011,50 +1047,67 @@ useEffect(() => {
       return 0;
     });
     return arr;
-  }, [filteredArtworks, saleSignals, ownershipFilter, canonicalHolders, user?.id, transferredArtworkIds]);
-
-  /** Ownership filter applied to artwork list filters, ignoring title search */
-  const ownershipCountIgnoringSearch = useMemo(() => {
-    const passesOwnershipFilter = (a: any) => {
-      const id = String(a.id || "");
-      const sig = saleSignals[id];
-      const latest = latestOwners[id];
-      const latestType = String((latest as any)?.transfer_type || "");
-      const holderId = canonicalHolders[id]?.userId ?? null;
-
-      const ownedByYou = holderId === user?.id;
-      const soldOrTransferred = transferredArtworkIds.has(id);
-
-      if (ownershipFilter === "needs_transfer") return Boolean(sig);
-      if (ownershipFilter === "sold") return soldOrTransferred;
-      if (ownershipFilter === "owned_by_you") return ownedByYou;
-      return true;
-    };
-
-    return artworksListFilteredNoSearch.filter(passesOwnershipFilter).length;
   }, [
-    artworksListFilteredNoSearch,
+    artworks,
+    searchQuery,
     saleSignals,
     ownershipFilter,
     canonicalHolders,
     user?.id,
     transferredArtworkIds,
+    outboundPendingArtworkIds,
+  ]);
+
+  /** Ownership filter applied to full authored catalogue, ignoring title search */
+  const ownershipCountIgnoringSearch = useMemo(() => {
+    return artworks.filter((a) => {
+      const id = String(a.id || "");
+      return passesCreativeOwnershipFilter({
+        artworkId: id,
+        filter: ownershipFilter,
+        canonicalHolderId: canonicalHolders[id]?.userId ?? null,
+        viewerUserId: user?.id,
+        hasSaleSignal: Boolean(saleSignals[id]),
+        transferredArtworkIds,
+        outboundPendingArtworkIds,
+      });
+    }).length;
+  }, [
+    artworks,
+    saleSignals,
+    ownershipFilter,
+    canonicalHolders,
+    user?.id,
+    transferredArtworkIds,
+    outboundPendingArtworkIds,
   ]);
 
   const ownershipFilterCounts = useMemo(() => {
-    const holderFor = (a: any) =>
-      canonicalHolders[String(a.id)]?.userId ?? null;
-    const soldOrTransferred = (a: any) =>
-      transferredArtworkIds.has(String(a.id || ""));
-    const ownedByYou = (a: any) => holderFor(a) === user?.id;
+    const ownedByYou = (a: (typeof artworks)[number]) =>
+      canonicalHolders[String(a.id)]?.userId === user?.id;
+    const soldTransferred = (a: (typeof artworks)[number]) =>
+      isSoldOrTransferredArtwork({
+        artworkId: String(a.id || ""),
+        transferredArtworkIds,
+        outboundPendingArtworkIds,
+      });
 
     return {
-      all: artworks.length,
-      needs_transfer: artworks.filter((a) => Boolean(saleSignals[String(a.id)])).length,
-      sold: artworks.filter(soldOrTransferred).length,
       owned_by_you: artworks.filter(ownedByYou).length,
+      needs_transfer: artworks.filter((a) =>
+        Boolean(saleSignals[String(a.id)])
+      ).length,
+      sold_transferred: artworks.filter(soldTransferred).length,
+      full_catalogue: artworks.length,
     };
-  }, [artworks, canonicalHolders, saleSignals, user?.id, transferredArtworkIds]);
+  }, [
+    artworks,
+    canonicalHolders,
+    saleSignals,
+    user?.id,
+    transferredArtworkIds,
+    outboundPendingArtworkIds,
+  ]);
 
   const filteredCertificates = useMemo(() => {
     let list = [...certifiedArtworksForUi];
@@ -1708,7 +1761,7 @@ const handleRegisterArtwork = async () => {
         p_artwork_id: artworkIdForValue,
         p_declared_value: Number(newArtwork.declared_value),
         p_currency: String(newArtwork.currency || "").toUpperCase(),
-        p_value_type: newArtwork.value_type || "initial",
+        p_value_type: newArtwork.value_type || "initial_valuation",
         p_visibility_level: newArtwork.visibility_level,
         p_note: null,
       });
@@ -1731,7 +1784,7 @@ const handleRegisterArtwork = async () => {
       imageFile: null,
       declared_value: "",
       currency: "",
-      value_type: "initial",
+      value_type: "initial_valuation",
     });
 
   } catch (err) {
@@ -1828,6 +1881,18 @@ const studioSidebarActivity =
 
 const ledgerFieldClass = workspace.modal.field;
 const ledgerInsetFieldClass = `${workspace.modal.field} mt-2`;
+
+const selectedLedgerCanRecordValue =
+  selectedArtwork?.id
+    ? canRecordValueEvent({
+        userId: user?.id,
+        artworkId: String(selectedArtwork.id),
+        artistId: selectedArtwork.artist_id,
+        hasCompletedSale: Boolean(
+          completedSalesByArtworkId[String(selectedArtwork.id)]
+        ),
+      })
+    : false;
 
 return (
   <>
@@ -2128,8 +2193,36 @@ return (
               setShowOwnershipLedgerModal(false);
             }}
             onAddValueEventClick={(artwork) => {
+              const artworkId = String(artwork.id ?? "");
+              const hasCompletedSale = Boolean(
+                completedSalesByArtworkId[artworkId]
+              );
+              const canRecord = canRecordValueEvent({
+                userId: user?.id,
+                artworkId,
+                artistId: artwork.artist_id,
+                hasCompletedSale,
+              });
+              if (!canRecord) {
+                showToast(
+                  "error",
+                  t(
+                    resolveValuationDisabledReason({
+                      userId: user?.id,
+                      artistId: artwork.artist_id,
+                      hasCompletedSale,
+                    }) === "artist_primary_only"
+                      ? "studio.artworks.valuationArtistPrimaryOnly"
+                      : "studio.artworks.valuationMarketDriven"
+                  )
+                );
+                return;
+              }
               setValueModalArtwork(artwork);
             }}
+            viewerUserId={user?.id ?? null}
+            canonicalHolders={canonicalHolders}
+            completedSalesByArtworkId={completedSalesByArtworkId}
             studioArtworksAccent={parseStudioArtworksAccent(
               profile?.studio_artworks_accent
             )}
@@ -2181,6 +2274,7 @@ return (
                 ...(o ? { __latest_owner: o } : {}),
                 __canonical_holder_id: canonicalHolders[id]?.userId ?? null,
                 __is_transferred: transferredArtworkIds.has(id),
+                __pending_outbound_transfer: outboundPendingArtworkIds.has(id),
               };
             })}
             totalOwnershipCount={ownershipCountIgnoringSearch}
@@ -2197,6 +2291,7 @@ return (
             }}
             userId={user?.id}
             saleSignals={saleSignals}
+            outboundPendingArtworkIds={outboundPendingArtworkIds}
           />
         )}
     </StudioShell>
@@ -2231,6 +2326,32 @@ return (
         if (!valueModalArtwork?.id) return;
         const artworkId = valueModalArtwork.id;
         const titleForLog = valueModalArtwork.title || "Artwork";
+        const hasCompletedSale = Boolean(
+          completedSalesByArtworkId[String(artworkId)]
+        );
+
+        if (
+          !canRecordValueEvent({
+            userId: user?.id,
+            artworkId,
+            artistId: valueModalArtwork.artist_id,
+            hasCompletedSale,
+          })
+        ) {
+          showToast(
+            "error",
+            t(
+              resolveValuationDisabledReason({
+                userId: user?.id,
+                artistId: valueModalArtwork.artist_id,
+                hasCompletedSale,
+              }) === "artist_primary_only"
+                ? "studio.artworks.valuationArtistPrimaryOnly"
+                : "studio.artworks.valuationMarketDriven"
+            )
+          );
+          return;
+        }
 
         setValueLoading(true);
 
@@ -2279,6 +2400,24 @@ return (
         if (!showOwnershipLedgerModal) setSelectedArtwork(null);
       }}
       valueHistory={valueHistory}
+      viewerUserId={user?.id ?? null}
+      hasCompletedSale={
+        artworkDetail?.id
+          ? Boolean(completedSalesByArtworkId[String(artworkDetail.id)])
+          : false
+      }
+      canRecordValue={
+        artworkDetail?.id
+          ? canRecordValueEvent({
+              userId: user?.id,
+              artworkId: String(artworkDetail.id),
+              artistId: artworkDetail.artist_id,
+              hasCompletedSale: Boolean(
+                completedSalesByArtworkId[String(artworkDetail.id)]
+              ),
+            })
+          : false
+      }
     />
 
     <ModalShell
@@ -2297,15 +2436,9 @@ return (
             aria-hidden
           />
           {(() => {
-            const SALE_TYPES = new Set([
-              "sale",
-              "auction",
-              "primary_sale",
-              "secondary_sale",
-            ]);
             const saleEvent = [...valueHistory]
               .reverse()
-              .find((e: any) => SALE_TYPES.has(String(e.value_type || "")));
+              .find((e: any) => isSaleLikeValueType(String(e.value_type || "")));
             const saleResolved =
               !saleEvent ||
               saleEvent.ownership_resolved === true ||
@@ -2314,7 +2447,9 @@ return (
                   String(ev.value_event_id || "") === String(saleEvent.id || "")
               );
 
-            if (!saleEvent || saleResolved) return null;
+            if (!saleEvent || saleResolved || !selectedLedgerCanRecordValue) {
+              return null;
+            }
 
             const prefillPrice =
               typeof saleEvent.declared_value === "number"
@@ -2723,6 +2858,22 @@ return (
                 </div>
               </div>
 
+              {!selectedLedgerCanRecordValue ? (
+                <p className="mb-4 text-sm text-neutral-600">
+                  {t(
+                    resolveValuationDisabledReason({
+                      userId: user?.id,
+                      artistId: selectedArtwork.artist_id,
+                      hasCompletedSale: Boolean(
+                        completedSalesByArtworkId[String(selectedArtwork.id)]
+                      ),
+                    }) === "artist_primary_only"
+                      ? "studio.artworks.valuationArtistPrimaryOnly"
+                      : "studio.artworks.valuationMarketDriven"
+                  )}
+                </p>
+              ) : null}
+
               <div className="relative min-h-0">
                 <div className="pointer-events-none absolute bottom-0 left-2 top-2 w-px bg-gradient-to-b from-emerald-400/80 via-emerald-400/40 to-emerald-500/10" />
                 <div
@@ -2740,12 +2891,20 @@ return (
                       className="flex justify-between gap-4 rounded-xl border border-neutral-200/90 bg-white/80 px-3 py-3 text-neutral-800"
                     >
                       <div>
-                        <p className="text-xs text-neutral-500">
-                          {translateValueEventType(event.value_type, t)}
-                        </p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-xs text-neutral-500">
+                            {translateValueEventType(event.value_type, t)}
+                          </p>
+                          <ValueEventImmutableBadge />
+                        </div>
                         <p className="mt-1 text-sm text-neutral-700">
                           {event.note || t("studio.ledger.noAdditionalContext")}
                         </p>
+                        {event.references_event_id ? (
+                          <p className="mt-1 text-xs text-neutral-500">
+                            Corrects filing {String(event.references_event_id).slice(0, 8)}…
+                          </p>
+                        ) : null}
                         <p className="mt-1 text-xs text-neutral-500">
                           {new Date(event.created_at).toLocaleString()}
                         </p>
@@ -2787,6 +2946,22 @@ return (
                       {t("studio.ledger.noOwnershipEvents")}
                     </p>
                   )}
+
+                  {provenanceHistory.map((event) => (
+                    <div
+                      key={`provenance-${event.id}`}
+                      className="relative rounded-xl border border-violet-200/80 bg-violet-50/40 px-3 py-3 text-sm text-neutral-800"
+                    >
+                      <p className="text-xs font-semibold uppercase tracking-wide text-violet-900/80">
+                        {String(event.kind ?? "evidence")}
+                      </p>
+                      <p className="mt-1 text-xs text-neutral-600">
+                        {event.occurred_at
+                          ? new Date(event.occurred_at).toLocaleString()
+                          : ""}
+                      </p>
+                    </div>
+                  ))}
 
                   {ownershipHistory.map((event, i) => {
                     const vStatus = normalizeVerificationStatus(

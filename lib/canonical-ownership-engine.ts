@@ -121,6 +121,64 @@ function groupLatestByArtwork(
   return latest;
 }
 
+/** Artworks where user appears as recipient on any ledger row (search narrowing only). */
+async function listArtworkIdsWithRecipientHistory(
+  service: SupabaseClient,
+  userId: string
+): Promise<string[]> {
+  const uid = String(userId ?? "").trim();
+  if (!uid) return [];
+
+  const { data, error } = await service
+    .from("ownership_events")
+    .select("artwork_id")
+    .eq("to_user_id", uid);
+
+  if (error) {
+    console.error(
+      "[canonical-ownership-engine] list_recipient_artwork_ids",
+      error.message
+    );
+    return [];
+  }
+
+  return [
+    ...new Set(
+      (data ?? [])
+        .map((row) => String(row.artwork_id ?? "").trim())
+        .filter(Boolean)
+    ),
+  ];
+}
+
+/** Latest holder row per artwork — full event history, no user pre-filter. */
+async function loadLatestHolderByArtworkIds(
+  service: SupabaseClient,
+  artworkIds: string[]
+): Promise<Map<string, OwnershipEventHolderRow>> {
+  const ids = [
+    ...new Set(artworkIds.map((id) => String(id ?? "").trim()).filter(Boolean)),
+  ];
+  if (ids.length === 0) return new Map();
+
+  const { data, error } = await service
+    .from("ownership_events")
+    .select(OWNERSHIP_EVENT_HOLDER_SELECT)
+    .in("artwork_id", ids)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false });
+
+  if (error) {
+    console.error(
+      "[canonical-ownership-engine] load_latest_holder_by_artwork_ids",
+      error.message
+    );
+    return new Map();
+  }
+
+  return groupLatestByArtwork((data ?? []) as OwnershipEventHolderRow[]);
+}
+
 /** Latest ledger holder for one artwork (ownership_events only). */
 export async function getCanonicalOwner(
   service: SupabaseClient,
@@ -185,17 +243,10 @@ export async function getOwnedArtworkIds(
   const uid = String(userId ?? "").trim();
   if (!uid) return [];
 
-  const { data: events, error } = await service
-    .from("ownership_events")
-    .select(OWNERSHIP_EVENT_HOLDER_SELECT)
-    .eq("to_user_id", uid);
+  const candidateIds = await listArtworkIdsWithRecipientHistory(service, uid);
+  if (candidateIds.length === 0) return [];
 
-  if (error) {
-    console.error("[canonical-ownership-engine] get_owned_artwork_ids", error.message);
-    return [];
-  }
-
-  const latestByArt = groupLatestByArtwork((events ?? []) as OwnershipEventHolderRow[]);
+  const latestByArt = await loadLatestHolderByArtworkIds(service, candidateIds);
   const owned: string[] = [];
   for (const [aid, row] of latestByArt) {
     if (resolveHolderUserIdFromEvent(row) === uid) owned.push(aid);
@@ -211,24 +262,16 @@ export async function getTransferredArtworkIds(
   const uid = String(userId ?? "").trim();
   if (!uid) return [];
 
-  const owned = new Set(await getOwnedArtworkIds(service, uid));
+  const candidateIds = await listArtworkIdsWithRecipientHistory(service, uid);
+  if (candidateIds.length === 0) return [];
 
-  const { data: events, error } = await service
-    .from("ownership_events")
-    .select(OWNERSHIP_EVENT_HOLDER_SELECT)
-    .eq("to_user_id", uid);
-
-  if (error || !events?.length) return [];
-
-  const artworkIds = [
-    ...new Set(
-      events
-        .map((row) => String(row.artwork_id ?? "").trim())
-        .filter(Boolean)
-    ),
-  ];
-
-  return artworkIds.filter((aid) => !owned.has(aid));
+  const latestByArt = await loadLatestHolderByArtworkIds(service, candidateIds);
+  const transferred: string[] = [];
+  for (const aid of candidateIds) {
+    const holder = resolveHolderUserIdFromEvent(latestByArt.get(aid) ?? null);
+    if (holder !== uid) transferred.push(aid);
+  }
+  return transferred;
 }
 
 /** Ordered ownership ledger chronology for an artwork. */

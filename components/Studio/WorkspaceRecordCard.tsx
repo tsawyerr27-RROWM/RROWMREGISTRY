@@ -3,6 +3,7 @@
 import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
 
 import { workspace } from "@/styles/workspace-design";
+import { studioCatalogueSheetClass } from "@/styles/studio-v2";
 
 type Props = {
   title: string;
@@ -36,7 +37,7 @@ export function WorkspaceRecordCard({
       tabIndex={0}
       onKeyDown={onKeyDown}
       onClick={onClick}
-      className={`${workspace.card.link} ${accentBorderClass ? `border-l-[3px] ${accentBorderClass}` : ""}`}
+      className={`${workspace.card.link} ${studioCatalogueSheetClass({})}`}
     >
       <div className={workspace.card.media}>
         {imageUrl ? (

@@ -15,6 +15,10 @@ export type MessageKey =
   | "common.ending"
   | "nav.registry"
   | "nav.field"
+  | "nav.fieldCommand"
+  | "nav.studio"
+  | "nav.organisation"
+  | "nav.search"
   | "nav.about"
   | "field.home.title"
   | "field.home.lede"
@@ -158,6 +162,10 @@ export type MessageKey =
   | "field.explorer.records.empty.filtered"
   | "field.explorer.records.empty.clearFilters"
   | "field.explorer.records.empty.browseAll"
+  | "field.explorer.density.label"
+  | "field.explorer.density.compact"
+  | "field.explorer.density.standard"
+  | "field.explorer.density.editorial"
   | "field.explorer.creatives.headline"
   | "field.explorer.creatives.lede"
   | "field.explorer.creatives.searching"
@@ -449,6 +457,122 @@ export type MessageKey =
   | "landing.workspace.takePart"
   | "landing.workspace.viewPublic"
   | "landing.portfolio.title"
+  | "landing.v2.hero.eyebrow"
+  | "landing.v2.hero.title"
+  | "landing.v2.hero.subtext"
+  | "landing.v2.hero.support"
+  | "landing.v2.hero.register"
+  | "landing.v2.hero.explore"
+  | "landing.v2.hero.assemblyHint"
+  | "landing.v2.problem.eyebrow"
+  | "landing.v2.problem.headline1"
+  | "landing.v2.problem.headline2"
+  | "landing.v2.problem.lead"
+  | "landing.v2.problem.fragment1"
+  | "landing.v2.problem.fragment2"
+  | "landing.v2.problem.fragment3"
+  | "landing.v2.problem.fragment4"
+  | "landing.v2.problem.title"
+  | "landing.v2.problem.body"
+  | "landing.v2.problem.point1"
+  | "landing.v2.problem.point2"
+  | "landing.v2.problem.point3"
+  | "landing.v2.pillars.eyebrow"
+  | "landing.v2.pillars.title"
+  | "landing.v2.pillars.subtitle"
+  | "landing.v2.pillars.authorship.title"
+  | "landing.v2.pillars.authorship.body"
+  | "landing.v2.pillars.authorship.detail"
+  | "landing.v2.pillars.stewardship.title"
+  | "landing.v2.pillars.stewardship.body"
+  | "landing.v2.pillars.stewardship.detail"
+  | "landing.v2.pillars.chronology.title"
+  | "landing.v2.pillars.chronology.body"
+  | "landing.v2.pillars.chronology.detail"
+  | "landing.v2.visual.layerRecord"
+  | "landing.v2.visual.layerChronology"
+  | "landing.v2.visual.layerCertificate"
+  | "landing.v2.visual.chronologyMeta"
+  | "landing.v2.visual.certificateMeta"
+  | "landing.v2.visual.lineAuthorship"
+  | "landing.v2.visual.lineStewardship"
+  | "landing.v2.visual.lineVerified"
+  | "landing.v2.visual.lineIssued"
+  | "landing.v2.visual.artworkEmber"
+  | "landing.v2.visual.artworkCobalt"
+  | "landing.v2.visual.artworkLime"
+  | "landing.v2.showcase.eyebrow"
+  | "landing.v2.showcase.title"
+  | "landing.v2.showcase.body"
+  | "landing.v2.showcase.recordLabel"
+  | "landing.v2.showcase.recordTitle"
+  | "landing.v2.showcase.authorship"
+  | "landing.v2.showcase.authorshipValue"
+  | "landing.v2.showcase.stewardship"
+  | "landing.v2.showcase.stewardshipValue"
+  | "landing.v2.showcase.medium"
+  | "landing.v2.showcase.mediumValue"
+  | "landing.v2.showcase.chronology"
+  | "landing.v2.showcase.chronologyTitle"
+  | "landing.v2.showcase.immutableBadge"
+  | "landing.v2.showcase.tabRecord"
+  | "landing.v2.showcase.tabChronology"
+  | "landing.v2.showcase.tabCertificate"
+  | "landing.v2.showcase.tabTransfer"
+  | "landing.v2.showcase.certificateTitle"
+  | "landing.v2.showcase.certificateStatus"
+  | "landing.v2.showcase.certificateIssued"
+  | "landing.v2.showcase.certificateBody"
+  | "landing.v2.showcase.transferTitle"
+  | "landing.v2.showcase.transferFrom"
+  | "landing.v2.showcase.transferTo"
+  | "landing.v2.showcase.transferStatus"
+  | "landing.v2.showcase.transferBody"
+  | "landing.v2.showcase.layer1"
+  | "landing.v2.showcase.layer2"
+  | "landing.v2.showcase.layer3"
+  | "landing.v2.showcase.layer4"
+  | "landing.v2.why.eyebrow"
+  | "landing.v2.why.title"
+  | "landing.v2.why.lead"
+  | "landing.v2.why.r1.title"
+  | "landing.v2.why.r1.body"
+  | "landing.v2.why.r2.title"
+  | "landing.v2.why.r2.body"
+  | "landing.v2.why.r3.title"
+  | "landing.v2.why.r3.body"
+  | "landing.v2.why.r4.title"
+  | "landing.v2.why.r4.body"
+  | "landing.v2.trust.title"
+  | "landing.v2.trust.lead"
+  | "landing.v2.trust.archiveLabel"
+  | "landing.v2.trust.r1.title"
+  | "landing.v2.trust.r1.body"
+  | "landing.v2.trust.r2.title"
+  | "landing.v2.trust.r2.body"
+  | "landing.v2.trust.r3.title"
+  | "landing.v2.trust.r3.body"
+  | "landing.v2.trust.r4.title"
+  | "landing.v2.trust.r4.body"
+  | "landing.v2.footer.closing"
+  | "landing.v2.metrics.eyebrow"
+  | "landing.v2.metrics.title"
+  | "landing.v2.metrics.subtitle"
+  | "landing.v2.metrics.m1.value"
+  | "landing.v2.metrics.m1.label"
+  | "landing.v2.metrics.m2.value"
+  | "landing.v2.metrics.m2.label"
+  | "landing.v2.metrics.m3.value"
+  | "landing.v2.metrics.m3.label"
+  | "landing.v2.metrics.m4.value"
+  | "landing.v2.metrics.m4.label"
+  | "landing.v2.metrics.live.works"
+  | "landing.v2.metrics.live.artists"
+  | "landing.v2.metrics.live.value"
+  | "landing.v2.metrics.live.provenance"
+  | "landing.v2.cta.eyebrow"
+  | "landing.v2.cta.title"
+  | "landing.v2.cta.body"
   | "getStarted.title"
   | "getStarted.alreadyAccount"
   | "getStarted.signIn"
@@ -545,6 +669,27 @@ export type MessageKey =
   | "registry.pagination.next"
   | "registry.pagination.pageOf"
   | "about.hero.title"
+  | "about.v2.mission.eyebrow"
+  | "about.v2.mission.title"
+  | "about.v2.mission.body"
+  | "about.v2.pillars.title"
+  | "about.v2.pillar.authorship.title"
+  | "about.v2.pillar.authorship.body"
+  | "about.v2.pillar.stewardship.title"
+  | "about.v2.pillar.stewardship.body"
+  | "about.v2.pillar.chronology.title"
+  | "about.v2.pillar.chronology.body"
+  | "about.v2.infrastructure.title"
+  | "about.v2.infrastructure.body"
+  | "about.v2.why.title"
+  | "about.v2.why.body"
+  | "about.v2.ecosystem.title"
+  | "about.v2.ecosystem.studio.title"
+  | "about.v2.ecosystem.studio.body"
+  | "about.v2.ecosystem.registry.title"
+  | "about.v2.ecosystem.registry.body"
+  | "about.v2.ecosystem.field.title"
+  | "about.v2.ecosystem.field.body"
   | "signup.joinTitle"
   | "signup.createArtistAccount"
   | "signup.subtitleArtworkAuth"
@@ -696,6 +841,18 @@ export type MessageKey =
   | "registry.record.edition.nOfT"
   | "registry.record.provenance"
   | "registry.record.provenanceTooltip"
+  | "registry.record.field.verification"
+  | "registry.record.field.steward"
+  | "registry.record.field.creationDate"
+  | "registry.record.ownershipLineage"
+  | "registry.event.registration"
+  | "registry.event.valuation"
+  | "registry.event.sale"
+  | "registry.event.ownership_transfer"
+  | "registry.event.certification"
+  | "registry.event.correction"
+  | "registry.event.filed"
+  | "registry.explorer.indexLabel"
   | "registry.record.recordInsights"
   | "registry.record.certStatusTitle"
   | "registry.record.certNotRecorded"
@@ -1340,6 +1497,17 @@ export type MessageKey =
   | "studio.artworks.notVerified"
   | "studio.artworks.verifiedTooltip"
   | "studio.artworks.recordValue"
+  | "studio.artworks.valuationStewardOnly"
+  | "studio.artworks.valuationMarketDriven"
+  | "studio.artworks.valuationArtistPrimaryOnly"
+  | "studio.artworks.phaseBadge.priceDiscovery"
+  | "studio.artworks.phaseBadge.marketEvidence"
+  | "studio.artworks.phaseBadge.primary"
+  | "studio.artworks.phaseBadge.secondary"
+  | "studio.artworks.stewardBadge.artistOnly"
+  | "studio.artworks.stewardBadge.steward"
+  | "studio.artworks.stewardBadge.artistAndSteward"
+  | "studio.valueEvent.immutableBadge"
   | "studio.artworks.noRecordId"
   | "studio.artworks.emptyLabel"
   | "studio.artworks.emptyTitle"
@@ -1353,9 +1521,12 @@ export type MessageKey =
   | "studio.certificates.emptyLabel"
   | "studio.certificates.emptyTitle"
   | "studio.ownership.filterAll"
+  | "studio.ownership.filterFullCatalogue"
   | "studio.ownership.filterNeedsTransfer"
   | "studio.ownership.filterSold"
+  | "studio.ownership.filterSoldTransferred"
   | "studio.ownership.filterHeldByYou"
+  | "studio.ownership.filterSemanticsHelp"
   | "studio.ownership.noMatches"
   | "studio.ownership.noTransfers"
   | "studio.ownership.transferLedger"
@@ -1415,6 +1586,10 @@ export type MessageKey =
   | "studio.form.visibilityPublic"
   | "studio.form.visibilityCertificate"
   | "studio.form.eventInitial"
+  | "studio.form.eventInitialValuation"
+  | "studio.form.eventValuation"
+  | "studio.form.eventExhibitionValue"
+  | "studio.form.eventListingValue"
   | "studio.form.eventPrimarySale"
   | "studio.form.eventSecondarySale"
   | "studio.form.eventAppraisal"
@@ -1653,6 +1828,7 @@ export type MessageKey =
   | "studio.ledger.status.unassigned"
   | "studio.ledger.status.recorded"
   | "studio.ledger.valueType.sale"
+  | "studio.ledger.valueType.correction"
   | "studio.ledger.valueType.auction"
   | "studio.ledger.transferType.transfer"
   | "studio.ledger.transferType.initial"
@@ -1978,6 +2154,10 @@ const EN: Record<MessageKey, string> = {
   "common.ending": "Ending…",
   "nav.registry": "Registry",
   "nav.field": "The Field",
+  "nav.fieldCommand": "Field",
+  "nav.studio": "Studio",
+  "nav.organisation": "Organisation",
+  "nav.search": "Search",
   "nav.about": "About",
   "nav.signIn": "Sign in",
   "nav.takePart": "Take part",
@@ -2154,6 +2334,10 @@ const EN: Record<MessageKey, string> = {
     "No records match your search or filters. Try clearing filters or browsing all records.",
   "field.explorer.records.empty.clearFilters": "Clear filters",
   "field.explorer.records.empty.browseAll": "Browse all records",
+  "field.explorer.density.label": "View density",
+  "field.explorer.density.compact": "Compact",
+  "field.explorer.density.standard": "Standard",
+  "field.explorer.density.editorial": "Editorial",
   "field.explorer.creatives.headline": "Discover Creatives",
   "field.explorer.creatives.lede":
     "Browse public Creative profiles on The Field. Practice, verification on file, and registry footprint. Discovery only; not a marketplace or recruitment surface.",
@@ -2492,6 +2676,152 @@ const EN: Record<MessageKey, string> = {
   "landing.workspace.takePart": "Take part",
   "landing.workspace.viewPublic": "View public layer",
   "landing.portfolio.title": "Portfolio management across every role",
+  "landing.v2.hero.eyebrow": "RROWM Registry",
+  "landing.v2.hero.title": "Cultural works deserve better records",
+  "landing.v2.hero.subtext":
+    "Registry infrastructure for authorship, stewardship, and chronology. One canonical record per work.",
+  "landing.v2.hero.support":
+    "Built for artists, institutions, galleries, and collectors who require institutional continuity.",
+  "landing.v2.hero.register": "Register a work",
+  "landing.v2.hero.explore": "Explore registry",
+  "landing.v2.hero.assemblyHint": "Scroll to assemble the canonical record from dispersed registry layers.",
+  "landing.v2.problem.eyebrow": "The fracture",
+  "landing.v2.problem.headline1": "Art moves.",
+  "landing.v2.problem.headline2": "Records break.",
+  "landing.v2.problem.lead":
+    "Works pass through studios, galleries, collections, and institutions, but their history fragments across inboxes, spreadsheets, and legacy systems.",
+  "landing.v2.problem.fragment1": "Provenance fragmentation",
+  "landing.v2.problem.fragment2": "Ownership ambiguity",
+  "landing.v2.problem.fragment3": "Resale opacity",
+  "landing.v2.problem.fragment4": "Creator exclusion from continuity",
+  "landing.v2.problem.title": "Cultural continuity should not live in fragments",
+  "landing.v2.problem.body":
+    "RROWM is registry infrastructure: a single canonical record for authorship, custody, provenance, certification, and value chronology.",
+  "landing.v2.problem.point1":
+    "Ownership and stewardship change; the record must remain coherent.",
+  "landing.v2.problem.point2":
+    "Verification and certification require institutional-grade auditability.",
+  "landing.v2.problem.point3":
+    "Value and provenance chronologies must be append-only — never rewritten.",
+  "landing.v2.pillars.eyebrow": "Three pillars",
+  "landing.v2.pillars.title": "The registry model",
+  "landing.v2.pillars.subtitle":
+    "Authorship, stewardship, and chronology. The enduring structure of every RROWM record.",
+  "landing.v2.pillars.authorship.title": "Authorship",
+  "landing.v2.pillars.authorship.body":
+    "Who created the work. Attributed, verifiable, and permanently linked to the canonical record.",
+  "landing.v2.pillars.authorship.detail":
+    "Authorship persists through transfer. The artist remains in the historical record even when stewardship changes.",
+  "landing.v2.pillars.stewardship.title": "Stewardship",
+  "landing.v2.pillars.stewardship.body":
+    "Who holds the work now. Custody, transfers, and verified handoffs across participants.",
+  "landing.v2.pillars.stewardship.detail":
+    "Stewardship follows the canonical ownership ledger. Every transfer is filed, not assumed.",
+  "landing.v2.pillars.chronology.title": "Chronology",
+  "landing.v2.pillars.chronology.body":
+    "What happened over time. Provenance, certification, and market evidence in one timeline.",
+  "landing.v2.pillars.chronology.detail":
+    "Chronology is append-only. Historical filings remain visible; corrections file forward.",
+  "landing.v2.visual.layerRecord": "Canonical record",
+  "landing.v2.visual.layerChronology": "Chronology layer",
+  "landing.v2.visual.layerCertificate": "Certificate",
+  "landing.v2.visual.chronologyMeta": "4 filings on file",
+  "landing.v2.visual.certificateMeta": "Registry certificate",
+  "landing.v2.visual.lineAuthorship": "Authorship, verified",
+  "landing.v2.visual.lineStewardship": "Stewardship, current holder",
+  "landing.v2.visual.lineVerified": "Verification on file",
+  "landing.v2.visual.lineIssued": "Certificate issued",
+  "landing.v2.visual.artworkEmber": "After the Last Frequency",
+  "landing.v2.visual.artworkCobalt": "Electric Field Studies III",
+  "landing.v2.visual.artworkLime": "Chromatic Drift No. 12",
+  "landing.v2.showcase.eyebrow": "The registry file",
+  "landing.v2.showcase.title": "One identity. Every layer of truth.",
+  "landing.v2.showcase.body":
+    "A living canonical record. Each filing accumulates without erasing what came before.",
+  "landing.v2.showcase.recordLabel": "Canonical record",
+  "landing.v2.showcase.recordTitle": "Signal in the Meridian",
+  "landing.v2.showcase.authorship": "Authorship",
+  "landing.v2.showcase.authorshipValue": "Attributed, verified",
+  "landing.v2.showcase.stewardship": "Stewardship",
+  "landing.v2.showcase.stewardshipValue": "Current holder on file",
+  "landing.v2.showcase.medium": "Medium",
+  "landing.v2.showcase.mediumValue": "Oil on linen, 2024",
+  "landing.v2.showcase.chronology": "Chronology",
+  "landing.v2.showcase.chronologyTitle": "Append-only timeline",
+  "landing.v2.showcase.immutableBadge": "Immutable registry event",
+  "landing.v2.showcase.tabRecord": "Record",
+  "landing.v2.showcase.tabChronology": "Chronology",
+  "landing.v2.showcase.tabCertificate": "Certificate",
+  "landing.v2.showcase.tabTransfer": "Transfer",
+  "landing.v2.showcase.certificateTitle": "Registry certificate",
+  "landing.v2.showcase.certificateStatus": "Status",
+  "landing.v2.showcase.certificateIssued": "Issued on file",
+  "landing.v2.showcase.certificateBody":
+    "Cryptographic proof tied to the canonical record. Verifiable without revealing private holdings.",
+  "landing.v2.showcase.transferTitle": "Ownership transfer",
+  "landing.v2.showcase.transferFrom": "Transfer",
+  "landing.v2.showcase.transferTo": "Gallery to collector, verified",
+  "landing.v2.showcase.transferStatus": "Recorded",
+  "landing.v2.showcase.transferBody":
+    "Verified stewardship handoffs produce registry-native evidence. Sale value and ownership filed together.",
+  "landing.v2.showcase.layer1": "Initial registration",
+  "landing.v2.showcase.layer2": "Declared value filed",
+  "landing.v2.showcase.layer3": "Certificate issued",
+  "landing.v2.showcase.layer4": "Ownership transfer recorded",
+  "landing.v2.why.eyebrow": "Why RROWM",
+  "landing.v2.why.title": "Trust infrastructure for cultural assets",
+  "landing.v2.why.lead":
+    "Not a marketplace. Not a portfolio. A canonical registry designed for institutions that take continuity seriously.",
+  "landing.v2.why.r1.title": "Canonical registry",
+  "landing.v2.why.r1.body":
+    "One persistent identity per work. The single source of truth for every participant and every filing.",
+  "landing.v2.why.r2.title": "Trust infrastructure",
+  "landing.v2.why.r2.body":
+    "Verification, certification, and multi-party attestation. Built for audit, not convenience.",
+  "landing.v2.why.r3.title": "Append-only chronology",
+  "landing.v2.why.r3.body":
+    "Provenance and value events are immutable. History is preserved; corrections file forward.",
+  "landing.v2.why.r4.title": "Cultural stewardship",
+  "landing.v2.why.r4.body":
+    "Artists remain in the authored catalogue. Collectors hold verified custody. Institutions file on behalf of the field.",
+  "landing.v2.trust.title": "Infrastructure built to outlast the market",
+  "landing.v2.trust.lead":
+    "RROWM is canonical registry infrastructure — not a marketplace, not a portfolio. Permanent records for works that matter across generations.",
+  "landing.v2.trust.archiveLabel": "Permanent record",
+  "landing.v2.trust.r1.title": "Canonical identity",
+  "landing.v2.trust.r1.body":
+    "One persistent identity per work. The single source of truth for every participant, filing, and attestation.",
+  "landing.v2.trust.r2.title": "Verification infrastructure",
+  "landing.v2.trust.r2.body":
+    "Multi-party attestation, certification, and audit trails. Built for institutions that take continuity seriously.",
+  "landing.v2.trust.r3.title": "Append-only chronology",
+  "landing.v2.trust.r3.body":
+    "Provenance and value events are immutable. History is preserved; corrections file forward, never erased.",
+  "landing.v2.trust.r4.title": "Cultural stewardship",
+  "landing.v2.trust.r4.body":
+    "Artists remain in the authored catalogue. Collectors hold verified custody. Institutions file on behalf of the field.",
+  "landing.v2.footer.closing":
+    "Cultural works deserve infrastructure as enduring as the art itself.",
+  "landing.v2.metrics.eyebrow": "Registry pulse",
+  "landing.v2.metrics.title": "Live registry activity",
+  "landing.v2.metrics.subtitle":
+    "Aggregate filings across the canonical ledger, updated as works enter the registry.",
+  "landing.v2.metrics.m1.value": "1",
+  "landing.v2.metrics.m1.label": "Canonical record per work",
+  "landing.v2.metrics.m2.value": "∞",
+  "landing.v2.metrics.m2.label": "Append-only chronology filings",
+  "landing.v2.metrics.m3.value": "4+",
+  "landing.v2.metrics.m3.label": "Participant roles on one record",
+  "landing.v2.metrics.m4.value": "0",
+  "landing.v2.metrics.m4.label": "Overwrites of registry events",
+  "landing.v2.metrics.live.works": "Works registered",
+  "landing.v2.metrics.live.artists": "Artists onboarded",
+  "landing.v2.metrics.live.value": "Value filings on record",
+  "landing.v2.metrics.live.provenance": "Provenance events filed",
+  "landing.v2.cta.eyebrow": "Begin on RROWM",
+  "landing.v2.cta.title": "The record outlives the transaction",
+  "landing.v2.cta.body":
+    "Register a work, explore the public registry layer, or take part as an artist, gallery, or collector.",
   "getStarted.title": "Choose how you take part",
   "getStarted.alreadyAccount": "Already have an account?",
   "getStarted.signIn": "Sign in",
@@ -2603,6 +2933,36 @@ const EN: Record<MessageKey, string> = {
   "registry.pagination.pageOf": "Page {page} of {totalPages}",
   "about.hero.title":
     "A system for recording authorship, provenance, and verification",
+  "about.v2.mission.eyebrow": "Institutional record",
+  "about.v2.mission.title": "Cultural infrastructure for works that must endure",
+  "about.v2.mission.body":
+    "RROWM is a registry for authorship, stewardship, and chronology — built so records remain legible across studios, collections, and institutions. Not a marketplace. Not a social feed. A durable file for cultural objects.",
+  "about.v2.pillars.title": "Three layers every record must hold",
+  "about.v2.pillar.authorship.title": "Authorship",
+  "about.v2.pillar.authorship.body":
+    "Who made the work, under what name, and with what claim to origin. Authorship is filed once and referenced everywhere the record travels.",
+  "about.v2.pillar.stewardship.title": "Stewardship",
+  "about.v2.pillar.stewardship.body":
+    "Who holds custody, represents, or answers for the work today. Stewardship can change; each transfer is filed without erasing prior fact.",
+  "about.v2.pillar.chronology.title": "Chronology",
+  "about.v2.pillar.chronology.body":
+    "An append-only ledger of registration, valuation, sale, transfer, certification, and correction. Events are ordered, attributable, and inspectable.",
+  "about.v2.infrastructure.title": "Registry infrastructure",
+  "about.v2.infrastructure.body":
+    "Records live in a structured ledger with verification states, certificates, and provenance milestones. Private negotiation happens in Studio; public trust is established on the Field. The same identifier binds both surfaces.",
+  "about.v2.why.title": "Why this matters",
+  "about.v2.why.body":
+    "Cultural value depends on continuity of fact. When authorship is disputed, custody is opaque, or history is rewritten, markets and institutions lose confidence. RROWM makes the file authoritative — so participants can act on record, not rumour.",
+  "about.v2.ecosystem.title": "Studio · Registry · Field",
+  "about.v2.ecosystem.studio.title": "Studio",
+  "about.v2.ecosystem.studio.body":
+    "Private workspace for filing works, negotiating deals, issuing certificates, and managing chronology. Where custody and commerce are executed.",
+  "about.v2.ecosystem.registry.title": "Registry",
+  "about.v2.ecosystem.registry.body":
+    "The canonical index of records on file — searchable, verifiable, and structured for institutional reference.",
+  "about.v2.ecosystem.field.title": "Field",
+  "about.v2.ecosystem.field.body":
+    "Public discovery of records, creatives, organisations, and opportunities — verification-forward, without recruitment or marketplace mechanics.",
   "signup.joinTitle": "Join the registry",
   "signup.createArtistAccount": "Create Creative account",
   "signup.subtitleArtworkAuth":
@@ -2776,6 +3136,18 @@ const EN: Record<MessageKey, string> = {
   "registry.record.provenance": "Provenance",
   "registry.record.provenanceTooltip":
     "Creation, verification, custody, and amendments filed on the Registry chronology.",
+  "registry.record.field.verification": "Verification",
+  "registry.record.field.steward": "Current steward",
+  "registry.record.field.creationDate": "Record filed",
+  "registry.record.ownershipLineage": "Ownership lineage",
+  "registry.event.registration": "Registration",
+  "registry.event.valuation": "Valuation",
+  "registry.event.sale": "Sale",
+  "registry.event.ownership_transfer": "Transfer",
+  "registry.event.certification": "Certification",
+  "registry.event.correction": "Correction",
+  "registry.event.filed": "Filed",
+  "registry.explorer.indexLabel": "Registry index",
   "registry.record.recordInsights": "Record insights",
   "registry.record.certStatusTitle": "Certificate status",
   "registry.record.certNotRecorded": "Certificate not recorded",
@@ -3559,6 +3931,20 @@ const EN: Record<MessageKey, string> = {
   "studio.artworks.notVerified": "Not verified",
   "studio.artworks.verifiedTooltip": "Verified on the record.",
   "studio.artworks.recordValue": "Record value",
+  "studio.artworks.valuationStewardOnly":
+    "Value chronology is now market-driven. Future value events are recorded automatically through verified sales and transfers.",
+  "studio.artworks.valuationMarketDriven":
+    "Value chronology is now market-driven. Future value events are recorded automatically through verified sales and transfers.",
+  "studio.artworks.valuationArtistPrimaryOnly":
+    "Only the artist may record manual value events while the work remains in the price discovery phase.",
+  "studio.artworks.phaseBadge.priceDiscovery": "Artist-led valuation phase",
+  "studio.artworks.phaseBadge.marketEvidence": "Market-driven valuation phase",
+  "studio.artworks.phaseBadge.primary": "Primary market",
+  "studio.artworks.phaseBadge.secondary": "Secondary market",
+  "studio.artworks.stewardBadge.artistOnly": "Artist only",
+  "studio.artworks.stewardBadge.steward": "Steward",
+  "studio.artworks.stewardBadge.artistAndSteward": "Artist + Steward",
+  "studio.valueEvent.immutableBadge": "Registry event — immutable record",
   "studio.artworks.noRecordId": "No record ID",
   "studio.artworks.emptyLabel": "Your studio",
   "studio.artworks.emptyTitle": "No represented works on file yet",
@@ -3572,9 +3958,13 @@ const EN: Record<MessageKey, string> = {
   "studio.certificates.emptyLabel": "Registry certificates",
   "studio.certificates.emptyTitle": "No verified certificates yet",
   "studio.ownership.filterAll": "All records ({count})",
+  "studio.ownership.filterFullCatalogue": "Full catalogue ({count})",
   "studio.ownership.filterNeedsTransfer": "Needs transfer ({count})",
   "studio.ownership.filterSold": "Sold ({count})",
+  "studio.ownership.filterSoldTransferred": "Sold / transferred ({count})",
   "studio.ownership.filterHeldByYou": "Held by you ({count})",
+  "studio.ownership.filterSemanticsHelp":
+    "Catalogue reflects authorship. Ownership reflects current stewardship.",
   "studio.ownership.noMatches": "No ownership records match your search or filter.",
   "studio.ownership.noTransfers": "No transfers yet",
   "studio.ownership.transferLedger": "{count} transfer on the ledger",
@@ -3636,6 +4026,10 @@ const EN: Record<MessageKey, string> = {
   "studio.form.visibilityPublic": "Public",
   "studio.form.visibilityCertificate": "Certificate",
   "studio.form.eventInitial": "Initial",
+  "studio.form.eventInitialValuation": "Initial valuation",
+  "studio.form.eventValuation": "Valuation",
+  "studio.form.eventExhibitionValue": "Exhibition value",
+  "studio.form.eventListingValue": "Listing value",
   "studio.form.eventPrimarySale": "Primary Sale",
   "studio.form.eventSecondarySale": "Secondary Sale",
   "studio.form.eventAppraisal": "Appraisal",
@@ -3670,7 +4064,7 @@ const EN: Record<MessageKey, string> = {
   "studio.valueEvent.helpCurrency":
     "ISO currency for the amount above. Choose the currency the value was quoted in, not an implied conversion.",
   "studio.valueEvent.helpEventTypes":
-    "Initial: first recorded anchor. Primary sale: first sale from the artist or primary market. Secondary sale: resale. Appraisal: formal valuation. Internal estimate: studio reference figure.",
+    "Primary-market filings only: initial valuation, valuation, exhibition value, listing value, or appraisal. Sale values are recorded automatically when ownership transfers.",
   "studio.valueEvent.helpVisibility":
     "Private: only you in the studio. Gallery: shared in gallery contexts. Certificate: can appear on the certificate layer. Public: eligible for public registry surfaces when policy allows.",
   "studio.valueEvent.helpNotes":
@@ -3921,6 +4315,7 @@ const EN: Record<MessageKey, string> = {
   "studio.ledger.status.unassigned": "Unassigned",
   "studio.ledger.status.recorded": "Ownership recorded",
   "studio.ledger.valueType.sale": "Sale recorded",
+  "studio.ledger.valueType.correction": "Value correction",
   "studio.ledger.valueType.auction": "Auction recorded",
   "studio.ledger.transferType.transfer": "Ownership transfer",
   "studio.ledger.transferType.initial": "Initial record",
@@ -4449,6 +4844,10 @@ const DE: Record<MessageKey, string> = {
     "Keine Einträge entsprechen Ihrer Suche oder den Filtern. Filter zurücksetzen oder alle Einträge durchsuchen.",
   "field.explorer.records.empty.clearFilters": "Filter zurücksetzen",
   "field.explorer.records.empty.browseAll": "Alle Einträge durchsuchen",
+  "field.explorer.density.label": "Ansichtsdichte",
+  "field.explorer.density.compact": "Kompakt",
+  "field.explorer.density.standard": "Standard",
+  "field.explorer.density.editorial": "Editorial",
   "field.explorer.creatives.headline": "Creatives entdecken",
   "field.explorer.creatives.lede":
     "Öffentliche Creative-Profile auf The Field · Praxis, Verifizierung und Register-Footprint. Nur Entdeckung; kein Marktplatz.",
@@ -4701,6 +5100,152 @@ const DE: Record<MessageKey, string> = {
   "landing.workspace.takePart": "Mitmachen",
   "landing.workspace.viewPublic": "Öffentliche Ebene ansehen",
   "landing.portfolio.title": "Portfoliomanagement für jede Rolle",
+  "landing.v2.hero.eyebrow": "RROWM Registry",
+  "landing.v2.hero.title": "Kulturwerke verdienen bessere Akten",
+  "landing.v2.hero.subtext":
+    "Register-Infrastruktur für Urheberschaft, Verwahrung und Chronologie — ein kanonischer Eintrag pro Werk.",
+  "landing.v2.hero.support":
+    "Für Künstlerinnen, Institutionen, Galerien und Sammlerinnen, die institutionelle Kontinuität brauchen.",
+  "landing.v2.hero.register": "Werk registrieren",
+  "landing.v2.hero.explore": "Register erkunden",
+  "landing.v2.hero.assemblyHint": "Scrollen, um den kanonischen Eintrag aus verstreuten Registerebenen zusammenzufügen.",
+  "landing.v2.problem.eyebrow": "Die Bruchstelle",
+  "landing.v2.problem.headline1": "Kunst bewegt sich.",
+  "landing.v2.problem.headline2": "Akten zerbrechen.",
+  "landing.v2.problem.lead":
+    "Werke passieren Ateliers, Galerien, Sammlungen und Institutionen — doch ihre Geschichte zerfasert in Postfächern, Tabellen und Altsystemen.",
+  "landing.v2.problem.fragment1": "Provenienz-Fragmentierung",
+  "landing.v2.problem.fragment2": "Eigentumsunklarheit",
+  "landing.v2.problem.fragment3": "Wiederverkaufs-Opazität",
+  "landing.v2.problem.fragment4": "Ausschluss der Schaffenden von der Kontinuität",
+  "landing.v2.problem.title": "Kulturelle Kontinuität darf nicht fragmentiert leben",
+  "landing.v2.problem.body":
+    "RROWM ist Register-Infrastruktur: ein kanonischer Eintrag für Urheberschaft, Verwahrung, Provenienz, Zertifizierung und Wertchronologie.",
+  "landing.v2.problem.point1":
+    "Eigentum und Verwahrung wechseln; der Eintrag muss kohärent bleiben.",
+  "landing.v2.problem.point2":
+    "Verifizierung und Zertifizierung erfordern institutionelle Nachvollziehbarkeit.",
+  "landing.v2.problem.point3":
+    "Wert- und Provenienzchronologien sind nur anhängbar — niemals überschreibbar.",
+  "landing.v2.pillars.eyebrow": "Drei Säulen",
+  "landing.v2.pillars.title": "Das Registermodell",
+  "landing.v2.pillars.subtitle":
+    "Urheberschaft, Verwahrung und Chronologie — die bleibende Struktur jedes RROWM-Eintrags.",
+  "landing.v2.pillars.authorship.title": "Urheberschaft",
+  "landing.v2.pillars.authorship.body":
+    "Wer das Werk geschaffen hat — zugeordnet, verifizierbar und dauerhaft mit dem kanonischen Eintrag verknüpft.",
+  "landing.v2.pillars.authorship.detail":
+    "Urheberschaft bleibt durch Übertragungen bestehen. Die Künstlerin bleibt in der historischen Akte, auch wenn die Verwahrung wechselt.",
+  "landing.v2.pillars.stewardship.title": "Verwahrung",
+  "landing.v2.pillars.stewardship.body":
+    "Wer das Werk jetzt hält — Verwahrung, Übertragungen und verifizierte Übergaben zwischen Beteiligten.",
+  "landing.v2.pillars.stewardship.detail":
+    "Verwahrung folgt dem kanonischen Eigentumsregister. Jede Übertragung wird eingereicht, nicht angenommen.",
+  "landing.v2.pillars.chronology.title": "Chronologie",
+  "landing.v2.pillars.chronology.body":
+    "Was im Laufe der Zeit geschah — Provenienz, Zertifizierung und Marktbelege in einer Zeitlinie.",
+  "landing.v2.pillars.chronology.detail":
+    "Chronologie ist nur anhängbar. Historische Einreichungen bleiben sichtbar; Korrekturen reichen nach vorne.",
+  "landing.v2.visual.layerRecord": "Kanonischer Eintrag",
+  "landing.v2.visual.layerChronology": "Chronologie-Ebene",
+  "landing.v2.visual.layerCertificate": "Zertifikat",
+  "landing.v2.visual.chronologyMeta": "4 Einreichungen in der Akte",
+  "landing.v2.visual.certificateMeta": "Register-Zertifikat",
+  "landing.v2.visual.lineAuthorship": "Urheberschaft · verifiziert",
+  "landing.v2.visual.lineStewardship": "Verwahrung · aktueller Inhaber",
+  "landing.v2.visual.lineVerified": "Verifizierung in der Akte",
+  "landing.v2.visual.lineIssued": "Zertifikat ausgestellt",
+  "landing.v2.visual.artworkEmber": "Nach der letzten Frequenz",
+  "landing.v2.visual.artworkCobalt": "Elektrische Feldstudien III",
+  "landing.v2.visual.artworkLime": "Chromatische Drift Nr. 12",
+  "landing.v2.showcase.eyebrow": "Die Registerakte",
+  "landing.v2.showcase.title": "Eine Identität. Jede Schicht der Wahrheit.",
+  "landing.v2.showcase.body":
+    "Ein lebendiger kanonischer Eintrag — kein Portfolio-Kachel. Jede Einreichung häuft sich an, ohne das Vorherige zu löschen.",
+  "landing.v2.showcase.recordLabel": "Kanonischer Eintrag",
+  "landing.v2.showcase.recordTitle": "Signal am Meridian",
+  "landing.v2.showcase.authorship": "Urheberschaft",
+  "landing.v2.showcase.authorshipValue": "Zugeordnet · verifiziert",
+  "landing.v2.showcase.stewardship": "Verwahrung",
+  "landing.v2.showcase.stewardshipValue": "Aktueller Inhaber in der Akte",
+  "landing.v2.showcase.medium": "Medium",
+  "landing.v2.showcase.mediumValue": "Öl auf Leinen · 2024",
+  "landing.v2.showcase.chronology": "Chronologie",
+  "landing.v2.showcase.chronologyTitle": "Nur anhängbare Zeitlinie",
+  "landing.v2.showcase.immutableBadge": "Register-Ereignis — unveränderlich",
+  "landing.v2.showcase.tabRecord": "Eintrag",
+  "landing.v2.showcase.tabChronology": "Chronologie",
+  "landing.v2.showcase.tabCertificate": "Zertifikat",
+  "landing.v2.showcase.tabTransfer": "Übertragung",
+  "landing.v2.showcase.certificateTitle": "Register-Zertifikat",
+  "landing.v2.showcase.certificateStatus": "Status",
+  "landing.v2.showcase.certificateIssued": "Ausgestellt in der Akte",
+  "landing.v2.showcase.certificateBody":
+    "Kryptografischer Nachweis, gebunden an den kanonischen Eintrag — verifizierbar ohne private Bestände preiszugeben.",
+  "landing.v2.showcase.transferTitle": "Eigentumsübertragung",
+  "landing.v2.showcase.transferFrom": "Übertragung",
+  "landing.v2.showcase.transferTo": "Galerie → Sammler · verifiziert",
+  "landing.v2.showcase.transferStatus": "Eingereicht",
+  "landing.v2.showcase.transferBody":
+    "Verifizierte Verwahrungsübergaben erzeugen register-native Belege — Verkaufswert und Eigentum gemeinsam eingereicht.",
+  "landing.v2.showcase.layer1": "Erstregistrierung",
+  "landing.v2.showcase.layer2": "Deklarierter Wert eingereicht",
+  "landing.v2.showcase.layer3": "Zertifikat ausgestellt",
+  "landing.v2.showcase.layer4": "Eigentumsübertragung eingereicht",
+  "landing.v2.why.eyebrow": "Warum RROWM",
+  "landing.v2.why.title": "Vertrauensinfrastruktur für Kulturgüter",
+  "landing.v2.why.lead":
+    "Kein Marktplatz. Kein Portfolio. Ein kanonisches Register für Institutionen, die Kontinuität ernst nehmen.",
+  "landing.v2.why.r1.title": "Kanonisches Register",
+  "landing.v2.why.r1.body":
+    "Eine dauerhafte Identität pro Werk — die einzige Quelle der Wahrheit für jeden Beteiligten und jede Einreichung.",
+  "landing.v2.why.r2.title": "Vertrauensinfrastruktur",
+  "landing.v2.why.r2.body":
+    "Verifizierung, Zertifizierung und Mehrparteien-Bestätigung — für Prüfung gebaut, nicht für Bequemlichkeit.",
+  "landing.v2.why.r3.title": "Nur anhängbare Chronologie",
+  "landing.v2.why.r3.body":
+    "Provenienz- und Wert-Ereignisse sind unveränderlich. Geschichte bleibt erhalten; Korrekturen reichen nach vorne.",
+  "landing.v2.why.r4.title": "Kulturelle Verwahrung",
+  "landing.v2.why.r4.body":
+    "Künstlerinnen bleiben im Urheberkatalog. Sammler halten verifizierte Verwahrung. Institutionen reichen im Namen des Feldes ein.",
+  "landing.v2.trust.title": "Infrastruktur, die den Markt überdauert",
+  "landing.v2.trust.lead":
+    "RROWM ist kanonische Register-Infrastruktur — kein Marktplatz, kein Portfolio. Dauerhafte Akten für Werke, die über Generationen Bestand haben.",
+  "landing.v2.trust.archiveLabel": "Dauerakte",
+  "landing.v2.trust.r1.title": "Kanonische Identität",
+  "landing.v2.trust.r1.body":
+    "Eine beständige Identität pro Werk. Die einzige Quelle der Wahrheit für jede Beteiligte, jede Einreichung und jede Bestätigung.",
+  "landing.v2.trust.r2.title": "Verifizierungs-Infrastruktur",
+  "landing.v2.trust.r2.body":
+    "Mehrparteien-Bestätigung, Zertifizierung und Prüfpfade. Für Institutionen, die Kontinuität ernst nehmen.",
+  "landing.v2.trust.r3.title": "Nur anhängbare Chronologie",
+  "landing.v2.trust.r3.body":
+    "Provenienz- und Wert-Ereignisse sind unveränderlich. Geschichte bleibt erhalten; Korrekturen werden nach vorne eingereicht.",
+  "landing.v2.trust.r4.title": "Kulturelle Verwahrung",
+  "landing.v2.trust.r4.body":
+    "Künstlerinnen bleiben im Urheberkatalog. Sammler halten verifizierte Verwahrung. Institutionen reichen im Namen des Feldes ein.",
+  "landing.v2.footer.closing":
+    "Kulturelle Werke verdienen Infrastruktur, die so beständig ist wie die Kunst selbst.",
+  "landing.v2.metrics.eyebrow": "Register-Puls",
+  "landing.v2.metrics.title": "Live-Registeraktivität",
+  "landing.v2.metrics.subtitle":
+    "Aggregierte Einreichungen im kanonischen Ledger — aktualisiert, wenn Werke ins Register eintreten.",
+  "landing.v2.metrics.m1.value": "1",
+  "landing.v2.metrics.m1.label": "Kanonischer Eintrag pro Werk",
+  "landing.v2.metrics.m2.value": "∞",
+  "landing.v2.metrics.m2.label": "Nur anhängbare Chronologie-Einreichungen",
+  "landing.v2.metrics.m3.value": "4+",
+  "landing.v2.metrics.m3.label": "Beteiligtenrollen auf einem Eintrag",
+  "landing.v2.metrics.m4.value": "0",
+  "landing.v2.metrics.m4.label": "Überschreibungen von Register-Ereignissen",
+  "landing.v2.metrics.live.works": "Registrierte Werke",
+  "landing.v2.metrics.live.artists": "Eingebundene Künstlerinnen",
+  "landing.v2.metrics.live.value": "Werteinreichungen in der Akte",
+  "landing.v2.metrics.live.provenance": "Eingereichte Provenienz-Ereignisse",
+  "landing.v2.cta.eyebrow": "Auf RROWM beginnen",
+  "landing.v2.cta.title": "Die Akte überdauert die Transaktion",
+  "landing.v2.cta.body":
+    "Registrieren Sie ein Werk, erkunden Sie die öffentliche Registerebene oder nehmen Sie als Künstlerin, Galerie oder Sammler teil.",
   "getStarted.title": "Wählen Sie, wie Sie mitmachen",
   "getStarted.alreadyAccount": "Bereits ein Konto?",
   "getStarted.signIn": "Anmelden",
@@ -4812,6 +5357,36 @@ const DE: Record<MessageKey, string> = {
   "registry.pagination.pageOf": "Seite {page} von {totalPages}",
   "about.hero.title":
     "Ein System zur Erfassung von Urheberschaft, Provenienz und Verifikation",
+  "about.v2.mission.eyebrow": "Institutioneller Nachweis",
+  "about.v2.mission.title": "Kulturelle Infrastruktur für Werke, die Bestand haben müssen",
+  "about.v2.mission.body":
+    "RROWM ist ein Register für Urheberschaft, Verwahrung und Chronologie — aufgebaut, damit Akten über Studios, Sammlungen und Institutionen hinweg lesbar bleiben. Kein Marktplatz. Kein Social Feed. Eine dauerhafte Akte für kulturelle Objekte.",
+  "about.v2.pillars.title": "Drei Schichten, die jede Akte tragen muss",
+  "about.v2.pillar.authorship.title": "Urheberschaft",
+  "about.v2.pillar.authorship.body":
+    "Wer das Werk geschaffen hat, unter welchem Namen und mit welchem Ursprungsanspruch. Urheberschaft wird einmal erfasst und überall referenziert, wohin die Akte reist.",
+  "about.v2.pillar.stewardship.title": "Verwahrung",
+  "about.v2.pillar.stewardship.body":
+    "Wer heute Verwahrung, Vertretung oder Verantwortung für das Werk trägt. Verwahrung kann wechseln; jede Übertragung wird erfasst, ohne frühere Tatsachen zu löschen.",
+  "about.v2.pillar.chronology.title": "Chronologie",
+  "about.v2.pillar.chronology.body":
+    "Ein nur anfügbares Register aus Registrierung, Bewertung, Verkauf, Übertragung, Zertifizierung und Korrektur. Ereignisse sind geordnet, zuordenbar und prüfbar.",
+  "about.v2.infrastructure.title": "Register-Infrastruktur",
+  "about.v2.infrastructure.body":
+    "Akten leben in einem strukturierten Register mit Verifikationsstatus, Zertifikaten und Provenienz-Meilensteinen. Private Verhandlung geschieht im Studio; öffentliches Vertrauen entsteht im Field. Dieselbe Kennung verbindet beide Oberflächen.",
+  "about.v2.why.title": "Warum das wichtig ist",
+  "about.v2.why.body":
+    "Kultureller Wert hängt von der Kontinuität der Fakten ab. Wenn Urheberschaft bestritten, Verwahrung undurchsichtig oder Geschichte umgeschrieben wird, verlieren Märkte und Institutionen Vertrauen. RROWM macht die Akte maßgeblich — damit Akteure nach Akte handeln, nicht nach Gerüchten.",
+  "about.v2.ecosystem.title": "Studio · Register · Field",
+  "about.v2.ecosystem.studio.title": "Studio",
+  "about.v2.ecosystem.studio.body":
+    "Privater Arbeitsraum zum Erfassen von Werken, Verhandeln von Deals, Ausstellen von Zertifikaten und Verwalten der Chronologie. Wo Verwahrung und Handel ausgeführt werden.",
+  "about.v2.ecosystem.registry.title": "Register",
+  "about.v2.ecosystem.registry.body":
+    "Der kanonische Index der erfassten Akten — durchsuchbar, verifizierbar und für institutionelle Referenz strukturiert.",
+  "about.v2.ecosystem.field.title": "Field",
+  "about.v2.ecosystem.field.body":
+    "Öffentliche Entdeckung von Akten, Kreativen, Organisationen und Möglichkeiten — verifikationsorientiert, ohne Rekrutierung oder Marktplatz-Mechanik.",
   "signup.joinTitle": "Register beitreten",
   "signup.createArtistAccount": "Creative-Konto erstellen",
   "signup.subtitleArtworkAuth":
@@ -5515,6 +6090,20 @@ const DE: Record<MessageKey, string> = {
   "studio.artworks.notVerified": "Nicht verifiziert",
   "studio.artworks.verifiedTooltip": "Im Eintrag verifiziert.",
   "studio.artworks.recordValue": "Wert erfassen",
+  "studio.artworks.valuationStewardOnly":
+    "Value chronology is now market-driven. Future value events are recorded automatically through verified sales and transfers.",
+  "studio.artworks.valuationMarketDriven":
+    "Value chronology is now market-driven. Future value events are recorded automatically through verified sales and transfers.",
+  "studio.artworks.valuationArtistPrimaryOnly":
+    "Only the artist may record manual value events while the work remains in the price discovery phase.",
+  "studio.artworks.phaseBadge.priceDiscovery": "Artist-led valuation phase",
+  "studio.artworks.phaseBadge.marketEvidence": "Market-driven valuation phase",
+  "studio.artworks.phaseBadge.primary": "Primary market",
+  "studio.artworks.phaseBadge.secondary": "Secondary market",
+  "studio.artworks.stewardBadge.artistOnly": "Artist only",
+  "studio.artworks.stewardBadge.steward": "Steward",
+  "studio.artworks.stewardBadge.artistAndSteward": "Artist + Steward",
+  "studio.valueEvent.immutableBadge": "Registry event — immutable record",
   "studio.artworks.noRecordId": "Keine Register-ID",
   "studio.artworks.emptyLabel": "Ihr Studio",
   "studio.artworks.emptyTitle": "Noch keine vertretenen Werke in der Akte",
@@ -5528,9 +6117,13 @@ const DE: Record<MessageKey, string> = {
   "studio.certificates.emptyLabel": "Registerzertifikate",
   "studio.certificates.emptyTitle": "Noch keine verifizierten Zertifikate",
   "studio.ownership.filterAll": "Alle Einträge ({count})",
+  "studio.ownership.filterFullCatalogue": "Vollständiger Katalog ({count})",
   "studio.ownership.filterNeedsTransfer": "Übertragung nötig ({count})",
   "studio.ownership.filterSold": "Verkauft ({count})",
+  "studio.ownership.filterSoldTransferred": "Verkauft / übertragen ({count})",
   "studio.ownership.filterHeldByYou": "In Ihrer Obhut ({count})",
+  "studio.ownership.filterSemanticsHelp":
+    "Der Katalog spiegelt die Urheberschaft wider. Eigentum spiegelt die aktuelle Verwahrung wider.",
   "studio.ownership.noMatches": "Keine Eigentumseinträge entsprechen Suche oder Filter.",
   "studio.ownership.noTransfers": "Noch keine Übertragungen",
   "studio.ownership.transferLedger": "{count} Übertragung im Ledger",
@@ -5602,6 +6195,10 @@ const DE: Record<MessageKey, string> = {
   "studio.form.visibilityPublic": "Öffentlich",
   "studio.form.visibilityCertificate": "Zertifikat",
   "studio.form.eventInitial": "Initial",
+  "studio.form.eventInitialValuation": "Initial valuation",
+  "studio.form.eventValuation": "Valuation",
+  "studio.form.eventExhibitionValue": "Exhibition value",
+  "studio.form.eventListingValue": "Listing value",
   "studio.form.eventPrimarySale": "Primärverkauf",
   "studio.form.eventSecondarySale": "Sekundärverkauf",
   "studio.form.eventAppraisal": "Schätzung",
@@ -5893,6 +6490,7 @@ const DE: Record<MessageKey, string> = {
   "studio.ledger.status.unassigned": "Nicht zugewiesen",
   "studio.ledger.status.recorded": "Eigentum erfasst",
   "studio.ledger.valueType.sale": "Verkauf erfasst",
+  "studio.ledger.valueType.correction": "Value correction",
   "studio.ledger.valueType.auction": "Auktion erfasst",
   "studio.ledger.transferType.transfer": "Eigentumsübertragung",
   "studio.ledger.transferType.initial": "Anfangseintrag",
@@ -6176,6 +6774,10 @@ const FR: Record<MessageKey, string> = {
     "Aucune entrée ne correspond à votre recherche ou aux filtres. Effacez les filtres ou parcourez toutes les entrées.",
   "field.explorer.records.empty.clearFilters": "Effacer les filtres",
   "field.explorer.records.empty.browseAll": "Parcourir toutes les entrées",
+  "field.explorer.density.label": "Densité d'affichage",
+  "field.explorer.density.compact": "Compact",
+  "field.explorer.density.standard": "Standard",
+  "field.explorer.density.editorial": "Éditorial",
   "field.explorer.creatives.headline": "Découvrir les Creatives",
   "field.explorer.creatives.lede":
     "Parcourez les profils Creative publics sur The Field. Pratique, vérification et empreinte registre. Découverte uniquement.",
@@ -6428,6 +7030,152 @@ const FR: Record<MessageKey, string> = {
   "landing.workspace.takePart": "Participer",
   "landing.workspace.viewPublic": "Voir la couche publique",
   "landing.portfolio.title": "Gestion de portefeuille pour chaque rôle",
+  "landing.v2.hero.eyebrow": "RROWM Registry",
+  "landing.v2.hero.title": "Les œuvres culturelles méritent de meilleures archives",
+  "landing.v2.hero.subtext":
+    "Infrastructure de registre pour la paternité, la garde et la chronologie — un dossier canonique par œuvre.",
+  "landing.v2.hero.support":
+    "Conçu pour les artistes, institutions, galeries et collectionneurs qui exigent une continuité institutionnelle.",
+  "landing.v2.hero.register": "Enregistrer une œuvre",
+  "landing.v2.hero.explore": "Explorer le registre",
+  "landing.v2.hero.assemblyHint": "Faites défiler pour assembler le dossier canonique à partir des couches dispersées du registre.",
+  "landing.v2.problem.eyebrow": "La fracture",
+  "landing.v2.problem.headline1": "L'art se déplace.",
+  "landing.v2.problem.headline2": "Les archives se brisent.",
+  "landing.v2.problem.lead":
+    "Les œuvres traversent ateliers, galeries, collections et institutions — mais leur histoire se fragmente entre boîtes mail, tableurs et systèmes hérités.",
+  "landing.v2.problem.fragment1": "Fragmentation de la provenance",
+  "landing.v2.problem.fragment2": "Ambiguïté de propriété",
+  "landing.v2.problem.fragment3": "Opacité de la revente",
+  "landing.v2.problem.fragment4": "Exclusion des créateurs de la continuité",
+  "landing.v2.problem.title": "La continuité culturelle ne doit pas vivre en fragments",
+  "landing.v2.problem.body":
+    "RROWM est une infrastructure de registre : un dossier canonique pour la paternité, la garde, la provenance, la certification et la chronologie de valeur.",
+  "landing.v2.problem.point1":
+    "Propriété et garde changent ; le dossier doit rester cohérent.",
+  "landing.v2.problem.point2":
+    "Vérification et certification exigent une auditabilité institutionnelle.",
+  "landing.v2.problem.point3":
+    "Les chronologies de valeur et de provenance sont en ajout seul — jamais réécrites.",
+  "landing.v2.pillars.eyebrow": "Trois piliers",
+  "landing.v2.pillars.title": "Le modèle de registre",
+  "landing.v2.pillars.subtitle":
+    "Paternité, garde et chronologie — la structure durable de chaque dossier RROWM.",
+  "landing.v2.pillars.authorship.title": "Paternité",
+  "landing.v2.pillars.authorship.body":
+    "Qui a créé l'œuvre — attribuée, vérifiable et liée de façon permanente au dossier canonique.",
+  "landing.v2.pillars.authorship.detail":
+    "La paternité persiste à travers les transferts. L'artiste reste dans le dossier historique même lorsque la garde change.",
+  "landing.v2.pillars.stewardship.title": "Garde",
+  "landing.v2.pillars.stewardship.body":
+    "Qui détient l'œuvre aujourd'hui — garde, transferts et passations vérifiées entre participants.",
+  "landing.v2.pillars.stewardship.detail":
+    "La garde suit le registre canonique de propriété. Chaque transfert est déposé, pas supposé.",
+  "landing.v2.pillars.chronology.title": "Chronologie",
+  "landing.v2.pillars.chronology.body":
+    "Ce qui s'est passé au fil du temps — provenance, certification et preuves de marché sur une seule ligne.",
+  "landing.v2.pillars.chronology.detail":
+    "La chronologie est en ajout seul. Les dépôts historiques restent visibles ; les corrections avancent.",
+  "landing.v2.visual.layerRecord": "Dossier canonique",
+  "landing.v2.visual.layerChronology": "Couche chronologie",
+  "landing.v2.visual.layerCertificate": "Certificat",
+  "landing.v2.visual.chronologyMeta": "4 dépôts au dossier",
+  "landing.v2.visual.certificateMeta": "Certificat de registre",
+  "landing.v2.visual.lineAuthorship": "Paternité · vérifiée",
+  "landing.v2.visual.lineStewardship": "Garde · détenteur actuel",
+  "landing.v2.visual.lineVerified": "Vérification au dossier",
+  "landing.v2.visual.lineIssued": "Certificat émis",
+  "landing.v2.visual.artworkEmber": "Après la dernière fréquence",
+  "landing.v2.visual.artworkCobalt": "Études de champ électrique III",
+  "landing.v2.visual.artworkLime": "Dérive chromatique n° 12",
+  "landing.v2.showcase.eyebrow": "Le dossier de registre",
+  "landing.v2.showcase.title": "Une identité. Chaque couche de vérité.",
+  "landing.v2.showcase.body":
+    "Un dossier canonique vivant — pas une tuile de portfolio. Chaque dépôt s'accumule sans effacer ce qui précède.",
+  "landing.v2.showcase.recordLabel": "Dossier canonique",
+  "landing.v2.showcase.recordTitle": "Signal sur le méridien",
+  "landing.v2.showcase.authorship": "Paternité",
+  "landing.v2.showcase.authorshipValue": "Attribuée · vérifiée",
+  "landing.v2.showcase.stewardship": "Garde",
+  "landing.v2.showcase.stewardshipValue": "Détenteur actuel au dossier",
+  "landing.v2.showcase.medium": "Médium",
+  "landing.v2.showcase.mediumValue": "Huile sur lin · 2024",
+  "landing.v2.showcase.chronology": "Chronologie",
+  "landing.v2.showcase.chronologyTitle": "Ligne de temps en ajout seul",
+  "landing.v2.showcase.immutableBadge": "Événement de registre — immuable",
+  "landing.v2.showcase.tabRecord": "Dossier",
+  "landing.v2.showcase.tabChronology": "Chronologie",
+  "landing.v2.showcase.tabCertificate": "Certificat",
+  "landing.v2.showcase.tabTransfer": "Transfert",
+  "landing.v2.showcase.certificateTitle": "Certificat de registre",
+  "landing.v2.showcase.certificateStatus": "Statut",
+  "landing.v2.showcase.certificateIssued": "Émis au dossier",
+  "landing.v2.showcase.certificateBody":
+    "Preuve cryptographique liée au dossier canonique — vérifiable sans révéler les détentions privées.",
+  "landing.v2.showcase.transferTitle": "Transfert de propriété",
+  "landing.v2.showcase.transferFrom": "Transfert",
+  "landing.v2.showcase.transferTo": "Galerie → Collectionneur · vérifié",
+  "landing.v2.showcase.transferStatus": "Enregistré",
+  "landing.v2.showcase.transferBody":
+    "Les passations de garde vérifiées produisent des preuves natives au registre — valeur de vente et propriété déposées ensemble.",
+  "landing.v2.showcase.layer1": "Enregistrement initial",
+  "landing.v2.showcase.layer2": "Valeur déclarée déposée",
+  "landing.v2.showcase.layer3": "Certificat émis",
+  "landing.v2.showcase.layer4": "Transfert de propriété enregistré",
+  "landing.v2.why.eyebrow": "Pourquoi RROWM",
+  "landing.v2.why.title": "Infrastructure de confiance pour les actifs culturels",
+  "landing.v2.why.lead":
+    "Pas une place de marché. Pas un portfolio. Un registre canonique pour les institutions qui prennent la continuité au sérieux.",
+  "landing.v2.why.r1.title": "Registre canonique",
+  "landing.v2.why.r1.body":
+    "Une identité persistante par œuvre — la source unique de vérité pour chaque participant et chaque dépôt.",
+  "landing.v2.why.r2.title": "Infrastructure de confiance",
+  "landing.v2.why.r2.body":
+    "Vérification, certification et attestation multipartite — conçues pour l'audit, pas la commodité.",
+  "landing.v2.why.r3.title": "Chronologie en ajout seul",
+  "landing.v2.why.r3.body":
+    "Les événements de provenance et de valeur sont immuables. L'histoire est préservée ; les corrections avancent.",
+  "landing.v2.why.r4.title": "Garde culturelle",
+  "landing.v2.why.r4.body":
+    "Les artistes restent dans le catalogue d'auteur. Les collectionneurs détiennent une garde vérifiée. Les institutions déposent au nom du champ.",
+  "landing.v2.trust.title": "Une infrastructure conçue pour survivre au marché",
+  "landing.v2.trust.lead":
+    "RROWM est une infrastructure de registre canonique — pas une place de marché, pas un portfolio. Des dossiers permanents pour les œuvres qui comptent au fil des générations.",
+  "landing.v2.trust.archiveLabel": "Dossier permanent",
+  "landing.v2.trust.r1.title": "Identité canonique",
+  "landing.v2.trust.r1.body":
+    "Une identité persistante par œuvre. La source unique de vérité pour chaque participant, dépôt et attestation.",
+  "landing.v2.trust.r2.title": "Infrastructure de vérification",
+  "landing.v2.trust.r2.body":
+    "Attestation multipartite, certification et pistes d'audit. Conçu pour les institutions qui prennent la continuité au sérieux.",
+  "landing.v2.trust.r3.title": "Chronologie en ajout seul",
+  "landing.v2.trust.r3.body":
+    "Les événements de provenance et de valeur sont immuables. L'histoire est préservée ; les corrections se déposent vers l'avant.",
+  "landing.v2.trust.r4.title": "Gestion culturelle",
+  "landing.v2.trust.r4.body":
+    "Les artistes restent dans le catalogue d'auteur. Les collectionneurs détiennent une garde vérifiée. Les institutions déposent au nom du champ.",
+  "landing.v2.footer.closing":
+    "Les œuvres culturelles méritent une infrastructure aussi durable que l'art lui-même.",
+  "landing.v2.metrics.eyebrow": "Pouls du registre",
+  "landing.v2.metrics.title": "Activité du registre en direct",
+  "landing.v2.metrics.subtitle":
+    "Dépôts agrégés sur le registre canonique — mis à jour à mesure que les œuvres entrent au registre.",
+  "landing.v2.metrics.m1.value": "1",
+  "landing.v2.metrics.m1.label": "Dossier canonique par œuvre",
+  "landing.v2.metrics.m2.value": "∞",
+  "landing.v2.metrics.m2.label": "Dépôts de chronologie en ajout seul",
+  "landing.v2.metrics.m3.value": "4+",
+  "landing.v2.metrics.m3.label": "Rôles de participants sur un dossier",
+  "landing.v2.metrics.m4.value": "0",
+  "landing.v2.metrics.m4.label": "Écrasements d'événements de registre",
+  "landing.v2.metrics.live.works": "Œuvres enregistrées",
+  "landing.v2.metrics.live.artists": "Artistes intégrés",
+  "landing.v2.metrics.live.value": "Dépôts de valeur au dossier",
+  "landing.v2.metrics.live.provenance": "Événements de provenance déposés",
+  "landing.v2.cta.eyebrow": "Commencer sur RROWM",
+  "landing.v2.cta.title": "Le dossier survit à la transaction",
+  "landing.v2.cta.body":
+    "Enregistrez une œuvre, explorez la couche publique du registre ou participez en tant qu'artiste, galerie ou collectionneur.",
   "getStarted.title": "Choisissez comment participer",
   "getStarted.alreadyAccount": "Vous avez déjà un compte ?",
   "getStarted.signIn": "Connexion",
@@ -6539,6 +7287,36 @@ const FR: Record<MessageKey, string> = {
   "registry.pagination.pageOf": "Page {page} sur {totalPages}",
   "about.hero.title":
     "Un système pour enregistrer la paternité, la provenance et la vérification",
+  "about.v2.mission.eyebrow": "Dossier institutionnel",
+  "about.v2.mission.title": "Infrastructure culturelle pour des œuvres qui doivent durer",
+  "about.v2.mission.body":
+    "RROWM est un registre de paternité, de garde et de chronologie — conçu pour que les dossiers restent lisibles à travers studios, collections et institutions. Pas une place de marché. Pas un fil social. Un dossier durable pour les objets culturels.",
+  "about.v2.pillars.title": "Trois couches que chaque dossier doit porter",
+  "about.v2.pillar.authorship.title": "Paternité",
+  "about.v2.pillar.authorship.body":
+    "Qui a fait l'œuvre, sous quel nom et avec quelle revendication d'origine. La paternité est déposée une fois et référencée partout où le dossier circule.",
+  "about.v2.pillar.stewardship.title": "Garde",
+  "about.v2.pillar.stewardship.body":
+    "Qui détient la garde, représente ou répond de l'œuvre aujourd'hui. La garde peut changer ; chaque transfert est déposé sans effacer les faits antérieurs.",
+  "about.v2.pillar.chronology.title": "Chronologie",
+  "about.v2.pillar.chronology.body":
+    "Un registre en ajout seul d'enregistrement, valorisation, vente, transfert, certification et correction. Les événements sont ordonnés, attribuables et inspectables.",
+  "about.v2.infrastructure.title": "Infrastructure du registre",
+  "about.v2.infrastructure.body":
+    "Les dossiers vivent dans un registre structuré avec états de vérification, certificats et jalons de provenance. La négociation privée se fait dans Studio ; la confiance publique s'établit sur le Field. Le même identifiant relie les deux surfaces.",
+  "about.v2.why.title": "Pourquoi c'est important",
+  "about.v2.why.body":
+    "La valeur culturelle dépend de la continuité des faits. Quand la paternité est contestée, la garde opaque ou l'histoire réécrite, marchés et institutions perdent confiance. RROWM rend le dossier faisant foi — pour agir sur dossier, pas sur rumeur.",
+  "about.v2.ecosystem.title": "Studio · Registre · Field",
+  "about.v2.ecosystem.studio.title": "Studio",
+  "about.v2.ecosystem.studio.body":
+    "Espace de travail privé pour déposer des œuvres, négocier des accords, émettre des certificats et gérer la chronologie. Où garde et commerce s'exécutent.",
+  "about.v2.ecosystem.registry.title": "Registre",
+  "about.v2.ecosystem.registry.body":
+    "L'index canonique des dossiers déposés — consultable, vérifiable et structuré pour la référence institutionnelle.",
+  "about.v2.ecosystem.field.title": "Field",
+  "about.v2.ecosystem.field.body":
+    "Découverte publique de dossiers, créatifs, organisations et opportunités — orientée vérification, sans recrutement ni mécanique de place de marché.",
   "signup.joinTitle": "Rejoindre le registre",
   "signup.createArtistAccount": "Créer un compte Créatif",
   "signup.subtitleArtworkAuth":
@@ -7240,6 +8018,20 @@ const FR: Record<MessageKey, string> = {
   "studio.artworks.notVerified": "Non vérifiée",
   "studio.artworks.verifiedTooltip": "Vérifiée au dossier.",
   "studio.artworks.recordValue": "Enregistrer la valeur",
+  "studio.artworks.valuationStewardOnly":
+    "Value chronology is now market-driven. Future value events are recorded automatically through verified sales and transfers.",
+  "studio.artworks.valuationMarketDriven":
+    "Value chronology is now market-driven. Future value events are recorded automatically through verified sales and transfers.",
+  "studio.artworks.valuationArtistPrimaryOnly":
+    "Only the artist may record manual value events while the work remains in the price discovery phase.",
+  "studio.artworks.phaseBadge.priceDiscovery": "Artist-led valuation phase",
+  "studio.artworks.phaseBadge.marketEvidence": "Market-driven valuation phase",
+  "studio.artworks.phaseBadge.primary": "Primary market",
+  "studio.artworks.phaseBadge.secondary": "Secondary market",
+  "studio.artworks.stewardBadge.artistOnly": "Artist only",
+  "studio.artworks.stewardBadge.steward": "Steward",
+  "studio.artworks.stewardBadge.artistAndSteward": "Artist + Steward",
+  "studio.valueEvent.immutableBadge": "Registry event — immutable record",
   "studio.artworks.noRecordId": "Pas d'ID de registre",
   "studio.artworks.emptyLabel": "Votre studio",
   "studio.artworks.emptyTitle": "Aucune œuvre représentée au dossier pour l'instant",
@@ -7253,9 +8045,13 @@ const FR: Record<MessageKey, string> = {
   "studio.certificates.emptyLabel": "Certificats de registre",
   "studio.certificates.emptyTitle": "Aucun certificat vérifié pour l'instant",
   "studio.ownership.filterAll": "Toutes les fiches ({count})",
+  "studio.ownership.filterFullCatalogue": "Catalogue complet ({count})",
   "studio.ownership.filterNeedsTransfer": "Transfert requis ({count})",
   "studio.ownership.filterSold": "Vendues ({count})",
+  "studio.ownership.filterSoldTransferred": "Vendues / transférées ({count})",
   "studio.ownership.filterHeldByYou": "Sous votre garde ({count})",
+  "studio.ownership.filterSemanticsHelp":
+    "Le catalogue reflète la paternité. La propriété reflète la garde actuelle.",
   "studio.ownership.noMatches": "Aucune fiche de propriété ne correspond à votre recherche ou filtre.",
   "studio.ownership.noTransfers": "Aucun transfert pour l'instant",
   "studio.ownership.transferLedger": "{count} transfert au registre",
@@ -7327,6 +8123,10 @@ const FR: Record<MessageKey, string> = {
   "studio.form.visibilityPublic": "Public",
   "studio.form.visibilityCertificate": "Certificat",
   "studio.form.eventInitial": "Initial",
+  "studio.form.eventInitialValuation": "Initial valuation",
+  "studio.form.eventValuation": "Valuation",
+  "studio.form.eventExhibitionValue": "Exhibition value",
+  "studio.form.eventListingValue": "Listing value",
   "studio.form.eventPrimarySale": "Vente primaire",
   "studio.form.eventSecondarySale": "Vente secondaire",
   "studio.form.eventAppraisal": "Expertise",
@@ -7622,6 +8422,7 @@ const FR: Record<MessageKey, string> = {
   "studio.ledger.status.unassigned": "Non attribué",
   "studio.ledger.status.recorded": "Propriété enregistrée",
   "studio.ledger.valueType.sale": "Vente enregistrée",
+  "studio.ledger.valueType.correction": "Value correction",
   "studio.ledger.valueType.auction": "Vente aux enchères enregistrée",
   "studio.ledger.transferType.transfer": "Transfert de propriété",
   "studio.ledger.transferType.initial": "Enregistrement initial",
@@ -7906,6 +8707,10 @@ const JA: Record<MessageKey, string> = {
     "検索またはフィルターに一致するレコードがありません。フィルターを解除するか、すべてのレコードを閲覧してください。",
   "field.explorer.records.empty.clearFilters": "フィルターを解除",
   "field.explorer.records.empty.browseAll": "すべてのレコードを閲覧",
+  "field.explorer.density.label": "表示密度",
+  "field.explorer.density.compact": "コンパクト",
+  "field.explorer.density.standard": "標準",
+  "field.explorer.density.editorial": "エディトリアル",
   "field.explorer.creatives.headline": "Creative を探す",
   "field.explorer.creatives.lede":
     "The Field 上の公開 Creative プロフィールを閲覧 · プラクティス、検証、レジストリの footprint。発見のみ。",
@@ -8154,6 +8959,152 @@ const JA: Record<MessageKey, string> = {
   "landing.workspace.takePart": "参加する",
   "landing.workspace.viewPublic": "公開レイヤーを見る",
   "landing.portfolio.title": "すべての役割でポートフォリオ管理",
+  "landing.v2.hero.eyebrow": "RROWM Registry",
+  "landing.v2.hero.title": "文化作品には、より良い記録が必要です",
+  "landing.v2.hero.subtext":
+    "作者性・管理・年表のためのレジストリ基盤 — 作品ごとに一つの正典記録。",
+  "landing.v2.hero.support":
+    "機関水準の継続性を求めるアーティスト、機関、ギャラリー、コレクター向けに構築。",
+  "landing.v2.hero.register": "作品を登録",
+  "landing.v2.hero.explore": "レジストリを探索",
+  "landing.v2.hero.assemblyHint": "スクロールして、分散したレジストリ層から正典記録を組み立てる。",
+  "landing.v2.problem.eyebrow": "断絶",
+  "landing.v2.problem.headline1": "アートは動く。",
+  "landing.v2.problem.headline2": "記録は壊れる。",
+  "landing.v2.problem.lead":
+    "作品はアトリエ、ギャラリー、コレクション、機関を通過する — しかしその歴史は受信箱、表計算、レガシーシステムに散らばる。",
+  "landing.v2.problem.fragment1": "来歴の断片化",
+  "landing.v2.problem.fragment2": "所有の曖昧さ",
+  "landing.v2.problem.fragment3": "再販の不透明さ",
+  "landing.v2.problem.fragment4": "継続性からの創作者の排除",
+  "landing.v2.problem.title": "文化的継続性は断片の中にあってはならない",
+  "landing.v2.problem.body":
+    "RROWMはレジストリ基盤です — 作者性、保管、来歴、認証、価値年表のための単一の正典記録。",
+  "landing.v2.problem.point1":
+    "所有と管理は変わる。記録は一貫性を保たなければならない。",
+  "landing.v2.problem.point2":
+    "検証と認証には機関水準の監査可能性が必要です。",
+  "landing.v2.problem.point3":
+    "価値と来歴の年表は追記のみ — 決して書き換えない。",
+  "landing.v2.pillars.eyebrow": "三つの柱",
+  "landing.v2.pillars.title": "レジストリモデル",
+  "landing.v2.pillars.subtitle":
+    "作者性、管理、年表 — すべてのRROWM記録の永続的な構造。",
+  "landing.v2.pillars.authorship.title": "作者性",
+  "landing.v2.pillars.authorship.body":
+    "誰が作品を創ったか — 帰属され、検証可能で、正典記録に永続的に結び付けられる。",
+  "landing.v2.pillars.authorship.detail":
+    "作者性は移転を通じて存続する。管理が変わっても、アーティストは歴史記録に残る。",
+  "landing.v2.pillars.stewardship.title": "管理",
+  "landing.v2.pillars.stewardship.body":
+    "現在誰が作品を保有しているか — 保管、移転、参加者間の検証済み引き渡し。",
+  "landing.v2.pillars.stewardship.detail":
+    "管理は正典の所有台帳に従う。すべての移転は推測ではなく記録される。",
+  "landing.v2.pillars.chronology.title": "年表",
+  "landing.v2.pillars.chronology.body":
+    "時間の経過とともに起きたこと — 来歴、認証、市場証拠を一つのタイムラインに。",
+  "landing.v2.pillars.chronology.detail":
+    "年表は追記のみ。過去の記録は可視のまま。訂正は前に積み重なる。",
+  "landing.v2.visual.layerRecord": "正典記録",
+  "landing.v2.visual.layerChronology": "年表レイヤー",
+  "landing.v2.visual.layerCertificate": "証明書",
+  "landing.v2.visual.chronologyMeta": "記録上の4件の申請",
+  "landing.v2.visual.certificateMeta": "レジストリ証明書",
+  "landing.v2.visual.lineAuthorship": "作者性 · 検証済み",
+  "landing.v2.visual.lineStewardship": "管理 · 現在の保有者",
+  "landing.v2.visual.lineVerified": "記録上の検証",
+  "landing.v2.visual.lineIssued": "証明書発行",
+  "landing.v2.visual.artworkEmber": "最後の周波数のあと",
+  "landing.v2.visual.artworkCobalt": "電界研究 III",
+  "landing.v2.visual.artworkLime": "色彩漂流 No. 12",
+  "landing.v2.showcase.eyebrow": "レジストリファイル",
+  "landing.v2.showcase.title": "一つのID。あらゆる層の真実。",
+  "landing.v2.showcase.body":
+    "生きた正典記録 — ポートフォリオのタイルではない。各申請は過去を消さずに積み重なる。",
+  "landing.v2.showcase.recordLabel": "正典記録",
+  "landing.v2.showcase.recordTitle": "子午線のシグナル",
+  "landing.v2.showcase.authorship": "作者性",
+  "landing.v2.showcase.authorshipValue": "帰属 · 検証済み",
+  "landing.v2.showcase.stewardship": "管理",
+  "landing.v2.showcase.stewardshipValue": "記録上の現在の保有者",
+  "landing.v2.showcase.medium": "媒材",
+  "landing.v2.showcase.mediumValue": "リネンに油彩 · 2024",
+  "landing.v2.showcase.chronology": "年表",
+  "landing.v2.showcase.chronologyTitle": "追記のみのタイムライン",
+  "landing.v2.showcase.immutableBadge": "レジストリイベント — 不変",
+  "landing.v2.showcase.tabRecord": "記録",
+  "landing.v2.showcase.tabChronology": "年表",
+  "landing.v2.showcase.tabCertificate": "証明書",
+  "landing.v2.showcase.tabTransfer": "移転",
+  "landing.v2.showcase.certificateTitle": "レジストリ証明書",
+  "landing.v2.showcase.certificateStatus": "ステータス",
+  "landing.v2.showcase.certificateIssued": "記録上で発行",
+  "landing.v2.showcase.certificateBody":
+    "正典記録に結び付いた暗号証明 — 私的保有を開示せずに検証可能。",
+  "landing.v2.showcase.transferTitle": "所有移転",
+  "landing.v2.showcase.transferFrom": "移転",
+  "landing.v2.showcase.transferTo": "ギャラリー → コレクター · 検証済み",
+  "landing.v2.showcase.transferStatus": "記録済み",
+  "landing.v2.showcase.transferBody":
+    "検証済みの管理引き渡しはレジストリネイティブな証拠を生む — 販売価値と所有がともに記録される。",
+  "landing.v2.showcase.layer1": "初回登録",
+  "landing.v2.showcase.layer2": "申告価値の記録",
+  "landing.v2.showcase.layer3": "証明書発行",
+  "landing.v2.showcase.layer4": "所有移転の記録",
+  "landing.v2.why.eyebrow": "なぜRROWMか",
+  "landing.v2.why.title": "文化資産のための信頼基盤",
+  "landing.v2.why.lead":
+    "マーケットプレイスではない。ポートフォリオでもない。継続性を真剣に受け止める機関のための正典レジストリ。",
+  "landing.v2.why.r1.title": "正典レジストリ",
+  "landing.v2.why.r1.body":
+    "作品ごとに一つの永続的ID — すべての参加者と申請のための単一の真実の源。",
+  "landing.v2.why.r2.title": "信頼基盤",
+  "landing.v2.why.r2.body":
+    "検証、認証、複数者の証明 — 利便性ではなく監査のために構築。",
+  "landing.v2.why.r3.title": "追記のみの年表",
+  "landing.v2.why.r3.body":
+    "来歴と価値のイベントは不変。歴史は保存され、訂正は前に積み重なる。",
+  "landing.v2.why.r4.title": "文化の管理",
+  "landing.v2.why.r4.body":
+    "アーティストは作者カタログに残る。コレクターは検証済みの保管を保有する。機関はフィールドのために記録する。",
+  "landing.v2.trust.title": "市場を超えて存続するインフラ",
+  "landing.v2.trust.lead":
+    "RROWMは正典レジストリ・インフラです。マーケットプレイスでもポートフォリオでもありません。世代を超えて重要な作品のための永続的な記録。",
+  "landing.v2.trust.archiveLabel": "永続記録",
+  "landing.v2.trust.r1.title": "正典アイデンティティ",
+  "landing.v2.trust.r1.body":
+    "作品ごとに一つの持続的なアイデンティティ。すべての参加者、申請、証明の唯一の信頼源。",
+  "landing.v2.trust.r2.title": "検証インフラ",
+  "landing.v2.trust.r2.body":
+    "複数当事者の証明、認証、監査証跡。継続性を真剣に受け止める機関のために構築。",
+  "landing.v2.trust.r3.title": "追記のみの年表",
+  "landing.v2.trust.r3.body":
+    "来歴と価値のイベントは不変。歴史は保存され、訂正は前方向に記録される。",
+  "landing.v2.trust.r4.title": "文化的な管理",
+  "landing.v2.trust.r4.body":
+    "アーティストは作者カタログに残る。コレクターは検証済みの保管を保有する。機関はフィールドのために記録する。",
+  "landing.v2.footer.closing":
+    "文化的な作品には、芸術そのものと同じくらい永続するインフラが必要です。",
+  "landing.v2.metrics.eyebrow": "レジストリの脈拍",
+  "landing.v2.metrics.title": "ライブレジストリ活動",
+  "landing.v2.metrics.subtitle":
+    "正典台帳全体の集計申請 — 作品がレジストリに入るたびに更新。",
+  "landing.v2.metrics.m1.value": "1",
+  "landing.v2.metrics.m1.label": "作品ごとに一つの正典記録",
+  "landing.v2.metrics.m2.value": "∞",
+  "landing.v2.metrics.m2.label": "追記のみの年表申請",
+  "landing.v2.metrics.m3.value": "4+",
+  "landing.v2.metrics.m3.label": "一つの記録上の参加者ロール",
+  "landing.v2.metrics.m4.value": "0",
+  "landing.v2.metrics.m4.label": "レジストリイベントの上書き",
+  "landing.v2.metrics.live.works": "登録作品数",
+  "landing.v2.metrics.live.artists": "参加アーティスト数",
+  "landing.v2.metrics.live.value": "記録上の価値申請",
+  "landing.v2.metrics.live.provenance": "記録された来歴イベント",
+  "landing.v2.cta.eyebrow": "RROWMで始める",
+  "landing.v2.cta.title": "記録は取引を超えて存続する",
+  "landing.v2.cta.body":
+    "作品を登録する、公開レジストリレイヤーを探索する、またはアーティスト、ギャラリー、コレクターとして参加する。",
   "getStarted.title": "参加方法を選ぶ",
   "getStarted.alreadyAccount": "すでにアカウントをお持ちですか？",
   "getStarted.signIn": "サインイン",
@@ -8263,6 +9214,36 @@ const JA: Record<MessageKey, string> = {
   "registry.pagination.next": "次へ",
   "registry.pagination.pageOf": "{totalPages} ページ中 {page}",
   "about.hero.title": "作者性・来歴・検証を記録するシステム",
+  "about.v2.mission.eyebrow": "制度的記録",
+  "about.v2.mission.title": "存続すべき作品のための文化インフラ",
+  "about.v2.mission.body":
+    "RROWMは作者性・管理・年表のためのレジストリです。スタジオ、コレクション、機関をまたいで記録が読み継がれるよう設計されています。マーケットプレイスではありません。ソーシャルフィードでもありません。文化対象のための永続的なファイルです。",
+  "about.v2.pillars.title": "すべての記録が保持すべき三つの層",
+  "about.v2.pillar.authorship.title": "作者性",
+  "about.v2.pillar.authorship.body":
+    "誰が、どの名義で、どのような起源の主張のもとに作品を制作したか。作者性は一度登録され、記録が移動するあらゆる場所で参照されます。",
+  "about.v2.pillar.stewardship.title": "管理",
+  "about.v2.pillar.stewardship.body":
+    "今日、誰が保管・代表・責任を担うか。管理は変わり得ます。各移転は記録され、過去の事実は消されません。",
+  "about.v2.pillar.chronology.title": "年表",
+  "about.v2.pillar.chronology.body":
+    "登録、評価、売却、移転、認証、訂正の追記のみの台帳。イベントは順序付けられ、帰属可能で、検証できます。",
+  "about.v2.infrastructure.title": "レジストリ・インフラ",
+  "about.v2.infrastructure.body":
+    "記録は検証状態、証明書、来歴マイルストーンを備えた構造化台帳に存在します。私的な交渉はStudioで、公的な信頼はFieldで確立されます。同一の識別子が両面を結びます。",
+  "about.v2.why.title": "なぜ重要か",
+  "about.v2.why.body":
+    "文化的価値は事実の連続性に依存します。作者性が争われ、保管が不透明になり、歴史が書き換えられると、市場と機関は信頼を失います。RROWMはファイルを権威あるものにし、噂ではなく記録に基づいて行動できるようにします。",
+  "about.v2.ecosystem.title": "Studio · Registry · Field",
+  "about.v2.ecosystem.studio.title": "Studio",
+  "about.v2.ecosystem.studio.body":
+    "作品登録、取引交渉、証明書発行、年表管理のための私的ワークスペース。保管と商取引が実行される場所。",
+  "about.v2.ecosystem.registry.title": "Registry",
+  "about.v2.ecosystem.registry.body":
+    "登録済み記録の正典インデックス — 検索可能、検証可能、制度的参照向けに構造化。",
+  "about.v2.ecosystem.field.title": "Field",
+  "about.v2.ecosystem.field.body":
+    "記録、クリエイティブ、組織、機会の公開発見 — 検証重視、勧誘やマーケットプレイス的仕組みなし。",
   "signup.joinTitle": "レジストリに参加",
   "signup.createArtistAccount": "クリエイティブアカウントを作成",
   "signup.subtitleArtworkAuth":
@@ -8961,6 +9942,20 @@ const JA: Record<MessageKey, string> = {
   "studio.artworks.notVerified": "未検証",
   "studio.artworks.verifiedTooltip": "記録上で検証済み。",
   "studio.artworks.recordValue": "価値を記録",
+  "studio.artworks.valuationStewardOnly":
+    "Value chronology is now market-driven. Future value events are recorded automatically through verified sales and transfers.",
+  "studio.artworks.valuationMarketDriven":
+    "Value chronology is now market-driven. Future value events are recorded automatically through verified sales and transfers.",
+  "studio.artworks.valuationArtistPrimaryOnly":
+    "Only the artist may record manual value events while the work remains in the price discovery phase.",
+  "studio.artworks.phaseBadge.priceDiscovery": "Artist-led valuation phase",
+  "studio.artworks.phaseBadge.marketEvidence": "Market-driven valuation phase",
+  "studio.artworks.phaseBadge.primary": "Primary market",
+  "studio.artworks.phaseBadge.secondary": "Secondary market",
+  "studio.artworks.stewardBadge.artistOnly": "Artist only",
+  "studio.artworks.stewardBadge.steward": "Steward",
+  "studio.artworks.stewardBadge.artistAndSteward": "Artist + Steward",
+  "studio.valueEvent.immutableBadge": "Registry event — immutable record",
   "studio.artworks.noRecordId": "レジストリIDなし",
   "studio.artworks.emptyLabel": "あなたのスタジオ",
   "studio.artworks.emptyTitle": "まだ代表作品の記録がありません",
@@ -8974,9 +9969,13 @@ const JA: Record<MessageKey, string> = {
   "studio.certificates.emptyLabel": "レジストリ証明書",
   "studio.certificates.emptyTitle": "まだ検証済みの証明書がありません",
   "studio.ownership.filterAll": "すべての記録 ({count})",
+  "studio.ownership.filterFullCatalogue": "全カタログ ({count})",
   "studio.ownership.filterNeedsTransfer": "移転が必要 ({count})",
   "studio.ownership.filterSold": "売却済み ({count})",
+  "studio.ownership.filterSoldTransferred": "売却 / 移転済み ({count})",
   "studio.ownership.filterHeldByYou": "あなたが保管 ({count})",
+  "studio.ownership.filterSemanticsHelp":
+    "カタログは作者性を示します。所有権は現在の管理を示します。",
   "studio.ownership.noMatches": "検索またはフィルターに一致する所有記録はありません。",
   "studio.ownership.noTransfers": "まだ移転がありません",
   "studio.ownership.transferLedger": "台帳に{count}件の移転",
@@ -9048,6 +10047,10 @@ const JA: Record<MessageKey, string> = {
   "studio.form.visibilityPublic": "公開",
   "studio.form.visibilityCertificate": "証明書",
   "studio.form.eventInitial": "初期",
+  "studio.form.eventInitialValuation": "Initial valuation",
+  "studio.form.eventValuation": "Valuation",
+  "studio.form.eventExhibitionValue": "Exhibition value",
+  "studio.form.eventListingValue": "Listing value",
   "studio.form.eventPrimarySale": "一次販売",
   "studio.form.eventSecondarySale": "二次販売",
   "studio.form.eventAppraisal": "鑑定",
@@ -9330,6 +10333,7 @@ const JA: Record<MessageKey, string> = {
   "studio.ledger.status.unassigned": "未割当",
   "studio.ledger.status.recorded": "所有を記録",
   "studio.ledger.valueType.sale": "売却を記録",
+  "studio.ledger.valueType.correction": "Value correction",
   "studio.ledger.valueType.auction": "オークションを記録",
   "studio.ledger.transferType.transfer": "所有移転",
   "studio.ledger.transferType.initial": "初期記録",

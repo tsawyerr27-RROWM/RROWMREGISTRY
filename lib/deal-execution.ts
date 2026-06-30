@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import type { OwnershipLoopPrompt } from "@/lib/acquisition-ownership-loop";
+import type { OwnershipLoopPrompt, AcquisitionTransferContext } from "@/lib/acquisition-ownership-loop";
 
 import {
   getDealExecutionRecord,
@@ -76,6 +76,13 @@ export type DealExecutionRecord =
   | RepresentationExecutionRecord
   | LicensingExecutionRecord;
 
+export type ExecutionBlockReason =
+  | "artwork_unverified"
+  | "not_current_owner"
+  | "missing_recipient_email"
+  | "execution_unavailable"
+  | "unknown";
+
 export type DealExecutionPanelState = {
   visible: boolean;
   recorded: boolean;
@@ -87,7 +94,11 @@ export type DealExecutionPanelState = {
   ledger_href: string | null;
   rights_ledger_href: string | null;
   reason: string | null;
+  reason_code?: ExecutionBlockReason | null;
+  /** True when the viewer can resolve an artwork verification blocker. */
+  can_resolve_verification?: boolean;
   ownership_loop: OwnershipLoopPrompt | null;
+  acquisition_transfer?: AcquisitionTransferContext | null;
 };
 
 const EXECUTABLE_STATUSES = new Set(["accepted", "closed"]);
@@ -552,6 +563,8 @@ export function buildDealExecutionPanelState(args: {
   artworkTitle: string | null;
   canInitiate: boolean;
   reason: string | null;
+  reasonCode?: ExecutionBlockReason | null;
+  canResolveVerification?: boolean;
   restrictToKind?: DealExecutionKind;
   ownershipLoop?: OwnershipLoopPrompt | null;
 }): DealExecutionPanelState {
@@ -593,6 +606,8 @@ export function buildDealExecutionPanelState(args: {
     rights_ledger_href:
       kind === "licensing" ? studioRightsHref(rightsLicenseId) : null,
     reason: args.reason,
+    reason_code: args.reasonCode ?? null,
+    can_resolve_verification: args.canResolveVerification ?? false,
     ownership_loop: args.ownershipLoop ?? null,
   };
 }

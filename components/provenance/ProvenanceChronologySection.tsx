@@ -6,6 +6,7 @@ import { useLocalePreferences } from "@/components/providers/LocalePreferencesPr
 import { ProvenanceCompletenessBand } from "@/components/provenance/ProvenanceCompletenessBand";
 import { ProvenanceEvidencePanel } from "@/components/provenance/ProvenanceEvidencePanel";
 import { ProvenanceMilestoneRail } from "@/components/provenance/ProvenanceMilestoneRail";
+import { registryV2 } from "@/styles/registry-v2";
 
 type Props = {
   bundle: ArchivalProvenanceBundle;
@@ -36,12 +37,14 @@ export function ProvenanceChronologySection({
       />
 
       <div>
-        <h3 className="font-serif text-xl font-normal tracking-tight text-neutral-950 md:text-2xl">
-          {t("provenance.chronology")}
-        </h3>
-        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-neutral-600">
-          {t("provenance.chronologyIntro")}
-        </p>
+        <div className="v2-surface-archive-sheet pl-5 md:pl-6">
+          <h3 className={registryV2.type.sectionTitle}>
+            {t("provenance.chronology")}
+          </h3>
+          <p className={`${registryV2.type.metaValue} mt-4 max-w-2xl`}>
+            {t("provenance.chronologyIntro")}
+          </p>
+        </div>
 
         {temporalRecall.length > 0 ? (
           <div className="mt-5 max-w-2xl space-y-2 text-sm leading-relaxed text-neutral-500">
@@ -53,7 +56,7 @@ export function ProvenanceChronologySection({
 
         <ProvenanceMilestoneRail events={events} />
 
-        <ol className="mt-8 list-none space-y-0 p-0" role="list">
+        <ol className="mt-10 list-none space-y-0 p-0" role="list">
           {events.map((ev, i) => (
             <ProvenanceEvidencePanel
               key={ev.key}
@@ -62,6 +65,7 @@ export function ProvenanceChronologySection({
               registryId={registryId}
               artworkTitle={artworkTitle}
               isLast={i === events.length - 1}
+              index={i}
             />
           ))}
         </ol>

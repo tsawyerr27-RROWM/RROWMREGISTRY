@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 import { logActivityEvent } from "@/lib/log-activity";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
+import { isPrimaryMarketManualValueType } from "@/lib/can-record-value-event";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 
 export const runtime = "nodejs";
@@ -19,6 +21,10 @@ type Body = {
   catalogue_artist_name?: string | null;
   artist_id?: string | null;
   pending_artist_email?: string | null;
+  declared_value?: string | number | null;
+  currency?: string | null;
+  value_type?: string | null;
+  visibility_level?: string | null;
 };
 
 /** Institution catalogue registration — canonical record + filing in one RPC. */
@@ -118,6 +124,47 @@ export async function POST(req: Request) {
 
   const artworkId = row?.id ? String(row.id) : null;
   const regSuffix = ` (${registryId})`;
+
+  const declaredValueRaw = body.declared_value;
+  const declaredValue =
+    declaredValueRaw != null && String(declaredValueRaw).trim() !== ""
+      ? Number(declaredValueRaw)
+      : null;
+
+  if (artworkId && declaredValue != null && !Number.isNaN(declaredValue) && declaredValue > 0) {
+    const valueType = String(body.value_type ?? "initial_valuation").trim().toLowerCase();
+    if (!isPrimaryMarketManualValueType(valueType)) {
+      return NextResponse.json(
+        { error: "Invalid value_type for primary-market filing." },
+        { status: 400 }
+      );
+    }
+
+    const currency = String(body.currency ?? "").trim().toUpperCase();
+    if (!currency) {
+      return NextResponse.json(
+        { error: "Currency is required when filing an initial value." },
+        { status: 400 }
+      );
+    }
+
+    const service = createSupabaseServiceClient();
+    const { error: valueError } = await service.from("value_events").insert({
+      artwork_id: artworkId,
+      declared_value: declaredValue,
+      currency,
+      value_type: valueType,
+      visibility_level: String(body.visibility_level ?? "private").trim() || "private",
+      source: "institution_registration",
+    });
+
+    if (valueError) {
+      console.warn(
+        "[register-institution-artwork] value event",
+        summarizeRpcError(valueError)
+      );
+    }
+  }
 
   void logActivityEvent({
     userId: user.id,

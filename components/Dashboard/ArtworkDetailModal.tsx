@@ -6,9 +6,15 @@ import ModalShell from "@/components/ui/ModalShell";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { formatValueEventLabel } from "@/lib/format-registry-labels";
+import { ValueEventImmutableBadge } from "@/components/Studio/ValueEventImmutableBadge";
+import {
+  resolveValuationDisabledReason,
+  resolveValueChronologyPhase,
+} from "@/lib/can-record-value-event";
 
 type ArtworkLike = {
   id?: string;
+  artist_id?: string | null;
   title?: string;
   registry_id?: string | null;
   image_url?: string | null;
@@ -26,31 +32,51 @@ type ValueEventLike = {
   declared_value?: number | string | null;
   visibility_level?: string | null;
   note?: string | null;
+  references_event_id?: string | null;
 };
 
 type ArtworkDetailModalProps = {
   artwork: ArtworkLike;
   onClose: () => void;
   valueHistory: ValueEventLike[];
+  viewerUserId?: string | null;
+  hasCompletedSale?: boolean;
+  canRecordValue?: boolean;
 };
 
 export function ArtworkDetailModal({
   artwork,
   onClose,
   valueHistory,
+  viewerUserId,
+  hasCompletedSale = false,
+  canRecordValue = true,
 }: ArtworkDetailModalProps) {
   const { t } = useLocalePreferences();
+
+  if (!artwork) {
+    return null;
+  }
+
   const hasScroll = valueHistory.length > 0;
+  const valuePhase = resolveValueChronologyPhase({ hasCompletedSale });
+  const valuationDisabledKey =
+    resolveValuationDisabledReason({
+      userId: viewerUserId,
+      artistId: artwork.artist_id,
+      hasCompletedSale,
+    }) === "artist_primary_only"
+      ? "studio.artworks.valuationArtistPrimaryOnly"
+      : "studio.artworks.valuationMarketDriven";
 
   return (
     <ModalShell
-      isOpen={!!artwork}
+      isOpen
       onClose={onClose}
       tone="light"
       panelClassName="relative max-h-[90vh] w-full max-w-4xl overflow-hidden"
     >
-      {artwork && (
-        <div className="relative max-h-[90vh] overflow-y-auto overscroll-contain">
+      <div className="relative max-h-[90vh] overflow-y-auto overscroll-contain">
           <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-px bg-gradient-to-r from-transparent via-emerald-400/35 to-transparent" />
           <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-emerald-400/14 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-20 -left-20 h-56 w-56 rounded-full bg-violet-400/12 blur-3xl" />
@@ -83,6 +109,13 @@ export function ArtworkDetailModal({
                   {[artwork.year, artwork.medium].filter(Boolean).join(" · ") ||
                     "–"}
                 </p>
+                <p className="mt-3">
+                  <span className="inline-flex rounded-full bg-violet-50 px-3 py-1 text-[11px] font-semibold text-violet-900 ring-1 ring-violet-200/80">
+                    {valuePhase === "price_discovery"
+                      ? t("studio.artworks.phaseBadge.priceDiscovery")
+                      : t("studio.artworks.phaseBadge.marketEvidence")}
+                  </span>
+                </p>
                 {artwork.dimensions ? (
                   <p className="mt-2 text-[15px] text-neutral-500">
                     {artwork.dimensions}
@@ -110,6 +143,12 @@ export function ArtworkDetailModal({
                   </p>
                 </div>
               </div>
+
+              {!canRecordValue ? (
+                <p className="mb-4 text-[13px] leading-relaxed text-neutral-600">
+                  {t(valuationDisabledKey)}
+                </p>
+              ) : null}
 
               {valueHistory.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-neutral-300/90 bg-white/60 px-5 py-8 text-center">
@@ -139,6 +178,9 @@ export function ArtworkDetailModal({
                             <p className="text-sm font-semibold text-emerald-700/90">
                               {formatValueEventLabel(event.value_type ?? null)}
                             </p>
+                            <div className="mt-1.5">
+                              <ValueEventImmutableBadge />
+                            </div>
                             <p className="mt-1.5 text-xs text-neutral-500">
                               {new Date(event.created_at).toLocaleString()}
                             </p>
@@ -166,6 +208,11 @@ export function ArtworkDetailModal({
                                 {event.note}
                               </p>
                             ) : null}
+                            {event.references_event_id ? (
+                              <p className="mt-2 text-[12px] text-neutral-500">
+                                Corrects filing {event.references_event_id.slice(0, 8)}…
+                              </p>
+                            ) : null}
                           </div>
                         </div>
                       </div>
@@ -178,7 +225,6 @@ export function ArtworkDetailModal({
             <div className="h-2 shrink-0" aria-hidden />
           </div>
         </div>
-      )}
     </ModalShell>
   );
 }

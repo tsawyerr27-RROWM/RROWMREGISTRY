@@ -1,9 +1,14 @@
 "use client";
 
-import { useId, useState, type ReactNode } from "react";
+import { useId, useRef, useState, type ReactNode } from "react";
 import ModalShell from "@/components/ui/ModalShell";
 import { CurrencyCombobox } from "@/components/ui/CurrencyCombobox";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import {
+  consequenceSurfaceFromTarget,
+  triggerConsequenceFeedback,
+} from "@/lib/consequence-feedback-runtime";
+import { studioFilingForm } from "@/styles/studio-filing-form";
 
 export type AddValueEventFormState = {
   declared_value: string;
@@ -20,17 +25,10 @@ type ArtworkMini = {
   image_url?: string | null;
 };
 
-/** Shared with RegisterModal — `liquid-glass-inset` uses border-radius:0 in CSS; override for round fields */
-const fieldBase =
-  "liquid-glass-inset !rounded-2xl mt-2 w-full px-4 py-3.5 text-[15px] leading-snug text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/15";
-
-const selectClass = `${fieldBase} appearance-none`;
-
-const btnGhost =
-  "liquid-glass-inset !rounded-2xl px-6 py-3 text-sm font-semibold text-neutral-800 transition hover:bg-white/70";
-
-const btnPrimary =
-  "rounded-2xl bg-neutral-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-neutral-900 disabled:cursor-not-allowed disabled:opacity-60";
+const fieldBase = `${studioFilingForm.field} mt-2`;
+const selectClass = studioFilingForm.select;
+const btnGhost = studioFilingForm.secondary;
+const btnPrimary = studioFilingForm.primary;
 
 function InfoTip({ title, children }: { title: string; children: ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -109,6 +107,16 @@ export function AddValueEventModal({
   const typeId = useId();
   const visId = useId();
   const noteId = useId();
+  const submitRef = useRef<HTMLButtonElement>(null);
+
+  const handleSubmit = () => {
+    const target = submitRef.current;
+    triggerConsequenceFeedback("registryCommit", {
+      target,
+      surface: consequenceSurfaceFromTarget(target),
+    });
+    onSubmit();
+  };
 
   return (
     <ModalShell
@@ -195,17 +203,17 @@ export function AddValueEventModal({
                     })
                   }
                 >
-                  <option value="initial">{t("studio.form.eventInitial")}</option>
-                  <option value="primary_sale">
-                    {t("studio.form.eventPrimarySale")}
+                  <option value="initial_valuation">
+                    {t("studio.form.eventInitialValuation")}
                   </option>
-                  <option value="secondary_sale">
-                    {t("studio.form.eventSecondarySale")}
+                  <option value="valuation">{t("studio.form.eventValuation")}</option>
+                  <option value="exhibition_value">
+                    {t("studio.form.eventExhibitionValue")}
+                  </option>
+                  <option value="listing_value">
+                    {t("studio.form.eventListingValue")}
                   </option>
                   <option value="appraisal">{t("studio.form.eventAppraisal")}</option>
-                  <option value="internal_estimate">
-                    {t("studio.form.eventInternalEstimate")}
-                  </option>
                 </select>
               </div>
 
@@ -264,9 +272,10 @@ export function AddValueEventModal({
                 {t("common.cancel")}
               </button>
               <button
+                ref={submitRef}
                 type="button"
                 disabled={loading}
-                onClick={onSubmit}
+                onClick={handleSubmit}
                 className={btnPrimary}
               >
                 {loading ? t("common.saving") : t("common.save")}

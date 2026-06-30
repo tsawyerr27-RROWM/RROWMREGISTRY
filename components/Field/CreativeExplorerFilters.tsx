@@ -6,6 +6,7 @@ import type {
   CreativeExplorerVerifiedFilter,
 } from "@/lib/field-creative-explorer-params";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { fieldV2 } from "@/styles/field-v2";
 
 type Props = {
   action: string;
@@ -26,17 +27,16 @@ export function CreativeExplorerFilters({
 }: Props) {
   const { t } = useLocalePreferences();
 
-  const inputClass =
-    "mt-2 w-full rounded-xl border border-neutral-900/[0.08] bg-white/85 px-4 py-3.5 text-sm text-neutral-900 shadow-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-emerald-900/12";
+  const inputClass = fieldV2.form.field;
   const selectClass = inputClass;
-  const labelClass = "text-sm font-medium text-neutral-700";
+  const labelClass = fieldV2.form.label;
 
   return (
     <form
       key={formKey}
       method="get"
       action={action}
-      className="rounded-[1.25rem] border border-neutral-900/[0.07] bg-white/55 p-6 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-[8px] md:p-7"
+      className="field-v2-filters p-6 md:p-7"
     >
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-12 lg:items-end">
         <div className="lg:col-span-4">

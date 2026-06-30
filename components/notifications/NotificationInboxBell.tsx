@@ -133,7 +133,7 @@ export function NotificationInboxBell({ className = "", tone = "light" }: Props)
       >
         <BellIcon className="h-5 w-5" />
         {unreadCount > 0 ? (
-          <span className="absolute right-1.5 top-2 h-2 w-2 rounded-full bg-amber-800 ring-2 ring-white/90 sm:right-0.5 sm:top-1.5" />
+          <span className="absolute right-1.5 top-2 h-2 w-2 rounded-full bg-[var(--v2-ink)] ring-2 ring-white/90 sm:right-0.5 sm:top-1.5" />
         ) : null}
       </button>
 

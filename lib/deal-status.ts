@@ -82,7 +82,7 @@ export function dealStatusLabel(status: string): string {
     case "rejected":
       return "Declined";
     case "closed":
-      return "Executed";
+      return "Closed";
     case "cancelled":
       return "Cancelled";
     default:

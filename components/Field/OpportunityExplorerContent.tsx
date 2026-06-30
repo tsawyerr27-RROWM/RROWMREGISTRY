@@ -3,30 +3,17 @@
 import Link from "next/link";
 
 import { FieldExplorerDiscoveryStrip } from "@/components/Field/FieldExplorerDiscoveryStrip";
+import { FieldExplorerResultsToolbar } from "@/components/Field/FieldExplorerResultsToolbar";
+import { FieldV2EmptyState } from "@/components/Field/FieldV2EmptyState";
 import { OpportunityExplorerCard } from "@/components/Field/OpportunityExplorerCard";
 import { OpportunityExplorerFilters } from "@/components/Field/OpportunityExplorerFilters";
 import { OpportunityExplorerPagination } from "@/components/Field/OpportunityExplorerPagination";
+import { useFieldExplorerDensity } from "@/hooks/useFieldExplorerDensity";
 import type { FieldOpportunityCard } from "@/lib/fetch-field-opportunities-list";
 import type { FieldOpportunityListParams } from "@/lib/field-opportunity-params";
+import { fieldExplorerDensityGridClass } from "@/lib/field-explorer-density";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
-
-type OpportunityRhythmSegment = {
-  featured: FieldOpportunityCard;
-  standards: FieldOpportunityCard[];
-};
-
-function buildOpportunityRhythm(rows: FieldOpportunityCard[]): OpportunityRhythmSegment[] {
-  const segments: OpportunityRhythmSegment[] = [];
-
-  for (let i = 0; i < rows.length; i += 3) {
-    segments.push({
-      featured: rows[i],
-      standards: rows.slice(i + 1, i + 3),
-    });
-  }
-
-  return segments;
-}
+import { registryV2 } from "@/styles/registry-v2";
 
 type Props = {
   basePath: string;
@@ -44,13 +31,13 @@ export function OpportunityExplorerContent({
   formKey,
 }: Props) {
   const { t } = useLocalePreferences();
+  const { density, setDensity } = useFieldExplorerDensity("opportunities");
   const hasActiveFilters =
     Boolean(params.q.trim()) ||
     Boolean(params.sector) ||
     Boolean(params.practice) ||
     Boolean(params.briefType) ||
     params.window !== "all";
-  const rhythmSegments = buildOpportunityRhythm(rows);
 
   return (
     <div className="mt-10">
@@ -66,57 +53,50 @@ export function OpportunityExplorerContent({
       />
 
       {total === 0 ? (
-        <div className="mt-14 rounded-[1.25rem] border border-neutral-900/[0.06] bg-white/70 px-8 py-14 text-center shadow-sm md:px-12">
-          <p className="text-sm leading-relaxed text-neutral-600">
-            {hasActiveFilters
+        <FieldV2EmptyState
+          message={
+            hasActiveFilters
               ? t("field.opportunities.empty.filtered")
-              : t("field.opportunities.empty.none")}
-          </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            {hasActiveFilters ? (
+              : t("field.opportunities.empty.none")
+          }
+          actions={
+            hasActiveFilters ? (
               <>
-                <Link
-                  href={basePath}
-                  className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
-                >
+                <Link href={basePath} className="v2-cta-secondary !min-h-0 px-5 py-2.5 text-xs">
                   {t("field.opportunities.empty.clearFilters")}
                 </Link>
-                <Link
-                  href={basePath}
-                  className="inline-flex rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50"
-                >
+                <Link href={basePath} className="v2-cta-secondary !min-h-0 px-5 py-2.5 text-xs">
                   {t("field.opportunities.empty.browseAll")}
                 </Link>
               </>
-            ) : null}
-          </div>
-        </div>
+            ) : null
+          }
+        />
       ) : (
         <>
-          <div className="mt-12 max-w-6xl space-y-8 md:space-y-10">
-            {rhythmSegments.map((segment, segmentIndex) => (
-              <div
-                key={segment.featured.id}
-                className="space-y-5 md:space-y-6"
-              >
-                <OpportunityExplorerCard
-                  row={segment.featured}
-                  variant="featured"
-                  accentIndex={segmentIndex * 3}
-                />
-                {segment.standards.length > 0 ? (
-                  <div className="grid gap-5 md:grid-cols-2 md:gap-6">
-                    {segment.standards.map((row, standardIndex) => (
-                      <OpportunityExplorerCard
-                        key={row.id}
-                        row={row}
-                        variant="standard"
-                        accentIndex={segmentIndex * 3 + standardIndex + 1}
-                      />
-                    ))}
-                  </div>
-                ) : null}
-              </div>
+          <FieldExplorerResultsToolbar
+            density={density}
+            onDensityChange={setDensity}
+            leading={
+              <p className={registryV2.type.monoId}>
+                {total}{" "}
+                {total === 1
+                  ? t("field.opportunities.countSingular")
+                  : t("field.opportunities.countPlural")}
+              </p>
+            }
+          />
+          <div
+            className={fieldExplorerDensityGridClass(density, "opportunities")}
+            data-density={density}
+          >
+            {rows.map((row, index) => (
+              <OpportunityExplorerCard
+                key={row.id}
+                row={row}
+                variant={index === 0 && density === "editorial" ? "featured" : "standard"}
+                accentIndex={index}
+              />
             ))}
           </div>
           <OpportunityExplorerPagination

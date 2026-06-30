@@ -160,7 +160,7 @@ export function DealNegotiationLedger({
   };
 
   return (
-    <div className="flex min-h-0 w-full flex-col">
+    <div className="w-full">
       <div className="flex items-baseline justify-between gap-4">
         <h3 className="font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-[1.65rem]">
           Negotiation ledger
@@ -168,9 +168,7 @@ export function DealNegotiationLedger({
         <p className="text-[12px] text-neutral-500">{events.length} entries</p>
       </div>
 
-      <div
-        className={`${rrowmDealSurface.ledger} mt-6 min-h-0 flex-1 overflow-y-auto md:mt-7`}
-      >
+      <div className={`${rrowmDealSurface.ledger} mt-6 md:mt-7`}>
         {events.length === 0 ? (
           <p className="max-w-[42rem] text-[14px] leading-relaxed text-neutral-500">
             No ledger entries recorded yet.

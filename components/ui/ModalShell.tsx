@@ -3,6 +3,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
+import { studioV2 } from "@/styles/studio-v2";
 import { workspaceModal } from "@/styles/workspace-design";
 
 export type ModalTone = "light" | "dark" | "silver";
@@ -15,9 +16,11 @@ type ModalShellProps = {
   overlayClassName?: string;
   closeClassName?: string;
   tone?: ModalTone;
+  /** Use v2 glass shell + paper inner (default for studio filing modals) */
+  variant?: "v2" | "legacy";
 };
 
-const tonePresets: Record<
+const legacyTonePresets: Record<
   ModalTone,
   { overlay: string; panelGlass: string; panelSize: string; close: string }
 > = {
@@ -49,6 +52,7 @@ export default function ModalShell({
   overlayClassName,
   closeClassName,
   tone = "light",
+  variant = "v2",
 }: ModalShellProps) {
   const [mounted, setMounted] = useState(false);
 
@@ -67,19 +71,51 @@ export default function ModalShell({
 
   if (!isOpen || !mounted) return null;
 
-  const preset = tonePresets[tone];
+  if (variant === "legacy") {
+    const preset = legacyTonePresets[tone];
+    return createPortal(
+      <div
+        className={overlayClassName ?? preset.overlay}
+        onClick={onClose}
+        role="presentation"
+      >
+        <div
+          className={[
+            "ds-z-modal relative rrowm-modal-surface mx-auto w-full shrink-0",
+            preset.panelGlass,
+            panelClassName ?? preset.panelSize,
+          ].join(" ")}
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+        >
+          <button
+            type="button"
+            onClick={onClose}
+            className={closeClassName ?? preset.close}
+            aria-label="Close"
+          >
+            Close
+          </button>
+          {children}
+        </div>
+      </div>,
+      document.body
+    );
+  }
 
   return createPortal(
     <div
-      className={overlayClassName ?? preset.overlay}
+      className={overlayClassName ?? studioV2.modal.overlay}
       onClick={onClose}
       role="presentation"
     >
       <div
         className={[
-          "ds-z-modal relative rrowm-modal-surface mx-auto w-full shrink-0",
-          preset.panelGlass,
-          panelClassName ?? preset.panelSize,
+          "ds-z-modal relative mx-auto w-full shrink-0",
+          studioV2.modal.panel,
+          studioV2.motion.modal,
+          panelClassName ?? "max-w-2xl",
         ].join(" ")}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
@@ -88,12 +124,12 @@ export default function ModalShell({
         <button
           type="button"
           onClick={onClose}
-          className={closeClassName ?? preset.close}
+          className={closeClassName ?? studioV2.modal.close}
           aria-label="Close"
         >
           Close
         </button>
-        {children}
+        <div className={studioV2.modal.inner}>{children}</div>
       </div>
     </div>,
     document.body

@@ -4,7 +4,7 @@
  * image-first cards, unified modals. Pair with classes in `app/globals.css`.
  */
 
-import { depth, glass, motion, type } from "./system-design";
+import { depth, glass, motion } from "./system-design";
 
 export const workspaceMotion = {
   ease: motion.ease,
@@ -16,30 +16,30 @@ export const workspaceMotion = {
 
 /** Workspace page atmospheres */
 export const workspaceAtmosphere = {
-  /** Default signed-in wash — collector, institutional, account */
-  environment: "rrowm-zone-studio",
+  /** Default signed-in wash — uses global v2 environment layer */
+  environment: "rrowm-app-shell",
   /** Continuity: certificates, ownership ledger, provenance handoffs */
   silver: "rrowm-zone-registry ds-silver-environment",
-  studio: "rrowm-zone-studio rrowm-grad-studio",
-  artworks: "rrowm-zone-studio rrowm-grad-artworks",
+  studio: "rrowm-app-shell",
+  artworks: "rrowm-app-shell",
   continuity: "rrowm-zone-registry rrowm-grad-continuity",
 } as const;
 
-/** Typography — Raleway UI + loaded serif for titles */
+/** Typography — Cormorant display + Inter UI + mono registry metadata */
 export const workspaceType = {
-  pageTitle: `${type.titleSerifLg}`,
+  pageTitle: "v2-type-display text-[2rem] font-normal leading-[1.08] tracking-[-0.03em] text-[var(--v2-ink)] md:text-[2.35rem]",
   sectionTitle:
-    "font-serif text-[1.75rem] font-normal leading-[1.12] tracking-[-0.01em] text-neutral-950 md:text-[1.85rem]",
+    "v2-type-display text-[1.75rem] font-normal leading-[1.12] tracking-[-0.02em] text-[var(--v2-ink)] md:text-[1.85rem]",
   cardTitle:
-    "font-serif text-lg font-normal leading-snug tracking-[-0.01em] text-neutral-950 md:text-xl",
-  cardArtist: "text-[15px] text-neutral-500",
-  label: "text-[14px] font-medium text-neutral-700",
-  meta: "text-[15px] leading-relaxed text-neutral-500",
-  metaQuiet: "text-[13px] leading-relaxed text-neutral-500",
-  registryId: "font-mono text-[10px] tracking-wide text-neutral-400",
-  navItem: "text-sm font-medium",
-  navItemActive: "text-sm font-medium text-neutral-950",
-  navItemIdle: "text-sm font-medium text-neutral-500",
+    "v2-type-display text-lg font-normal leading-snug tracking-[-0.01em] text-[var(--v2-ink)] md:text-xl",
+  cardArtist: "v2-type-body text-[15px]",
+  label: "text-[14px] font-medium text-[var(--v2-ink-muted)]",
+  meta: "v2-type-body text-[15px]",
+  metaQuiet: "v2-type-mono text-[13px]",
+  registryId: "v2-type-mono",
+  navItem: "v2-type-label text-[11px] tracking-[0.2em]",
+  navItemActive: "v2-type-label text-[11px] tracking-[0.2em] text-[var(--v2-near-black)]",
+  navItemIdle: "v2-type-label text-[11px] tracking-[0.2em] text-[var(--v2-cool-grey)]",
 } as const;
 
 export const workspaceSpace = {
@@ -49,25 +49,24 @@ export const workspaceSpace = {
   grid: "grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-3",
 } as const;
 
-/** Premium artwork card — image-first, minimal surface */
+/** Premium artwork card — archival catalogue sheet */
 export const workspaceCard = {
-  link: "ws-artwork-card group relative block overflow-hidden rrowm-surface-l2 backdrop-blur-[2px] transition-[transform,box-shadow,border-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:shadow-[0_20px_48px_rgba(40,25,10,0.09)]",
-  media: "relative aspect-[4/3] w-full overflow-hidden bg-neutral-100/80",
+  link: "studio-catalogue-sheet v2-motion-hover-subtle group relative block cursor-pointer overflow-hidden pl-3",
+  media: "studio-catalogue-sheet__media relative aspect-[4/5] w-full overflow-hidden bg-[var(--v2-cool-grey)]/8",
   mediaImg:
-    "h-full w-full object-cover transition duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.02]",
-  surface: "px-5 pb-5 pt-4",
+    "h-full w-full object-cover transition duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.015]",
+  surface: "px-4 pb-4 pt-4",
   reveal:
-    "border-t border-neutral-900/[0.06] bg-white/50 px-5 py-4 opacity-100 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] md:translate-y-1 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:group-focus-within:translate-y-0 md:group-focus-within:opacity-100",
+    "border-t border-[var(--v2-border)] bg-white/70 px-4 py-4 flex flex-col gap-4",
   pill:
-    "inline-flex rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-medium text-neutral-600 ring-1 ring-neutral-900/[0.06]",
+    "inline-flex rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-medium text-[var(--v2-ink-muted)] ring-1 ring-[var(--v2-border)]",
   pillVerified:
-    "inline-flex rounded-full bg-neutral-900/[0.04] px-2 py-0.5 text-[10px] font-medium text-neutral-800 ring-1 ring-neutral-900/[0.06]",
+    "inline-flex rounded-full bg-[var(--v2-cobalt-signal-dim)] px-2 py-0.5 text-[10px] font-medium text-[var(--v2-ink)] ring-1 ring-[var(--v2-border)]",
 } as const;
 
 /** Floating panels — account, settings, workspace sections */
 export const workspacePanel = {
-  shell:
-    "rrowm-surface-l1 p-7 sm:p-8 md:p-9 backdrop-blur-[2px]",
+  shell: "v2-surface-paper v2-radius-card p-7 sm:p-8 md:p-9",
   title: workspaceType.sectionTitle,
   description: "mt-3 max-w-2xl text-[15px] leading-relaxed text-neutral-500",
   body: "mt-10",

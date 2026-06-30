@@ -1,5 +1,6 @@
 "use client";
 
+import { CurrencyCombobox } from "@/components/ui/CurrencyCombobox";
 import type { DealIntent, DealTermField } from "@/lib/deal-intents";
 
 type Props = {
@@ -50,6 +51,16 @@ function renderField(
           </option>
         ))}
       </select>
+    );
+  }
+
+  if (field.type === "currency_code") {
+    return (
+      <CurrencyCombobox
+        id={id}
+        value={String(value || "").toUpperCase()}
+        onChange={(code) => onChange(field.key, code)}
+      />
     );
   }
 

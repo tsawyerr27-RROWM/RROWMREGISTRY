@@ -6,6 +6,8 @@ import {
   mergeAcquisitionExecutionIntoTerms,
   type AcquisitionExecutionRecord,
 } from "@/lib/deal-execution";
+import { otherDealParticipant } from "@/lib/deal-permissions";
+import type { DealRow } from "@/lib/deals";
 import {
   upsertDealExecutionRecord,
 } from "@/lib/deal-execution-records";
@@ -28,6 +30,14 @@ export type OwnershipLoopPrompt = {
   action_label: string | null;
 };
 
+export type AcquisitionTransferContext = {
+  provenance_transfer_id: string;
+  status: string;
+  from_user_id: string | null;
+  recipient_user_id: string | null;
+  invite_token: string | null;
+};
+
 export type PendingAcquisitionRow = {
   artwork_id: string;
   title: string | null;
@@ -39,7 +49,7 @@ export type PendingAcquisitionRow = {
   status: "pending_transfer";
 };
 
-type TransferRow = {
+export type TransferRow = {
   id: string;
   artwork_id: string;
   from_user_id: string;
@@ -48,6 +58,11 @@ type TransferRow = {
   invite_token: string | null;
   note: string | null;
 };
+
+const TRANSFER_SELECT =
+  "id, artwork_id, from_user_id, recipient_user_id, status, invite_token, note" as const;
+
+const LOOP_TRANSFER_STATUSES = new Set(["pending_acceptance", "completed"]);
 
 function parseDealIdFromNote(note: string | null | undefined): string | null {
   const raw = String(note ?? "");
@@ -59,6 +74,41 @@ export function buildOwnershipAcceptHref(inviteToken: string | null): string | n
   return buildAcquisitionAcceptHref(inviteToken);
 }
 
+export function toAcquisitionTransferContext(
+  transfer: TransferRow | null
+): AcquisitionTransferContext | null {
+  if (!transfer?.id) return null;
+  return {
+    provenance_transfer_id: String(transfer.id),
+    status: String(transfer.status ?? ""),
+    from_user_id:
+      transfer.from_user_id != null ? String(transfer.from_user_id) : null,
+    recipient_user_id:
+      transfer.recipient_user_id != null
+        ? String(transfer.recipient_user_id)
+        : null,
+    invite_token:
+      transfer.invite_token != null ? String(transfer.invite_token) : null,
+  };
+}
+
+export async function loadAcquisitionTransferById(
+  service: SupabaseClient,
+  provenanceTransferId: string
+): Promise<TransferRow | null> {
+  const id = String(provenanceTransferId ?? "").trim();
+  if (!id) return null;
+
+  const { data, error } = await service
+    .from("provenance_transfers")
+    .select(TRANSFER_SELECT)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data as TransferRow;
+}
+
 export async function loadAcquisitionTransferForDeal(
   service: SupabaseClient,
   args: { dealId: string; artworkId: string }
@@ -66,9 +116,7 @@ export async function loadAcquisitionTransferForDeal(
   const marker = dealExecutionNoteMarker(args.dealId);
   const { data, error } = await service
     .from("provenance_transfers")
-    .select(
-      "id, artwork_id, from_user_id, recipient_user_id, status, invite_token, note"
-    )
+    .select(TRANSFER_SELECT)
     .eq("artwork_id", args.artworkId)
     .order("created_at", { ascending: false })
     .limit(20);
@@ -79,6 +127,95 @@ export async function loadAcquisitionTransferForDeal(
     String((item as { note?: string }).note ?? "").includes(marker)
   );
   return row ? (row as TransferRow) : null;
+}
+
+export async function resolveAcquisitionTransferForDeal(
+  service: SupabaseClient,
+  args: {
+    dealId: string;
+    artworkId: string;
+    provenanceTransferId?: string | null;
+  }
+): Promise<TransferRow | null> {
+  const transferId = String(args.provenanceTransferId ?? "").trim();
+  if (transferId) {
+    const byId = await loadAcquisitionTransferById(service, transferId);
+    if (byId) return byId;
+  }
+  return loadAcquisitionTransferForDeal(service, {
+    dealId: args.dealId,
+    artworkId: args.artworkId,
+  });
+}
+
+/** Buyer id from transfer row, execution metadata, or deal counterparty of seller — never the viewer. */
+export function resolveAcquisitionBuyerUserId(args: {
+  deal: DealRow;
+  transfer: TransferRow | null;
+  execution: AcquisitionExecutionRecord | null;
+}): string | null {
+  const fromTransfer = String(args.transfer?.recipient_user_id ?? "").trim();
+  if (fromTransfer) return fromTransfer;
+
+  const fromExecution = String(args.execution?.recipient_user_id ?? "").trim();
+  if (fromExecution) return fromExecution;
+
+  const sellerId = String(
+    args.transfer?.from_user_id ?? args.execution?.recorded_by_user_id ?? ""
+  ).trim();
+  if (!sellerId) return null;
+
+  return otherDealParticipant({
+    userId: sellerId,
+    participantAUserId: String(args.deal.participant_a_user_id ?? ""),
+    participantBUserId: String(args.deal.participant_b_user_id ?? ""),
+  });
+}
+
+export function hydrateAcquisitionExecutionFromTransfer(args: {
+  deal: DealRow;
+  execution: AcquisitionExecutionRecord | null;
+  transfer: TransferRow | null;
+  registryId: string | null;
+}): AcquisitionExecutionRecord | null {
+  const transferId = String(
+    args.transfer?.id ?? args.execution?.provenance_transfer_id ?? ""
+  ).trim();
+  if (!transferId) return args.execution;
+
+  const sellerId = String(
+    args.transfer?.from_user_id ?? args.execution?.recorded_by_user_id ?? ""
+  ).trim();
+  const buyerId = resolveAcquisitionBuyerUserId({
+    deal: args.deal,
+    transfer: args.transfer,
+    execution: args.execution,
+  });
+
+  return {
+    type: "acquisition",
+    provenance_transfer_id: transferId,
+    registry_id: args.registryId ?? args.execution?.registry_id ?? null,
+    recorded_at: args.execution?.recorded_at ?? new Date().toISOString(),
+    recorded_by_user_id: sellerId,
+    status: mapProvenanceStatusToExecution(
+      args.transfer?.status ?? args.execution?.status ?? "pending_acceptance"
+    ),
+    recipient_user_id: buyerId,
+  };
+}
+
+export function isPendingAcquisitionTransferRecipient(args: {
+  userId: string;
+  transfer: AcquisitionTransferContext | null;
+}): boolean {
+  const uid = String(args.userId ?? "").trim();
+  const recipient = String(args.transfer?.recipient_user_id ?? "").trim();
+  if (!uid || !recipient || uid !== recipient) return false;
+  return (
+    mapProvenanceStatusToExecution(args.transfer?.status ?? "") ===
+    "pending_acceptance"
+  );
 }
 
 export function resolveOwnershipLoopPrompt(args: {
@@ -142,34 +279,47 @@ export function resolveOwnershipLoopPrompt(args: {
 export async function resolveOwnershipLoopForDealExecution(
   service: SupabaseClient,
   args: {
-    dealId: string;
+    deal: DealRow;
     artworkId: string;
     userId: string;
     registryId: string | null;
     execution: AcquisitionExecutionRecord | null;
   }
 ): Promise<OwnershipLoopPrompt | null> {
-  if (!args.execution?.provenance_transfer_id) return null;
+  const transfer = await resolveAcquisitionTransferForDeal(service, {
+    dealId: args.deal.id,
+    artworkId: args.artworkId,
+    provenanceTransferId: args.execution?.provenance_transfer_id,
+  });
 
-  const transfer =
-    (await loadAcquisitionTransferForDeal(service, {
-      dealId: args.dealId,
-      artworkId: args.artworkId,
-    })) ??
-    null;
+  if (!transfer && !args.execution?.provenance_transfer_id) {
+    return null;
+  }
 
-  const sellerUserId = String(transfer?.from_user_id ?? args.execution.recorded_by_user_id ?? "");
-  const buyerUserId = String(
-    transfer?.recipient_user_id ?? args.execution.recipient_user_id ?? ""
+  const rawStatus = String(transfer?.status ?? args.execution?.status ?? "")
+    .toLowerCase()
+    .trim();
+  if (!LOOP_TRANSFER_STATUSES.has(rawStatus)) {
+    return null;
+  }
+
+  const sellerUserId = String(
+    transfer?.from_user_id ?? args.execution?.recorded_by_user_id ?? ""
   );
+  const buyerUserId =
+    resolveAcquisitionBuyerUserId({
+      deal: args.deal,
+      transfer,
+      execution: args.execution,
+    }) ?? "";
 
   return resolveOwnershipLoopPrompt({
     userId: args.userId,
     sellerUserId,
     buyerUserId,
-    executionStatus: transfer?.status ?? args.execution.status,
+    executionStatus: transfer?.status ?? args.execution?.status ?? rawStatus,
     registryId: args.registryId,
-    dealId: args.dealId,
+    dealId: args.deal.id,
     acceptHref: buildOwnershipAcceptHref(transfer?.invite_token ?? null),
   });
 }

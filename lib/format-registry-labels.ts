@@ -3,12 +3,18 @@ export function formatValueEventLabel(valueType: string | null | undefined) {
   const t = (valueType || "").toLowerCase().replace(/_/g, " ");
   const map: Record<string, string> = {
     initial: "Primary record",
+    initial_valuation: "Initial valuation",
+    valuation: "Valuation",
+    exhibition_value: "Exhibition value",
+    listing_value: "Listing value",
     appraisal: "Appraisal",
     sale: "Sale recorded",
+    sale_value: "Sale recorded",
     auction: "Auction recorded",
     insurance: "Insurance",
     donation: "Donation",
     transfer: "Transfer",
+    value_correction: "Value correction",
   };
   for (const [k, v] of Object.entries(map)) {
     if (t.includes(k)) return v;

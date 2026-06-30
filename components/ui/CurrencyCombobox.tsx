@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CURRENCIES, currencyLabel } from "@/lib/currencies";
+import { SUPPORTED_CURRENCIES, currencyLabel } from "@/lib/currencies";
 
 export function CurrencyCombobox({
   value,
@@ -27,7 +27,7 @@ export function CurrencyCombobox({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const list = [...CURRENCIES].sort((a, b) => a.code.localeCompare(b.code));
+    const list = [...SUPPORTED_CURRENCIES].sort((a, b) => a.code.localeCompare(b.code));
     if (!q) return list;
     return list.filter((c) => {
       const hay = `${c.code} ${c.symbol} ${c.name}`.toLowerCase();

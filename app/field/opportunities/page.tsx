@@ -1,3 +1,4 @@
+import { FieldV2Container } from "@/components/Field/FieldV2Container";
 import { OpportunityExplorerContent } from "@/components/Field/OpportunityExplorerContent";
 import { OpportunityExplorerHero } from "@/components/Field/OpportunityExplorerHero";
 import { fetchFieldOpportunitiesList } from "@/lib/fetch-field-opportunities-list";
@@ -30,7 +31,7 @@ export default async function FieldOpportunitiesPage({ searchParams }: Props) {
   const formKey = `${params.q}|${params.sector}|${params.practice}|${params.briefType}|${params.window}|${params.sort}`;
 
   return (
-    <div className="mx-auto w-full max-w-[min(100%,88rem)] px-4 pb-20 sm:px-6 lg:px-8">
+    <FieldV2Container className="pt-4 md:pt-6">
       <OpportunityExplorerHero
         searchQuery={params.q}
         total={total}
@@ -46,6 +47,6 @@ export default async function FieldOpportunitiesPage({ searchParams }: Props) {
         params={params}
         formKey={formKey}
       />
-    </div>
+    </FieldV2Container>
   );
 }

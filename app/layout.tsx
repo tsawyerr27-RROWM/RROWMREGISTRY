@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { Cormorant_Garamond, Inter } from "next/font/google";
 import { cookies } from "next/headers";
-import { Raleway } from "next/font/google";
 import "./globals.css";
 import { Suspense } from "react";
 
@@ -11,12 +11,20 @@ import { CookieBanner } from "@/components/CookieBanner";
 import { LocalePreferencesProvider } from "@/components/providers/LocalePreferencesProvider";
 import NavigationHistory from "@/components/navigation/NavigationHistory";
 import { parseRegionId, REGION_STORAGE_KEY } from "@/lib/regions";
+import { rrowmV2Scope } from "@/styles/rrowm-v2";
 
 export const dynamic = "force-dynamic";
 
-const raleway = Raleway({
+const displayFont = Cormorant_Garamond({
   subsets: ["latin"],
-  variable: "--font-raleway",
+  weight: ["300", "400", "500", "600"],
+  variable: "--font-landing-display",
+  display: "swap",
+});
+
+const uiFont = Inter({
+  subsets: ["latin"],
+  variable: "--font-landing-sans",
   display: "swap",
 });
 
@@ -35,33 +43,27 @@ export default async function RootLayout({
     parseRegionId(cookieStore.get(REGION_STORAGE_KEY)?.value) ?? "gb";
 
   return (
-
     <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
-
       <body
-        className={`${raleway.variable} font-sans antialiased min-h-[100dvh] overflow-x-clip`}
+        className={`${displayFont.variable} ${uiFont.variable} v2-type-body antialiased min-h-[100dvh] overflow-x-clip`}
       >
         <Suspense fallback={null}>
           <NavigationHistory />
         </Suspense>
 
-        {/* Global Environment Background */}
         <EnvironmentLayer />
 
-        {/* Application Layer */}
         <LocalePreferencesProvider initialRegionId={initialRegionId}>
-          <div className="ds-z-content relative flex min-h-screen flex-col print:min-h-0">
+          <div
+            className={`${rrowmV2Scope} ds-z-content relative flex min-h-screen flex-col print:min-h-0`}
+          >
             <Header />
             <main className="flex-1 print:min-h-0">{children}</main>
             <Footer />
             <CookieBanner />
           </div>
         </LocalePreferencesProvider>
-
       </body>
-
     </html>
-
   );
-
 }

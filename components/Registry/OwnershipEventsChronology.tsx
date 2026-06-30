@@ -1,15 +1,25 @@
+"use client";
+
 import type { OwnershipTimelineEntry } from "@/lib/canonical-ownership-engine";
 import { formatOwnershipTransferTypeLabel } from "@/lib/format-registry-labels";
+import {
+  ownershipEventCategory,
+  registryEventCategoryMessageKey,
+  registryEventSemanticEvent,
+  registryEventStampClass,
+} from "@/lib/registry-event-visual";
+import { registryV2 } from "@/styles/registry-v2";
+import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 type Props = {
   entries: OwnershipTimelineEntry[];
   className?: string;
 };
 
-function formatDate(iso: string): string {
+function formatDate(iso: string, locale: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString(undefined, {
+  return d.toLocaleDateString(locale, {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -17,71 +27,74 @@ function formatDate(iso: string): string {
 }
 
 export function OwnershipEventsChronology({ entries, className = "" }: Props) {
+  const { t, region } = useLocalePreferences();
+
   if (!entries.length) {
     return (
-      <p className={`text-sm text-neutral-500 ${className}`}>
+      <p className={`v2-type-body text-sm ${className}`}>
         No ownership events recorded yet.
       </p>
     );
   }
 
   return (
-    <ol className={`space-y-4 ${className}`}>
-      {entries.map((entry) => {
+    <ol className={`registry-lineage-chain list-none p-0 ${className}`} role="list">
+      {entries.map((entry, index) => {
+        const category = ownershipEventCategory(entry.transfer_type);
+        const stampClass = registryEventStampClass(category);
+        const motionClass = registryV2.motion.forEvent(
+          registryEventSemanticEvent(category)
+        );
         const transferLabel = entry.transfer_type
           ? formatOwnershipTransferTypeLabel(entry.transfer_type)
-          : "Transfer";
+          : t("registry.event.ownership_transfer");
         const price =
           entry.sale_price != null && entry.sale_currency
-            ? `${entry.sale_currency} ${entry.sale_price.toLocaleString()}`
+            ? `${entry.sale_currency} ${entry.sale_price.toLocaleString(region.locale)}`
             : null;
 
         return (
           <li
             key={entry.id}
-            className="rounded-xl border border-neutral-200/90 bg-white/80 px-4 py-4"
+            className={`${registryV2.surface.lineageNode} ${motionClass}`}
+            style={{ animationDelay: `${Math.min(index, 6) * 0.1}s` }}
           >
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <p className="font-medium text-neutral-900">{transferLabel}</p>
+            <div className="flex items-start justify-between gap-3">
+              <span className={`${registryV2.type.stamp} ${stampClass}`}>
+                {t(registryEventCategoryMessageKey(category))}
+              </span>
               <time
-                className="text-[12px] text-neutral-500"
+                className={`${registryV2.type.monoId} shrink-0 tabular-nums`}
                 dateTime={entry.created_at}
               >
-                {formatDate(entry.created_at)}
+                {formatDate(entry.created_at, region.locale)}
               </time>
             </div>
-            <dl className="mt-3 grid gap-2 text-[13px] text-neutral-700 sm:grid-cols-2">
+
+            <p className={`${registryV2.type.sectionTitle} mt-4 text-xl md:text-[1.35rem]`}>
+              {transferLabel}
+            </p>
+
+            <dl className="mt-5 space-y-4">
               <div>
-                <dt className="text-neutral-500">Previous holder</dt>
-                <dd className="mt-0.5 font-medium text-neutral-900">
+                <dt className={registryV2.type.metaLabel}>Previous custody</dt>
+                <dd className={`${registryV2.type.metaValue} mt-1.5 font-medium text-[var(--v2-ink)]`}>
                   {entry.from_label ?? "—"}
                 </dd>
               </div>
               <div>
-                <dt className="text-neutral-500">New holder</dt>
-                <dd className="mt-0.5 font-medium text-neutral-900">
+                <dt className={registryV2.type.metaLabel}>Current custody</dt>
+                <dd className={`${registryV2.type.metaValue} mt-1.5 font-medium text-[var(--v2-ink)]`}>
                   {entry.to_label ?? "—"}
                 </dd>
               </div>
               {price ? (
-                <div className="sm:col-span-2">
-                  <dt className="text-neutral-500">Recorded value</dt>
-                  <dd className="mt-0.5 font-medium text-neutral-900">{price}</dd>
-                </div>
-              ) : null}
-              {entry.deal_id ? (
-                <div className="sm:col-span-2">
-                  <dt className="text-neutral-500">Deal reference</dt>
-                  <dd className="mt-0.5 font-mono text-[12px] text-neutral-800">
-                    {entry.deal_id}
-                  </dd>
-                </div>
-              ) : null}
-              {entry.provenance_transfer_id ? (
-                <div className="sm:col-span-2">
-                  <dt className="text-neutral-500">Provenance transfer</dt>
-                  <dd className="mt-0.5 font-mono text-[12px] text-neutral-800">
-                    {entry.provenance_transfer_id}
+                <div>
+                  <dt className={registryV2.type.metaLabel}>
+                    {t("registry.event.valuation")}
+                  </dt>
+                  <dd className={`${registryV2.type.monoId} mt-1.5 text-[var(--v2-ink)]`}>
+                    {price}
                   </dd>
                 </div>
               ) : null}

@@ -86,3 +86,29 @@ export function consumePendingCreativeSection(): CreativeSectionId | null {
 
 /** @deprecated Use consumePendingCreativeSection */
 export const consumePendingStudioSection = consumePendingCreativeSection;
+
+/** Studio verification entry for a linked artwork, with catalogue fallback. */
+export function buildArtworkVerificationHref(artworkId: string | null): string {
+  const id = String(artworkId ?? "").trim();
+  if (id) {
+    return `/authenticate-record?artwork_id=${encodeURIComponent(id)}`;
+  }
+  return "/studio/creative?section=artworks";
+}
+
+export function primeCreativeSectionFromUrlQuery(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const section = new URLSearchParams(window.location.search).get("section");
+    if (!section) return;
+    const normalized =
+      section.toLowerCase() === "artworks"
+        ? "Artworks"
+        : section.charAt(0).toUpperCase() + section.slice(1);
+    if (isCreativeSectionId(normalized)) {
+      sessionStorage.setItem(CREATIVE_SECTION_STORAGE_KEY, normalized);
+    }
+  } catch {
+    // ignore
+  }
+}

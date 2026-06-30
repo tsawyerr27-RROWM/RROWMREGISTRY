@@ -1,17 +1,24 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { DealMessageRow, DealRevisionRow, DealRow } from "@/lib/deals";
-import { isNegotiableDealStatus, dealStatusLabel } from "@/lib/deal-status";
+import { isNegotiableDealStatus } from "@/lib/deal-status";
+import { acquisitionDealStatusLabel } from "@/lib/acquisition-deal-labels";
+import { resolveAcquisitionFilingUiState } from "@/lib/deal-action-state";
 import { canActorRespondToDealTerms } from "@/lib/deal-permissions";
+import { useAcquisitionDealExecution } from "@/hooks/useAcquisitionDealExecution";
+import { primeCreativeSectionFromUrlQuery } from "@/lib/studio-nav/creative-nav";
+import { AcquisitionFilingHero } from "@/components/Studio/Deals/AcquisitionFilingHero";
 import { CounterProposalModal } from "@/components/Studio/Deals/CounterProposalModal";
-import { DealArtworkHero } from "@/components/Studio/Deals/DealArtworkHero";
 import { DealCounterpartyPanel } from "@/components/Studio/Deals/DealCounterpartyPanel";
 import { DealExecutionPanel } from "@/components/Studio/Deals/DealExecutionPanel";
 import { DealNegotiationLedger } from "@/components/Studio/Deals/DealNegotiationLedger";
 import { DealTermsPanel } from "@/components/Studio/Deals/DealTermsPanel";
-import { rrowmButton, rrowmDealSurface } from "@/styles/rrowm-theme";
+import { studioV2 } from "@/styles/studio-v2";
+import { semanticStampClass } from "@/lib/registry-semantic-signals";
+import { triggerConsequenceFeedback } from "@/lib/consequence-feedback-runtime";
 
 type Props = {
   userId: string;
@@ -45,23 +52,38 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
   const [detail, setDetail] = useState<DealDetailPayload | null>(null);
   const [counterModalOpen, setCounterModalOpen] = useState(false);
   const markedUnderReviewRef = useRef<string | null>(null);
+  const currentDealIdRef = useRef<string | null>(deal?.id ?? null);
+  currentDealIdRef.current = deal?.id ?? null;
 
   const dealId = deal?.id ?? null;
+  const isAcquisitionDeal =
+    String(deal?.type ?? "").toLowerCase() === "acquisition" &&
+    Boolean(deal?.artwork_id);
+  const acquisitionExecution = useAcquisitionDealExecution(
+    dealId,
+    isAcquisitionDeal
+  );
 
   const refresh = async () => {
-    if (!dealId) {
+    const requestedDealId = dealId;
+    if (!requestedDealId) {
       setDetail(null);
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/deals/${encodeURIComponent(dealId)}`, {
-        credentials: "include",
-      });
+      const res = await fetch(
+        `/api/deals/${encodeURIComponent(requestedDealId)}`,
+        {
+          credentials: "include",
+        }
+      );
       const payload = (await res.json().catch(() => ({}))) as Partial<
         DealDetailPayload
       > & { error?: string };
+      if (requestedDealId !== currentDealIdRef.current) return;
+
       if (!res.ok || !payload.deal) {
         setDetail(null);
         setError(payload.error || `Could not load deal (${res.status}).`);
@@ -77,20 +99,33 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
           : [],
       });
     } catch {
+      if (requestedDealId !== currentDealIdRef.current) return;
       setDetail(null);
       setError("Could not load deal.");
     } finally {
-      setLoading(false);
+      if (requestedDealId === currentDealIdRef.current) {
+        setLoading(false);
+      }
     }
   };
 
+  const afterDealMutation = async (executingDealId: string | null) => {
+    if (!executingDealId || executingDealId !== currentDealIdRef.current) {
+      return;
+    }
+    await refresh();
+    onDealUpdated();
+  };
+
   useEffect(() => {
+    setDetail(null);
     void refresh();
     markedUnderReviewRef.current = null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dealId]);
 
-  const activeDeal = detail?.deal ?? deal;
+  const activeDeal =
+    detail?.deal?.id === dealId ? detail.deal : deal;
 
   const header = useMemo(() => {
     const d = activeDeal;
@@ -98,6 +133,7 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
 
     const dealType = String(d.type ?? "").trim();
     const status = String(d.status ?? "").trim();
+    const statusLabel = acquisitionDealStatusLabel(d);
 
     const ribbonLeft =
       dealType
@@ -109,8 +145,8 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
       type: dealType
         ? `${dealType[0]?.toUpperCase()}${dealType.slice(1)}`
         : "",
-      status: dealStatusLabel(status),
-      ribbon: `${ribbonLeft} · ${dealStatusLabel(status)}`,
+      status: statusLabel,
+      ribbon: `${ribbonLeft} · ${statusLabel}`,
       counterpartyUserId: counterpartyUserId(userId, d),
     };
   }, [activeDeal, userId]);
@@ -163,17 +199,35 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detail?.deal?.id, detail?.deal?.status, userId, loading]);
 
+  const acquisitionUi = useMemo(() => {
+    if (!isAcquisitionDeal || !deal) return null;
+    const resolved = activeDeal?.id === dealId ? activeDeal : deal;
+    if (!resolved) return null;
+    return resolveAcquisitionFilingUiState({
+      deal: resolved,
+      userId,
+      executionState: acquisitionExecution.executionState,
+      loadingExecution: acquisitionExecution.loadingExecution,
+    });
+  }, [
+    isAcquisitionDeal,
+    deal,
+    activeDeal,
+    dealId,
+    userId,
+    acquisitionExecution.executionState,
+    acquisitionExecution.loadingExecution,
+  ]);
+
   if (!deal) {
     return (
       <section
-        className={`${rrowmDealSurface.workspace} flex min-h-[22rem] flex-col items-center justify-center px-8 py-16 text-center`}
+        className={`${studioV2.surface.filingSheetMajor} flex min-h-[22rem] flex-col items-center justify-center px-8 py-16 text-center`}
         aria-label="Deal workspace"
       >
-        <h2 className="font-serif text-xl font-normal tracking-tight text-neutral-950">
-          Select a deal
-        </h2>
-        <p className="mt-3 max-w-sm text-[14px] leading-relaxed text-neutral-500">
-          Choose an item from the inbox to review the negotiation ledger.
+        <h2 className={studioV2.type.sectionTitle}>Select a deal</h2>
+        <p className={`${studioV2.type.metaValue} mt-3 max-w-sm`}>
+          Choose an item from the inbox to open the negotiation record.
         </p>
       </section>
     );
@@ -230,56 +284,70 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
         action: () => setCounterModalOpen(true),
       }
     );
-  } else if (status === "accepted") {
+  } else if (status === "accepted" && !isAcquisitionDeal) {
     actionButtons.push({
       key: "complete",
-      label: "Record execution",
+      label: "Mark deal closed",
       tone: "primary",
       action: () => void transitionStatus("closed"),
     });
   }
 
+  const acquisitionHeaderAction =
+    isAcquisitionDeal && status === "accepted"
+      ? acquisitionUi?.headerAction
+      : null;
+
+  const handleAcquisitionFileTransfer = async () => {
+    const executingDealId = dealId;
+    const ok = await acquisitionExecution.executeAcquisition();
+    if (!ok) return;
+    triggerConsequenceFeedback("marketCommit");
+    await afterDealMutation(executingDealId);
+  };
+
   return (
     <section
-      className={`${rrowmDealSurface.workspace} relative min-h-0`}
+      className={`${studioV2.surface.commandCenter} min-w-0 w-full`}
       aria-label="Selected deal"
     >
-      <div className="flex min-h-0 flex-col">
-        <div className={rrowmDealSurface.header}>
-          <div className="flex flex-wrap items-start justify-between gap-6">
+      <div className={`${studioV2.surface.filingSheetMajor} relative min-w-0 w-full`}>
+        <div className="border-b border-[var(--v2-border)] px-6 py-5 md:px-8 md:py-6">
+          <div className="flex min-w-0 flex-wrap items-start justify-between gap-6">
             <div className="min-w-0">
-              <h2 className="truncate font-serif text-2xl font-normal tracking-tight text-neutral-950">
+              <p className={studioV2.type.railLabel}>Negotiation record</p>
+              <h2 className={`${studioV2.type.commandTitle} mt-2 truncate text-2xl md:text-[1.85rem]`}>
                 {header?.title ?? "Deal"}
               </h2>
-              <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
+              <p className={`${studioV2.type.metaValue} mt-2`}>
                 {header?.ribbon ?? "Negotiation record"}
               </p>
             </div>
-            <div className="shrink-0 rounded-xl border border-neutral-900/[0.06] bg-white/80 px-4 py-3 text-right shadow-[0_4px_14px_rgba(25,20,10,0.04)]">
-              <p className="text-[12px] font-medium text-neutral-800">
-                {header?.type ?? ""}
-              </p>
-              <p className="mt-1 text-[12px] text-neutral-500">{header?.status ?? ""}</p>
+            <div className={`${studioV2.surface.filingSheet} shrink-0 px-4 py-3 text-right`}>
+              <span
+                className={semanticStampClass(
+                  isAcquisitionDeal ? "sale" : "registration"
+                )}
+              >
+                {header?.type ?? "Deal"}
+              </span>
+              <p className={`${studioV2.type.inboxItem} mt-2`}>{header?.status ?? ""}</p>
             </div>
           </div>
 
           {loading ? (
-            <p className="mt-4 text-[13px] text-neutral-500">Loading record.</p>
+            <p className={`${studioV2.type.metaValue} mt-4`}>Loading record.</p>
           ) : null}
           {error ? (
-            <p className="mt-4 text-[13px] leading-relaxed text-neutral-600">{error}</p>
+            <p className={`${studioV2.type.metaValue} mt-4`}>{error}</p>
           ) : null}
         </div>
 
-        <div className={rrowmDealSurface.actionBar}>
+        <div className="border-b border-[var(--v2-border)] px-6 py-4 md:px-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <p className="text-[13px] text-neutral-500">
-              Status actions update the record ledger.
-            </p>
+            <p className={studioV2.type.metaLabel}>Status actions file to the ledger</p>
             <div className="flex flex-wrap gap-2">
-              {actionButtons.length === 0 ? (
-                <p className="text-[13px] text-neutral-500">No actions available.</p>
-              ) : (
+              {actionButtons.length > 0 ? (
                 actionButtons.map((a) => (
                   <button
                     key={a.key}
@@ -287,20 +355,76 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
                     onClick={a.action}
                     className={
                       a.tone === "primary"
-                        ? rrowmButton.primaryEconomic
-                        : rrowmButton.secondary
+                        ? "v2-cta-primary !min-h-0 px-4 py-2.5 text-[10px]"
+                        : "v2-cta-secondary !min-h-0 px-4 py-2.5 text-[10px]"
                     }
                   >
                     {a.label}
                   </button>
                 ))
+              ) : acquisitionHeaderAction?.kind === "file_transfer" ? (
+                <button
+                  type="button"
+                  disabled={acquisitionExecution.busy}
+                  onClick={() => void handleAcquisitionFileTransfer()}
+                  className="v2-cta-primary !min-h-0 px-4 py-2.5 text-[10px]"
+                >
+                  {acquisitionExecution.busy
+                    ? "Filing transfer…"
+                    : "File transfer on record"}
+                </button>
+              ) : acquisitionHeaderAction?.kind === "confirm_receipt" ? (
+                <Link
+                  href={acquisitionHeaderAction.href}
+                  onClick={() => {
+                    triggerConsequenceFeedback("custodyCommit");
+                  }}
+                  className="v2-cta-primary !min-h-0 px-4 py-2.5 text-[10px]"
+                >
+                  {acquisitionHeaderAction.label}
+                </Link>
+              ) : acquisitionHeaderAction?.kind === "verify_artwork" ? (
+                <Link
+                  href={acquisitionHeaderAction.href}
+                  onClick={() => {
+                    if (!resolvedDeal.artwork_id) {
+                      primeCreativeSectionFromUrlQuery();
+                    }
+                  }}
+                  className="v2-cta-secondary !min-h-0 px-4 py-2.5 text-[10px]"
+                >
+                  Verify artwork
+                </Link>
+              ) : acquisitionHeaderAction?.kind === "ownership_recorded" ? (
+                <span className={semanticStampClass("transfer")}>
+                  Ownership recorded
+                </span>
+              ) : isAcquisitionDeal &&
+                status === "accepted" &&
+                acquisitionExecution.loadingExecution ? (
+                <p className={studioV2.type.metaValue}>Loading filing status…</p>
+              ) : (
+                <p className={studioV2.type.metaValue}>No actions available.</p>
               )}
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-8 px-7 py-8 md:gap-10 md:py-10 lg:px-11 lg:py-12">
-          <div className="min-h-0 w-full">
+      <div className="studio-deal-command-center__grid mt-6 min-w-0 w-full">
+        <div className="studio-deal-command-center__main min-w-0 flex flex-col gap-6">
+          {isAcquisitionDeal ? (
+            <AcquisitionFilingHero
+              deal={resolvedDeal}
+              userId={userId}
+              execution={acquisitionExecution}
+              onExecuted={(executingDealId) => {
+                void afterDealMutation(executingDealId);
+              }}
+            />
+          ) : null}
+
+          <div className={`${studioV2.surface.ledger} ${studioV2.surface.filingSheet} relative min-w-0 w-full p-6 md:p-8`}>
             <DealNegotiationLedger
               userId={userId}
               deal={resolvedDeal}
@@ -310,26 +434,28 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
             />
           </div>
 
-          <div className="grid min-h-0 grid-cols-1 gap-6 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] md:gap-8">
+          <div className="grid min-w-0 w-full grid-cols-1 gap-6 md:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]">
             <DealCounterpartyPanel
               counterpartyUserId={header?.counterpartyUserId ?? null}
             />
             <DealTermsPanel deal={resolvedDeal} />
           </div>
-
-          {String(resolvedDeal.type ?? "").toLowerCase() === "acquisition" &&
-          resolvedDeal.artwork_id ? (
-            <DealArtworkHero deal={resolvedDeal} />
-          ) : null}
-
-          <DealExecutionPanel
-            deal={resolvedDeal}
-            onExecuted={() => {
-              void refresh();
-              onDealUpdated();
-            }}
-          />
         </div>
+
+        <aside className={`${studioV2.surface.executionRail} relative min-w-0`}>
+          <p className={studioV2.type.railLabel}>Execution</p>
+          <div
+            className={`${studioV2.surface.filingSheetMajor} relative mt-4 min-h-0 min-w-0 w-full p-5 md:p-6`}
+          >
+            <DealExecutionPanel
+              deal={resolvedDeal}
+              onExecuted={() => {
+                void refresh();
+                onDealUpdated();
+              }}
+            />
+          </div>
+        </aside>
       </div>
 
       {negotiable && canRespondToTerms ? (

@@ -16,6 +16,7 @@ import {
 } from "@/lib/certificate-document";
 import { buildCertificateShareContext } from "@/lib/certificate-share";
 import { registryPremium } from "@/styles/registry-premium";
+import { registryV2 } from "@/styles/registry-v2";
 
 type Props = {
   data: CertificateDocumentData;
@@ -31,7 +32,7 @@ export function CertificateDocumentView({
   const { t, region } = useLocalePreferences();
   const { artwork, certificate, artistName, verifierName, verifyUrl } = data;
   const isRevoked = certificate.revoked;
-  const labelClass = registryPremium.document.label;
+  const labelClass = registryV2.type.metaLabel;
   const issuedDate = formatCertificateIssuedDate(certificate.issued_at, region.locale);
   const yearMedium = artworkYearMediumLine(artwork.year, artwork.medium);
   const sealLevel = isRevoked ? "revoked" : "attested";
@@ -49,7 +50,7 @@ export function CertificateDocumentView({
     <CertificateDocumentFrame
       screenWatermark={
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center select-none print:hidden">
-          <div className="text-[min(22vw,200px)] font-light tracking-[0.45em] text-neutral-900/[0.035]">
+          <div className={`${registryV2.type.monoId} text-[min(18vw,180px)] tracking-[0.45em] text-[var(--v2-ink)]/[0.04]`}>
             RROWM
           </div>
         </div>
@@ -91,7 +92,7 @@ export function CertificateDocumentView({
         </div>
       ) : null}
 
-      <header className="flex shrink-0 flex-col gap-8 border-b border-neutral-200/80 pb-10 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-9 print:flex-row print:items-end print:justify-between print:gap-2 print:border-b print:border-neutral-200/90 print:pb-2">
+      <header className="flex shrink-0 flex-col gap-8 border-b border-[var(--v2-border)] pb-10 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-9 print:flex-row print:items-end print:justify-between print:gap-2 print:border-b print:border-neutral-200/90 print:pb-2">
         <div className="min-w-0">
           <Link
             href="/"
@@ -103,16 +104,16 @@ export function CertificateDocumentView({
               className="h-9 w-auto max-h-9 max-w-full object-contain object-left opacity-95 sm:h-10 sm:max-h-10 print:h-8 print:max-h-8"
             />
           </Link>
-          <p className="mt-5 font-serif text-base text-neutral-800 print:mt-1.5 print:text-sm">
+          <p className={`${registryV2.type.sectionTitle} mt-5 text-xl print:mt-1.5 print:text-sm`}>
             {t("certificate.document.registryName")}
           </p>
-          <p className={`${labelClass} mt-2 text-neutral-500 print:mt-1`}>
+          <p className={`${registryV2.type.metaLabel} mt-2 print:mt-1`}>
             {t("certificate.document.subtitle")}
           </p>
         </div>
         <div className="shrink-0 sm:text-right print:text-right">
-          <p className={labelClass}>{t("certificate.document.registryId")}</p>
-          <p className="mt-2 max-w-full break-all font-mono text-[13px] font-medium tracking-[0.08em] text-neutral-900 print:text-[11px]">
+          <p className={registryV2.type.metaLabel}>{t("certificate.document.registryId")}</p>
+          <p className={`${registryV2.type.monoId} mt-2 max-w-full break-all font-medium text-[var(--v2-ink)] print:text-[11px]`}>
             {artwork.registry_id}
           </p>
         </div>
@@ -142,7 +143,7 @@ export function CertificateDocumentView({
           />
         </div>
         <h1
-          className={`${registryPremium.document.title} mx-auto mt-8 max-w-full text-balance break-words px-1 text-center text-[2rem] leading-[1.16] sm:text-[2.65rem] sm:leading-[1.1] md:max-w-3xl md:text-[2.85rem] print:mt-2 print:px-0 print:text-[clamp(1.125rem,1.45rem,1.95rem)] print:leading-[1.12]`}
+          className={`${registryV2.type.recordTitle} mx-auto mt-8 max-w-full text-balance break-words px-1 text-center print:mt-2 print:px-0 print:text-[clamp(1.125rem,1.45rem,1.95rem)] print:leading-[1.12]`}
         >
           {artwork.title}
         </h1>
@@ -153,8 +154,8 @@ export function CertificateDocumentView({
         ) : null}
         {artistName ? (
           <div className="mx-auto mt-10 max-w-xl px-1 text-center print:mt-2 print:max-w-full">
-            <p className={labelClass}>{t("certificate.document.attributedCreator")}</p>
-            <p className="mt-3 text-balance break-words font-serif text-xl font-normal tracking-wide text-neutral-800 sm:text-2xl print:mt-1.5 print:text-lg">
+            <p className={registryV2.type.metaLabel}>{t("certificate.document.attributedCreator")}</p>
+            <p className={`${registryV2.type.sectionTitle} mt-3 text-xl sm:text-2xl print:mt-1.5 print:text-lg`}>
               {artistName}
             </p>
           </div>

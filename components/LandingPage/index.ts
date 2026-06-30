@@ -33,3 +33,5 @@ export { SectionFadeDivider } from "./SectionFadeDivider";
 export { JourneyProgress } from "./JourneyProgress";
 export { ScrollInvitation } from "./ScrollInvitation";
 export { UseCaseJourney } from "./UseCaseJourney";
+
+export * from "./redesign";

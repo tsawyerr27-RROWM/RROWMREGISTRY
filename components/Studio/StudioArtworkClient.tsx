@@ -11,6 +11,9 @@ import {
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { OwnershipVerificationControls } from "@/components/Registry/OwnershipVerificationControls";
 import { StudioSaleTransferModal } from "@/components/Studio/StudioSaleTransferModal";
+import { SemanticToast } from "@/components/motion/SemanticToast";
+import type { RegistrySemanticEvent } from "@/lib/registry-semantic-signals";
+import { triggerConsequenceFeedback } from "@/lib/consequence-feedback-runtime";
 import {
   formatOwnershipOwnerPrimary,
   latestOwnershipSystemStatus,
@@ -70,7 +73,10 @@ export function StudioArtworkClient({ registryId }: Props) {
   } | null>(null);
   const [isOwner, setIsOwner] = useState(false);
   const [saleModalOpen, setSaleModalOpen] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    event: RegistrySemanticEvent;
+  } | null>(null);
   const refresh = useCallback(async (): Promise<string | null> => {
     const { data: a } = await sb()
       .from("artworks")
@@ -262,9 +268,7 @@ export function StudioArtworkClient({ registryId }: Props) {
   return (
     <div className="min-h-screen rrowm-bg-page pt-20 pb-16 text-neutral-900">
       {toast ? (
-        <div className="fixed right-6 top-24 z-[120] rounded-2xl border border-black/[0.06] bg-white px-4 py-3 text-sm text-neutral-800 shadow-lg">
-          {toast}
-        </div>
+        <SemanticToast message={toast.message} event={toast.event} />
       ) : null}
 
       <main className="mx-auto max-w-4xl px-5 md:px-8">
@@ -484,11 +488,14 @@ export function StudioArtworkClient({ registryId }: Props) {
             deferredRouterRefresh(router);
           }}
           onToast={(kind, message) => {
-            setToast(message);
-            setTimeout(() => setToast(null), 3200);
-            if (kind === "error") {
-              /* keep */
+            if (kind === "success") {
+              triggerConsequenceFeedback("custodyCommit");
             }
+            setToast({
+              message,
+              event: kind === "success" ? "transfer" : "correction",
+            });
+            setTimeout(() => setToast(null), 3200);
           }}
         />
       ) : null}

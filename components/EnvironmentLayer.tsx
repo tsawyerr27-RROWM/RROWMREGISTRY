@@ -2,37 +2,37 @@
 
 import { useEffect, useState } from "react";
 
-/** Slow glossy highlights — aligns with ds-page-environment cool white field. */
+/**
+ * Global v2 app environment — layered cool field with grain, scan lines,
+ * and rare cobalt/lime signal pulses. Very subtle; pairs with `rrowm-app-environment` in globals.css.
+ */
 export default function EnvironmentLayer() {
-  const [offset, setOffset] = useState(0);
+  const [pulsePhase, setPulsePhase] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setOffset((prev) => (prev + 0.025) % 100);
-    }, 520);
+      setPulsePhase((prev) => (prev + 1) % 240);
+    }, 1200);
     return () => clearInterval(interval);
   }, []);
 
+  const pulseActive = pulsePhase === 0;
+
   return (
-    <>
+    <div className="rrowm-app-environment pointer-events-none fixed inset-0 -z-40 print:hidden" aria-hidden>
+      <div className="rrowm-app-environment__base" />
+      <div className="rrowm-app-environment__grain" />
+      <div className="rrowm-app-environment__scanlines" />
       <div
-        className="pointer-events-none fixed inset-0 -z-40 print:hidden"
-        style={{
-          background: `radial-gradient(ellipse 92% 72% at ${50 + offset * 0.04}% ${
-            38 + offset * 0.03
-          }%, rgba(255,255,255,0.55), transparent 62%)`,
-          transition: "background 14s ease-out",
-        }}
+        className={`rrowm-app-environment__pulse rrowm-app-environment__pulse--cobalt ${
+          pulseActive ? "rrowm-app-environment__pulse--active" : ""
+        }`}
       />
       <div
-        className="pointer-events-none fixed inset-0 -z-40 opacity-[0.35] print:hidden"
-        style={{
-          background: `radial-gradient(ellipse 68% 48% at ${58 - offset * 0.03}% ${
-            92 - offset * 0.02
-          }%, rgba(224, 242, 254, 0.42), transparent 56%)`,
-          transition: "background 14s ease-out",
-        }}
+        className={`rrowm-app-environment__pulse rrowm-app-environment__pulse--lime ${
+          pulsePhase === 120 ? "rrowm-app-environment__pulse--active" : ""
+        }`}
       />
-    </>
+    </div>
   );
 }

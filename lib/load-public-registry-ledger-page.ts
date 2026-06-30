@@ -39,6 +39,7 @@ export type PublicRegistryLedgerPageData = {
     verification_hash: string | null;
     timeline_hash: string | null;
     is_locked: boolean | null;
+    created_at: string | null;
   };
   artistName: string;
   artistUserId: string | null;
@@ -248,6 +249,7 @@ export async function loadPublicRegistryLedgerPageData(
       verification_hash: artwork.verification_hash,
       timeline_hash: artwork.timeline_hash,
       is_locked: artwork.is_locked,
+      created_at: artwork.created_at,
     },
     artistName,
     artistUserId: artwork.artist_id ?? artist?.id ?? null,
