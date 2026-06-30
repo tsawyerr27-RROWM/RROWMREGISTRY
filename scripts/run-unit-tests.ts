@@ -4,7 +4,7 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { globSync } from "node:fs";
+import { globSync } from "glob";
 
 const files = globSync("lib/**/*.test.ts").sort();
 

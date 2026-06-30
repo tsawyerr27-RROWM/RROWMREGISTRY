@@ -37,6 +37,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "glob": "^13.0.6",
     "pg": "^8.16.0",
     "supabase": "^2.84.7",
     "tailwindcss": "^4",
