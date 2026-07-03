@@ -81,3 +81,4 @@ Thumbs.db
 # -----------------------------
 .cache/
 .tmp/supabase/.temp/
+db/seeds/demo_auth_users_rc1.sql
