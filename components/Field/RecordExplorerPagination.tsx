@@ -8,7 +8,7 @@ import {
   recordExplorerQueryString,
   type RecordExplorerCertificateFilter,
   type RecordExplorerSort,
-  type RecordExplorerVerifiedFilter,
+  type RecordExplorerTrustFilter,
 } from "@/lib/field-record-explorer-params";
 import { fillMessage } from "@/lib/locale-messages";
 
@@ -21,7 +21,7 @@ type Props = {
   creative: string;
   organisation: string;
   practice: string;
-  verified: RecordExplorerVerifiedFilter;
+  trust: RecordExplorerTrustFilter;
   certificate: RecordExplorerCertificateFilter;
 };
 
@@ -34,7 +34,7 @@ export function RecordExplorerPagination({
   creative,
   organisation,
   practice,
-  verified,
+  trust,
   certificate,
 }: Props) {
   const { t } = useLocalePreferences();
@@ -53,7 +53,7 @@ export function RecordExplorerPagination({
       creative,
       organisation,
       practice,
-      verified,
+      trust,
       certificate,
     });
     return qs ? `${basePath}?${qs}` : basePath;

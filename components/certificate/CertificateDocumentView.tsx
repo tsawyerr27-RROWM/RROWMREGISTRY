@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 
 import { RrowmLogo } from "@/components/brand/RrowmLogo";
 import { CertificateArtistActions } from "@/components/certificate/CertificateArtistActions";
@@ -9,12 +10,14 @@ import { CertificateDocumentFrame } from "@/components/certificate/CertificateDo
 import { CertificateSeal } from "@/components/certificate/CertificateSeal";
 import { CertificateShareControl } from "@/components/certificate/CertificateShareControl";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { useTelemetry } from "@/hooks/useTelemetry";
 import {
   artworkYearMediumLine,
   formatCertificateIssuedDate,
   type CertificateDocumentData,
 } from "@/lib/certificate-document";
 import { buildCertificateShareContext } from "@/lib/certificate-share";
+import { certificateClassTitleKey } from "@/lib/artwork-trust-tier";
 import { registryPremium } from "@/styles/registry-premium";
 import { registryV2 } from "@/styles/registry-v2";
 
@@ -30,24 +33,38 @@ export function CertificateDocumentView({
   qrCodeDataUrl,
 }: Props) {
   const { t, region } = useLocalePreferences();
+  const { track } = useTelemetry();
+
+  useEffect(() => {
+    track({
+      eventName: "certificate_opened",
+      surface: "registry",
+      metadata: { registry_id: data.artwork.registry_id ?? null },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.artwork.registry_id]);
   const { artwork, certificate, artistName, verifierName, verifyUrl } = data;
   const isRevoked = certificate.revoked;
   const labelClass = registryV2.type.metaLabel;
   const issuedDate = formatCertificateIssuedDate(certificate.issued_at, region.locale);
   const yearMedium = artworkYearMediumLine(artwork.year, artwork.medium);
   const sealLevel = isRevoked ? "revoked" : "attested";
+  const certificateClassLabel = certificate.certificate_class
+    ? t(certificateClassTitleKey(certificate.certificate_class))
+    : null;
   const shareContext = buildCertificateShareContext({
     registryId: artwork.registry_id,
     artworkTitle: artwork.title,
     artistName,
     issuedAt: certificate.issued_at,
-    isVerified: artwork.verification_status === "verified",
+    verificationStatus: artwork.verification_status,
     hasCertificate: true,
     revoked: isRevoked,
   });
 
   return (
     <CertificateDocumentFrame
+      certificateClassLabel={certificateClassLabel}
       screenWatermark={
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center select-none print:hidden">
           <div className={`${registryV2.type.monoId} text-[min(18vw,180px)] tracking-[0.45em] text-[var(--v2-ink)]/[0.04]`}>
@@ -108,7 +125,7 @@ export function CertificateDocumentView({
             {t("certificate.document.registryName")}
           </p>
           <p className={`${registryV2.type.metaLabel} mt-2 print:mt-1`}>
-            {t("certificate.document.subtitle")}
+            {certificateClassLabel ?? t("certificate.document.subtitle")}
           </p>
         </div>
         <div className="shrink-0 sm:text-right print:text-right">

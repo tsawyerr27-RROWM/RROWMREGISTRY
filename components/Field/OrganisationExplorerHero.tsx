@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { FieldExplorerHeroShell } from "@/components/Field/FieldExplorerHeroShell";
+import { FieldExplorerInfoTooltip } from "@/components/Field/FieldExplorerInfoTooltip";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fieldVerifyHref } from "@/lib/field-nav";
 
@@ -46,14 +47,15 @@ export function OrganisationExplorerHero({
 
   return (
     <FieldExplorerHeroShell
-      indexLabel={t("field.explorer.tab.organisations")}
       title={t("field.explorer.organisations.headline")}
-      lede={t("field.explorer.organisations.lede")}
+      infoTooltip={
+        <FieldExplorerInfoTooltip text={t("field.explorer.organisations.lede")} />
+      }
       meta={metaParts.length > 0 ? metaParts.join(" · ") : undefined}
       actions={
         <Link
           href={fieldVerifyHref()}
-          className="v2-cta-secondary inline-flex !min-h-0 px-5 py-2.5 text-xs"
+          className="v2-cta-secondary inline-flex min-h-[44px] items-center px-4 py-2.5 text-xs"
         >
           {t("field.explorer.link.verifyHub")}
         </Link>

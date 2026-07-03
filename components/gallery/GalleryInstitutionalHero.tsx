@@ -1,20 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import type { CSSProperties } from "react";
+
 import { ArtworksHeroPreview } from "@/components/Dashboard/ArtworksHeroPreview";
-import { StudioHeroSlab } from "@/components/Studio/StudioHeroSlab";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fieldOrganisationHref } from "@/lib/field-nav";
 import { fillMessage } from "@/lib/locale-messages";
 import type { MessageKey } from "@/lib/locale-messages";
-import { rrowmButton, rrowmStudioSurface } from "@/styles/rrowm-theme";
-import {
-  CompletenessMeter,
-  HeroActionButton,
-  HeroStat,
-  HeroTile,
-} from "@/components/workspace/WorkspaceHeroPrimitives";
+import { rrowmButton } from "@/styles/rrowm-theme";
+import { studioV2 } from "@/styles/studio-v2";
+import { publicPath } from "@/components/workspace/WorkspaceHeroPrimitives";
 
 type HeroArtwork = {
   id: string;
@@ -29,18 +25,16 @@ type Props = {
   orgName: string;
   slug: string;
   verified: boolean;
-  description: string | null;
   location: string | null;
   subscriptionStatus: string | null;
   artworks: HeroArtwork[];
-  worksCount: number;
-  verifiedWorksCount: number;
-  verificationPct: number;
-  awaitingVerificationCount: number;
-  institutionFiledCount?: number;
-  artistConfirmedCount?: number;
+  worksOnFile: number;
+  verifiedWorks: number;
+  pendingVerification: number;
+  artistsRepresented: number;
+  certificatesIssued: number;
+  activeDeals: number;
   participationPendingCount?: number;
-  rosterInvitesPendingCount?: number;
   amendmentsPendingCount?: number;
   onGoToSection: (section: GallerySection) => void;
   onRegister: () => void;
@@ -57,7 +51,9 @@ const SUBSCRIPTION_KEYS: Record<string, MessageKey> = {
   trial: "gallery.hero.subscriptionTrial",
 };
 
-const HERO_THEME = "light" as const;
+function formatMetric(value: number): string {
+  return Number.isFinite(value) ? String(value) : "-";
+}
 
 export function GalleryInstitutionalHero({
   orgName,
@@ -66,14 +62,13 @@ export function GalleryInstitutionalHero({
   location,
   subscriptionStatus,
   artworks,
-  worksCount,
-  verifiedWorksCount,
-  verificationPct,
-  awaitingVerificationCount,
-  institutionFiledCount = 0,
-  artistConfirmedCount = 0,
+  worksOnFile,
+  verifiedWorks,
+  pendingVerification,
+  artistsRepresented,
+  certificatesIssued,
+  activeDeals,
   participationPendingCount = 0,
-  rosterInvitesPendingCount = 0,
   amendmentsPendingCount = 0,
   onGoToSection,
   onRegister,
@@ -89,213 +84,200 @@ export function GalleryInstitutionalHero({
   const subscriptionLabel = SUBSCRIPTION_KEYS[subscriptionKey]
     ? t(SUBSCRIPTION_KEYS[subscriptionKey])
     : subscriptionStatus?.trim() || null;
+  const publicHref = fieldOrganisationHref(slug);
+  const path = publicPath(publicHref);
+
+  const primaryMetrics = [
+    { label: t("gallery.organisation.metric.worksOnFile"), value: worksOnFile },
+    { label: t("gallery.organisation.metric.verifiedWorks"), value: verifiedWorks },
+    { label: t("gallery.organisation.metric.pendingVerification"), value: pendingVerification },
+  ];
+
+  const secondaryMetrics = [
+    { label: t("gallery.organisation.metric.artistsRepresented"), value: artistsRepresented },
+    { label: t("gallery.organisation.metric.certificatesIssued"), value: certificatesIssued },
+    { label: t("gallery.organisation.metric.activeDeals"), value: activeDeals },
+  ];
 
   return (
-    <StudioHeroSlab
-      headerExtra={
-        <div className="flex flex-wrap items-center gap-3">
-          <span
-            className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-              verified
-                ? "border border-emerald-900/12 bg-emerald-50 text-emerald-800"
-                : "border border-amber-900/12 bg-amber-50 text-amber-900"
-            }`}
-          >
-            {verified
-              ? t("gallery.hero.institutionVerified")
-              : t("gallery.hero.verificationPending")}
-          </span>
-          {subscriptionLabel ? (
-            <span className="text-sm text-neutral-400">{subscriptionLabel}</span>
-          ) : null}
-        </div>
-      }
-      title={
-        <>
-          <InfoTooltip text={t("gallery.hero.tooltip")} theme="light" />
-          <h1 className="mt-3 font-serif text-[2rem] font-normal leading-[1.05] tracking-tight text-neutral-950 md:text-[2.75rem] lg:text-[3rem]">
-            {orgName}
-          </h1>
-          {location ? <p className="mt-3 text-sm text-neutral-500">{location}</p> : null}
-          <p className="mt-4 text-sm text-neutral-500">
-            Register · Verify · Preserve · Transact
-          </p>
-        </>
-      }
-      metrics={
-        <ul className="grid gap-4 sm:grid-cols-3 sm:gap-5">
-          <HeroTile
-            title={t("gallery.hero.registryAuthority")}
-            theme={HERO_THEME}
-            footer={
-              <HeroActionButton theme={HERO_THEME} onClick={() => onGoToSection("catalogue")}>
-                {t("gallery.hero.openCatalogue")}
-              </HeroActionButton>
-            }
-          >
-            <HeroStat
-              theme={HERO_THEME}
-              value={worksCount}
-              sub={worksCount === 1 ? t("gallery.hero.work") : t("gallery.hero.works")}
-              label={t("gallery.hero.inGalleryCatalogue")}
-            />
-            <p className="text-[11px] leading-relaxed text-neutral-500">
-              {t("gallery.hero.singleRegistryIds")}
-            </p>
-          </HeroTile>
-
-          <HeroTile
-            title={t("gallery.hero.institutionalVerification")}
-            theme={HERO_THEME}
-            footer={
-              <HeroActionButton theme={HERO_THEME} onClick={() => onGoToSection("verification")}>
-                {t("gallery.hero.trustAndCerts")}
-              </HeroActionButton>
-            }
-          >
-            <CompletenessMeter
-              theme={HERO_THEME}
-              percent={verificationPct}
-              label={t("gallery.hero.worksVerified")}
-              accent="sky"
-            />
-            <p className="text-[11px] text-neutral-500">
-              {fillMessage(t("gallery.hero.verifiedLine"), {
-                count: String(verifiedWorksCount),
-              })}
-              {awaitingVerificationCount > 0 ? (
-                <>
-                  {" · "}
-                  <span className="text-amber-800">
-                    {fillMessage(t("gallery.hero.awaitingLine"), {
-                      count: String(awaitingVerificationCount),
-                    })}
-                  </span>
-                </>
-              ) : null}
-            </p>
-          </HeroTile>
-
-          <HeroTile
-            title={t("gallery.hero.recordDepth")}
-            theme={HERO_THEME}
-            footer={
-              isAdmin ? (
-                <HeroActionButton theme={HERO_THEME} onClick={() => onGoToSection("invitations")}>
-                  {t("gallery.hero.rosterAndInvites")}
-                </HeroActionButton>
-              ) : (
-                <span className="text-[11px] text-neutral-400">
-                  {t("gallery.hero.adminCanInvite")}
+    <section className={`studio-reveal ${studioV2.scope} -mt-1`}>
+      <div
+        className={`${studioV2.surface.filingSheetMajor} relative overflow-hidden px-5 py-6 sm:px-7 sm:py-8 md:px-9 md:py-9`}
+      >
+        <div className="relative z-[1] grid gap-8 lg:grid-cols-12 lg:gap-10">
+          <div className="lg:col-span-7">
+            <p className="flex flex-wrap items-center gap-2">
+              <span className={`${studioV2.type.railLabel} text-[var(--v2-ink-muted)]`}>
+                {t("gallery.organisation.rail")}
+              </span>
+              <span className="studio-execution-stamp studio-execution-stamp--active">
+                {t("gallery.organisation.stamp")}
+              </span>
+              <span
+                className={`studio-execution-stamp ${
+                  verified ? "studio-execution-stamp--active" : ""
+                }`}
+              >
+                {verified
+                  ? t("gallery.hero.institutionVerified")
+                  : t("gallery.hero.verificationPending")}
+              </span>
+              {subscriptionLabel ? (
+                <span className="v2-type-mono text-[10px] tracking-[0.1em] text-[var(--v2-cool-grey)]">
+                  {subscriptionLabel}
                 </span>
-              )
-            }
-          >
-            <p className="text-[11px] leading-relaxed text-neutral-600">
-              <span className="font-medium text-neutral-800">{institutionFiledCount}</span>{" "}
-              {t("gallery.hero.institutionAttestation")}
-              {participationPendingCount > 0 ? (
-                <>
-                  {" · "}
-                  <span className="text-neutral-700">
-                    {participationPendingCount} {t("gallery.hero.mayDeepen")}
-                  </span>
-                </>
               ) : null}
             </p>
-            <p className="text-[11px] text-neutral-500">
-              <span className="font-medium text-neutral-700">{artistConfirmedCount}</span>{" "}
-              {t("gallery.hero.artistAttestationOnFile")}
-              {rosterInvitesPendingCount > 0 ? (
-                <>
-                  {" · "}
-                  {rosterInvitesPendingCount}{" "}
-                  {rosterInvitesPendingCount === 1
-                    ? t("gallery.hero.inviteOutstanding")
-                    : t("gallery.hero.invitesOutstanding")}
-                </>
-              ) : null}
+
+            <h1 className={`${studioV2.type.commandTitle} mt-4 md:mt-5`}>{orgName}</h1>
+            {location ? (
+              <p className="mt-2 text-sm text-[var(--v2-ink-muted)]">{location}</p>
+            ) : null}
+            <p className="mt-3 max-w-xl text-sm leading-relaxed text-[var(--v2-ink-muted)] md:text-[15px]">
+              {t("gallery.organisation.subtitle")}
             </p>
-            {amendmentsPendingCount > 0 ? (
-              typeof onGoToAmendments === "function" ? (
-                <button
-                  type="button"
-                  onClick={onGoToAmendments}
-                  className="mt-2 w-full rounded-xl border border-violet-900/12 bg-violet-50 px-3 py-2 text-left text-[11px] font-medium text-violet-900 transition hover:bg-violet-100/80"
-                >
-                  {fillMessage(t("gallery.hero.openAmendments"), {
-                    count: String(amendmentsPendingCount),
-                  })}
+
+            <p className="mt-4 v2-type-mono text-[10px] tracking-[0.12em] text-[var(--v2-cool-grey)]">
+              {fillMessage(t("gallery.organisation.statusLine"), {
+                works: String(worksOnFile),
+                verified: String(verifiedWorks),
+                pending: String(pendingVerification),
+              })}
+            </p>
+
+            <div className="mt-8 space-y-3">
+              <dl className="studio-reveal-stagger grid grid-cols-3 gap-2 sm:gap-2.5">
+                {primaryMetrics.map((metric, index) => (
+                  <div
+                    key={metric.label}
+                    style={{ "--reveal-index": index } as CSSProperties}
+                    className="rounded-lg border border-[var(--v2-border-strong)] bg-white px-3 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_10px_28px_-22px_rgba(15,23,42,0.18)] sm:px-3.5 sm:py-4"
+                  >
+                    <dt className="v2-type-mono text-[9px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
+                      {metric.label}
+                    </dt>
+                    <dd className="mt-2 font-serif text-[1.65rem] tabular-nums leading-none tracking-tight text-[var(--v2-ink)] sm:text-[2rem]">
+                      {formatMetric(metric.value)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+
+              <dl className="studio-reveal-stagger grid grid-cols-3 gap-2 sm:gap-2.5">
+                {secondaryMetrics.map((metric, index) => (
+                  <div
+                    key={metric.label}
+                    style={{ "--reveal-index": index + 3 } as CSSProperties}
+                    className="rounded-lg border border-[var(--v2-border)] bg-white/80 px-2.5 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] sm:px-3"
+                  >
+                    <dt className="v2-type-mono text-[9px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
+                      {metric.label}
+                    </dt>
+                    <dd className="mt-1.5 font-serif text-lg tabular-nums leading-none text-[var(--v2-ink-soft)] sm:text-xl">
+                      {formatMetric(metric.value)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+
+            {(participationPendingCount > 0 || amendmentsPendingCount > 0) &&
+            typeof onGoToAmendments === "function" ? (
+              <div className="mt-5 space-y-2">
+                {participationPendingCount > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => onGoToSection("invitations")}
+                    className="w-full rounded-lg border border-[var(--v2-border-strong)] bg-white/85 px-3 py-2.5 text-left v2-type-mono text-[10px] tracking-[0.1em] text-[var(--v2-ink-muted)] transition hover:bg-white"
+                  >
+                    {participationPendingCount}{" "}
+                    {t("gallery.hero.mayDeepen")}
+                  </button>
+                ) : null}
+                {amendmentsPendingCount > 0 ? (
+                  <button
+                    type="button"
+                    onClick={onGoToAmendments}
+                    className="w-full rounded-lg border border-[var(--v2-amber-exception-dim)] bg-[var(--v2-amber-exception-dim)]/20 px-3 py-2.5 text-left v2-type-mono text-[10px] tracking-[0.1em] text-[var(--v2-ink)] transition hover:bg-[var(--v2-amber-exception-dim)]/30"
+                  >
+                    {fillMessage(t("gallery.hero.openAmendments"), {
+                      count: String(amendmentsPendingCount),
+                    })}
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+
+            <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-[var(--v2-border)] pt-6">
+              <button type="button" onClick={onRegister} className={rrowmButton.primaryEconomic}>
+                {t("gallery.hero.registerWork")}
+              </button>
+              <button
+                type="button"
+                onClick={() => onGoToSection("verification")}
+                className={rrowmButton.secondary}
+              >
+                {t("gallery.hero.trustAndCerts")}
+              </button>
+              <button
+                type="button"
+                onClick={() => onGoToSection("catalogue")}
+                className={rrowmButton.secondary}
+              >
+                {t("gallery.hero.openCatalogue")}
+              </button>
+              {isAdmin ? (
+                <button type="button" onClick={onInvite} className={rrowmButton.secondary}>
+                  {t("gallery.hero.inviteToAuthenticate")}
                 </button>
-              ) : (
-                <p className="mt-2 text-[11px] text-violet-800">
-                  {fillMessage(t("gallery.hero.amendmentsPending"), {
-                    count: String(amendmentsPendingCount),
-                  })}
-                </p>
-              )
-            ) : null}
-            {isAdmin ? (
-              <button
-                type="button"
-                onClick={onInvite}
-                className="mt-1 w-full rounded-xl border border-neutral-900/[0.08] bg-white px-3 py-2 text-[11px] font-medium text-neutral-800 transition hover:bg-neutral-50"
-              >
-                {t("gallery.hero.newInvitation")}
-              </button>
-            ) : null}
-          </HeroTile>
-        </ul>
-      }
-      actions={
-        <>
-          <button type="button" onClick={onRegister} className={rrowmButton.primaryEconomic}>
-            {t("gallery.hero.registerWork")}
-          </button>
-          {isAdmin ? (
-            <button type="button" onClick={onInvite} className={rrowmButton.secondary}>
-              {t("gallery.hero.inviteToAuthenticate")}
-            </button>
-          ) : null}
-          <div className="ml-auto flex flex-wrap items-center justify-end gap-x-5 gap-y-2 text-[12px] text-neutral-500">
-            {typeof onAboutWorkspace === "function" ? (
-              <button
-                type="button"
-                onClick={onAboutWorkspace}
-                className="text-left font-medium underline decoration-neutral-300 underline-offset-4 transition hover:text-neutral-900 hover:decoration-neutral-500"
-              >
-                {t("gallery.hero.aboutWorkspace")}
-              </button>
-            ) : null}
-            <Link
-              href={fieldOrganisationHref(slug)}
-              className="transition hover:text-neutral-900"
-            >
-              {t("gallery.hero.publicPage")}
-            </Link>
-            <Link href="/studio/account" className="transition hover:text-neutral-900">
-              {t("gallery.hero.account")}
-            </Link>
+              ) : null}
+              <div className="flex w-full flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-[var(--v2-ink-muted)] sm:ml-auto sm:w-auto">
+                {typeof onAboutWorkspace === "function" ? (
+                  <button
+                    type="button"
+                    onClick={onAboutWorkspace}
+                    className="transition hover:text-[var(--v2-ink)]"
+                  >
+                    {t("gallery.hero.aboutWorkspace")}
+                  </button>
+                ) : null}
+                <Link href={publicHref} className="transition hover:text-[var(--v2-ink)]">
+                  {t("gallery.hero.publicPage")}
+                </Link>
+                <Link href="/studio/account" className="transition hover:text-[var(--v2-ink)]">
+                  {t("gallery.hero.account")}
+                </Link>
+              </div>
+            </div>
+
+            <p className="mt-4 v2-type-mono text-[10px] tracking-[0.1em] text-[var(--v2-cool-grey)]">
+              {t("gallery.organisation.publicPath")}{" "}
+              <span className="text-[var(--v2-ink-soft)]">{path}</span>
+            </p>
           </div>
-        </>
-      }
-      aside={
-        <div className="relative w-full max-w-[300px]">
-          <div className={`${rrowmStudioSurface.card} px-5 py-6 sm:px-6 sm:py-7`}>
-            <ArtworksHeroPreview
-              artworks={artworks as HeroArtwork[]}
-              variant="editorial"
-              pick="latest"
-              tone="light"
-            />
-            {artworks.length === 0 ? (
-              <p className="mt-4 text-center text-xs leading-relaxed text-neutral-400">
-                {t("gallery.hero.previewEmpty")}
+
+          <div className="flex items-center justify-center lg:col-span-5">
+            <div className={`${studioV2.surface.filingSheet} w-full max-w-[min(100%,20rem)] p-5`}>
+              <p className="v2-type-mono text-[9px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
+                {t("gallery.organisation.preview")}
               </p>
-            ) : null}
+              <div className="mt-4 flex justify-center">
+                <ArtworksHeroPreview
+                  artworks={artworks}
+                  variant="editorial"
+                  pick="latest"
+                  tone="light"
+                />
+              </div>
+              {artworks.length === 0 ? (
+                <p className="mt-5 text-center text-xs leading-relaxed text-[var(--v2-ink-muted)]">
+                  {t("gallery.hero.previewEmpty")}
+                </p>
+              ) : null}
+            </div>
           </div>
         </div>
-      }
-    />
+      </div>
+    </section>
   );
 }

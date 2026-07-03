@@ -3,13 +3,15 @@
  * No DB / Node-only imports; safe for client bundles.
  */
 
+import type { ArtworkTrustTier } from "@/lib/artwork-trust-tier";
+
 export const REPLAY_PERMUTATION_CAP = 48;
 
 export type ReplayState = {
   current_owner_id: string | null;
-  verification_status: "verified" | "unverified";
+  trust_tier: ArtworkTrustTier;
   value_by_currency: Record<string, number>;
-  certificates: Array<{ id: string; revoked: boolean }>;
+  certificates: Array<{ id: string; revoked: boolean; snapshot: unknown }>;
 };
 
 export type GalleryAuthority = Map<string, boolean>;
@@ -74,10 +76,56 @@ export function galleryAuthorityToRecord(m: GalleryAuthority): Record<string, bo
 
 export const INITIAL_REPLAY_STATE = (): ReplayState => ({
   current_owner_id: null,
-  verification_status: "unverified",
+  trust_tier: "filed",
   value_by_currency: {},
   certificates: [],
 });
+
+function trustTierFromCertSnapshot(snapshot: unknown): ArtworkTrustTier | null {
+  if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) {
+    return null;
+  }
+  const cc = String(
+    (snapshot as Record<string, unknown>).certificate_class ?? ""
+  ).toLowerCase();
+  if (cc === "verified_registry") return "verified";
+  if (cc === "filing_attestation") return "self_attested";
+  return null;
+}
+
+export function recomputeTrustTier(
+  state: ReplayState,
+  verApplied: VerificationEvent[],
+  authority: GalleryAuthority
+): void {
+  const liveCerts = state.certificates.filter((c) => !c.revoked);
+  const galleryConfirmed = verificationEventsConfirmedGallery(
+    verApplied,
+    authority
+  );
+
+  if (liveCerts.length > 0) {
+    const latest = liveCerts[liveCerts.length - 1];
+    const fromSnapshot = trustTierFromCertSnapshot(latest.snapshot);
+    if (fromSnapshot) {
+      state.trust_tier = fromSnapshot;
+      return;
+    }
+    state.trust_tier = galleryConfirmed ? "verified" : "self_attested";
+    return;
+  }
+
+  state.trust_tier = galleryConfirmed ? "verified" : "filed";
+}
+
+/** @deprecated Use recomputeTrustTier */
+export function recomputeVerification(
+  state: ReplayState,
+  verApplied: VerificationEvent[],
+  authority: GalleryAuthority
+): void {
+  recomputeTrustTier(state, verApplied, authority);
+}
 
 export function normUuid(u: string | null | undefined): string | null {
   if (u == null || String(u).trim() === "") return null;
@@ -98,25 +146,10 @@ export function verificationEventsConfirmedGallery(
   return false;
 }
 
-export function recomputeVerification(
-  state: ReplayState,
-  verApplied: VerificationEvent[],
-  authority: GalleryAuthority
-): void {
-  const liveCert = state.certificates.some((c) => !c.revoked);
-  if (liveCert) {
-    state.verification_status = "verified";
-    return;
-  }
-  state.verification_status = verificationEventsConfirmedGallery(verApplied, authority)
-    ? "verified"
-    : "unverified";
-}
-
 export function cloneReplayState(s: ReplayState): ReplayState {
   return {
     current_owner_id: s.current_owner_id,
-    verification_status: s.verification_status,
+    trust_tier: s.trust_tier,
     value_by_currency: { ...s.value_by_currency },
     certificates: s.certificates.map((c) => ({ ...c })),
   };
@@ -132,7 +165,7 @@ export function stateSignature(s: ReplayState): string {
     .sort((a, b) => a.id.localeCompare(b.id))
     .map((c) => `${c.id}:${c.revoked ? "1" : "0"}`)
     .join("|");
-  return `${cur}|${s.verification_status}|${vals}|${certs}`;
+  return `${cur}|${s.trust_tier}|${vals}|${certs}`;
 }
 
 export function sortEvents(
@@ -257,7 +290,7 @@ function finalizeRevocations(
   authority: GalleryAuthority
 ): void {
   patchCertificateRevocation(state, byId);
-  recomputeVerification(state, verApplied, authority);
+  recomputeTrustTier(state, verApplied, authority);
 }
 
 export type ReplayTimelineOptions = {
@@ -314,14 +347,14 @@ export function replayTimeline(
         );
       }
 
-      state.certificates.push({ id: e.id, revoked: false });
-      recomputeVerification(state, verApplied, authority);
+      state.certificates.push({ id: e.id, revoked: false, snapshot: e.snapshot });
+      recomputeTrustTier(state, verApplied, authority);
       continue;
     }
 
     if (e.kind === "verification") {
       verApplied.push(e);
-      recomputeVerification(state, verApplied, authority);
+      recomputeTrustTier(state, verApplied, authority);
       continue;
     }
 
@@ -330,7 +363,7 @@ export function replayTimeline(
     }
 
     applyOwnershipOrValue(state, e);
-    recomputeVerification(state, verApplied, authority);
+    recomputeTrustTier(state, verApplied, authority);
   }
 
   if (applyFinal) {

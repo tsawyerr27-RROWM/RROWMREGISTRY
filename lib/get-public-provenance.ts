@@ -349,7 +349,7 @@ function computeRecordIntegrity(args: {
 
   const missing_links = validation.mismatches.length > 0;
 
-  const verified = state.verification_status === "verified";
+  const verified = state.trust_tier === "verified";
 
   let levelLabel: string;
   let narrative: string;
@@ -747,9 +747,11 @@ function stateToDisplayLines(
         ? holders.get(oid) ?? "Private holder"
         : "Unassigned";
   const verificationLine =
-    state.verification_status === "verified"
+    state.trust_tier === "verified"
       ? "Listed as verified in the current record"
-      : "Not listed as verified in the current record";
+      : state.trust_tier === "self_attested"
+        ? "Self-attested in the current record"
+        : "Not listed as verified in the current record";
   const valuesLines = Object.keys(state.value_by_currency)
     .sort()
     .map((c) => {

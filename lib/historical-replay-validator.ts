@@ -7,6 +7,7 @@
  */
 
 import type { PoolClient } from "pg";
+import { parseArtworkTrustTier } from "@/lib/artwork-trust-tier";
 import type { ArtworkMeta, GalleryAuthority, TimelineEvent } from "./artwork-replay-engine";
 import {
   normUuid,
@@ -391,18 +392,18 @@ async function validateOneArtwork(
   );
 
   const dbOwner = normUuid(aw[0]?.co ?? null);
-  const dbVs = String(aw[0]?.vs || "unverified").toLowerCase();
+  const dbTier = parseArtworkTrustTier(aw[0]?.vs ?? null);
   const rpOwner = normUuid(r1.state.current_owner_id);
-  const rpVs = r1.state.verification_status;
+  const rpTier = r1.state.trust_tier;
 
   if (dbOwner !== rpOwner) {
     mismatches.push(
       `current_owner_id: db=${dbOwner ?? "null"} replay=${rpOwner ?? "null"} (exactly one canonical owner expected)`
     );
   }
-  if (dbVs !== rpVs) {
+  if (dbTier !== rpTier) {
     mismatches.push(
-      `verification_status: db=${aw[0]?.vs} replay=${rpVs} — event-derived vs cache`
+      `trust_tier: db=${dbTier} replay=${rpTier} — event-derived vs cache`
     );
   }
 

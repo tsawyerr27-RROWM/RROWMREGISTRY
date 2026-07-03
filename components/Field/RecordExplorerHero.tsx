@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 
+import { FieldExplorerHeroShell } from "@/components/Field/FieldExplorerHeroShell";
+import { FieldExplorerInfoTooltip } from "@/components/Field/FieldExplorerInfoTooltip";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fieldVerifyHref } from "@/lib/field-nav";
 import type {
   RecordExplorerCertificateFilter,
-  RecordExplorerVerifiedFilter,
+  RecordExplorerTrustFilter,
 } from "@/lib/field-record-explorer-params";
-import { registryV2 } from "@/styles/registry-v2";
 
 type Props = {
   searchQuery: string;
@@ -16,7 +17,7 @@ type Props = {
   creative: string;
   organisation: string;
   practice: string;
-  verified: RecordExplorerVerifiedFilter;
+  trust: RecordExplorerTrustFilter;
   certificate: RecordExplorerCertificateFilter;
 };
 
@@ -26,7 +27,7 @@ export function RecordExplorerHero({
   creative,
   organisation,
   practice,
-  verified,
+  trust,
   certificate,
 }: Props) {
   const { t } = useLocalePreferences();
@@ -36,48 +37,36 @@ export function RecordExplorerHero({
     Boolean(creative) ||
     Boolean(organisation) ||
     Boolean(practice) ||
-    verified === "all" ||
+    trust !== "all" ||
     certificate === "present";
 
+  const metaParts: string[] = [];
+  if (total > 0) {
+    metaParts.push(`${total} ${total === 1 ? "record" : "records"}`);
+  }
+  if (trust !== "all") {
+    metaParts.push(t(`field.explorer.records.trustScope.${trust}`));
+  }
+  if (trimmedQ) {
+    metaParts.push(`${t("field.explorer.records.searching")} “${trimmedQ}”`);
+  }
+  if (hasFilters) {
+    metaParts.push(t("field.explorer.records.filtered"));
+  }
+
   return (
-    <section
-      className={`relative mt-2 overflow-hidden ${registryV2.surface.filingMajor} p-8 lg:p-12 xl:p-14 ${registryV2.motion.reveal}`}
-    >
-      <p className={registryV2.type.metaLabel}>{t("registry.explorer.indexLabel")}</p>
-      <h1 className={`${registryV2.type.recordTitle} mt-4 max-w-3xl`}>
-        {t("field.explorer.records.headline")}
-      </h1>
-      <p className={`${registryV2.type.metaValue} mt-6 max-w-2xl text-base`}>
-        {t("field.explorer.records.lede")}
-      </p>
-      {total > 0 || hasFilters || trimmedQ ? (
-        <p className={`${registryV2.type.monoId} mt-8`}>
-          {total > 0 ? (
-            <>
-              {total} {total === 1 ? "record" : "records"}
-              {" · "}
-            </>
-          ) : null}
-          {verified === "all"
-            ? t("field.explorer.records.verifiedScopeAll")
-            : t("field.explorer.records.verifiedScopeDefault")}
-          {trimmedQ ? (
-            <>
-              {" "}
-              · {t("field.explorer.records.searching")} “{trimmedQ}”
-            </>
-          ) : null}
-          {hasFilters ? ` · ${t("field.explorer.records.filtered")}` : null}
-        </p>
-      ) : null}
-      <div className="mt-6">
+    <FieldExplorerHeroShell
+      title={t("field.explorer.records.headline")}
+      infoTooltip={<FieldExplorerInfoTooltip text={t("field.explorer.records.lede")} />}
+      meta={metaParts.length > 0 ? metaParts.join(" · ") : undefined}
+      actions={
         <Link
           href={fieldVerifyHref()}
-          className="v2-cta-secondary inline-flex !min-h-0 px-5 py-2.5 text-xs"
+          className="v2-cta-secondary inline-flex min-h-[44px] items-center px-4 py-2.5 text-xs"
         >
           {t("field.explorer.link.verifyHub")}
         </Link>
-      </div>
-    </section>
+      }
+    />
   );
 }

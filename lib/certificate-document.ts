@@ -1,3 +1,5 @@
+import type { CertificateClass } from "@/lib/artwork-trust-tier";
+
 export type CertificateVerificationSummary = {
   gallery?: boolean;
   artist?: boolean;
@@ -19,6 +21,7 @@ export type CertificateDocumentRow = {
   certificate_hash: string | null;
   verification_summary: unknown;
   certificate_snapshot: unknown;
+  certificate_class: CertificateClass | null;
 };
 
 export type CertificateArtworkRow = {

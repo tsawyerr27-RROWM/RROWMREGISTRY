@@ -35,8 +35,8 @@ export async function loadProvenanceMilestoneOgBundle(
   const restricted = (partial?: Partial<ProvenanceMilestoneShareContext>) =>
     ({
       context: {
-        registryId: cleanRegistry || "—",
-        eventId: cleanEvent || "—",
+        registryId: cleanRegistry || "-",
+        eventId: cleanEvent || "-",
         artworkTitle: "Work on file",
         eventTitle: "Provenance milestone",
         participantContext: null,

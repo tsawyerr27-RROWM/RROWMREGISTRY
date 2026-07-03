@@ -6,7 +6,6 @@ import { LandingContainer, LandingSection } from "@/components/LandingPage/redes
 import { LandingReveal } from "@/components/LandingPage/redesign/LandingReveal";
 import { LandingPageShell } from "@/components/LandingPage/redesign/LandingPageShell";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
-import { fieldExplorerHref, fieldExplorerRecordsHref } from "@/lib/field-nav";
 import { landingType } from "@/styles/landing-redesign";
 
 const PILLAR_KEYS = [
@@ -15,10 +14,27 @@ const PILLAR_KEYS = [
   { title: "about.v2.pillar.chronology.title", body: "about.v2.pillar.chronology.body" },
 ] as const;
 
-const ECOSYSTEM_KEYS = [
-  { title: "about.v2.ecosystem.studio.title", body: "about.v2.ecosystem.studio.body", href: "/studio/creative" },
-  { title: "about.v2.ecosystem.registry.title", body: "about.v2.ecosystem.registry.body", href: fieldExplorerRecordsHref() },
-  { title: "about.v2.ecosystem.field.title", body: "about.v2.ecosystem.field.body", href: fieldExplorerHref() },
+const INTEGRITY_KEYS = [
+  {
+    title: "about.v2.ecosystem.registry.title",
+    body: "about.v2.ecosystem.registry.body",
+    accent: "cobalt",
+  },
+  {
+    title: "about.v2.ecosystem.field.title",
+    body: "about.v2.ecosystem.field.body",
+    accent: "lime",
+  },
+  {
+    title: "about.v2.ecosystem.studio.title",
+    body: "about.v2.ecosystem.studio.body",
+    accent: "ember",
+  },
+  {
+    title: "about.v2.ecosystem.deals.title",
+    body: "about.v2.ecosystem.deals.body",
+    accent: "cobalt",
+  },
 ] as const;
 
 export function AboutPageContent() {
@@ -92,31 +108,69 @@ export function AboutPageContent() {
 
       <LandingSection id="about-ecosystem" tone="bone">
         <LandingContainer>
-          <LandingReveal variant="file">
-            <h2 className={`${landingType.display} max-w-[16ch] text-[clamp(2rem,3.2vw,2.75rem)] leading-[1.08] text-[var(--landing-charcoal)]`}>
-              {t("about.v2.ecosystem.title")}
-            </h2>
-          </LandingReveal>
-          <div className="mt-14 grid gap-8 md:grid-cols-3">
-            {ECOSYSTEM_KEYS.map((item, i) => (
-              <LandingReveal key={item.title} variant="append" delay={i * 0.06}>
-                <Link
-                  href={item.href}
-                  className="group block border border-[var(--landing-border)] bg-white/80 p-7 transition hover:border-[var(--landing-charcoal-muted)]/30"
-                >
-                  <h3 className={`${landingType.display} text-xl text-[var(--landing-charcoal)] group-hover:text-[var(--landing-cobalt)]`}>
-                    {t(item.title)}
-                  </h3>
-                  <p className={`${landingType.body} mt-4`}>{t(item.body)}</p>
+          <div className="grid gap-16 lg:grid-cols-12 lg:gap-10 xl:gap-16">
+            <div className="lg:col-span-5">
+              <LandingReveal variant="file">
+                <p className={landingType.signal}>{t("about.v2.ecosystem.eyebrow")}</p>
+                <h2 className={`${landingType.display} mt-6 max-w-[15ch] text-[clamp(2rem,3.2vw,2.75rem)] leading-[1.08] text-[var(--landing-charcoal)]`}>
+                  {t("about.v2.ecosystem.title")}
+                </h2>
+                <p className={`${landingType.lead} mt-8 max-w-md`}>
+                  {t("about.v2.ecosystem.lead")}
+                </p>
+              </LandingReveal>
+
+              <LandingReveal className="mt-10" variant="stamp">
+                <div className="landing-plane landing-plane--certificate relative overflow-hidden p-6">
+                  <p className="v2-type-mono text-[9px] uppercase tracking-[0.22em] text-[var(--landing-charcoal-soft)]">
+                    SHA-256 · canonical digest
+                  </p>
+                  <p className="v2-type-mono mt-3 break-all text-[12px] leading-[1.7] text-[var(--landing-charcoal-muted)]">
+                    9f2c7a1e8b04d6f3a51c0e9d47b2fa88c31e6705ad9e4c22f18b0a3d7e5c1904
+                  </p>
+                  <div className="mt-5 flex items-center gap-2 border-t border-[var(--landing-border)] pt-4">
+                    <span
+                      className="landing-accent-bar landing-accent-bar--cobalt !min-h-0 h-3"
+                      aria-hidden
+                    />
+                    <span className="v2-type-mono text-[10px] uppercase tracking-[0.16em] text-[var(--landing-charcoal-soft)]">
+                      one byte changed · fingerprint breaks
+                    </span>
+                  </div>
+                </div>
+              </LandingReveal>
+            </div>
+
+            <div className="space-y-10 lg:col-span-6 lg:col-start-7 lg:space-y-12">
+              {INTEGRITY_KEYS.map((item, i) => (
+                <LandingReveal key={item.title} variant="append" delay={i * 0.06}>
+                  <article className="landing-trust-row">
+                    <span
+                      className={`landing-accent-bar landing-accent-bar--${item.accent}`}
+                      aria-hidden
+                    />
+                    <div>
+                      <div className="flex items-baseline gap-3">
+                        <span className="v2-type-mono text-[10px] uppercase tracking-[0.2em] text-[var(--landing-charcoal-soft)]">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        <h3 className={`${landingType.display} text-[1.4rem] leading-snug text-[var(--landing-charcoal)] md:text-[1.5rem]`}>
+                          {t(item.title)}
+                        </h3>
+                      </div>
+                      <p className={`${landingType.body} mt-3 max-w-prose`}>{t(item.body)}</p>
+                    </div>
+                  </article>
+                </LandingReveal>
+              ))}
+
+              <LandingReveal variant="stamp">
+                <Link href="/get-started" className="landing-cta-primary landing-cta-primary--signal">
+                  {t("nav.takePart")}
                 </Link>
               </LandingReveal>
-            ))}
+            </div>
           </div>
-          <LandingReveal className="mt-14" variant="stamp">
-            <Link href="/get-started" className="landing-cta-primary landing-cta-primary--signal">
-              {t("nav.takePart")}
-            </Link>
-          </LandingReveal>
         </LandingContainer>
       </LandingSection>
     </LandingPageShell>

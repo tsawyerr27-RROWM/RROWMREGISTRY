@@ -1,28 +1,33 @@
 import { REGISTRY_PAGE_SIZE } from "@/lib/registry-list-params";
+import {
+  parseRecordExplorerTrustParam,
+  RECORD_EXPLORER_TRUST_FILTERS,
+  type RecordExplorerTrustFilter,
+  recordExplorerTrustQueryValue,
+} from "@/lib/artwork-trust-tier";
+
+export { RECORD_EXPLORER_TRUST_FILTERS };
 
 export { REGISTRY_PAGE_SIZE as FIELD_RECORD_EXPLORER_PAGE_SIZE };
 
 export type RecordExplorerSort = "recent" | "oldest" | "title_asc" | "title_desc";
 
+/** @deprecated Use RecordExplorerTrustFilter */
 export type RecordExplorerVerifiedFilter = "all" | "verified";
+
+export type { RecordExplorerTrustFilter };
 
 export type RecordExplorerCertificateFilter = "all" | "present";
 
-/** Verified-only is the default when `verified` is absent (Phase 2B founder freeze §2). */
+/** Trust tier filter — default all tiers (filed works are public registry facts). */
 export function parseRecordExplorerVerifiedParam(
   sp: Record<string, string | string[] | undefined>
 ): { verified: RecordExplorerVerifiedFilter; verifiedScopeExplicit: boolean } {
-  if (!Object.prototype.hasOwnProperty.call(sp, "verified")) {
-    return { verified: "verified", verifiedScopeExplicit: false };
+  const { trust, trustScopeExplicit } = parseRecordExplorerTrustParam(sp);
+  if (trust === "verified") {
+    return { verified: "verified", verifiedScopeExplicit: trustScopeExplicit };
   }
-
-  const verifiedRaw = typeof sp.verified === "string" ? sp.verified.trim().toLowerCase() : "";
-
-  if (verifiedRaw === "0" || verifiedRaw === "all" || verifiedRaw === "false") {
-    return { verified: "all", verifiedScopeExplicit: true };
-  }
-
-  return { verified: "verified", verifiedScopeExplicit: true };
+  return { verified: "all", verifiedScopeExplicit: trustScopeExplicit };
 }
 
 export function parseRecordExplorerParams(
@@ -48,6 +53,7 @@ export function parseRecordExplorerParams(
   const practiceRaw = typeof sp.practice === "string" ? sp.practice.trim() : "";
   const practice = practiceRaw ? practiceRaw.toLowerCase() : "";
 
+  const { trust, trustScopeExplicit } = parseRecordExplorerTrustParam(sp);
   const { verified, verifiedScopeExplicit } = parseRecordExplorerVerifiedParam(sp);
 
   const certificateRaw =
@@ -62,8 +68,10 @@ export function parseRecordExplorerParams(
     creative,
     organisation,
     practice,
+    trust,
+    trustScopeExplicit,
     verified,
-    verifiedScopeExplicit,
+    verifiedScopeExplicit: verifiedScopeExplicit || trustScopeExplicit,
     certificate,
   };
 }
@@ -75,7 +83,8 @@ export function recordExplorerQueryString(args: {
   creative: string;
   organisation: string;
   practice: string;
-  verified: RecordExplorerVerifiedFilter;
+  trust?: RecordExplorerTrustFilter;
+  verified?: RecordExplorerVerifiedFilter;
   certificate: RecordExplorerCertificateFilter;
 }): string {
   const params = new URLSearchParams();
@@ -85,7 +94,15 @@ export function recordExplorerQueryString(args: {
   if (args.organisation) params.set("organisation", args.organisation);
   if (args.practice) params.set("practice", args.practice);
   if (args.sort !== "recent") params.set("sort", args.sort);
-  if (args.verified === "all") params.set("verified", "0");
+
+  const trust = args.trust ?? (args.verified === "verified" ? "verified" : "all");
+  const trustValue = recordExplorerTrustQueryValue(trust);
+  if (trustValue && trustValue !== "all") {
+    params.set("trust", trustValue);
+  } else if (args.verified === "all") {
+    params.set("verified", "0");
+  }
+
   if (args.certificate === "present") params.set("certificate", "1");
   if (args.page > 1) params.set("page", String(args.page));
   return params.toString();
@@ -108,7 +125,7 @@ export function recordExplorerQueryFromLegacyRegistry(
   else if (sortRaw === "title_asc") sort = "title_asc";
   else if (sortRaw === "title_desc") sort = "title_desc";
 
-  const verified: RecordExplorerVerifiedFilter =
+  const trust: RecordExplorerTrustFilter =
     statusRaw === "verified" ? "verified" : "all";
 
   return recordExplorerQueryString({
@@ -118,7 +135,7 @@ export function recordExplorerQueryFromLegacyRegistry(
     creative: "",
     organisation: "",
     practice: "",
-    verified,
+    trust,
     certificate: "all",
   });
 }

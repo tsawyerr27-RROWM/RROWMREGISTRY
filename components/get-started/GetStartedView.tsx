@@ -5,7 +5,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { GalleryPricingModal } from "./GalleryPricingModal";
 import { IconArtist, IconCollector, IconGallery } from "./role-icons";
-import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 /** Stroke/fill use `currentColor` on the SVG — restrained neutral tints only. */
@@ -128,15 +127,6 @@ export function GetStartedView() {
               />
             </Link>
           </nav>
-        </section>
-
-        <section className="rrowm-atmo-section--blend relative mt-16 overflow-hidden rounded-[1.5rem] md:mt-20">
-          <div className="relative z-10 max-w-2xl px-6 py-10 md:px-8 md:py-12">
-            <InfoTooltip text="Verified listings and chronology offer a shared surface for inquiry, not a marketplace pitch." />
-            <h2 className="font-serif text-xl font-normal text-neutral-950">
-              {t("getStarted.catalogueTitle")}
-            </h2>
-          </div>
         </section>
       </main>
 

@@ -42,8 +42,12 @@ export async function fetchArtistArtworkList(
 
   if (status === "verified") {
     query = query.eq("verification_status", "verified");
-  } else if (status === "pending") {
-    query = query.neq("verification_status", "verified");
+  } else if (status === "self_attested") {
+    query = query.eq("verification_status", "self_attested");
+  } else if (status === "filed") {
+    query = query.or(
+      "verification_status.eq.filed,verification_status.eq.unverified,verification_status.eq.pending,verification_status.is.null"
+    );
   }
 
   const term = q.trim().replace(/,/g, " ");

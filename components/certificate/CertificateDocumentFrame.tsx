@@ -9,12 +9,14 @@ type Props = {
   children: ReactNode;
   screenWatermark?: ReactNode;
   revokedWatermark?: ReactNode;
+  certificateClassLabel?: string | null;
 };
 
 export function CertificateDocumentFrame({
   children,
   screenWatermark,
   revokedWatermark,
+  certificateClassLabel,
 }: Props) {
   return (
     <div className={`${registryV2.scope} registry-print-page relative flex min-h-screen items-center justify-center px-4 pb-16 pt-24 sm:px-6 lg:px-8 print:box-border print:bg-white print:px-4 print:py-3`}>
@@ -33,6 +35,7 @@ export function CertificateDocumentFrame({
 
       <article
         className={`${registryPremium.document.sheet} ${registryV2.surface.certificateSheet} relative z-10 mx-auto w-full max-w-[820px] print:mx-auto print:max-w-none print:w-full`}
+        aria-label={certificateClassLabel ?? undefined}
       >
         <div
           className={`print:box-border print:mx-auto print:flex print:h-auto print:w-[190mm] print:max-w-[190mm] print:shrink-0 print:flex-col print:overflow-hidden ${registryPremium.print.a4Aspect}`}

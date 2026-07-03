@@ -447,7 +447,7 @@ function DeleteAccountZone({
                 </div>
               ) : (
                 <p className="text-sm text-neutral-600">
-                  OAuth account — ensure you signed in recently. If not, sign out and
+                  OAuth account: ensure you signed in recently. If not, sign out and
                   sign in again before continuing.
                 </p>
               )}

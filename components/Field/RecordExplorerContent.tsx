@@ -14,7 +14,7 @@ import {
   recordExplorerQueryString,
   type RecordExplorerCertificateFilter,
   type RecordExplorerSort,
-  type RecordExplorerVerifiedFilter,
+  type RecordExplorerTrustFilter,
 } from "@/lib/field-record-explorer-params";
 import { fieldExplorerDensityGridClass } from "@/lib/field-explorer-density";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
@@ -30,7 +30,7 @@ type Props = {
   creative: string;
   organisation: string;
   practice: string;
-  verified: RecordExplorerVerifiedFilter;
+  trust: RecordExplorerTrustFilter;
   certificate: RecordExplorerCertificateFilter;
   formKey: string;
 };
@@ -45,7 +45,7 @@ export function RecordExplorerContent({
   creative,
   organisation,
   practice,
-  verified,
+  trust,
   certificate,
   formKey,
 }: Props) {
@@ -56,7 +56,7 @@ export function RecordExplorerContent({
     Boolean(creative) ||
     Boolean(organisation) ||
     Boolean(practice) ||
-    verified === "all" ||
+    trust !== "all" ||
     certificate === "present";
 
   const browseAllHref = (() => {
@@ -67,14 +67,14 @@ export function RecordExplorerContent({
       creative,
       organisation,
       practice,
-      verified: "all",
+      trust: "all",
       certificate,
     });
-    return qs ? `${basePath}?${qs}` : `${basePath}?verified=0`;
+    return qs ? `${basePath}?${qs}` : basePath;
   })();
 
   return (
-    <div className="mt-10">
+    <div className="mt-6">
       <RecordExplorerFilters
         action={basePath}
         q={q}
@@ -82,7 +82,7 @@ export function RecordExplorerContent({
         creative={creative}
         organisation={organisation}
         practice={practice}
-        verified={verified}
+        trust={trust}
         certificate={certificate}
         formKey={formKey}
       />
@@ -141,7 +141,7 @@ export function RecordExplorerContent({
             creative={creative}
             organisation={organisation}
             practice={practice}
-            verified={verified}
+            trust={trust}
             certificate={certificate}
           />
         </>

@@ -2,6 +2,10 @@
 
 import type { ArchivalProvenanceBundle } from "@/lib/provenance-timeline";
 import { chronologyTemporalRecallLinesI18n } from "@/lib/archival-provenance-i18n";
+import {
+  groupProvenanceEventsByPhase,
+  provenancePhaseMessageKey,
+} from "@/lib/provenance-chronology-phases";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { ProvenanceCompletenessBand } from "@/components/provenance/ProvenanceCompletenessBand";
 import { ProvenanceEvidencePanel } from "@/components/provenance/ProvenanceEvidencePanel";
@@ -22,12 +26,15 @@ export function ProvenanceChronologySection({
   const { t, region } = useLocalePreferences();
   const { events, recordCompleteness, continuityIndicators } = bundle;
   const temporalRecall = chronologyTemporalRecallLinesI18n(bundle, t);
+  const phaseGroups = groupProvenanceEventsByPhase(events);
 
   if (!events.length) {
     return (
       <p className="text-sm leading-relaxed text-neutral-600">{t("provenance.empty")}</p>
     );
   }
+
+  let eventIndex = 0;
 
   return (
     <div className="space-y-10 md:space-y-12">
@@ -56,19 +63,44 @@ export function ProvenanceChronologySection({
 
         <ProvenanceMilestoneRail events={events} />
 
-        <ol className="mt-10 list-none space-y-0 p-0" role="list">
-          {events.map((ev, i) => (
-            <ProvenanceEvidencePanel
-              key={ev.key}
-              event={ev}
-              locale={region.locale}
-              registryId={registryId}
-              artworkTitle={artworkTitle}
-              isLast={i === events.length - 1}
-              index={i}
-            />
+        <div className="mt-10 space-y-12 md:space-y-14">
+          {phaseGroups.map((group) => (
+            <section key={group.phase} aria-labelledby={`phase-${group.phase}`}>
+              <div className="mb-6 flex items-center gap-4 border-b border-[var(--v2-border)] pb-4">
+                <h4
+                  id={`phase-${group.phase}`}
+                  className="v2-type-display text-lg text-[var(--v2-ink)] md:text-xl"
+                >
+                  {t(provenancePhaseMessageKey(group.phase))}
+                </h4>
+                <span className={`${registryV2.type.monoId} text-[var(--v2-cool-grey)]`}>
+                  {group.events.length}
+                </span>
+              </div>
+              <ol className="list-none space-y-0 p-0" role="list">
+                {group.events.map((ev, i) => {
+                  const index = eventIndex++;
+                  const isLastInSection = i === group.events.length - 1;
+                  const isLastOverall =
+                    group.phase === phaseGroups[phaseGroups.length - 1]?.phase &&
+                    isLastInSection;
+                  return (
+                    <ProvenanceEvidencePanel
+                      key={ev.key}
+                      event={ev}
+                      locale={region.locale}
+                      registryId={registryId}
+                      artworkTitle={artworkTitle}
+                      phase={group.phase}
+                      isLast={isLastOverall}
+                      index={index}
+                    />
+                  );
+                })}
+              </ol>
+            </section>
           ))}
-        </ol>
+        </div>
       </div>
     </div>
   );

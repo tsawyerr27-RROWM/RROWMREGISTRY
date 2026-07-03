@@ -24,6 +24,8 @@ type Props = {
   userId: string;
   deal: DealRow | null;
   onDealUpdated: () => void;
+  /** Mobile tab pane — desktop always uses `all`. */
+  mobilePane?: "all" | "deal" | "execution";
 };
 
 type DealDetailPayload = {
@@ -46,7 +48,12 @@ function titleLine(deal: DealRow): string {
   return type ? type[0]?.toUpperCase() + type.slice(1) : "Deal";
 }
 
-export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
+export function DealWorkspace({
+  userId,
+  deal,
+  onDealUpdated,
+  mobilePane = "all",
+}: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<DealDetailPayload | null>(null);
@@ -306,13 +313,20 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
     await afterDealMutation(executingDealId);
   };
 
+  const showNegotiationHeader = mobilePane === "all" || mobilePane === "deal";
+  const showMain = mobilePane === "all" || mobilePane === "deal";
+  const showExecution = mobilePane === "all" || mobilePane === "execution";
+  const actionButtonClass =
+    "min-h-[44px] px-4 py-2.5 text-[10px] md:min-h-0 md:!min-h-0";
+
   return (
     <section
       className={`${studioV2.surface.commandCenter} min-w-0 w-full`}
       aria-label="Selected deal"
     >
+      {showNegotiationHeader ? (
       <div className={`${studioV2.surface.filingSheetMajor} relative min-w-0 w-full`}>
-        <div className="border-b border-[var(--v2-border)] px-6 py-5 md:px-8 md:py-6">
+        <div className="border-b border-[var(--v2-border)] px-4 py-4 sm:px-6 md:px-8 md:py-6">
           <div className="flex min-w-0 flex-wrap items-start justify-between gap-6">
             <div className="min-w-0">
               <p className={studioV2.type.railLabel}>Negotiation record</p>
@@ -343,10 +357,10 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
           ) : null}
         </div>
 
-        <div className="border-b border-[var(--v2-border)] px-6 py-4 md:px-8">
-          <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="border-b border-[var(--v2-border)] px-4 py-3 sm:px-6 md:px-8 md:py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 md:gap-4">
             <p className={studioV2.type.metaLabel}>Status actions file to the ledger</p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex w-full flex-wrap gap-2 sm:w-auto">
               {actionButtons.length > 0 ? (
                 actionButtons.map((a) => (
                   <button
@@ -355,8 +369,8 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
                     onClick={a.action}
                     className={
                       a.tone === "primary"
-                        ? "v2-cta-primary !min-h-0 px-4 py-2.5 text-[10px]"
-                        : "v2-cta-secondary !min-h-0 px-4 py-2.5 text-[10px]"
+                        ? `v2-cta-primary ${actionButtonClass}`
+                        : `v2-cta-secondary ${actionButtonClass}`
                     }
                   >
                     {a.label}
@@ -367,7 +381,7 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
                   type="button"
                   disabled={acquisitionExecution.busy}
                   onClick={() => void handleAcquisitionFileTransfer()}
-                  className="v2-cta-primary !min-h-0 px-4 py-2.5 text-[10px]"
+                  className={`v2-cta-primary ${actionButtonClass}`}
                 >
                   {acquisitionExecution.busy
                     ? "Filing transfer…"
@@ -379,7 +393,7 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
                   onClick={() => {
                     triggerConsequenceFeedback("custodyCommit");
                   }}
-                  className="v2-cta-primary !min-h-0 px-4 py-2.5 text-[10px]"
+                  className={`v2-cta-primary ${actionButtonClass}`}
                 >
                   {acquisitionHeaderAction.label}
                 </Link>
@@ -391,7 +405,7 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
                       primeCreativeSectionFromUrlQuery();
                     }
                   }}
-                  className="v2-cta-secondary !min-h-0 px-4 py-2.5 text-[10px]"
+                  className={`v2-cta-secondary ${actionButtonClass}`}
                 >
                   Verify artwork
                 </Link>
@@ -410,9 +424,23 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
           </div>
         </div>
       </div>
+      ) : mobilePane === "execution" ? (
+        <div className={`${studioV2.surface.filingSheetMajor} border-b border-[var(--v2-border)] px-4 py-4 sm:px-6 md:px-8`}>
+          <p className={studioV2.type.railLabel}>Execution</p>
+          <h2 className={`${studioV2.type.commandTitle} mt-2 truncate text-xl md:text-2xl`}>
+            {header?.title ?? "Deal"}
+          </h2>
+          <p className={`${studioV2.type.metaValue} mt-1`}>{header?.ribbon ?? ""}</p>
+        </div>
+      ) : null}
 
-      <div className="studio-deal-command-center__grid mt-6 min-w-0 w-full">
-        <div className="studio-deal-command-center__main min-w-0 flex flex-col gap-6">
+      <div
+        className={`studio-deal-command-center__grid mt-4 min-w-0 w-full md:mt-6 ${
+          mobilePane === "execution" ? "studio-deal-command-center__grid--execution-only" : ""
+        } ${mobilePane === "deal" ? "studio-deal-command-center__grid--deal-only" : ""}`}
+      >
+        {showMain ? (
+        <div className="studio-deal-command-center__main min-w-0 flex flex-col gap-4 md:gap-6">
           {isAcquisitionDeal ? (
             <AcquisitionFilingHero
               deal={resolvedDeal}
@@ -441,11 +469,13 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
             <DealTermsPanel deal={resolvedDeal} />
           </div>
         </div>
+        ) : null}
 
+        {showExecution ? (
         <aside className={`${studioV2.surface.executionRail} relative min-w-0`}>
           <p className={studioV2.type.railLabel}>Execution</p>
           <div
-            className={`${studioV2.surface.filingSheetMajor} relative mt-4 min-h-0 min-w-0 w-full p-5 md:p-6`}
+            className={`${studioV2.surface.filingSheetMajor} relative mt-3 min-h-0 min-w-0 w-full p-4 md:mt-4 md:p-6`}
           >
             <DealExecutionPanel
               deal={resolvedDeal}
@@ -456,6 +486,7 @@ export function DealWorkspace({ userId, deal, onDealUpdated }: Props) {
             />
           </div>
         </aside>
+        ) : null}
       </div>
 
       {negotiable && canRespondToTerms ? (

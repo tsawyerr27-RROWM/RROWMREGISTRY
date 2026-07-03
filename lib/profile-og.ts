@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import {
+  artworkTrustOgLabelKey,
+} from "@/lib/artwork-trust-tier";
 import type { CreativePresenceGallery } from "@/lib/field-creative-presence";
 import { getCollectorOwnedArtworkIds } from "@/lib/collector-portfolio";
 import {
@@ -25,6 +28,7 @@ export type ProfileOgBundle = {
   context: ProfileShareContext;
   bio: string | null;
   indexable: boolean;
+  artworkTrustOgLine?: string | null;
 };
 
 const OG_LANG = "en" as const;
@@ -45,13 +49,32 @@ function truncateDescription(text: string, max = 160): string {
   return `${trimmed.slice(0, max - 1).trimEnd()}…`;
 }
 
-export function resolveProfileOgLines(context: ProfileShareContext) {
+export function resolveProfileArtworkTrustOgLine(args: {
+  verifiedWorkCount: number;
+  selfAttestedWorkCount: number;
+}): string | null {
+  if (args.verifiedWorkCount > 0) {
+    const key = artworkTrustOgLabelKey("verified");
+    return key ? tOg(key) : null;
+  }
+  if (args.selfAttestedWorkCount > 0) {
+    const key = artworkTrustOgLabelKey("self_attested");
+    return key ? tOg(key) : null;
+  }
+  return null;
+}
+
+export function resolveProfileOgLines(
+  context: ProfileShareContext,
+  options?: { artworkTrustOgLine?: string | null }
+) {
   const surfaceLabel = tOg(context.surfaceLabelKey);
   const trust = formatShareLine(context.trustLine);
   const footprint = formatShareLine(context.footprintLine);
   const secondary = formatShareLine(context.secondaryLine);
+  const artworkTrust = options?.artworkTrustOgLine?.trim() || null;
   const detail = [footprint, secondary, context.practiceLine].filter(Boolean).join(" · ");
-  const summary = [trust, detail].filter(Boolean).join(" · ");
+  const summary = [artworkTrust, trust, detail].filter(Boolean).join(" · ");
   const description = fillMessage(tOg("profile.presence.share.text"), {
     name: context.displayName,
     summary: summary || surfaceLabel,
@@ -60,6 +83,7 @@ export function resolveProfileOgLines(context: ProfileShareContext) {
   return {
     surfaceLabel,
     trust,
+    artworkTrust,
     footprint,
     secondary,
     practice: context.practiceLine,
@@ -72,7 +96,9 @@ export function resolveProfileOgLines(context: ProfileShareContext) {
 }
 
 export function buildProfilePresenceMetadata(bundle: ProfileOgBundle): Metadata {
-  const lines = resolveProfileOgLines(bundle.context);
+  const lines = resolveProfileOgLines(bundle.context, {
+    artworkTrustOgLine: bundle.artworkTrustOgLine,
+  });
   const canonicalUrl = profileShareAbsoluteUrl(bundle.context, getSiteUrl());
   const description = bundle.bio?.trim()
     ? truncateDescription(bundle.bio)
@@ -174,12 +200,18 @@ export async function loadCreativeProfileOgBundle(
   const presence = parsePublicPresence(artistRaw.public_presence);
   if (!presence.profile) return null;
 
-  const [{ count: verifiedWorkCount }, { count: total }] = await Promise.all([
+  const [{ count: verifiedWorkCount }, { count: selfAttestedWorkCount }, { count: total }] =
+    await Promise.all([
     supabase
       .from("artworks")
       .select("id", { count: "exact", head: true })
       .eq("artist_id", artistRaw.id)
       .eq("verification_status", "verified"),
+    supabase
+      .from("artworks")
+      .select("id", { count: "exact", head: true })
+      .eq("artist_id", artistRaw.id)
+      .eq("verification_status", "self_attested"),
     supabase
       .from("artworks")
       .select("id", { count: "exact", head: true })
@@ -230,10 +262,16 @@ export async function loadCreativeProfileOgBundle(
     activeLicenseCount: 0,
   });
 
+  const artworkTrustOgLine = resolveProfileArtworkTrustOgLine({
+    verifiedWorkCount: verifiedWorkCount ?? 0,
+    selfAttestedWorkCount: selfAttestedWorkCount ?? 0,
+  });
+
   return {
     context,
     bio: artistRaw.bio,
     indexable: presence.profile,
+    artworkTrustOgLine,
   };
 }
 
@@ -374,14 +412,23 @@ export async function loadCollectorProfileOgBundle(
 
   const ownedIds = await getCollectorOwnedArtworkIds(supabase, profile.user_id);
   let verifiedWorks = 0;
+  let selfAttestedWorks = 0;
 
   if (ownedIds.length > 0) {
-    const { count } = await supabase
-      .from("artworks")
-      .select("id", { count: "exact", head: true })
-      .in("id", ownedIds)
-      .eq("verification_status", "verified");
-    verifiedWorks = count ?? 0;
+    const [{ count: verified }, { count: selfAttested }] = await Promise.all([
+      supabase
+        .from("artworks")
+        .select("id", { count: "exact", head: true })
+        .in("id", ownedIds)
+        .eq("verification_status", "verified"),
+      supabase
+        .from("artworks")
+        .select("id", { count: "exact", head: true })
+        .in("id", ownedIds)
+        .eq("verification_status", "self_attested"),
+    ]);
+    verifiedWorks = verified ?? 0;
+    selfAttestedWorks = selfAttested ?? 0;
   }
 
   const context = buildCollectorProfileShareContext({
@@ -406,10 +453,16 @@ export async function loadCollectorProfileOgBundle(
     works: [],
   });
 
+  const artworkTrustOgLine = resolveProfileArtworkTrustOgLine({
+    verifiedWorkCount: verifiedWorks,
+    selfAttestedWorkCount: selfAttestedWorks,
+  });
+
   return {
     context,
     bio: anonymousPublic ? null : profile.bio,
     indexable: !anonymousPublic,
+    artworkTrustOgLine,
   };
 }
 

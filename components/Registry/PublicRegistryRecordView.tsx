@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 import { RightsLedgerSection } from "@/components/Rights/RightsLedgerSection";
 import { ArchivalProvenanceTimeline } from "@/components/provenance/ArchivalProvenanceTimeline";
-import { CertificateShareControl } from "@/components/certificate/CertificateShareControl";
 import { VerificationShareControl } from "@/components/Registry/VerificationShareControl";
-import { RegistryCertificateOverviewButton } from "@/components/certificate/RegistryCertificateOverviewButton";
 import { RegistryTrustPanel } from "@/components/Registry/RegistryTrustPanel";
+import { RegistryTrustTierStrip } from "@/components/Registry/RegistryTrustTierStrip";
+import { RegistryRecordCertificateActions } from "@/components/Registry/RegistryRecordCertificateActions";
 import { RegistryIntelligencePanel } from "@/components/Registry/RegistryIntelligencePanel";
 import { InviteRecordStewardControl } from "@/components/Registry/InviteRecordStewardControl";
 import { PublicClaimOwnership } from "@/components/Registry/PublicClaimOwnership";
@@ -16,6 +16,8 @@ import { RegistryTechnicalDetails } from "@/components/Registry/RegistryTechnica
 import { ShareRecordButton } from "@/components/Registry/ShareRecordButton";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { useTelemetry } from "@/hooks/useTelemetry";
+import { useRegistryCatalogueShell } from "@/components/Registry/RegistryCatalogueShellContext";
 import { buildStudioNewDealHref } from "@/lib/deal-create-nav";
 import {
   acquisitionDealWorkLabel,
@@ -35,6 +37,11 @@ import { translateProvenanceInsight } from "@/lib/archival-provenance-i18n";
 import { buildCertificateShareContext } from "@/lib/certificate-share";
 import { buildVerificationShareContext } from "@/lib/verification-share";
 import { fieldCreativeHref, fieldRecordHref } from "@/lib/field-nav";
+import {
+  certificateClassForTrustTier,
+  certificateClassTitleKey,
+  parseArtworkTrustTier,
+} from "@/lib/artwork-trust-tier";
 import {
   computeRegistryTrustPresentation,
   isRecordVerified,
@@ -130,6 +137,17 @@ export function PublicRegistryRecordView({
   ownershipTimeline = [],
 }: PublicRegistryRecordProps) {
   const { t } = useLocalePreferences();
+  const { track } = useTelemetry();
+  const inCatalogueShell = useRegistryCatalogueShell();
+
+  useEffect(() => {
+    track({
+      eventName: "ledger_opened",
+      surface: "registry",
+      metadata: { registry_id: artwork.registry_id ?? null },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [artwork.registry_id]);
 
   const dealCounterparty = useMemo(
     () =>
@@ -237,12 +255,23 @@ export function PublicRegistryRecordView({
     registryId: artwork.registry_id,
     artworkTitle: artwork.title || "Work on file",
     artistName,
-    isVerified: isRecordVerified(artwork.verification_status),
+    verificationStatus: artwork.verification_status,
     hasCertificate,
     revoked: certRevoked,
   });
 
   const recordVerified = isRecordVerified(artwork.verification_status);
+  const trustTier = parseArtworkTrustTier(artwork.verification_status);
+  const certificateClass =
+    hasCertificate && !certRevoked ? certificateClassForTrustTier(trustTier) : null;
+  const certificateTierLabel = certRevoked
+    ? t("registry.record.trust.revokedHeadline")
+    : certificateClass
+      ? t(certificateClassTitleKey(certificateClass))
+      : hasCertificate
+        ? t("registry.record.certRecorded")
+        : t("registry.record.badge.noCertificate");
+
   const verificationShareContext = buildVerificationShareContext({
     registryId: artwork.registry_id,
     artworkTitle: artwork.title || "Work on file",
@@ -252,15 +281,11 @@ export function PublicRegistryRecordView({
     isVerified: recordVerified,
   });
 
-  const verificationStatusLabel = recordVerified
-    ? t("registry.record.trust.verifiedHeadline")
-    : t("registry.record.trust.unverifiedHeadline");
-
   const creationDate = (() => {
     const d = artwork.created_at ?? "";
-    if (!d) return "—";
+    if (!d) return "-";
     const parsed = new Date(d);
-    if (Number.isNaN(parsed.getTime())) return "—";
+    if (Number.isNaN(parsed.getTime())) return "-";
     return parsed.toLocaleDateString(undefined, {
       year: "numeric",
       month: "long",
@@ -269,8 +294,18 @@ export function PublicRegistryRecordView({
   })();
 
   return (
-    <div className={`${registryV2.scope} rrowm-zone-registry text-[var(--v2-ink)]`}>
-      <main className={`${registryV2.surface.page} relative mx-auto max-w-6xl px-4 py-6 sm:px-6 md:py-10 lg:px-8`}>
+    <div
+      className={`${registryV2.scope} rrowm-zone-registry text-[var(--v2-ink)]${
+        inCatalogueShell ? "" : " pt-16 md:pt-20"
+      }`}
+    >
+      <main
+        className={`${registryV2.surface.page} relative mx-auto max-w-6xl ${
+          inCatalogueShell
+            ? "px-0 py-6 md:py-8 lg:px-8"
+            : "px-4 py-6 sm:px-6 md:py-10 lg:px-8"
+        }`}
+      >
         <div
           className={`mb-8 flex flex-wrap items-center justify-between gap-3 ${registryV2.surface.filing} px-4 py-3 md:px-5`}
         >
@@ -308,11 +343,14 @@ export function PublicRegistryRecordView({
           artistHref={artistSlug ? fieldCreativeHref(artistSlug) : null}
           registryId={artwork.registry_id}
           noImageLabel={t("registry.card.noImage")}
+          trustTierStrip={
+            <RegistryTrustTierStrip
+              verificationStatus={artwork.verification_status}
+              certificateTierLabel={certificateTierLabel}
+              revoked={certRevoked}
+            />
+          }
           fields={[
-            {
-              label: t("registry.record.field.verification"),
-              value: verificationStatusLabel,
-            },
             {
               label: t("registry.record.field.steward"),
               value: heldByContent,
@@ -326,8 +364,21 @@ export function PublicRegistryRecordView({
               value: String(artwork.year || "–"),
             },
           ]}
+          certificateActions={
+            <RegistryRecordCertificateActions
+              registryId={artwork.registry_id}
+              verificationStatus={artwork.verification_status}
+              hasCertificate={hasCertificate}
+              certRevoked={certRevoked}
+              certificateShareContext={certificateShareContext}
+            />
+          }
           trustPanel={
-            <RegistryTrustPanel presentation={trustPresentation} variant="compact" />
+            <RegistryTrustPanel
+              presentation={trustPresentation}
+              trustTier={trustTier}
+              variant="compact"
+            />
           }
         />
 
@@ -376,32 +427,34 @@ export function PublicRegistryRecordView({
                 {t("registry.record.specifications")}
               </h2>
               <dl className="mt-6 divide-y divide-[var(--v2-border)]">
-                <div className="flex justify-between gap-6 py-4 first:pt-0">
+                <div className="registry-spec-row flex flex-col gap-1.5 py-4 first:pt-0 sm:flex-row sm:justify-between sm:gap-6">
                   <dt className={registryV2.type.metaLabel}>{t("registry.record.field.medium")}</dt>
-                  <dd className={`${registryV2.type.monoId} max-w-[60%] text-right`}>
+                  <dd className={`${registryV2.type.monoId} break-words sm:max-w-[60%] sm:text-right`}>
                     {artwork.medium || "–"}
                   </dd>
                 </div>
-                <div className="flex justify-between gap-6 py-4">
+                <div className="registry-spec-row flex flex-col gap-1.5 py-4 sm:flex-row sm:justify-between sm:gap-6">
                   <dt className={registryV2.type.metaLabel}>
                     {t("registry.record.field.dimensions")}
                   </dt>
-                  <dd className={`${registryV2.type.monoId} max-w-[60%] text-right`}>
+                  <dd className={`${registryV2.type.monoId} break-words sm:max-w-[60%] sm:text-right`}>
                     {artwork.dimensions || "–"}
                   </dd>
                 </div>
-                <div className="flex justify-between gap-6 py-4">
+                <div className="registry-spec-row flex flex-col gap-1.5 py-4 sm:flex-row sm:justify-between sm:gap-6">
                   <dt className={registryV2.type.metaLabel}>{t("registry.record.field.year")}</dt>
-                  <dd className={`${registryV2.type.monoId} text-right`}>
+                  <dd className={`${registryV2.type.monoId} break-words sm:text-right`}>
                     {artwork.year || "–"}
                   </dd>
                 </div>
                 {editionLine ? (
-                  <div className="flex justify-between gap-6 py-4">
+                  <div className="registry-spec-row flex flex-col gap-1.5 py-4 sm:flex-row sm:justify-between sm:gap-6">
                     <dt className={registryV2.type.metaLabel}>
                       {t("registry.record.field.edition")}
                     </dt>
-                    <dd className={`${registryV2.type.monoId} text-right`}>{editionLine}</dd>
+                    <dd className={`${registryV2.type.monoId} break-words sm:text-right`}>
+                      {editionLine}
+                    </dd>
                   </div>
                 ) : null}
               </dl>
@@ -453,50 +506,29 @@ export function PublicRegistryRecordView({
                 {t("registry.record.certStatusTitle")}
               </h2>
               <div className={`${registryV2.type.metaValue} mt-6 space-y-3`}>
+                <p className="font-medium text-[var(--v2-ink)]">{certificateTierLabel}</p>
                 {!hasCertificate ? (
-                  <p className="font-medium text-[var(--v2-ink)]">
-                    {t("registry.record.certNotRecorded")}
-                  </p>
+                  <p>{t("registry.record.certNotRecorded")}</p>
                 ) : certRevoked ? (
-                  <div className="space-y-2">
-                    <p className="font-medium text-red-800">
-                      {t("registry.record.certRevoked")}
-                    </p>
-                    {revokedReason ? (
-                      <p className="text-red-700/90">{revokedReason}</p>
-                    ) : null}
-                  </div>
-                ) : (
-                  <p className="font-medium text-[var(--v2-ink)]">
-                    {t("registry.record.certRecorded")}
-                  </p>
-                )}
+                  revokedReason ? (
+                    <p className="text-red-700/90">{revokedReason}</p>
+                  ) : null
+                ) : null}
               </div>
 
               <div className="mt-6">
-                <RegistryCertificateOverviewButton
+                <RegistryRecordCertificateActions
                   registryId={artwork.registry_id}
+                  verificationStatus={artwork.verification_status}
+                  hasCertificate={hasCertificate}
+                  certRevoked={certRevoked}
+                  certificateShareContext={certificateShareContext}
                 />
               </div>
-
-              {hasCertificate ? (
-                <div className="mt-5">
-                  <p className={`${registryV2.type.metaLabel} mb-3`}>
-                    {t("certificate.share.sectionLabel")}
-                  </p>
-                  <CertificateShareControl context={certificateShareContext} />
-                </div>
-              ) : null}
 
               <p className={`${registryV2.type.monoId} mt-4`}>
                 {t("registry.record.certFootnote")}
               </p>
-              <Link
-                href={`/login?next=${encodeURIComponent(`/certificate/${artwork.registry_id}`)}`}
-                className="v2-cta-secondary mt-4 block w-full !min-h-0 py-3 text-center text-xs"
-              >
-                {t("registry.card.viewCertLogin")}
-              </Link>
             </div>
 
             <RegistryTechnicalDetails

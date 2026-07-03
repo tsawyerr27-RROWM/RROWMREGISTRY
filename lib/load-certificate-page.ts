@@ -7,6 +7,7 @@ import {
 } from "@/lib/certificate-document";
 import { getSiteUrl } from "@/lib/site-url";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { parseArtworkTrustTier, parseCertificateClass, certificateClassForTrustTier, certificateClassTitleKey } from "@/lib/artwork-trust-tier";
 import { warnSupabaseRpc } from "@/lib/supabase-rpc-error";
 
 export type CertificatePageResult =
@@ -63,7 +64,10 @@ export async function loadCertificatePageData(
   }
 
   if (artwork.verification_status !== "verified") {
-    return "not_found";
+    const tier = parseArtworkTrustTier(artwork.verification_status);
+    if (tier !== "self_attested") {
+      return "not_found";
+    }
   }
 
   const { data: artist } = await supabase
@@ -85,7 +89,8 @@ export async function loadCertificatePageData(
       revoked_reason,
       certificate_hash,
       verification_summary,
-      certificate_snapshot
+      certificate_snapshot,
+      certificate_class
     `
     )
     .eq("artwork_id", artwork.id)
@@ -104,6 +109,11 @@ export async function loadCertificatePageData(
       ?.gallery
       ? "Organisation on file"
       : null);
+
+  const trustTier = parseArtworkTrustTier(artwork.verification_status);
+  const certificateClass =
+    parseCertificateClass(certificate.certificate_class) ??
+    certificateClassForTrustTier(trustTier);
 
   const data: CertificateDocumentData = {
     artwork: {
@@ -127,6 +137,7 @@ export async function loadCertificatePageData(
       certificate_hash: certificate.certificate_hash,
       verification_summary: certificate.verification_summary,
       certificate_snapshot: certificate.certificate_snapshot,
+      certificate_class: certificateClass,
     },
     artistName: publicName,
     verifierName,

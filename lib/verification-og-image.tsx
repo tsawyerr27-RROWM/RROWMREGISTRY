@@ -286,7 +286,7 @@ export function renderVerificationOgImage(bundle: VerificationOgBundle) {
 export function renderVerificationOgFallbackImage() {
   return renderVerificationOgImage({
     context: {
-      registryId: "—",
+      registryId: "-",
       artworkTitle: "Registry verification",
       verifierName: null,
       trustLevel: "registered",

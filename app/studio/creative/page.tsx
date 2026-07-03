@@ -13,6 +13,8 @@ import { parseArtistRepresentationState } from "@/lib/artwork-representation";
 import { EndRepresentationModal } from "@/components/Studio/EndRepresentationModal";
 import { GovernanceSectionShell } from "@/components/Studio/GovernanceSectionShell";
 import { REPRESENTATION_PHRASES } from "@/lib/representation-language";
+import { parseArtworkTrustTier } from "@/lib/artwork-trust-tier";
+import { fieldRecordHref } from "@/lib/field-nav";
 import {
   useCallback,
   useEffect,
@@ -31,10 +33,15 @@ import {
 } from "@/components/Dashboard/ArtworksSection";
 import { ArtistWorkspaceHero } from "@/components/Studio/ArtistWorkspaceHero";
 import {
+  StudioRoleBand,
+  studioRoleBandCopy,
+} from "@/components/Studio/StudioRoleBand";
+import {
   StudioContentSlab,
   StudioMetricTile,
   studioOverviewStackClass,
 } from "@/components/Studio/StudioContentSlab";
+import { studioV2 } from "@/styles/studio-v2";
 import {
   ArtistRepresentationReviewSection,
   type ArtistRepresentationReviewItem,
@@ -135,6 +142,7 @@ export default function Dashboard() {
   const sb = useSupabaseBrowserLazy();
   const guardUser = useStudioGuardUser();
   const { t, formatMoney } = useLocalePreferences();
+  const [pageLoading, setPageLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [representationReviewQueue, setRepresentationReviewQueue] = useState<
@@ -237,6 +245,10 @@ export default function Dashboard() {
   const [ownershipHistory, setOwnershipHistory] = useState<any[]>([]);
   const [provenanceHistory, setProvenanceHistory] = useState<any[]>([]);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [registrationOutcome, setRegistrationOutcome] = useState<{
+    registryId: string;
+    title: string;
+  } | null>(null);
   const [registerLoading, setRegisterLoading] = useState(false);
   const [selectedArtwork, setSelectedArtwork] = useState<any | null>(null);
   const [showOwnershipLedgerModal, setShowOwnershipLedgerModal] =
@@ -815,7 +827,13 @@ export default function Dashboard() {
 // Initial load (session/onboarding/role: app/studio/layout StudioRouteGuard)
 useEffect(() => {
   const uid = guardUser?.userId;
-  if (!uid) return;
+  if (!uid) {
+    setPageLoading(false);
+    return;
+  }
+
+  let cancelled = false;
+  setPageLoading(true);
 
   const init = async () => {
     try {
@@ -859,12 +877,16 @@ useEffect(() => {
         "error",
         t("studio.toast.connectionInterrupted")
       );
-      // Let the rest of the UI render; the app will fail gracefully when calls error.
+    } finally {
+      if (!cancelled) setPageLoading(false);
     }
   };
 
   void init();
-}, [guardUser?.userId, guardUser?.email, sb]);
+  return () => {
+    cancelled = true;
+  };
+}, [guardUser?.userId, guardUser?.email, sb, t]);
 
 useEffect(() => {
   if (!user?.id) {
@@ -988,13 +1010,15 @@ useEffect(() => {
   }
 
   const artworksListFilteredNoSearch = useMemo(() => {
-    const vs = (a: (typeof artworks)[number]) =>
-      String(a.verification_status || "").toLowerCase();
     let list = artworks;
     if (artworksListFilter === "verified") {
-      list = list.filter((a) => vs(a) === "verified");
-    } else if (artworksListFilter === "unverified") {
-      list = list.filter((a) => vs(a) !== "verified");
+      list = list.filter((a) => parseArtworkTrustTier(a.verification_status) === "verified");
+    } else if (artworksListFilter === "self_attested") {
+      list = list.filter(
+        (a) => parseArtworkTrustTier(a.verification_status) === "self_attested"
+      );
+    } else if (artworksListFilter === "filed") {
+      list = list.filter((a) => parseArtworkTrustTier(a.verification_status) === "filed");
     } else if (artworksListFilter === "priced") {
       list = list.filter((a) => {
         const v = a.latest_value;
@@ -1673,6 +1697,17 @@ useEffect(() => {
 const handleRegisterArtwork = async () => {
   if (!user) return;
 
+  const title = newArtwork.title.trim();
+  const medium = newArtwork.medium.trim();
+  if (!title) {
+    showToast("error", t("studio.register.validationTitle"));
+    return;
+  }
+  if (!medium) {
+    showToast("error", t("studio.register.validationMedium"));
+    return;
+  }
+
   setRegisterLoading(true);
   let imageUrl: string | null = null;
 
@@ -1724,7 +1759,7 @@ const handleRegisterArtwork = async () => {
       "register_artwork_atomic",
       {
       p_artist_id: user.id,
-      p_title: newArtwork.title,
+      p_title: title,
       p_year: newArtwork.year,
       p_medium: newArtwork.medium,
       p_dimensions: newArtwork.dimensions,
@@ -1768,9 +1803,26 @@ const handleRegisterArtwork = async () => {
     }
 
     setShowRegisterModal(false);
+
+    const resolvedRegistryId = (() => {
+      if (registered && typeof registered === "object" && "registry_id" in registered) {
+        return String((registered as { registry_id?: string }).registry_id ?? "").trim();
+      }
+      if (typeof registered === "string" && registered.trim()) {
+        return registered.trim();
+      }
+      return registryId;
+    })();
+
+    if (resolvedRegistryId) {
+      setRegistrationOutcome({
+        registryId: resolvedRegistryId,
+        title,
+      });
+    }
     await logActivity({
       type: "artwork_registered",
-      message: `Artwork registered: ${newArtwork.title}`,
+      message: `Artwork registered: ${title}`,
       artworkId: artworkIdForValue,
     });
     if (user?.id) await fetchActivity(user.id);
@@ -1790,12 +1842,12 @@ const handleRegisterArtwork = async () => {
   } catch (err) {
     console.error(err);
     showToast("error", t("studio.toast.registerFailed"));
+  } finally {
+    setRegisterLoading(false);
   }
-
-  setRegisterLoading(false);
 };
 
-  if (!user || !profile) {
+  if (pageLoading) {
     return (
       <div className="ds-page-environment flex min-h-screen flex-col items-center justify-center px-6 pt-20 text-neutral-900">
         <div
@@ -1806,6 +1858,14 @@ const handleRegisterArtwork = async () => {
           RROWM
         </p>
         <p className="mt-2 text-sm text-neutral-700">{t("studio.loading.opening")}</p>
+      </div>
+    );
+  }
+
+  if (!user || !profile) {
+    return (
+      <div className="ds-page-environment flex min-h-screen flex-col items-center justify-center px-6 pt-20 text-neutral-900">
+        <p className="text-sm text-neutral-600">{t("studio.toast.connectionInterrupted")}</p>
       </div>
     );
   }
@@ -1933,6 +1993,24 @@ return (
         {/* STUDIO (overview) */}
         {isStudio && (
           <div className={`max-w-6xl pb-8 ${studioOverviewStackClass}`}>
+            <StudioRoleBand
+              role="creative"
+              {...studioRoleBandCopy("creative", t)}
+              metrics={[
+                {
+                  label: t("studio.insight.breakdown.totalWorks"),
+                  value: totalWorks,
+                },
+                {
+                  label: t("studio.hero.verified"),
+                  value: verifiedWorks,
+                },
+                {
+                  label: t("studio.hero.priced"),
+                  value: pricedWorks,
+                },
+              ]}
+            />
             <ArtistWorkspaceHero
               displayName={
                 profile?.display_name?.trim() ||
@@ -1942,8 +2020,9 @@ return (
               totalWorks={totalWorks}
               verifiedWorks={verifiedWorks}
               pricedWorks={pricedWorks}
-              percentVerified={percentVerified}
-              percentPriced={percentPriced}
+              pendingActionCount={
+                representationReviewQueue.length + amendmentResponsesNeeded
+              }
               previewArtworks={artworks}
               publicPageHref={
                 profile?.slug
@@ -1969,6 +2048,7 @@ return (
                       Object.keys(totalsByCurrency).map((currency) => (
                         <StudioMetricTile
                           key={currency}
+                          variant="primary"
                           onClick={() => void openInsight("value")}
                           label={fillMessage(t("studio.overview.totalValueCurrency"), {
                             currency,
@@ -1990,6 +2070,7 @@ return (
                       {Object.keys(averageByCurrency).map((currency) => (
                         <StudioMetricTile
                           key={`avg-${currency}`}
+                          variant="secondary"
                           label={fillMessage(t("studio.overview.avgValueCurrency"), {
                             currency,
                           })}
@@ -2038,23 +2119,33 @@ return (
               subtitle={t("studio.overview.ownershipRequests.subtitle")}
             >
               {ownershipClaims.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-neutral-900/[0.10] bg-neutral-50/50 py-14 text-center">
-                  <p className="text-[15px] leading-relaxed text-neutral-600">
+                <div className="rounded-xl border border-[var(--v2-border)] bg-white/70 px-6 py-12 text-center">
+                  <p className="v2-type-mono text-[9px] uppercase tracking-[0.2em] text-[var(--v2-ink-muted)]">
+                    {t("studio.overview.ownershipRequests.title")}
+                  </p>
+                  <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-[var(--v2-ink-muted)]">
                     {t("studio.overview.noPendingClaims")}
                   </p>
                 </div>
               ) : (
-                <div className="divide-y divide-neutral-900/[0.06]">
+                <ul className="space-y-3">
                   {ownershipClaims.map((claim) => (
-                    <div key={claim.id} className="py-10 first:pt-2">
-                      <p className="text-sm font-medium text-amber-800/90">
+                    <li
+                      key={claim.id}
+                      className="v2-motion-hover-subtle relative overflow-hidden rounded-xl border border-[var(--v2-border-strong)] bg-white px-4 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_10px_28px_-22px_rgba(15,23,42,0.18)] transition-[border-color,box-shadow] duration-300 sm:px-5 sm:py-6"
+                    >
+                      <span
+                        className="pointer-events-none absolute inset-y-0 left-0 w-0.5 bg-[var(--v2-lime-pulse)] opacity-80"
+                        aria-hidden
+                      />
+                      <p className="v2-type-mono text-[9px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
                         {t("studio.overview.pendingReview")}
                       </p>
-                      <p className="mt-3 text-lg font-medium text-neutral-900">
+                      <p className="mt-2 font-serif text-[1.3rem] leading-[1.1] tracking-[-0.01em] text-[var(--v2-ink)]">
                         {claim.artworks?.registry_id ? (
                           <Link
                             href={`/artwork/${encodeURIComponent(claim.artworks.registry_id)}`}
-                            className="transition hover:text-emerald-800 hover:underline decoration-emerald-300 underline-offset-4"
+                            className="transition hover:text-[var(--v2-ink-soft)] hover:underline decoration-[var(--v2-lime-pulse)] underline-offset-4"
                           >
                             {claim.artworks?.title}
                           </Link>
@@ -2062,17 +2153,17 @@ return (
                           claim.artworks?.title
                         )}
                       </p>
-                      <p className="mt-2 font-mono text-[11px] text-neutral-500">
+                      <p className="mt-2 v2-type-mono text-[10px] tracking-[0.08em] text-[var(--v2-cool-grey)]">
                         {claim.artworks?.registry_id}
                       </p>
-                      <p className="mt-2 text-xs text-neutral-500">
+                      <p className="mt-2 text-xs text-[var(--v2-ink-muted)]">
                         {t("studio.overview.claimant")}{" "}
-                        <span className="font-mono text-neutral-700">
+                        <span className="v2-type-mono text-[var(--v2-ink-soft)]">
                           {claim.collector_id?.slice(0, 8)}…
                         </span>
                       </p>
                       {claim.note && (
-                        <p className="mt-4 border-l border-black/10 pl-4 text-sm italic leading-relaxed text-neutral-700">
+                        <p className="mt-4 border-l border-[var(--v2-border-strong)] pl-4 text-sm italic leading-relaxed text-[var(--v2-ink-soft)]">
                           &ldquo;{claim.note}&rdquo;
                         </p>
                       )}
@@ -2081,7 +2172,7 @@ return (
                           type="button"
                           disabled={!!claimActionId}
                           onClick={() => approveClaim(claim.id)}
-                          className="rounded-xl bg-neutral-950 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-50"
+                          className="v2-cta-primary min-h-[44px] px-5 py-2.5 text-[11px] disabled:opacity-50 md:min-h-0"
                         >
                           {claimActionId === claim.id
                             ? t("common.processing")
@@ -2091,16 +2182,16 @@ return (
                           type="button"
                           disabled={!!claimActionId}
                           onClick={() => rejectClaim(claim.id)}
-                          className="border border-black/15 bg-transparent px-5 py-2.5 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50 disabled:opacity-50"
+                          className="v2-cta-secondary min-h-[44px] px-5 py-2.5 text-[11px] disabled:opacity-50 md:min-h-0"
                         >
                           {claimActionId === claim.id
                             ? t("common.processing")
                             : t("common.reject")}
                         </button>
                       </div>
-                    </div>
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
             </StudioContentSlab>
 
@@ -2173,6 +2264,34 @@ return (
           </div>
         )}
 
+        {activeSection === "Artworks" && registrationOutcome ? (
+          <div className={`${studioV2.surface.filingSheetMajor} mb-8 p-5 md:p-6`}>
+            <p className={studioV2.type.railLabel}>{t("studio.register.outcome.eyebrow")}</p>
+            <h2 className={`${studioV2.type.sectionTitle} mt-2`}>
+              {t("studio.register.outcome.title")}
+            </h2>
+            <p className={`${studioV2.type.metaValue} mt-3 max-w-2xl`}>
+              {t("studio.register.outcome.body")}
+            </p>
+            <p className={`${studioV2.type.monoId} mt-4`}>{registrationOutcome.registryId}</p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Link
+                href={fieldRecordHref(registrationOutcome.registryId)}
+                className="v2-cta-primary min-h-[44px] px-4 py-2.5 text-xs md:min-h-0"
+              >
+                {t("studio.register.outcome.viewRecord")}
+              </Link>
+              <button
+                type="button"
+                onClick={() => setRegistrationOutcome(null)}
+                className="v2-cta-secondary min-h-[44px] px-4 py-2.5 text-xs md:min-h-0"
+              >
+                {t("studio.register.outcome.dismiss")}
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         {activeSection === "Artworks" && (
           <ArtworksSection
             searchQuery={searchQuery}
@@ -2191,6 +2310,18 @@ return (
               setArtworkDetail(artwork);
               setSelectedArtwork(artwork);
               setShowOwnershipLedgerModal(false);
+            }}
+            onSelfAttest={async (artwork) => {
+              if (!user?.id) return;
+              const { error } = await sb().rpc("artist_confirm_artwork", {
+                p_artwork_id: artwork.id,
+              });
+              if (error) {
+                showToast("error", error.message || t("studio.toast.selfAttestFailed"));
+                return;
+              }
+              showToast("success", t("studio.toast.selfAttested"));
+              await fetchArtworks(user.id);
             }}
             onAddValueEventClick={(artwork) => {
               const artworkId = String(artwork.id ?? "");

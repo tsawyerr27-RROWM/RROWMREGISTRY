@@ -3,8 +3,10 @@ export const REGISTRY_PAGE_SIZE = 12;
 
 export type RegistrySort = "newest" | "oldest" | "title_asc" | "title_desc";
 
-/** Verification scope (e.g. artist page); registry listings ignore this unless set in URL */
-export type ArtworkStatusFilter = "all" | "verified" | "pending";
+import type { ArtworkTrustTier } from "@/lib/artwork-trust-tier";
+
+/** Trust tier scope (e.g. artist / creative presence listings). */
+export type ArtworkStatusFilter = "all" | ArtworkTrustTier;
 
 export function parseListParams(sp: Record<string, string | string[] | undefined>) {
   const q = typeof sp.q === "string" ? sp.q : "";
@@ -18,11 +20,13 @@ export function parseListParams(sp: Record<string, string | string[] | undefined
     1,
     parseInt(typeof sp.page === "string" ? sp.page : "1", 10) || 1
   );
-  const statusRaw = typeof sp.status === "string" ? sp.status : "all";
+  const statusRaw = typeof sp.status === "string" ? sp.status.trim().toLowerCase() : "all";
+  const normalized =
+    statusRaw === "pending" ? "filed" : statusRaw;
   const status: ArtworkStatusFilter = (
-    ["all", "verified", "pending"] as const
-  ).includes(statusRaw as ArtworkStatusFilter)
-    ? (statusRaw as ArtworkStatusFilter)
+    ["all", "filed", "self_attested", "verified"] as const
+  ).includes(normalized as ArtworkStatusFilter)
+    ? (normalized as ArtworkStatusFilter)
     : "all";
   return { q, sort, page, status };
 }

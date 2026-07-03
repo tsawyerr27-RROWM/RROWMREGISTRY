@@ -1,3 +1,4 @@
+export { LandingOperatingSystem } from "./LandingOperatingSystem";
 export { LandingPageShell } from "./LandingPageShell";
 export { LandingHero } from "./LandingHero";
 export { LandingProblem } from "./LandingProblem";

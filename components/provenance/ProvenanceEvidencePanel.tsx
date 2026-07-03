@@ -19,6 +19,8 @@ import {
   registryEventSignalBarClass,
   registryEventStampClass,
 } from "@/lib/registry-event-visual";
+import type { ProvenanceChronologyPhase } from "@/lib/provenance-chronology-phases";
+import { provenancePhaseMessageKey } from "@/lib/provenance-chronology-phases";
 import { ProvenanceMilestoneShareControl } from "@/components/provenance/ProvenanceMilestoneShareControl";
 import { registryV2 } from "@/styles/registry-v2";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
@@ -28,6 +30,7 @@ type Props = {
   locale: string;
   registryId: string;
   artworkTitle: string;
+  phase?: ProvenanceChronologyPhase;
   isLast?: boolean;
   index?: number;
 };
@@ -37,6 +40,7 @@ export function ProvenanceEvidencePanel({
   locale,
   registryId,
   artworkTitle,
+  phase,
   isLast = false,
   index = 0,
 }: Props) {
@@ -94,12 +98,19 @@ export function ProvenanceEvidencePanel({
         className={`relative min-w-0 ${filingClass} ${registryV2.motion.hover} pl-5 md:pl-6`}
       >
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 border-b border-[var(--v2-border)] pb-4">
-          <time
-            dateTime={event.dateIso}
-            className={`${registryV2.type.monoId} tabular-nums`}
-          >
-            {formatArchivalDate(event.dateIso, locale)}
-          </time>
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+            <time
+              dateTime={event.dateIso}
+              className={`${registryV2.type.monoId} tabular-nums`}
+            >
+              {formatArchivalDate(event.dateIso, locale)}
+            </time>
+            {phase ? (
+              <span className={`${registryV2.type.monoId} text-[var(--v2-cool-grey)]`}>
+                {t(provenancePhaseMessageKey(phase))}
+              </span>
+            ) : null}
+          </div>
           <span className="v2-type-label text-[9px] tracking-[0.2em] text-[var(--v2-cool-grey)]">
             {t("registry.event.filed")} ·{" "}
             {translateVerificationLabel(event.verificationLabel, t)}

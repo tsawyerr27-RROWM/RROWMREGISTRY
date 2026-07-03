@@ -287,9 +287,11 @@ export async function loadCreativePresencePageData(
   const filterHint =
     status === "verified"
       ? REGISTRY_FILTER_LABELS.verifiedOnly
-      : status === "pending"
-        ? REGISTRY_FILTER_LABELS.participationPending
-        : null;
+      : status === "self_attested"
+        ? REGISTRY_FILTER_LABELS.selfAttestedOnly
+        : status === "filed"
+          ? REGISTRY_FILTER_LABELS.filedOnly
+          : null;
 
   const [activeRepresentation, exhibitionCount, activeLicenseCount] =
     await Promise.all([

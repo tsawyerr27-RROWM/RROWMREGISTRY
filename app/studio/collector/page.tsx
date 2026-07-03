@@ -1,14 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { WelcomeModal } from "@/components/ui/IntroModal";
 import { collectorIntroSteps } from "@/components/ui/intro-content";
+import { useStudioGuardUser } from "@/components/Studio/StudioRouteGuard";
+import { useTelemetry } from "@/hooks/useTelemetry";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { StudioShell } from "@/components/Studio/StudioShell";
 import { WorkspaceShellFooterLinks } from "@/components/Studio/WorkspaceShell";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
-import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 import {
   buildCollectorNavItems,
   consumePendingCollectorSection,
@@ -26,11 +27,7 @@ import {
 } from "@/lib/collector-portfolio";
 import { getTransferredArtworkIds } from "@/lib/ownership-resolver";
 import { OWNERSHIP_EVENT_COLLECTOR_STATUS_SELECT } from "@/lib/ownership-events-schema";
-import {
-  resolvePortfolioBadge,
-  type CollectorPortfolioFilter,
-} from "@/lib/ownership-surface-state";
-import { OwnershipStateBadge } from "@/components/ownership/OwnershipStateBadge";
+import type { CollectorPortfolioFilter } from "@/lib/ownership-surface-state";
 import {
   latestOwnershipSystemStatus,
   normalizeVerificationStatus,
@@ -42,7 +39,17 @@ import { getUnresolvedSaleSignals } from "@/lib/studio-signals";
 import { testModeEnabled } from "@/lib/test-mode";
 import { TestDataControls } from "@/components/Admin/TestDataControls";
 import { CollectorStudioActivityPreview } from "@/components/Studio/CollectorStudioActivityPreview";
+import { CollectorHoldingSlab } from "@/components/Studio/CollectorHoldingSlab";
+import { CollectorHoldingsGallery } from "@/components/Studio/CollectorHoldingsGallery";
+import {
+  StudioViewToggle,
+  useStudioViewMode,
+} from "@/components/Studio/StudioViewToggle";
 import { CollectorWorkspaceHero } from "@/components/Studio/CollectorWorkspaceHero";
+import {
+  StudioRoleBand,
+  studioRoleBandCopy,
+} from "@/components/Studio/StudioRoleBand";
 import { CollectorWorkspaceOverview } from "@/components/Studio/CollectorWorkspaceOverview";
 import { StudioCatalogueMetricsPanels } from "@/components/Studio/StudioCatalogueMetricsPanels";
 import {
@@ -93,9 +100,12 @@ type CollectionSnapshot = {
 
 export default function CollectorStudioPage() {
   const { t } = useLocalePreferences();
+  const { track } = useTelemetry();
   const sb = useSupabaseBrowserLazy();
+  const guardUser = useStudioGuardUser();
+  const userId = guardUser?.userId ?? null;
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
   const [pendingAcquisitions, setPendingAcquisitions] = useState<
     PendingAcquisitionRow[]
@@ -105,6 +115,19 @@ export default function CollectorStudioPage() {
     Record<string, { has_certificate: boolean; revoked: boolean }>
   >({});
   const [sortMode, setSortMode] = useState<"activity" | "value">("activity");
+  const [worksView, setWorksView] = useStudioViewMode("collector.worksView");
+  const handleWorksViewChange = useCallback(
+    (mode: "ledger" | "gallery") => {
+      setWorksView(mode);
+      track({
+        eventName: "view_mode_changed",
+        surface: "studio",
+        actorRole: "collector",
+        metadata: { section: "collector", mode },
+      });
+    },
+    [setWorksView, track]
+  );
   const [portfolioFilter, setPortfolioFilter] =
     useState<CollectorPortfolioFilter>("current");
   const [transferredRows, setTransferredRows] = useState<Row[]>([]);
@@ -174,19 +197,17 @@ export default function CollectorStudioPage() {
   }, [activeSection]);
 
   useEffect(() => {
+    const uid = guardUser?.userId;
+    if (!uid) {
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
     void (async () => {
-      const {
-        data: { user },
-      } = await sb().auth.getUser();
-      const uid = user?.id;
-      if (!uid) {
-        if (!cancelled) setLoading(false);
-        return;
-      }
-
-      setUserId(uid);
-
+      try {
       const pendingRes = await fetch("/api/collector/pending-acquisitions", {
         credentials: "include",
       });
@@ -225,9 +246,7 @@ export default function CollectorStudioPage() {
           .in("id", ownedIds);
 
         if (error) {
-          console.error(error);
-          if (!cancelled) setLoading(false);
-          return;
+          throw error;
         }
 
         heldRows = (artRows || []).map((row) => ({
@@ -276,7 +295,6 @@ export default function CollectorStudioPage() {
           setPriorityValueEventIds([]);
           setPriorityOwnershipEventIds([]);
           setSignalMaps({ pendingSale: new Set(), unverified: new Set() });
-          setLoading(false);
         }
         return;
       }
@@ -426,13 +444,20 @@ export default function CollectorStudioPage() {
 
       if (!cancelled) {
         setRows(heldRows);
-        setLoading(false);
+      }
+      } catch (err) {
+        console.error(err);
+        if (!cancelled) {
+          setLoadError(t("studio.toast.connectionInterrupted"));
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [sb]);
+  }, [guardUser?.userId, sb, t]);
 
   const sorted = useMemo(() => {
     if (portfolioFilter === "pending") {
@@ -603,7 +628,7 @@ export default function CollectorStudioPage() {
     [catalogueMetrics, rows, sb, t, userId]
   );
 
-  if (loading || !userId) {
+  if (loading) {
     return (
       <div className="ds-page-environment relative min-h-screen pt-28 text-neutral-900">
         <div
@@ -613,6 +638,25 @@ export default function CollectorStudioPage() {
         <p className="text-center text-sm text-neutral-500">{t("collector.shell.loading")}</p>
       </div>
     );
+  }
+
+  if (loadError) {
+    return (
+      <div className="ds-page-environment flex min-h-screen flex-col items-center justify-center px-6 pt-28 text-center text-neutral-900">
+        <p className="max-w-md text-sm text-neutral-600">{loadError}</p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="v2-cta-secondary mt-6 min-h-[44px] px-6 py-2.5 text-xs"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+
+  if (!userId) {
+    return null;
   }
 
   const snap = collectionSnapshot;
@@ -665,14 +709,36 @@ export default function CollectorStudioPage() {
           ) : null}
 
           <div className={`max-w-6xl pb-8 ${testModeEnabled() ? "mt-8" : "mt-6"} ${studioOverviewStackClass}`}>
+            <StudioRoleBand
+              role="collector"
+              {...studioRoleBandCopy("collector", t)}
+              metrics={[
+                {
+                  label: t("collector.hero.ownershipOnRecord"),
+                  value: snap?.held ?? rows.length,
+                },
+                {
+                  label: t("collector.hero.verifiedOwnership"),
+                  value: snap?.verifiedOwnership,
+                },
+                {
+                  label: t("collector.hero.continuity"),
+                  value: intelligenceItems.length,
+                },
+              ]}
+            />
             <CollectorWorkspaceHero
               displayName={displayName}
               location={locationLine}
               publicPageHref={publicCollectionHref}
               previewArtworks={heroPreviewArtworks}
+              metrics={{
+                holdings: snap?.held ?? rows.length,
+                verified: snap?.verifiedOwnership ?? 0,
+                transfers: snap?.pendingTransfer ?? 0,
+                certificates: snap?.certificatesAvailable ?? 0,
+              }}
               snapshot={{
-                held: snap?.held ?? rows.length,
-                verifiedOwnership: snap?.verifiedOwnership ?? 0,
                 attentionCount: intelligenceItems.length,
                 profilePublic: Boolean(collectorProfile?.is_public),
                 anonymousOnPublic: Boolean(collectorProfile?.anonymous_on_public),
@@ -785,11 +851,16 @@ export default function CollectorStudioPage() {
       ) : null}
 
       {activeSection === "works" ? (
-        <section>
-          <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-4">
-            <h2 className="font-serif text-xl font-normal text-neutral-900">
-              {t("collector.works.title")}
-            </h2>
+        <section className="studio-reveal max-w-6xl">
+          <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4 border-b border-[var(--v2-border)] pb-5">
+            <div>
+              <p className="v2-type-mono text-[10px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
+                {t("collector.archive.rail")}
+              </p>
+              <h2 className="v2-type-display mt-2 text-[1.5rem] leading-none text-[var(--v2-ink)] md:text-[1.75rem]">
+                {t("collector.archive.holdingsTitle")}
+              </h2>
+            </div>
             <div className="flex flex-wrap items-center gap-3">
               <label className="sr-only" htmlFor="collector-portfolio-filter">
                 Filter works
@@ -812,6 +883,13 @@ export default function CollectorStudioPage() {
                   Sold / transferred ({transferredRows.length})
                 </option>
               </select>
+              <StudioViewToggle
+                mode={worksView}
+                onChange={handleWorksViewChange}
+                label={t("collector.works.viewLabel")}
+                ledgerLabel={t("collector.works.viewLedger")}
+                galleryLabel={t("collector.works.viewGallery")}
+              />
             </div>
             {sorted.length > 0 ? (
               <p className="text-xs text-neutral-400">
@@ -858,10 +936,14 @@ export default function CollectorStudioPage() {
                   return (
                     <li
                       key={item.provenance_transfer_id}
-                      className="rounded-2xl border border-amber-200/50 bg-gradient-to-br from-amber-50/70 via-white to-white p-4 shadow-[0_8px_24px_-16px_rgba(120,90,40,0.12)]"
+                      className="relative overflow-hidden rounded-xl border border-[var(--v2-border-strong)] bg-white p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_10px_28px_-22px_rgba(15,23,42,0.18)]"
                     >
+                      <span
+                        className="pointer-events-none absolute inset-y-0 left-0 w-0.5 bg-[var(--v2-amber-exception)] opacity-80"
+                        aria-hidden
+                      />
                       <div className="flex gap-4">
-                        <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-neutral-200/80">
+                        <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[var(--v2-paper-sunk,#efe9df)]">
                           {item.image_url ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
@@ -875,7 +957,7 @@ export default function CollectorStudioPage() {
                           <p className="font-serif text-lg text-neutral-950">{title}</p>
                           <p className="mt-1 font-mono text-[12px] text-neutral-500">{reg}</p>
                           <p className="mt-2 text-[13px] text-neutral-600">
-                            Pending transfer — confirm receipt to complete ownership.
+                            Pending transfer: confirm receipt to complete ownership.
                           </p>
                           <div className="mt-3 flex flex-wrap gap-2">
                             {item.accept_href ? (
@@ -905,19 +987,43 @@ export default function CollectorStudioPage() {
           ) : null}
 
           {sorted.length === 0 && pendingAcquisitions.length === 0 ? (
-            <p className="mt-10 text-sm leading-relaxed text-neutral-500">
-              {t("collector.works.emptyPrefix")}{" "}
-              <Link
-                href={fieldExplorerRecordsHref()}
-                className="text-neutral-800 underline decoration-neutral-300 underline-offset-[5px] hover:decoration-neutral-500"
-              >
-                {t("collector.works.emptyLink")}
-              </Link>{" "}
-              {t("collector.works.emptySuffix")}
-            </p>
+            <div className="studio-reveal mt-10 max-w-xl border border-[var(--v2-border)] bg-white/80 px-5 py-6 sm:px-6 sm:py-7">
+              <p className="v2-type-display text-[1.25rem] leading-snug text-[var(--v2-ink)]">
+                {t("collector.works.emptyTitle")}
+              </p>
+              <p className="mt-3 text-sm leading-relaxed text-[var(--v2-ink-muted)]">
+                {t("collector.works.emptyBody")}
+              </p>
+            </div>
+          ) : worksView === "gallery" ? (
+            <CollectorHoldingsGallery
+              items={sorted.map((r) => {
+                const isPending = r.portfolio_status === "pending_transfer";
+                return {
+                  id: r.id,
+                  href: isPending
+                    ? r.accept_href ||
+                      (r.registry_id
+                        ? `/registry/${encodeURIComponent(r.registry_id)}/ledger`
+                        : "#")
+                    : r.registry_id
+                      ? `/collector-studio/artwork/${encodeURIComponent(r.registry_id)}`
+                      : "#",
+                  title: (r.title || "").trim() || t("collector.fallback.untitled"),
+                  artist:
+                    r.artist_id && artistNames[r.artist_id]
+                      ? artistNames[r.artist_id]
+                      : t("collector.fallback.artist"),
+                  registryId: r.registry_id?.trim() || "–",
+                  imageUrl: r.image_url,
+                  verificationStatus: r.verification_status,
+                  isPending,
+                };
+              })}
+            />
           ) : (
-            <ul className="mt-12 space-y-0 divide-y divide-neutral-900/10">
-              {sorted.map((r) => {
+            <ul className="studio-reveal-stagger mt-8 space-y-3 sm:space-y-4">
+              {sorted.map((r, index) => {
                 const reg = r.registry_id?.trim() || "–";
                 const title = (r.title || "").trim() || t("collector.fallback.untitled");
                 const artist =
@@ -925,73 +1031,42 @@ export default function CollectorStudioPage() {
                     ? artistNames[r.artist_id]
                     : t("collector.fallback.artist");
                 const isPending = r.portfolio_status === "pending_transfer";
-                const surfaceBadge = resolvePortfolioBadge({
-                  portfolioStatus: r.portfolio_status,
-                });
                 const ownEntry = isPending
                   ? {
                       status: "claimed" as OwnershipSystemStatus,
-                      className: "text-amber-900/80 font-medium",
+                      className: "text-[var(--v2-amber-exception)]",
                     }
                   : (latestOwnershipByArt[r.id] ?? null);
                 const ownLabel = isPending
-                  ? "Pending transfer"
+                  ? t("collector.works.transferPending")
                   : ownEntry
                     ? translateOwnershipStatusLabel(ownEntry.status, t)
                     : null;
-                const ownClassName = ownEntry?.className;
                 const href = isPending
                   ? r.accept_href || (r.registry_id ? `/registry/${encodeURIComponent(r.registry_id)}/ledger` : "#")
                   : r.registry_id
                     ? `/collector-studio/artwork/${encodeURIComponent(r.registry_id)}`
                     : "#";
-                const flagSale = !isPending && signalMaps.pendingSale.has(r.id);
-                const flagUnver = !isPending && signalMaps.unverified.has(r.id);
+                const cert = certByArtwork[r.id];
                 return (
-                  <li key={r.id} className={isPending ? "opacity-80" : undefined}>
-                    <Link
+                  <div key={r.id} style={{ "--reveal-index": index } as CSSProperties}>
+                    <CollectorHoldingSlab
                       href={href}
-                      className={`block py-7 outline-none transition first:pt-0 hover:[&_.work-title]:text-neutral-600 focus-visible:ring-1 focus-visible:ring-neutral-900/10 ${isPending ? "border-l-2 border-amber-300/60 pl-4" : ""}`}
-                    >
-                      <div className="flex gap-4">
-                        {r.image_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={r.image_url}
-                            alt=""
-                            className={`hidden h-16 w-16 shrink-0 rounded-lg object-cover sm:block ${isPending ? "opacity-70 grayscale-[20%]" : ""}`}
-                          />
-                        ) : null}
-                        <div className="min-w-0 flex-1">
-                      <p className="work-title font-serif text-lg font-normal leading-snug text-neutral-950">
-                        {title}
-                      </p>
-                      <p className="mt-2 text-sm text-neutral-500">{artist}</p>
-                      <p className="mt-3 font-mono text-xs tracking-tight text-neutral-400">
-                        {reg}
-                      </p>
-                      {ownLabel ? (
-                        <p className={`mt-3 text-sm ${ownClassName}`}>
-                          {ownLabel}
-                        </p>
-                      ) : null}
-                      <div className="mt-2">
-                        <OwnershipStateBadge badge={surfaceBadge} />
-                      </div>
-                      {flagSale ? (
-                        <span className="block pt-1 text-xs font-normal text-amber-900/80">
-                          {t("collector.works.transferPending")}
-                        </span>
-                      ) : null}
-                      {flagUnver ? (
-                        <span className="block pt-1 text-xs font-normal text-neutral-500">
-                          {t("collector.works.verificationOutstanding")}
-                        </span>
-                      ) : null}
-                        </div>
-                      </div>
-                    </Link>
-                  </li>
+                      title={title}
+                      artist={artist}
+                      registryId={reg}
+                      imageUrl={r.image_url}
+                      verificationStatus={r.verification_status}
+                      hasCertificate={Boolean(cert?.has_certificate)}
+                      certificateRevoked={Boolean(cert?.revoked)}
+                      ownershipLabel={ownLabel}
+                      ownershipClassName={ownEntry?.className}
+                      transferCount={r.ownership_transfer_count}
+                      isPending={isPending}
+                      transferPending={!isPending && signalMaps.pendingSale.has(r.id)}
+                      verificationOutstanding={!isPending && signalMaps.unverified.has(r.id)}
+                    />
+                  </div>
                 );
               })}
             </ul>

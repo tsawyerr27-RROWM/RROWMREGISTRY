@@ -34,14 +34,14 @@ export function formatRightsDuration(
   endsAt: string | null | undefined
 ): string {
   const start = String(startsAt ?? "").trim();
-  if (!start) return "—";
+  if (!start) return "-";
   if (!endsAt) return `${formatRightsDate(start)} · open-ended`;
   return `${formatRightsDate(start)} – ${formatRightsDate(endsAt)}`;
 }
 
 export function formatRightsDate(isoDate: string): string {
   const clean = String(isoDate ?? "").trim();
-  if (!clean) return "—";
+  if (!clean) return "-";
   const parsed = new Date(`${clean}T12:00:00`);
   if (Number.isNaN(parsed.getTime())) return clean;
   return parsed.toLocaleDateString(undefined, {

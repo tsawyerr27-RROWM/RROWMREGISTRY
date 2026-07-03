@@ -10,6 +10,10 @@ import {
   translateTransferTypeLabel,
   translateValueEventType,
 } from "@/lib/ownership-ledger-i18n";
+import {
+  semanticDotClass,
+  type RegistrySemanticEvent,
+} from "@/lib/registry-semantic-signals";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 import {
@@ -37,6 +41,7 @@ type Line = {
   detail: string;
   href?: string;
   pinned?: boolean;
+  signal?: RegistrySemanticEvent;
 };
 
 /** Meaningful events only; typographic list — no feed chrome. */
@@ -126,6 +131,7 @@ export function CollectorStudioActivityPreview({
           detail: fillMessage(t("collector.activity.detail"), { title, kind }),
           href: reg ? `/collector-studio/artwork/${encodeURIComponent(reg)}` : undefined,
           pinned: priVe.has(rawId),
+          signal: priVe.has(rawId) ? "sale" : undefined,
         });
       }
 
@@ -156,6 +162,7 @@ export function CollectorStudioActivityPreview({
             : fillMessage(t("collector.activity.detail"), { title, kind }),
           href: reg ? `/collector-studio/artwork/${encodeURIComponent(reg)}` : undefined,
           pinned: priOe.has(rawOeId) || claimed,
+          signal: priOe.has(rawOeId) || claimed ? "transfer" : undefined,
         });
       }
 
@@ -219,34 +226,35 @@ export function CollectorStudioActivityPreview({
 
   if (artworkIds.length === 0) {
     return (
-      <p className="text-sm leading-relaxed text-neutral-500">
+      <p className="text-xs leading-relaxed text-neutral-500">
         {t("collector.activity.emptyHold")}
       </p>
     );
   }
 
   if (loading) {
-    return <p className="text-sm text-neutral-400">{t("collector.activity.loading")}</p>;
+    return <p className="text-xs text-neutral-400">{t("collector.activity.loading")}</p>;
   }
 
   if (lines.length === 0) {
     return (
-      <p className="text-sm leading-relaxed text-neutral-500">
+      <p className="text-xs leading-relaxed text-neutral-500">
         {t("collector.activity.noEvents")}
       </p>
     );
   }
 
+  const scrollClass =
+    lines.length > 3
+      ? "max-h-[14rem] space-y-3 overflow-y-auto overscroll-y-contain pr-1"
+      : "space-y-3";
+
   return (
-    <ul className="space-y-0 divide-y divide-neutral-900/10">
+    <div className={scrollClass}>
       {lines.map((r) => {
-        const date = (() => {
+        const when = (() => {
           try {
-            return new Date(r.created_at).toLocaleDateString(undefined, {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            });
+            return new Date(r.created_at).toLocaleString();
           } catch {
             return "";
           }
@@ -254,33 +262,35 @@ export function CollectorStudioActivityPreview({
 
         const inner = (
           <>
-            <p className="text-sm font-medium text-neutral-700">{r.label}</p>
+            <p className="flex items-center gap-1.5 text-xs text-neutral-600">
+              {r.pinned ? (
+                <span className={semanticDotClass(r.signal ?? null)} aria-hidden />
+              ) : null}
+              <span className={r.pinned ? "font-medium text-neutral-800" : undefined}>
+                {r.label}
+              </span>
+            </p>
             {r.detail ? (
-              <p className="mt-2 text-[15px] leading-snug text-neutral-800">
-                {r.detail}
-              </p>
+              <p className="mt-1 text-xs leading-snug text-neutral-600">{r.detail}</p>
             ) : null}
-            {date ? (
-              <p className="mt-2 text-xs tabular-nums text-neutral-400">{date}</p>
+            {when ? (
+              <p className="mt-1 text-[10px] tabular-nums text-neutral-400">{when}</p>
             ) : null}
           </>
         );
 
-        return (
-          <li key={r.id} className="py-6 first:pt-0">
-            {r.href ? (
-              <Link
-                href={r.href}
-                className="block outline-none transition hover:text-neutral-950 focus-visible:ring-1 focus-visible:ring-neutral-900/15"
-              >
-                {inner}
-              </Link>
-            ) : (
-              inner
-            )}
-          </li>
+        return r.href ? (
+          <Link
+            key={r.id}
+            href={r.href}
+            className="block outline-none transition hover:text-neutral-950 focus-visible:ring-1 focus-visible:ring-neutral-900/15"
+          >
+            {inner}
+          </Link>
+        ) : (
+          <div key={r.id}>{inner}</div>
         );
       })}
-    </ul>
+    </div>
   );
 }

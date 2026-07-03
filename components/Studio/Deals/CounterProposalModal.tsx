@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { DealTermsForm } from "@/components/Deals/DealTermsForm";
 import ModalShell from "@/components/ui/ModalShell";
+import { useMaxWidth1023 } from "@/hooks/useMaxWidth1023";
 import type { DealRow } from "@/lib/deals";
 import {
   buildUpdatedTerms,
@@ -24,6 +25,7 @@ type Props = {
 const summaryClass = `${studioFilingForm.textarea} mt-2 min-h-[6rem]`;
 
 export function CounterProposalModal({ isOpen, onClose, deal, onSubmitted }: Props) {
+  const isMobile = useMaxWidth1023();
   const [values, setValues] = useState<Record<string, string>>({});
   const [summary, setSummary] = useState("");
   const [busy, setBusy] = useState(false);
@@ -106,7 +108,16 @@ export function CounterProposalModal({ isOpen, onClose, deal, onSubmitted }: Pro
       isOpen={isOpen}
       onClose={handleClose}
       tone="light"
-      panelClassName="relative max-h-[92vh] w-full max-w-2xl overflow-hidden"
+      overlayClassName={
+        isMobile
+          ? "ds-z-modal-backdrop fixed inset-0 flex items-end bg-[rgba(10,10,10,0.42)] backdrop-blur-md"
+          : undefined
+      }
+      panelClassName={
+        isMobile
+          ? "relative max-h-[min(92dvh,40rem)] w-full max-w-none overflow-hidden rounded-b-none rounded-t-[var(--v2-radius-modal)]"
+          : "relative max-h-[92vh] w-full max-w-2xl overflow-hidden"
+      }
     >
       <div className="relative max-h-[92vh] overflow-y-auto overscroll-contain">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-neutral-400/30 to-transparent" />
@@ -169,7 +180,7 @@ export function CounterProposalModal({ isOpen, onClose, deal, onSubmitted }: Pro
               type="button"
               onClick={handleClose}
               disabled={busy}
-              className="rounded-xl border border-neutral-900/[0.08] bg-white/90 px-4 py-2.5 text-[13px] font-medium text-neutral-800 transition hover:bg-neutral-50 disabled:opacity-50"
+              className="inline-flex min-h-[44px] items-center rounded-xl border border-neutral-900/[0.08] bg-white/90 px-4 py-2.5 text-[13px] font-medium text-neutral-800 transition hover:bg-neutral-50 disabled:opacity-50 md:min-h-0"
             >
               Cancel
             </button>
@@ -177,7 +188,7 @@ export function CounterProposalModal({ isOpen, onClose, deal, onSubmitted }: Pro
               type="button"
               onClick={() => void submit()}
               disabled={busy || fields.length === 0}
-              className="rounded-xl border border-neutral-900/[0.08] bg-neutral-950 px-4 py-2.5 text-[13px] font-medium text-white transition hover:bg-neutral-900 disabled:opacity-50"
+              className="inline-flex min-h-[44px] items-center rounded-xl border border-neutral-900/[0.08] bg-neutral-950 px-4 py-2.5 text-[13px] font-medium text-white transition hover:bg-neutral-900 disabled:opacity-50 md:min-h-0"
             >
               {busy ? "Recording…" : "Submit counterproposal"}
             </button>

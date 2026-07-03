@@ -14,9 +14,13 @@ import {
 } from "@/lib/deal-inbox";
 import { DealListPanel } from "@/components/Studio/Deals/DealListPanel";
 import { DealWorkspace } from "@/components/Studio/Deals/DealWorkspace";
+import { RrowmTabs } from "@/components/ui/RrowmTabs";
+import { useMaxWidth1023 } from "@/hooks/useMaxWidth1023";
 import { studioV2 } from "@/styles/studio-v2";
 
 export type { DealInboxTabId as DealTabId };
+
+type DealMobilePane = "inbox" | "deal" | "execution";
 
 type Props = {
   userId: string;
@@ -42,6 +46,8 @@ export function StudioDealsWorkspace({ userId, initialDealId = null }: Props) {
   >({});
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<DealInboxTabId>("active");
+  const [mobilePane, setMobilePane] = useState<DealMobilePane>("inbox");
+  const isMobile = useMaxWidth1023();
 
   const buckets = useMemo(() => bucketDeals(deals, userId), [deals, userId]);
 
@@ -132,6 +138,7 @@ export function StudioDealsWorkspace({ userId, initialDealId = null }: Props) {
     syncDealQuery(id);
     const deal = deals.find((row) => row.id === id);
     if (deal) setActiveTab(resolveDealInboxTab(deal, userId));
+    if (isMobile) setMobilePane("deal");
   };
 
   const handleTabChange = (tab: DealInboxTabId) => {
@@ -153,20 +160,16 @@ export function StudioDealsWorkspace({ userId, initialDealId = null }: Props) {
       : tabList[0] ?? selectedDeal;
 
   return (
-    <div className={`${studioV2.scope} studio-deals-workspace flex min-w-0 w-full flex-col gap-6`}>
-      <header className="relative mb-4 flex flex-wrap items-start justify-between gap-4">
-        <div className="relative min-w-0 v2-surface-archive-sheet pl-5 md:pl-6">
+    <div className={`${studioV2.scope} studio-deals-workspace flex min-w-0 w-full flex-col gap-4 md:gap-6`}>
+      <header className="relative mb-2 flex flex-wrap items-start justify-between gap-3 md:mb-4 md:gap-4">
+        <div className="relative min-w-0 v2-surface-archive-sheet pl-4 md:pl-6">
           <p className={studioV2.type.railLabel}>Execution room</p>
-          <h1 className={`${studioV2.type.commandTitle} mt-3`}>Deals</h1>
-          <p className={`${studioV2.type.metaValue} mt-3 max-w-2xl`}>
-            A private command center for proposals, terms, correspondence, and
-            registry filings.
-          </p>
+          <h1 className={`${studioV2.type.commandTitle} mt-2 md:mt-3`}>Deals</h1>
         </div>
         <button
           type="button"
           onClick={openNewDeal}
-          className="v2-cta-primary !min-h-0 px-5 py-3 text-xs"
+          className="v2-cta-primary min-h-[44px] px-5 py-3 text-xs md:!min-h-0"
         >
           New deal
         </button>
@@ -190,6 +193,45 @@ export function StudioDealsWorkspace({ userId, initialDealId = null }: Props) {
             New deal
           </button>
         </section>
+      ) : isMobile ? (
+        <>
+          <RrowmTabs
+            items={[
+              { id: "inbox", label: "Inbox", count: deals.length },
+              { id: "deal", label: "Deal" },
+              { id: "execution", label: "Execution" },
+            ]}
+            activeId={mobilePane}
+            onChange={setMobilePane}
+            className="studio-deals-mobile-tabs lg:hidden"
+            ariaLabel="Deal workspace"
+          />
+          <div
+            className={`${studioV2.surface.commandGrid} studio-deals-workspace__layout studio-deals-workspace__layout--mobile min-w-0 w-full`}
+          >
+            {mobilePane === "inbox" ? (
+              <DealListPanel
+                userId={userId}
+                loading={loading}
+                loadError={loadError}
+                deals={deals}
+                counterpartyLabels={counterpartyLabels}
+                activeTab={activeTab}
+                onTabChange={handleTabChange}
+                selectedDealId={workspaceDeal?.id ?? selectedDealId}
+                onSelectDealId={handleSelectDeal}
+                onCreateDeal={openNewDeal}
+              />
+            ) : (
+              <DealWorkspace
+                userId={userId}
+                deal={workspaceDeal}
+                mobilePane={mobilePane === "execution" ? "execution" : "deal"}
+                onDealUpdated={() => void refreshDeals()}
+              />
+            )}
+          </div>
+        </>
       ) : (
         <div className={`${studioV2.surface.commandGrid} studio-deals-workspace__layout min-w-0 w-full`}>
           <DealListPanel

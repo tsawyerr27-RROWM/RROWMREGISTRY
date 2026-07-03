@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 
 import { logActivityEvent } from "@/lib/log-activity";
 import { notifyRegistryVerificationApproved } from "@/lib/notification-hooks/registry";
+import { captureRuntimeError } from "@/lib/runtime-errors";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
+import { writeTelemetryEvent } from "@/lib/telemetry";
 
 export const runtime = "nodejs";
 
@@ -15,6 +17,7 @@ type Body = {
 
 /** Gallery staff attestation: verify artwork on the Registry ledger. */
 export async function POST(req: Request) {
+  try {
   let body: Body;
   try {
     body = (await req.json()) as Body;
@@ -60,6 +63,13 @@ export async function POST(req: Request) {
   if (error) {
     const msg = summarizeRpcError(error);
     const code = String((error as { code?: string }).code ?? "");
+    void captureRuntimeError({
+      error,
+      surface: "verification",
+      route: "/api/registry/verify-artwork",
+      userId: user.id,
+      metadata: { rpc: "gallery_verify_artwork", artwork_id: artworkId, code },
+    });
     const lower = msg.toLowerCase();
     const status =
       code === "42501" || lower.includes("not authorized") || lower.includes("not authorised")
@@ -94,7 +104,23 @@ export async function POST(req: Request) {
         via: "gallery",
       },
     });
+
+    void writeTelemetryEvent({
+      eventName: "verification_completed",
+      surface: "verification",
+      userId: user.id,
+      actorRole: "gallery",
+      metadata: { artwork_id: artworkId },
+    });
   }
 
   return NextResponse.json({ ok: true });
+  } catch (error) {
+    void captureRuntimeError({
+      error,
+      surface: "verification",
+      route: "/api/registry/verify-artwork",
+    });
+    throw error;
+  }
 }

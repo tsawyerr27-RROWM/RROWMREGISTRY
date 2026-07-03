@@ -7,6 +7,10 @@ import {
   isArtworkArchived,
 } from "@/lib/personal-archive";
 import { REPRESENTATION_PHRASES } from "@/lib/representation-language";
+import {
+  isInstitutionallyVerified,
+  parseArtworkTrustTier,
+} from "@/lib/artwork-trust-tier";
 
 export type FieldVerifyCertificateStatus = {
   has_certificate: boolean;
@@ -82,7 +86,8 @@ export async function loadFieldVerifyRecordData(
   if (artworkError) warnSupabaseRpc("field verify artwork", artworkError);
   if (!artwork) return null;
 
-  const recordVerified = artwork.verification_status === "verified";
+  const recordVerified = isInstitutionallyVerified(artwork.verification_status);
+  const trustTier = parseArtworkTrustTier(artwork.verification_status);
 
   let artist: FieldVerifyRecordData["artist"] = null;
   let organisation: FieldVerifyOrganisationContext = null;
@@ -202,10 +207,10 @@ export function recordVerificationStatusLabel(
   status: string | null,
   recordVerified: boolean
 ): string {
-  if (recordVerified) return "Verified Registry record";
-  const s = String(status ?? "").toLowerCase();
-  if (s === "pending") return "Registered · verification may deepen on file";
-  return "Registered on file";
+  const tier = parseArtworkTrustTier(status);
+  if (recordVerified || tier === "verified") return "Verified";
+  if (tier === "self_attested") return "Self-attested";
+  return "Filed";
 }
 
 export function artistConfirmationLabel(onFile: boolean): string {

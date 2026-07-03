@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { isCurrentOwner } from "@/lib/canonical-ownership-engine";
+import { canParticipateInOwnershipFlow } from "@/lib/artwork-trust-tier";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
 
@@ -35,9 +36,9 @@ export async function GET(req: Request) {
   if (error || !art?.id) {
     return NextResponse.json({ error: "Work not found." }, { status: 404 });
   }
-  if (String(art.verification_status || "") !== "verified") {
+  if (!canParticipateInOwnershipFlow(art.verification_status)) {
     return NextResponse.json(
-      { eligible: false, reason: "not_verified" },
+      { eligible: false, reason: "trust_tier_insufficient" },
       { status: 200 }
     );
   }

@@ -262,10 +262,12 @@ export function renderCertificateOgImage(bundle: CertificateOgBundle) {
 export function renderCertificateOgFallbackImage() {
   return renderCertificateOgImage({
     context: {
-      registryId: "—",
+      registryId: "-",
       artworkTitle: "Registry certificate",
+      trustTier: "filed",
       publicity: "restricted",
     },
+    trustOgLine: null,
     indexable: false,
   });
 }

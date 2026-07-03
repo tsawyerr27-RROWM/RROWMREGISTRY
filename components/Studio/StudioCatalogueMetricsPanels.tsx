@@ -54,17 +54,20 @@ export function StudioCatalogueMetricsPanels({
           {valueProgression.comparableWorks > 0 ? (
             <>
               <StudioMetricTile
+                variant="primary"
                 label={t("studio.overview.avgChange")}
                 value={formatGrowthPercent(valueProgression.averageGrowthPercent)}
                 hint={t("studio.overview.avgChangeHint")}
                 onClick={onOpenValueInsight}
               />
               <StudioMetricTile
+                variant="secondary"
                 label={t("studio.overview.worksIncreased")}
                 value={valueProgression.worksIncreased}
                 onClick={onOpenValueInsight}
               />
               <StudioMetricTile
+                variant="secondary"
                 label={t("studio.overview.decliningWorks")}
                 value={valueProgression.worksDeclined}
                 onClick={onOpenValueInsight}
@@ -88,14 +91,17 @@ export function StudioCatalogueMetricsPanels({
       >
         <div className="grid gap-4 sm:grid-cols-3 sm:gap-5">
           <StudioMetricTile
-            label={t("studio.overview.totalTransfers")}
-            value={ownership.totalTransfers}
-          />
-          <StudioMetricTile
+            variant="primary"
             label={worksHeldLabel}
             value={ownership.worksHeld}
           />
           <StudioMetricTile
+            variant="secondary"
+            label={t("studio.overview.totalTransfers")}
+            value={ownership.totalTransfers}
+          />
+          <StudioMetricTile
+            variant="secondary"
             label={avgHoldLabel}
             value={
               ownership.avgHoldDays != null

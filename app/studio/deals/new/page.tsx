@@ -19,7 +19,7 @@ function StudioNewDealContent() {
   const atmosphere =
     role === "artist" ? workspace.atmosphere.studio : workspace.atmosphere.environment;
 
-  if (!ready || !userId || !role) {
+  if (!ready) {
     return (
       <div className={`min-h-[100dvh] ${workspace.atmosphere.environment}`}>
         <div className="mx-auto max-w-3xl px-6 py-16">
@@ -32,6 +32,10 @@ function StudioNewDealContent() {
         </div>
       </div>
     );
+  }
+
+  if (!userId || !role) {
+    return null;
   }
 
   return (

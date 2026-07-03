@@ -8,6 +8,10 @@ import type { Session } from "@supabase/supabase-js";
 import { signOutAndRedirect } from "@/lib/auth-sign-out";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { FooterRegionSelector } from "@/components/LandingPage/FooterRegionSelector";
+import {
+  MobileCommandDrawer,
+  MobileCommandMenuButton,
+} from "@/components/Header/MobileCommandDrawer";
 import { NotificationInboxBell } from "@/components/notifications/NotificationInboxBell";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import {
@@ -56,22 +60,24 @@ function ProfileIcon({ className }: { className?: string }) {
   );
 }
 
-export default function Header() {
+export default function Header({ initialPathname = "" }: { initialPathname?: string }) {
   const sb = useSupabaseBrowserLazy();
   const { regionId, setRegionId, t } = useLocalePreferences();
   const regionLabelId = useId();
   const pathname = usePathname();
-  const hideChromeWhenPrinting = pathname?.startsWith("/certificate") ?? false;
+  const resolvedPathname =
+    pathname && pathname.length > 0 ? pathname : initialPathname;
+  const hideChromeWhenPrinting = resolvedPathname?.startsWith("/certificate") ?? false;
   const [scrollY, setScrollY] = useState(0);
   const [session, setSession] = useState<Session | null>(null);
   const [actorRole, setActorRole] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const isFieldSurface =
-    pathname === "/field" || pathname?.startsWith("/field/");
+  const isFieldSignatureRoot = resolvedPathname === "/field";
 
-  const isHome = pathname === "/";
+  const isHome = resolvedPathname === "/";
 
   const isAuthPage =
     pathname?.startsWith("/login") ||
@@ -118,7 +124,7 @@ export default function Header() {
     pathname === "/about" || pathname?.startsWith("/about/");
 
   const onField =
-    isFieldSurface && !onRegistry && !onAbout;
+    (pathname === "/field" || pathname?.startsWith("/field/")) && !onRegistry && !onAbout;
 
   useEffect(() => {
     let ticking = false;
@@ -217,12 +223,17 @@ export default function Header() {
 
   const headerOnDarkStudio = onArtistStudio && dashboardHeaderDark;
 
+  const fieldSignatureHeader =
+    isFieldSignatureRoot && scrollY <= COMMAND_BAR_THRESHOLD;
+
   const commandBarFloated =
     headerOnDarkStudio ||
     scrollY > COMMAND_BAR_THRESHOLD ||
     (isMarketingPublic && scrollY > 48);
 
-  const commandBarTone: "light" | "dark" = commandBarFloated ? "dark" : "light";
+  const commandBarImmersiveDark = commandBarFloated || fieldSignatureHeader;
+
+  const commandBarTone: "light" | "dark" = commandBarImmersiveDark ? "dark" : "light";
 
   const handleSignOut = useCallback(async () => {
     if (signingOut) return;
@@ -234,6 +245,10 @@ export default function Header() {
     }
   }, [signingOut]);
 
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
   const navLinkClass = (active: boolean) =>
     `rrowm-command-bar-nav-link v2-motion-hover-subtle ${
       active
@@ -241,9 +256,9 @@ export default function Header() {
         : "rrowm-command-bar-nav-link--idle"
     }`;
 
-  const utilityLinkClass = commandBarFloated
-    ? "hidden text-[11px] font-medium tracking-wide text-white/70 transition hover:text-white sm:inline"
-    : "hidden text-[11px] font-medium tracking-wide text-neutral-500 transition hover:text-neutral-900 sm:inline";
+  const utilityLinkClass = commandBarImmersiveDark
+    ? "hidden text-[11px] font-medium tracking-wide text-white/70 transition hover:text-white lg:inline"
+    : "hidden text-[11px] font-medium tracking-wide text-neutral-500 transition hover:text-neutral-900 lg:inline";
 
   const commandNavItems = [
     { href: studioNavHref, label: t("nav.studio"), active: onStudio },
@@ -261,41 +276,52 @@ export default function Header() {
     >
       <div
         className={`rrowm-command-bar mx-auto max-w-[min(100%,88rem)] transition-[padding] duration-500 ${
-          commandBarFloated ? "rrowm-command-bar--floated" : "rrowm-command-bar--quiet"
+          commandBarFloated
+            ? "rrowm-command-bar--floated"
+            : fieldSignatureHeader
+              ? "rrowm-command-bar--field-signature"
+              : "rrowm-command-bar--quiet"
         }`}
       >
         <div
-          className={`relative overflow-hidden transition-[border-radius,padding,box-shadow] duration-500 ${
-            commandBarFloated
-              ? "v2-surface-glass-dark v2-shadow-cinematic v2-radius-pill px-4 py-2.5 sm:px-6 sm:py-3"
+          className={`relative flex items-center gap-2.5 transition-[padding] duration-500 sm:gap-3 ${
+            commandBarFloated || fieldSignatureHeader
+              ? "px-1 py-1 sm:px-2"
               : "px-1 py-2 sm:px-2 sm:py-3"
           }`}
         >
+          <Link
+            href="/"
+            className="rrowm-logo-slot group relative z-20 flex shrink-0 items-center v2-motion-hover-subtle"
+            aria-label="RROWM home"
+          >
+            <RrowmLogo
+              priority
+              sizes="(max-width: 767px) 148px, 220px"
+              className={`rrowm-logo-crisp h-11 w-[148px] max-w-[min(148px,42vw)] object-contain object-left transition-opacity duration-500 group-hover:opacity-90 motion-reduce:transition-none md:h-11 md:w-[200px] md:max-w-[200px] ${
+                commandBarImmersiveDark ? "rrowm-logo-crisp--on-dark" : ""
+              }`}
+            />
+          </Link>
+
           <div
-            className="rrowm-command-bar__signal pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[var(--v2-cobalt-signal)] to-transparent opacity-40"
-            aria-hidden
-          />
-
-          <nav className="relative flex items-center justify-between gap-3 sm:gap-4">
-            <Link
-              href="/"
-              className="group relative z-10 flex shrink-0 items-center v2-motion-hover-subtle"
-              aria-label="RROWM home"
-            >
-              <RrowmLogo
-                priority
-                sizes="(max-width: 767px) min(188px, 48vw), 220px"
-                className={`h-11 w-auto max-w-[min(188px,48vw)] object-contain object-left transition-[opacity,filter] duration-500 group-hover:opacity-90 motion-reduce:transition-none md:h-[3.35rem] md:max-w-[220px] ${
-                  commandBarFloated
-                    ? "[filter:brightness(0)_invert(1)_drop-shadow(0_1px_1px_rgb(0_0_0/0.45))]"
-                    : ""
-                }`}
-              />
-            </Link>
-
+            className={`relative min-w-0 flex-1 overflow-hidden transition-[border-radius,padding,box-shadow] duration-500 ${
+              fieldSignatureHeader
+                ? "rrowm-command-bar__field-signature-shell v2-radius-pill px-3 py-2 sm:px-5 sm:py-2.5"
+                : commandBarFloated
+                  ? "v2-surface-glass-dark v2-shadow-cinematic v2-radius-pill px-3 py-2 sm:px-5 sm:py-2.5"
+                  : ""
+            }`}
+          >
             <div
-              className={`relative z-10 hidden min-w-0 flex-1 items-center justify-center md:flex ${
-                commandBarFloated ? "rrowm-command-bar-capsule gap-7 px-8 py-2" : "gap-8 lg:gap-10"
+              className="rrowm-command-bar__signal pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-[var(--v2-cobalt-signal)] to-transparent opacity-40"
+              aria-hidden
+            />
+
+            <nav className="relative flex items-center justify-between gap-2 sm:gap-3">
+            <div
+              className={`relative z-10 hidden min-w-0 flex-1 items-center justify-center lg:flex ${
+                commandBarImmersiveDark ? "rrowm-command-bar-capsule gap-7 px-8 py-2" : "gap-8 lg:gap-10"
               }`}
             >
               {commandNavItems.map((item) => (
@@ -303,19 +329,6 @@ export default function Header() {
                   key={item.href}
                   href={item.href}
                   className={navLinkClass(item.active)}
-                  aria-current={item.active ? "page" : undefined}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-
-            <div className="relative z-10 flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden">
-              {commandNavItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`${navLinkClass(item.active)} text-[10px]`}
                   aria-current={item.active ? "page" : undefined}
                 >
                   {item.label}
@@ -337,12 +350,12 @@ export default function Header() {
                   <NotificationInboxBell tone={commandBarTone} />
                   <Link
                     href="/studio/account"
-                    className="rrowm-command-bar-icon-btn v2-motion-hover-subtle"
+                    className="rrowm-command-bar-icon-btn v2-motion-hover-subtle hidden lg:inline-flex"
                     aria-label={t("nav.myAccount")}
                   >
                     <ProfileIcon className="h-[1.125rem] w-[1.125rem]" />
                   </Link>
-                  <span className="sr-only sm:not-sr-only sm:inline">
+                  <span className="sr-only lg:not-sr-only lg:inline">
                     <Link href="/studio/account" className={utilityLinkClass}>
                       {t("nav.account")}
                     </Link>
@@ -363,8 +376,8 @@ export default function Header() {
                     type="button"
                     disabled={signingOut}
                     aria-busy={signingOut}
-                    className={`min-h-[44px] touch-manipulation rounded-full px-3 py-2 text-[10px] font-medium uppercase tracking-[0.16em] transition disabled:cursor-wait sm:min-h-0 sm:px-3.5 ${
-                      commandBarFloated
+                    className={`hidden min-h-[44px] touch-manipulation rounded-full px-3 py-2 text-[10px] font-medium uppercase tracking-[0.16em] transition disabled:cursor-wait lg:inline-flex lg:min-h-0 lg:px-3.5 ${
+                      commandBarImmersiveDark
                         ? "text-white/55 hover:text-white/90 disabled:text-white/30"
                         : "text-neutral-500 hover:text-neutral-900 disabled:text-neutral-300"
                     }`}
@@ -372,6 +385,11 @@ export default function Header() {
                   >
                     {signingOut ? "…" : t("nav.signOut")}
                   </button>
+                  <MobileCommandMenuButton
+                    open={mobileMenuOpen}
+                    onClick={() => setMobileMenuOpen((prev) => !prev)}
+                    tone={commandBarTone}
+                  />
                 </>
               ) : (
                 <>
@@ -380,8 +398,8 @@ export default function Header() {
                   </Link>
                   <Link
                     href="/get-started"
-                    className={`v2-motion-hover-subtle rounded-full px-4 py-2 text-[11px] font-medium uppercase tracking-[0.14em] transition sm:px-5 sm:py-2.5 sm:text-xs ${
-                      commandBarFloated
+                    className={`v2-motion-hover-subtle hidden rounded-full px-4 py-2 text-[11px] font-medium uppercase tracking-[0.14em] transition sm:px-5 sm:py-2.5 sm:text-xs lg:inline-flex ${
+                      commandBarImmersiveDark
                         ? "border border-white/18 bg-white/10 text-white hover:bg-white/16"
                         : isAuthPage
                           ? "border border-black/8 bg-white/70 text-neutral-900 backdrop-blur-md hover:bg-white/90"
@@ -390,12 +408,32 @@ export default function Header() {
                   >
                     {t("nav.takePart")}
                   </Link>
+                  <MobileCommandMenuButton
+                    open={mobileMenuOpen}
+                    onClick={() => setMobileMenuOpen((prev) => !prev)}
+                    tone={commandBarTone}
+                  />
                 </>
               )}
             </div>
           </nav>
+          </div>
         </div>
       </div>
+
+      <MobileCommandDrawer
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        exploreItems={commandNavItems}
+        sessionActive={Boolean(hydrated && session)}
+        loginHref={loginHref}
+        accountHref="/studio/account"
+        signingOut={signingOut}
+        onSignOut={() => void handleSignOut()}
+        regionId={regionId}
+        onRegionChange={setRegionId}
+        regionLabelId={regionLabelId}
+      />
     </header>
   );
 }

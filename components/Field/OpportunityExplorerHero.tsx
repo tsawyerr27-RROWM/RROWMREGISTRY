@@ -1,6 +1,7 @@
 "use client";
 
 import { FieldExplorerHeroShell } from "@/components/Field/FieldExplorerHeroShell";
+import { FieldExplorerInfoTooltip } from "@/components/Field/FieldExplorerInfoTooltip";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 type Props = {
@@ -48,9 +49,8 @@ export function OpportunityExplorerHero({
 
   return (
     <FieldExplorerHeroShell
-      indexLabel={t("field.explorer.tab.opportunities")}
       title={t("field.opportunities.headline")}
-      lede={t("field.opportunities.lede")}
+      infoTooltip={<FieldExplorerInfoTooltip text={t("field.opportunities.lede")} />}
       meta={metaParts.length > 0 ? metaParts.join(" · ") : undefined}
     />
   );

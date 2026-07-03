@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ArtistWorkspaceShellLayout } from "@/components/Studio/ArtistWorkspaceShellLayout";
 import { CollectorWorkspaceShellLayout } from "@/components/Studio/CollectorWorkspaceShellLayout";
 import { GalleryWorkspaceShellLayout } from "@/components/Studio/GalleryWorkspaceShellLayout";
+import { RegistryCatalogueShellProvider } from "@/components/Registry/RegistryCatalogueShellContext";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 
 type WorkspaceRole = "artist" | "collector" | "gallery";
@@ -71,23 +72,29 @@ export function SignedInCatalogueShellLayout({
 
   if (role === "artist") {
     return (
-      <ArtistWorkspaceShellLayout userId={userId} catalogueActive>
-        {children}
-      </ArtistWorkspaceShellLayout>
+      <RegistryCatalogueShellProvider>
+        <ArtistWorkspaceShellLayout userId={userId} catalogueActive>
+          {children}
+        </ArtistWorkspaceShellLayout>
+      </RegistryCatalogueShellProvider>
     );
   }
 
   if (role === "collector") {
     return (
-      <CollectorWorkspaceShellLayout userId={userId} catalogueActive>
-        {children}
-      </CollectorWorkspaceShellLayout>
+      <RegistryCatalogueShellProvider>
+        <CollectorWorkspaceShellLayout userId={userId} catalogueActive>
+          {children}
+        </CollectorWorkspaceShellLayout>
+      </RegistryCatalogueShellProvider>
     );
   }
 
   return (
-    <GalleryWorkspaceShellLayout userId={userId} catalogueActive>
-      {children}
-    </GalleryWorkspaceShellLayout>
+    <RegistryCatalogueShellProvider>
+      <GalleryWorkspaceShellLayout userId={userId} catalogueActive>
+        {children}
+      </GalleryWorkspaceShellLayout>
+    </RegistryCatalogueShellProvider>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
 import { WorkspaceSidebarActivityFeed } from "@/components/Studio/WorkspaceSidebarActivityFeed";
@@ -26,6 +26,7 @@ import {
   type OrganisationNavFlags,
 } from "@/lib/studio-nav";
 import { workspace } from "@/styles/workspace-design";
+import { useTelemetry } from "@/hooks/useTelemetry";
 
 export type StudioRole = "artist" | "collector" | "gallery";
 
@@ -97,6 +98,24 @@ export function StudioShell({
 }: StudioShellProps) {
   const router = useRouter();
   const { t } = useLocalePreferences();
+  const { track } = useTelemetry();
+
+  const studioSection = useMemo(() => {
+    if (role === "artist") return "creative";
+    if (role === "collector") return "collector";
+    return "organisation";
+  }, [role]);
+
+  useEffect(() => {
+    track({
+      eventName: "studio_opened",
+      surface: "studio",
+      actorRole: role === "gallery" ? "gallery" : role,
+      metadata: { section: studioSection, active_id: activeId },
+    });
+    // studio_opened once per shell mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const resolvedNavItems = useMemo(() => {
     if (navItems) return navItems;
@@ -163,6 +182,14 @@ export function StudioShell({
     );
 
   const handleSelect = (id: string) => {
+    if (id !== activeId) {
+      track({
+        eventName: "studio_section_opened",
+        surface: "studio",
+        actorRole: role === "gallery" ? "gallery" : role,
+        metadata: { section: studioSection, section_id: id },
+      });
+    }
     if (onSelect) {
       onSelect(id);
       return;

@@ -4,6 +4,7 @@
 
 import { createHash } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { parseArtworkTrustTier } from "@/lib/artwork-trust-tier";
 import type { ArtworkMeta, GalleryAuthority, TimelineEvent } from "./artwork-replay-engine";
 import {
   galleryAuthorityToRecord,
@@ -449,16 +450,18 @@ export async function getArtworkReplayData(
   }
 
   const dbOwner = normUuid(aw.current_owner_id as string | null);
-  const dbVs = String(aw.verification_status || "unverified").toLowerCase();
+  const dbTier = parseArtworkTrustTier(
+    aw.verification_status as string | null | undefined
+  );
   const rpOwner = normUuid(r1.state.current_owner_id);
-  const rpVs = r1.state.verification_status;
+  const rpTier = r1.state.trust_tier;
   if (dbOwner !== rpOwner) {
     mismatches.push(
       `current_owner_id: db=${dbOwner ?? "null"} replay=${rpOwner ?? "null"}`
     );
   }
-  if (dbVs !== rpVs) {
-    mismatches.push(`verification_status: db=${aw.verification_status} replay=${rpVs}`);
+  if (dbTier !== rpTier) {
+    mismatches.push(`trust_tier: db=${dbTier} replay=${rpTier}`);
   }
 
   const drift_second =

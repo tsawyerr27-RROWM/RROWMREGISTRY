@@ -5,7 +5,7 @@ import {
   recordExplorerQueryString,
   type RecordExplorerCertificateFilter,
   type RecordExplorerSort,
-  type RecordExplorerVerifiedFilter,
+  type RecordExplorerTrustFilter,
 } from "@/lib/field-record-explorer-params";
 
 export function redirectIfRecordExplorerPageOutOfRange(
@@ -18,7 +18,7 @@ export function redirectIfRecordExplorerPageOutOfRange(
     creative: string;
     organisation: string;
     practice: string;
-    verified: RecordExplorerVerifiedFilter;
+    trust: RecordExplorerTrustFilter;
     certificate: RecordExplorerCertificateFilter;
   }
 ) {

@@ -8,7 +8,8 @@ import {
 } from "@/lib/opportunity-editor";
 import { fillMessage } from "@/lib/locale-messages";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
-import { rrowmButton, rrowmSurface } from "@/styles/rrowm-theme";
+import { rrowmButton } from "@/styles/rrowm-theme";
+import { studioV2 } from "@/styles/studio-v2";
 
 type Props = {
   briefs: OpportunityBriefRow[];
@@ -63,56 +64,80 @@ export function OpportunityListPanel({
       ) : briefs.length === 0 && !isCreating ? (
         <p className="mt-8 text-sm text-neutral-600">{t("studio.opportunities.empty")}</p>
       ) : (
-        <ul className="mt-6 flex-1 space-y-2 overflow-y-auto pr-1">
+        <ul className={`${studioV2.scope} mt-6 flex-1 space-y-3 overflow-y-auto pr-1`}>
           {briefs.map((brief) => {
             const active =
               (selectedId === brief.id && !isCreating) || reviewModeId === brief.id;
             const inReview = reviewModeId === brief.id;
             const updatedLabel = formatOpportunityDate(brief.updated_at);
             const applicationCount = brief.application_count ?? 0;
+            const description = (brief.description || "").trim();
             return (
               <li key={brief.id}>
                 <div
-                  className={`p-4 transition ${
+                  className={`v2-motion-hover-subtle relative overflow-hidden rounded-xl border bg-white px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_10px_28px_-22px_rgba(15,23,42,0.18)] transition-[border-color,box-shadow] duration-300 ${
                     active
-                      ? `${rrowmSurface.l2} ring-1 ring-[color:color-mix(in_srgb,var(--rrowm-zone-accent)_28%,transparent)]`
-                      : `${rrowmSurface.l3} hover:shadow-[0_12px_30px_rgba(40,25,10,0.08)]`
+                      ? "border-[var(--v2-cobalt-signal)]"
+                      : "border-[var(--v2-border-strong)]"
                   }`}
                 >
+                  <span
+                    className={`pointer-events-none absolute inset-y-0 left-0 w-0.5 opacity-80 ${
+                      active
+                        ? "bg-[var(--v2-cobalt-signal)]"
+                        : "bg-[var(--v2-border-strong)]"
+                    }`}
+                    aria-hidden
+                  />
                   <button
                     type="button"
                     onClick={() => onSelect(brief)}
                     className="w-full text-left"
                   >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full border border-neutral-200 bg-white px-2.5 py-0.5 text-[11px] font-medium text-neutral-600">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 v2-type-mono text-[9px] uppercase tracking-[0.16em] text-[var(--v2-ink-muted)]">
+                      <span className="text-[var(--v2-ink-soft)]">
                         {opportunityVisibilityLabelLocalized(brief.visibility_state, t)}
                       </span>
-                      <span className="text-[11px] text-neutral-500">
+                      <span aria-hidden className="text-[var(--v2-cool-grey)]">·</span>
+                      <span>
                         {fillMessage(t("studio.opportunities.applicationCount"), {
                           count: applicationCount,
                         })}
                       </span>
+                      {updatedLabel ? (
+                        <>
+                          <span aria-hidden className="text-[var(--v2-cool-grey)]">·</span>
+                          <span>
+                            {fillMessage(t("studio.opportunities.lastUpdated"), {
+                              date: updatedLabel,
+                            })}
+                          </span>
+                        </>
+                      ) : null}
                       {inReview ? (
-                        <span className="text-[11px] font-medium text-emerald-900/80">
+                        <span className="studio-execution-stamp studio-execution-stamp--active">
                           {t("studio.opportunities.applicationsHeading")}
                         </span>
                       ) : null}
                     </div>
-                    <h3 className="mt-2 font-serif text-lg text-neutral-950">{brief.title}</h3>
-                    <p className="mt-1 text-xs text-neutral-500">
+                    <h3 className="mt-2 font-serif text-lg leading-tight text-[var(--v2-ink)]">
+                      {brief.title}
+                    </h3>
+                    <p className="mt-1 v2-type-mono text-[10px] uppercase tracking-[0.12em] text-[var(--v2-cool-grey)]">
                       {briefTypeLabelLocalized(brief.brief_type, t)}
-                      {updatedLabel
-                        ? ` · ${fillMessage(t("studio.opportunities.lastUpdated"), { date: updatedLabel })}`
-                        : null}
                     </p>
+                    {description ? (
+                      <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[var(--v2-ink-muted)]">
+                        {description}
+                      </p>
+                    ) : null}
                   </button>
-                  <div className="mt-3 flex flex-wrap gap-2 border-t border-neutral-900/[0.05] pt-3">
+                  <div className="mt-3 flex flex-wrap gap-2 border-t border-[var(--v2-border)] pt-3">
                     <button
                       type="button"
                       disabled={busy}
                       onClick={() => onSelect(brief)}
-                      className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-900 transition hover:bg-neutral-50 disabled:opacity-50"
+                      className="v2-cta-secondary px-3 py-1.5 text-[11px] disabled:opacity-50"
                     >
                       {t("studio.opportunities.edit")}
                     </button>
@@ -120,7 +145,7 @@ export function OpportunityListPanel({
                       type="button"
                       disabled={busy}
                       onClick={() => onReviewApplications(brief)}
-                      className="rounded-lg border border-emerald-900/15 bg-emerald-50/80 px-3 py-1.5 text-xs font-medium text-emerald-950 transition hover:bg-emerald-100 disabled:opacity-50"
+                      className="v2-cta-primary px-3 py-1.5 text-[11px] disabled:opacity-50"
                     >
                       {t("studio.opportunities.reviewApplications")}
                       {applicationCount > 0 ? ` (${applicationCount})` : ""}
@@ -130,7 +155,7 @@ export function OpportunityListPanel({
                       disabled
                       title={t("studio.opportunities.duplicatePlaceholder")}
                       onClick={() => onDuplicate(brief)}
-                      className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-500 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="v2-cta-secondary px-3 py-1.5 text-[11px] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {t("studio.opportunities.duplicate")}
                     </button>
@@ -139,7 +164,7 @@ export function OpportunityListPanel({
                       disabled
                       title={t("studio.opportunities.deletePlaceholder")}
                       onClick={() => onDelete(brief)}
-                      className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-500 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="v2-cta-secondary px-3 py-1.5 text-[11px] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {t("studio.opportunities.delete")}
                     </button>

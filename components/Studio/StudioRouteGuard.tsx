@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -30,14 +31,43 @@ export function useStudioGuardUser(): StudioGuardUser | null {
   return useContext(StudioGuardUserContext);
 }
 
+function studioGuardLoginPath(pathname: string | null): string {
+  if (!pathname || pathname === "/login") return "/login";
+  return `/login?next=${encodeURIComponent(pathname)}`;
+}
+
 export function StudioRouteGuard({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const sb = useSupabaseBrowserLazy();
   const [phase, setPhase] = useState<GuardPhase>("pending");
   const [guardUser, setGuardUser] = useState<StudioGuardUser | null>(null);
+  const redirectedRef = useRef(false);
 
   const skipGuard = studioLayoutGuardSkipsPath(pathname);
+
+  useEffect(() => {
+    redirectedRef.current = false;
+  }, [pathname]);
+
+  const redirectLoginOnce = () => {
+    if (redirectedRef.current) return;
+    redirectedRef.current = true;
+    deferredRouterReplace(router, studioGuardLoginPath(pathname));
+  };
+
+  useEffect(() => {
+    if (skipGuard || phase !== "pending") return;
+
+    const timeoutId = window.setTimeout(() => {
+      console.warn(
+        "[StudioRouteGuard] Guard pending > 8s; redirecting to login."
+      );
+      redirectLoginOnce();
+    }, 8000);
+
+    return () => clearTimeout(timeoutId);
+  }, [skipGuard, phase, pathname, router]);
 
   useEffect(() => {
     if (skipGuard) {
@@ -51,7 +81,10 @@ export function StudioRouteGuard({ children }: { children: ReactNode }) {
         const supabase = sb();
         const { data: sessionData } = await supabase.auth.getSession();
         const session = sessionData?.session;
-        if (!session) return;
+        if (!session) {
+          if (!cancelled) redirectLoginOnce();
+          return;
+        }
 
         const uid = session.user.id;
         const onboardingPath = await getOnboardingRedirectPath(supabase, uid);

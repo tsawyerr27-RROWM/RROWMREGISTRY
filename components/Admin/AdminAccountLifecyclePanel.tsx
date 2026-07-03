@@ -111,10 +111,10 @@ export function AdminAccountLifecyclePanel() {
                   <td className="py-3 pr-4 text-white/60">
                     {r.deletion_scheduled_at
                       ? new Date(r.deletion_scheduled_at).toLocaleDateString()
-                      : "—"}
+                      : "-"}
                   </td>
                   <td className="py-3 pr-4 text-white/60">
-                    {r.deletion_notification_email ?? "—"}
+                    {r.deletion_notification_email ?? "-"}
                   </td>
                   <td className="py-3">
                     <div className="flex flex-wrap gap-2">

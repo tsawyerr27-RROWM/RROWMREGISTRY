@@ -15,7 +15,7 @@ export function LandingStatValue({
   className?: string;
 }) {
   const reduce = useReducedMotion();
-  const display = loading || value == null ? "—" : formatLandingStat(value);
+  const display = loading || value == null ? "-" : formatLandingStat(value);
 
   return (
     <motion.span

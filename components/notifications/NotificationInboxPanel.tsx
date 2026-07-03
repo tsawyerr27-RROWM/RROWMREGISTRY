@@ -2,10 +2,16 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { deferredRouterPush } from "@/lib/deferred-app-router";
+import {
+  groupNotificationsByInboxSection,
+  NOTIFICATION_INBOX_SECTIONS,
+  NOTIFICATION_INBOX_SECTION_LABEL_KEYS,
+  type NotificationInboxSection,
+} from "@/lib/notification-inbox-sections";
 import {
   isNotificationUnread,
   resolveNotificationHref,
@@ -13,9 +19,13 @@ import {
 } from "@/lib/notifications";
 import {
   notificationSemanticEvent,
+  semanticAccentBorderClass,
   semanticDotClass,
+  semanticStampClass,
+  type RegistrySemanticEvent,
 } from "@/lib/registry-semantic-signals";
 import { STUDIO_INBOX_HREF } from "@/lib/studio-nav/studio-utility-nav";
+import type { MessageKey } from "@/lib/locale-messages";
 
 type Props = {
   variant?: "panel" | "page";
@@ -24,6 +34,8 @@ type Props = {
   onUnreadCountChange?: (count: number) => void;
   /** Called when the user follows an inbox link (e.g. close the header dropdown). */
   onNavigate?: () => void;
+  onClose?: () => void;
+  showClose?: boolean;
 };
 
 function formatRelativeTime(iso: string, locale: string): string {
@@ -46,29 +58,47 @@ function formatRelativeTime(iso: string, locale: string): string {
   });
 }
 
-function notificationItemClass(unread: boolean): string {
-  const base = [
-    "group block w-full rounded-2xl border p-3.5 text-left",
-    "transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
-    "hover:-translate-y-0.5",
-  ];
-
-  if (unread) {
-    return [
-      ...base,
-      "border-[var(--v2-border-strong)] bg-white",
-      "shadow-[0_8px_24px_-16px_rgba(15,23,42,0.12)] ring-1 ring-[var(--v2-border)]",
-      "hover:border-[var(--v2-border-strong)]",
-      "hover:shadow-[0_14px_32px_-16px_rgba(15,23,42,0.14)]",
-    ].join(" ");
+function notificationSignalMarker(
+  semanticEvent: RegistrySemanticEvent | null,
+  unread: boolean
+): ReactNode {
+  if (semanticEvent === "certification") {
+    return (
+      <span
+        className={`${semanticStampClass("certification")} mt-1 shrink-0 scale-[0.82] origin-left ${
+          unread ? "" : "opacity-75"
+        }`}
+        aria-hidden
+      />
+    );
   }
 
+  return (
+    <span
+      className={`mt-2 shrink-0 ${semanticDotClass(semanticEvent)} ${
+        unread ? "" : "opacity-70"
+      }`}
+      aria-hidden
+    />
+  );
+}
+
+function notificationItemClass(
+  unread: boolean,
+  semanticEvent: RegistrySemanticEvent | null
+): string {
+  const accent = semanticEvent
+    ? semanticAccentBorderClass(semanticEvent)
+    : "border-l-[var(--v2-border)]";
+
   return [
-    ...base,
-    "border-neutral-900/[0.06] bg-white/90",
-    "shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_4px_16px_-12px_rgba(15,23,42,0.08)]",
-    "hover:border-neutral-900/[0.1]",
-    "hover:shadow-[0_12px_28px_-14px_rgba(15,23,42,0.12)]",
+    "group block w-full border border-[var(--v2-border)] border-l-2 bg-white/95 px-3.5 py-3 text-left",
+    accent,
+    "transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+    "hover:border-[var(--v2-border-strong)] hover:bg-white",
+    unread
+      ? "shadow-[0_8px_20px_-16px_rgba(15,23,42,0.14)] ring-1 ring-[var(--v2-border)]"
+      : "opacity-90 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)]",
   ].join(" ");
 }
 
@@ -78,6 +108,8 @@ export function NotificationInboxPanel({
   className = "",
   onUnreadCountChange,
   onNavigate,
+  onClose,
+  showClose = false,
 }: Props) {
   const router = useRouter();
   const { t, region } = useLocalePreferences();
@@ -86,6 +118,7 @@ export function NotificationInboxPanel({
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [markingAll, setMarkingAll] = useState(false);
   const [fadeTop, setFadeTop] = useState(false);
   const [fadeBottom, setFadeBottom] = useState(false);
@@ -156,7 +189,11 @@ export function NotificationInboxPanel({
         `/api/notifications/${encodeURIComponent(notification.id)}/read`,
         { method: "PATCH", credentials: "same-origin" }
       );
-      if (!res.ok) return notification;
+      if (!res.ok) {
+        const payload = (await res.json().catch(() => ({}))) as { error?: string };
+        setActionError(payload.error ?? t("notifications.inbox.markReadError"));
+        return notification;
+      }
 
       const payload = (await res.json()) as { notification?: NotificationRow };
       const updated = payload.notification ?? {
@@ -168,20 +205,26 @@ export function NotificationInboxPanel({
         prev.map((item) => (item.id === updated.id ? updated : item))
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
+      setActionError(null);
       return updated;
     },
-    []
+    [t]
   );
 
   const markAllRead = useCallback(async () => {
     if (unreadCount === 0 || markingAll) return;
     setMarkingAll(true);
+    setActionError(null);
     try {
       const res = await fetch("/api/notifications", {
         method: "POST",
         credentials: "same-origin",
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        const payload = (await res.json().catch(() => ({}))) as { error?: string };
+        setActionError(payload.error ?? t("notifications.inbox.markAllReadError"));
+        return;
+      }
       const readAt = new Date().toISOString();
       setNotifications((prev) =>
         prev.map((item) => ({ ...item, read_at: item.read_at ?? readAt }))
@@ -190,7 +233,7 @@ export function NotificationInboxPanel({
     } finally {
       setMarkingAll(false);
     }
-  }, [markingAll, unreadCount]);
+  }, [markingAll, t, unreadCount]);
 
   const renderNotificationItem = (notification: NotificationRow) => {
     const href = resolveNotificationHref(notification);
@@ -200,16 +243,11 @@ export function NotificationInboxPanel({
 
     const content = (
       <div className="flex items-start gap-3">
-        <span
-          className={`mt-2 ${semanticDotClass(semanticEvent)} ${
-            unread ? "" : "opacity-70"
-          }`}
-          aria-hidden
-        />
+        {notificationSignalMarker(semanticEvent, unread)}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
             <p
-              className={`font-serif text-[15px] leading-snug text-neutral-950 ${
+              className={`v2-type-display text-[15px] leading-snug text-[var(--v2-ink)] ${
                 unread ? "font-medium" : "font-normal"
               }`}
             >
@@ -218,13 +256,13 @@ export function NotificationInboxPanel({
             {timeLabel ? (
               <time
                 dateTime={notification.created_at}
-                className="text-[11px] tabular-nums text-neutral-400"
+                className="v2-type-mono text-[10px] tabular-nums text-[var(--v2-ink-muted)]"
               >
                 {timeLabel}
               </time>
             ) : null}
           </div>
-          <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-600">
+          <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--v2-ink-soft)]">
             {notification.body}
           </p>
         </div>
@@ -240,7 +278,7 @@ export function NotificationInboxPanel({
               void markRead(notification);
               onNavigate?.();
             }}
-            className={notificationItemClass(unread)}
+            className={notificationItemClass(unread, semanticEvent)}
           >
             {content}
           </Link>
@@ -250,7 +288,7 @@ export function NotificationInboxPanel({
             onClick={() => {
               void markRead(notification);
             }}
-            className={notificationItemClass(unread)}
+            className={notificationItemClass(unread, semanticEvent)}
           >
             {content}
           </button>
@@ -259,16 +297,39 @@ export function NotificationInboxPanel({
     );
   };
 
+  const renderSection = (section: NotificationInboxSection, items: NotificationRow[]) => {
+    if (items.length === 0) return null;
+
+    const labelKey = NOTIFICATION_INBOX_SECTION_LABEL_KEYS[
+      section
+    ] as MessageKey;
+
+    return (
+      <section key={section} className="space-y-2">
+        <h3 className="v2-type-label px-0.5 text-[10px] tracking-[0.2em] text-[var(--v2-ink-muted)]">
+          {t(labelKey)}
+        </h3>
+        <ul className="space-y-2">{items.map(renderNotificationItem)}</ul>
+      </section>
+    );
+  };
+
+  const grouped = groupNotificationsByInboxSection(notifications);
+
   const listBody = loading ? (
-    <p className="px-1 text-sm text-neutral-500">{t("common.processing")}</p>
+    <p className="px-0.5 text-sm text-[var(--v2-ink-muted)]">{t("common.processing")}</p>
   ) : error ? (
-    <p className="px-1 text-sm text-neutral-600">{error}</p>
+    <p className="px-0.5 text-sm text-[var(--v2-ink-soft)]">{error}</p>
   ) : notifications.length === 0 ? (
-    <p className="px-1 text-sm leading-relaxed text-neutral-500">
+    <p className="px-0.5 text-sm leading-relaxed text-[var(--v2-ink-muted)]">
       {t("notifications.inbox.empty")}
     </p>
   ) : (
-    <ul className="space-y-2.5 pr-0.5">{notifications.map(renderNotificationItem)}</ul>
+    <div className="space-y-5 pr-0.5">
+      {NOTIFICATION_INBOX_SECTIONS.map((section) =>
+        renderSection(section, grouped[section])
+      )}
+    </div>
   );
 
   const scrollRegionClass =
@@ -277,14 +338,14 @@ export function NotificationInboxPanel({
   if (variant === "page") {
     return (
       <section
-        className={`rounded-[1.25rem] border border-neutral-900/[0.07] bg-[#fafaf8]/90 p-6 md:p-9 ${className}`}
+        className={`rounded-[1.25rem] border border-[var(--v2-border)] v2-surface-paper p-6 md:p-9 ${className}`}
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="font-serif text-2xl font-normal tracking-tight text-neutral-950 md:text-[1.75rem]">
+            <h2 className="v2-type-display text-2xl font-normal tracking-tight text-[var(--v2-ink)] md:text-[1.75rem]">
               {t("notifications.inbox.title")}
             </h2>
-            <p className="mt-2 text-sm leading-relaxed text-neutral-600">
+            <p className="mt-2 text-sm leading-relaxed text-[var(--v2-ink-soft)]">
               {t("notifications.inbox.intro")}
             </p>
           </div>
@@ -293,7 +354,7 @@ export function NotificationInboxPanel({
               type="button"
               onClick={() => void markAllRead()}
               disabled={markingAll}
-              className="shrink-0 text-xs font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-4 transition hover:text-neutral-900 hover:decoration-neutral-500 disabled:opacity-50"
+              className="v2-type-mono shrink-0 text-[10px] text-[var(--v2-ink-muted)] underline decoration-[var(--v2-border)] underline-offset-4 transition hover:text-[var(--v2-ink)] disabled:opacity-50 motion-reduce:transition-none"
             >
               {markingAll
                 ? t("common.processing")
@@ -301,6 +362,9 @@ export function NotificationInboxPanel({
             </button>
           ) : null}
         </div>
+        {actionError ? (
+          <p className="mt-3 text-xs leading-relaxed text-red-800/90">{actionError}</p>
+        ) : null}
         <div className="mt-8">{listBody}</div>
       </section>
     );
@@ -312,39 +376,62 @@ export function NotificationInboxPanel({
     >
       <header className="relative shrink-0 pb-3">
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--v2-border-strong)] to-transparent"
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--v2-cobalt-signal-dim)] to-transparent opacity-70"
           aria-hidden
         />
-        <div className="flex items-start justify-between gap-4 pt-0.5">
-          <div>
-            <h2 className="font-serif text-lg font-normal tracking-tight text-neutral-950">
+        <div className="flex items-start justify-between gap-3 pt-0.5">
+          <div className="min-w-0">
+            <p className="v2-type-label text-[10px] tracking-[0.2em] text-[var(--v2-ink-muted)]">
+              Command inbox
+            </p>
+            <h2 className="v2-type-display mt-1 text-lg font-normal tracking-tight text-[var(--v2-ink)]">
               {t("notifications.inbox.title")}
             </h2>
             {unreadCount > 0 ? (
-              <p className="mt-1 text-[11px] font-medium text-[var(--v2-ink-muted)]">
+              <p className="mt-1 v2-type-mono text-[10px] text-[var(--v2-ink-muted)]">
                 {unreadCount} unread
               </p>
             ) : null}
           </div>
-          {unreadCount > 0 ? (
-            <button
-              type="button"
-              onClick={() => void markAllRead()}
-              disabled={markingAll}
-              className="shrink-0 rounded-full border border-neutral-900/[0.08] bg-white/80 px-2.5 py-1 text-[11px] font-medium text-neutral-700 transition hover:border-neutral-900/[0.12] hover:bg-white disabled:opacity-50"
-            >
-              {markingAll
-                ? t("common.processing")
-                : t("notifications.inbox.markAllRead")}
-            </button>
-          ) : null}
+          <div className="flex shrink-0 items-center gap-2">
+            {unreadCount > 0 ? (
+              <button
+                type="button"
+                onClick={() => void markAllRead()}
+                disabled={markingAll}
+                className="v2-type-mono rounded-full border border-[var(--v2-border)] bg-white/90 px-2.5 py-1 text-[10px] text-[var(--v2-ink-soft)] transition hover:border-[var(--v2-border-strong)] hover:text-[var(--v2-ink)] disabled:opacity-50 motion-reduce:transition-none"
+              >
+                {markingAll
+                  ? t("common.processing")
+                  : t("notifications.inbox.markAllRead")}
+              </button>
+            ) : null}
+            {showClose ? (
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--v2-border)] text-[var(--v2-ink-muted)] transition hover:text-[var(--v2-ink)] motion-reduce:transition-none"
+                aria-label="Close inbox"
+              >
+                <span aria-hidden className="text-lg leading-none">
+                  ×
+                </span>
+              </button>
+            ) : null}
+          </div>
         </div>
       </header>
+
+      {actionError ? (
+        <p className="shrink-0 px-0.5 pb-2 text-xs leading-relaxed text-red-800/90">
+          {actionError}
+        </p>
+      ) : null}
 
       <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         {fadeTop ? (
           <div
-            className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-7 bg-gradient-to-b from-[#f8f4ec] via-[#f8f4ec]/80 to-transparent"
+            className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-6 bg-gradient-to-b from-white via-white/85 to-transparent"
             aria-hidden
           />
         ) : null}
@@ -358,7 +445,7 @@ export function NotificationInboxPanel({
         </div>
         {fadeBottom ? (
           <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-7 bg-gradient-to-t from-[#f3efe6] via-[#f3efe6]/80 to-transparent"
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-6 bg-gradient-to-t from-white via-white/85 to-transparent"
             aria-hidden
           />
         ) : null}
@@ -373,7 +460,7 @@ export function NotificationInboxPanel({
               deferredRouterPush(router, STUDIO_INBOX_HREF);
               onNavigate?.();
             }}
-            className="inline-flex items-center text-[13px] font-medium text-neutral-800 underline decoration-[var(--v2-border-strong)] underline-offset-4 transition hover:text-neutral-950 hover:decoration-[var(--v2-ink-muted)]"
+            className="v2-type-mono inline-flex items-center text-[10px] text-[var(--v2-ink-soft)] underline decoration-[var(--v2-border)] underline-offset-4 transition hover:text-[var(--v2-ink)] motion-reduce:transition-none"
           >
             {t("notifications.inbox.viewAll")}
           </Link>

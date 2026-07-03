@@ -3,6 +3,7 @@
 import { RegistryTrustSeal } from "@/components/Registry/RegistryTrustSeal";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fillMessage } from "@/lib/locale-messages";
+import type { ArtworkTrustTier } from "@/lib/artwork-trust-tier";
 import type { RegistryTrustPresentation } from "@/lib/registry-trust-model";
 import {
   registryTrustLevelMessageKey,
@@ -15,17 +16,20 @@ export type RegistryTrustPanelVariant = "hero" | "compact" | "modal";
 
 type Props = {
   presentation: RegistryTrustPresentation;
+  trustTier?: ArtworkTrustTier;
   variant?: RegistryTrustPanelVariant;
   className?: string;
 };
 
 export function RegistryTrustPanel({
   presentation,
+  trustTier,
   variant = "hero",
   className = "",
 }: Props) {
   const { t } = useLocalePreferences();
   const sealSize = variant === "hero" ? "lg" : "md";
+  const showTierCopy = Boolean(trustTier) && presentation.level !== "revoked";
 
   const shellClass =
     variant === "hero"
@@ -52,7 +56,9 @@ export function RegistryTrustPanel({
         <RegistryTrustSeal level={presentation.level} size={sealSize} />
         <div className="min-w-0 flex-1 pt-1">
           <h2 className={levelClass}>
-            {t(registryTrustLevelMessageKey(presentation.level))}
+            {showTierCopy
+              ? t("registry.trust.evidenceTitle")
+              : t(registryTrustLevelMessageKey(presentation.level))}
           </h2>
           <p className={`${registryV2.type.metaLabel} mt-2`}>
             {t("registry.trust.panelLabel")}

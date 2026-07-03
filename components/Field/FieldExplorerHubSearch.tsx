@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fieldV2 } from "@/styles/field-v2";
@@ -10,15 +10,23 @@ import {
   resolveFieldHubSearchRoute,
 } from "@/lib/field-search-contract";
 
-export function FieldExplorerHubSearch() {
+type Props = {
+  initialQuery?: string;
+};
+
+export function FieldExplorerHubSearch({ initialQuery = "" }: Props) {
   const router = useRouter();
   const { t } = useLocalePreferences();
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setQuery(initialQuery);
+  }, [initialQuery]);
 
   return (
     <form
-      className="mt-10 max-w-2xl"
+      className="max-w-2xl"
       onSubmit={(e) => {
         e.preventDefault();
         const route = resolveFieldHubSearchRoute(query);
@@ -46,16 +54,12 @@ export function FieldExplorerHubSearch() {
         />
         <button
           type="submit"
-          className="v2-cta-primary inline-flex shrink-0 !min-h-0 px-6 py-3.5 text-sm"
+          className="v2-cta-primary inline-flex min-h-[44px] shrink-0 items-center px-6 py-3 text-sm"
         >
           {t("field.explorer.hub.searchSubmit")}
         </button>
       </div>
-      {error ? (
-        <p className="mt-2 text-sm text-amber-900">{error}</p>
-      ) : (
-        <p className="mt-2 text-xs text-neutral-500">{t("field.explorer.hub.searchHint")}</p>
-      )}
+      {error ? <p className="mt-2 text-sm text-amber-900">{error}</p> : null}
     </form>
   );
 }

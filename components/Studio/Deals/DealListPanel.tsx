@@ -99,7 +99,7 @@ export function DealListPanel({
           <button
             type="button"
             onClick={onCreateDeal}
-            className="v2-cta-secondary mt-2.5 w-full !min-h-0 py-2 text-[9px]"
+            className="v2-cta-secondary mt-2.5 w-full min-h-[44px] py-2 text-[9px] md:min-h-0 md:!min-h-0"
           >
             New deal
           </button>
@@ -113,7 +113,12 @@ export function DealListPanel({
           <p className={studioV2.type.metaValue}>{loadError}</p>
         ) : list.length === 0 ? (
           <div className={`${studioV2.surface.filingSheet} px-3 py-5 text-center`}>
-            <p className={studioV2.type.metaValue}>No deals in this view.</p>
+            <p className={studioV2.type.metaValue}>
+              No deals filed in this folder yet.
+            </p>
+            <p className="mt-2 text-xs leading-relaxed text-[var(--v2-ink-muted)]">
+              Acquisition and representation filings appear here when initiated.
+            </p>
           </div>
         ) : (
           <ul className="space-y-1">

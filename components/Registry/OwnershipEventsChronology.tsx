@@ -38,7 +38,16 @@ export function OwnershipEventsChronology({ entries, className = "" }: Props) {
   }
 
   return (
-    <ol className={`registry-lineage-chain list-none p-0 ${className}`} role="list">
+    <div className={className}>
+      <div className="mb-6 flex items-center gap-4 border-b border-[var(--v2-border)] pb-4">
+        <h3 className="v2-type-display text-lg text-[var(--v2-ink)] md:text-xl">
+          {t("provenance.phase.ownership")}
+        </h3>
+        <span className={`${registryV2.type.monoId} text-[var(--v2-cool-grey)]`}>
+          {entries.length}
+        </span>
+      </div>
+      <ol className="registry-lineage-chain list-none p-0" role="list">
       {entries.map((entry, index) => {
         const category = ownershipEventCategory(entry.transfer_type);
         const stampClass = registryEventStampClass(category);
@@ -75,25 +84,25 @@ export function OwnershipEventsChronology({ entries, className = "" }: Props) {
               {transferLabel}
             </p>
 
-            <dl className="mt-5 space-y-4">
-              <div>
+            <dl className="mt-5 grid gap-4 sm:grid-cols-2">
+              <div className="min-w-0">
                 <dt className={registryV2.type.metaLabel}>Previous custody</dt>
-                <dd className={`${registryV2.type.metaValue} mt-1.5 font-medium text-[var(--v2-ink)]`}>
-                  {entry.from_label ?? "—"}
+                <dd className={`${registryV2.type.metaValue} mt-1.5 break-words font-medium text-[var(--v2-ink)]`}>
+                  {entry.from_label ?? "-"}
                 </dd>
               </div>
-              <div>
+              <div className="min-w-0">
                 <dt className={registryV2.type.metaLabel}>Current custody</dt>
-                <dd className={`${registryV2.type.metaValue} mt-1.5 font-medium text-[var(--v2-ink)]`}>
-                  {entry.to_label ?? "—"}
+                <dd className={`${registryV2.type.metaValue} mt-1.5 break-words font-medium text-[var(--v2-ink)]`}>
+                  {entry.to_label ?? "-"}
                 </dd>
               </div>
               {price ? (
-                <div>
+                <div className="min-w-0 sm:col-span-2">
                   <dt className={registryV2.type.metaLabel}>
                     {t("registry.event.valuation")}
                   </dt>
-                  <dd className={`${registryV2.type.monoId} mt-1.5 text-[var(--v2-ink)]`}>
+                  <dd className={`${registryV2.type.monoId} mt-1.5 break-words text-[var(--v2-ink)]`}>
                     {price}
                   </dd>
                 </div>
@@ -102,6 +111,7 @@ export function OwnershipEventsChronology({ entries, className = "" }: Props) {
           </li>
         );
       })}
-    </ol>
+      </ol>
+    </div>
   );
 }

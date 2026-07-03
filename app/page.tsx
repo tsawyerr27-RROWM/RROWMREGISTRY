@@ -3,11 +3,12 @@
 import {
   LandingFinalCta,
   LandingHero,
-  LandingTrust,
+  LandingOperatingSystem,
   LandingPageShell,
   LandingPillars,
   LandingProblem,
   LandingProductShowcase,
+  LandingTrust,
   LandingWhy,
 } from "@/components/LandingPage/redesign";
 
@@ -17,6 +18,7 @@ export default function LandingPage() {
       <LandingHero />
       <LandingProblem />
       <LandingPillars />
+      <LandingOperatingSystem />
       <LandingProductShowcase />
       <LandingWhy />
       <LandingTrust />

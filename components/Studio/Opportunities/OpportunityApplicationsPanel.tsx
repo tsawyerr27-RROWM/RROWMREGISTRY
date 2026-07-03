@@ -110,19 +110,36 @@ export function OpportunityApplicationsPanel({
       {!loading && applications.length > 0 ? (
         <>
           <dl className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {METRIC_ITEMS.map(({ key, labelKey }) => (
-              <div
-                key={key}
-                className="rounded-xl border border-neutral-900/[0.06] bg-neutral-50/70 px-4 py-3"
-              >
-                <dt className="text-[13px] font-medium text-neutral-600">
-                  {t(labelKey)}
-                </dt>
-                <dd className="mt-1 text-2xl font-semibold tabular-nums text-neutral-950">
-                  {metrics[key]}
-                </dd>
-              </div>
-            ))}
+            {METRIC_ITEMS.map(({ key, labelKey }) => {
+              const isPrimary = key === "total";
+              const needsAttention =
+                key === "eligibilityOverrideRequests" && metrics[key] > 0;
+              return (
+                <div
+                  key={key}
+                  className={`rounded-lg border bg-white px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)] ${
+                    isPrimary
+                      ? "border-[var(--v2-border-strong)]"
+                      : needsAttention
+                        ? "border-[var(--v2-amber-exception-dim)]"
+                        : "border-[var(--v2-border)]"
+                  }`}
+                >
+                  <dt className="v2-type-mono text-[9px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
+                    {t(labelKey)}
+                  </dt>
+                  <dd
+                    className={`mt-1 font-serif tabular-nums leading-none ${
+                      isPrimary
+                        ? "text-[1.85rem] text-[var(--v2-ink)]"
+                        : "text-xl text-[var(--v2-ink-soft)]"
+                    }`}
+                  >
+                    {metrics[key]}
+                  </dd>
+                </div>
+              );
+            })}
           </dl>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">

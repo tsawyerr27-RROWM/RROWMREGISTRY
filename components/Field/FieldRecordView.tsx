@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 import { FieldRelationshipContextSection } from "@/components/Field/FieldRelationshipContextSection";
+import { ArtworkTrustBadge } from "@/components/Registry/ArtworkTrustBadge";
 import { RegistryRecordHero } from "@/components/Registry/RegistryRecordHero";
 import {
   artistConfirmationLabel,
@@ -25,6 +26,7 @@ import {
   shouldShowAcquisitionDealCta,
 } from "@/lib/acquisition-deal-counterparty";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { useTelemetry } from "@/hooks/useTelemetry";
 import { registryV2 } from "@/styles/registry-v2";
 
 type Props = {
@@ -33,6 +35,18 @@ type Props = {
 
 export function FieldRecordView({ data }: Props) {
   const { t } = useLocalePreferences();
+  const { track } = useTelemetry();
+
+  useEffect(() => {
+    track({
+      eventName: "field_record_opened",
+      surface: "field",
+      metadata: {
+        registry_id: data.artwork.registry_id ?? null,
+      },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.artwork.registry_id]);
   const {
     artwork,
     recordVerified,
@@ -83,9 +97,9 @@ export function FieldRecordView({ data }: Props) {
 
   const filedDate = (() => {
     const d = artwork.created_at;
-    if (!d) return "—";
+    if (!d) return "-";
     const parsed = new Date(d);
-    if (Number.isNaN(parsed.getTime())) return "—";
+    if (Number.isNaN(parsed.getTime())) return "-";
     return parsed.toLocaleDateString(undefined, {
       year: "numeric",
       month: "long",
@@ -126,10 +140,13 @@ export function FieldRecordView({ data }: Props) {
 
   return (
     <main className={`${registryV2.scope} mx-auto max-w-5xl px-4 py-10 sm:px-6 md:py-14 lg:px-8`}>
+      <div className="mb-8">
+        <ArtworkTrustBadge verificationStatus={artwork.verification_status} />
+      </div>
       <RegistryRecordHero
         imageUrl={image_url}
         title={title}
-        artistName={artistName || "—"}
+        artistName={artistName || "-"}
         artistHref={creativeHref}
         registryId={artwork.registry_id}
         fields={[

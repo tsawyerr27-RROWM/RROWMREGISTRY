@@ -14,7 +14,7 @@ type Props = {
 
 export default async function FieldExplorerRecordsPage({ searchParams }: Props) {
   const sp = await searchParams;
-  const { q, sort, page, creative, organisation, practice, verified, certificate } =
+  const { q, sort, page, creative, organisation, practice, trust, certificate } =
     parseRecordExplorerParams(sp);
 
   const supabase = await createSupabaseServerClient();
@@ -25,7 +25,7 @@ export default async function FieldExplorerRecordsPage({ searchParams }: Props) 
     creative,
     organisation,
     practice,
-    verified,
+    trust,
     certificate,
   });
 
@@ -35,11 +35,11 @@ export default async function FieldExplorerRecordsPage({ searchParams }: Props) 
     creative,
     organisation,
     practice,
-    verified,
+    trust,
     certificate,
   });
 
-  const formKey = `${q}|${sort}|${creative}|${organisation}|${practice}|${verified}|${certificate}`;
+  const formKey = `${q}|${sort}|${creative}|${organisation}|${practice}|${trust}|${certificate}`;
 
   return (
     <FieldV2Container className="pt-4 md:pt-6">
@@ -49,7 +49,7 @@ export default async function FieldExplorerRecordsPage({ searchParams }: Props) 
         creative={creative}
         organisation={organisation}
         practice={practice}
-        verified={verified}
+        trust={trust}
         certificate={certificate}
       />
       <RecordExplorerContent
@@ -62,7 +62,7 @@ export default async function FieldExplorerRecordsPage({ searchParams }: Props) 
         creative={creative}
         organisation={organisation}
         practice={practice}
-        verified={verified}
+        trust={trust}
         certificate={certificate}
         formKey={formKey}
       />

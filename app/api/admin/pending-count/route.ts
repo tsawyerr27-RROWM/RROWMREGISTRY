@@ -14,7 +14,7 @@ export async function GET() {
     const { count } = await service
       .from("artworks")
       .select("id", { count: "exact", head: true })
-      .in("verification_status", ["unverified", "pending"]);
+      .in("verification_status", ["filed", "self_attested"]);
 
     return NextResponse.json({ count: count ?? 0 });
   } catch {

@@ -1,4 +1,9 @@
 import type { MessageKey } from "@/lib/locale-messages";
+import {
+  isInstitutionallyVerified,
+  parseArtworkTrustTier,
+  type ArtworkTrustTier,
+} from "@/lib/artwork-trust-tier";
 import type { RecordCompletenessLevel } from "@/lib/record-completeness";
 
 /** Public trust presentation levels for registry surfaces. */
@@ -41,7 +46,13 @@ const PILLAR_ORDER: RegistryTrustEvidencePillarId[] = [
 export function isRecordVerified(
   verificationStatus: string | null | undefined
 ): boolean {
-  return String(verificationStatus || "").toLowerCase() === "verified";
+  return isInstitutionallyVerified(verificationStatus);
+}
+
+export function trustTierFromVerificationStatus(
+  verificationStatus: string | null | undefined
+): ArtworkTrustTier {
+  return parseArtworkTrustTier(verificationStatus);
 }
 
 function buildTrustPillars(input: {
@@ -77,7 +88,8 @@ export function computeRegistryTrustPresentation(input: {
   organisationVerified?: boolean;
   continuityEstablished?: boolean;
 }): RegistryTrustPresentation {
-  const recordVerified = isRecordVerified(input.verificationStatus);
+  const recordVerified = isInstitutionallyVerified(input.verificationStatus);
+  const trustTier = parseArtworkTrustTier(input.verificationStatus);
   const completenessLevel = input.completenessLevel ?? null;
   const verifierName = input.verifierName ?? null;
   const artistConfirmationOnFile = input.artistConfirmationOnFile ?? false;
@@ -128,6 +140,22 @@ export function computeRegistryTrustPresentation(input: {
       pillars: buildTrustPillars(pillarInput),
       recordVerified: true,
       hasCertificate: true,
+      certificateRevoked: false,
+      completenessLevel,
+      verifierName,
+    };
+  }
+
+  if (trustTier === "self_attested") {
+    return {
+      level: "established",
+      explanationKey: "registry.trust.explanation.established",
+      pillars: buildTrustPillars({
+        ...pillarInput,
+        artistConfirmationOnFile: true,
+      }),
+      recordVerified: false,
+      hasCertificate: input.hasCertificate,
       certificateRevoked: false,
       completenessLevel,
       verifierName,

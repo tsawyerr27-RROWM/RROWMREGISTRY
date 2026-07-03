@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { canParticipateInOwnershipFlow } from "@/lib/artwork-trust-tier";
 import { buildOwnershipAcceptHref } from "@/lib/acquisition-ownership-loop";
 import { dealExecutionNoteMarker, resolveUserEmail } from "@/lib/deal-execution";
 import { fetchCanonicalHolderForArtwork } from "@/lib/ownership-canonical";
@@ -266,10 +267,11 @@ export async function resolveOwnershipClaimPath(
     return { kind: "blocked", reason: "Artwork not found." };
   }
 
-  if (String(art.verification_status ?? "").toLowerCase() !== "verified") {
+  if (!canParticipateInOwnershipFlow(art.verification_status)) {
     return {
       kind: "blocked",
-      reason: "This work must be verified before stewardship can be claimed.",
+      reason:
+        "This work must be self-attested or institutionally verified before stewardship can be claimed.",
     };
   }
 
@@ -285,7 +287,7 @@ export async function resolveOwnershipClaimPath(
       accept_href: pendingDeal.accept_href,
       deal_id: pendingDeal.deal_id,
       message:
-        "This acquisition is in progress. Accept the stewardship transfer to complete your purchase — manual claims are not required for deal-based acquisitions.",
+        "This acquisition is in progress. Accept the stewardship transfer to complete your purchase. Manual claims are not required for deal-based acquisitions.",
     };
   }
 

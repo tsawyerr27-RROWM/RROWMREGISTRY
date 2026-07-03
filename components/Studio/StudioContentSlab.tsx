@@ -3,13 +3,11 @@
 import type { ReactNode } from "react";
 
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
-import { rrowmStudioSurface, rrowmZoneClass } from "@/styles/rrowm-theme";
+import { rrowmZoneClass } from "@/styles/rrowm-theme";
+import { studioV2 } from "@/styles/studio-v2";
 
 /** Vertical rhythm between hero and overview slabs */
 export const studioOverviewStackClass = "space-y-8 md:space-y-10";
-
-const accentLineClass =
-  "pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-[color:color-mix(in_srgb,var(--rrowm-zone-accent)_45%,transparent)] to-transparent md:inset-x-8";
 
 type StudioContentSlabProps = {
   id?: string;
@@ -43,7 +41,9 @@ export function StudioContentSlab({
   compact = false,
   headerless = false,
 }: StudioContentSlabProps) {
-  const shell = compact ? rrowmStudioSurface.card : rrowmStudioSurface.panel;
+  const shell = compact
+    ? studioV2.surface.filingSheet
+    : studioV2.surface.filingSheetMajor;
   const pad = compact
     ? "relative px-5 py-5 sm:px-6 sm:py-6"
     : "relative px-6 py-8 sm:px-8 sm:py-9 md:px-10 md:py-10";
@@ -51,16 +51,17 @@ export function StudioContentSlab({
   return (
     <section
       id={id}
-      className={`relative ${scrollMargin ? "scroll-mt-28" : ""} ${className}`}
+      className={`${studioV2.scope} relative ${scrollMargin ? "scroll-mt-28" : ""} ${className}`}
     >
       <div className={`${shell} ${rrowmZoneClass.studio} relative overflow-hidden`}>
-        <div className={accentLineClass} aria-hidden />
         <div className={pad}>
           {!headerless ? (
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
                 {overline ? (
-                  <p className="text-sm font-medium text-neutral-500">{overline}</p>
+                  <p className="v2-type-label text-[10px] tracking-[0.2em] text-[var(--v2-ink-muted)]">
+                    {overline}
+                  </p>
                 ) : null}
                 {headerExtra ? (
                   <div className={overline ? "mt-3" : undefined}>{headerExtra}</div>
@@ -107,9 +108,11 @@ type StudioMetricTileProps = {
   className?: string;
   onClick?: () => void;
   disabled?: boolean;
+  /** primary: dominant serif figure (default) · secondary: muted microtile */
+  variant?: "primary" | "secondary";
 };
 
-/** Metric capsule — aligns with hero `HeroTile` density on light studio chrome. */
+/** Metric capsule — archival filing-sheet tile with primary/secondary hierarchy. */
 export function StudioMetricTile({
   label,
   value,
@@ -117,20 +120,37 @@ export function StudioMetricTile({
   className = "",
   onClick,
   disabled = false,
+  variant = "primary",
 }: StudioMetricTileProps) {
+  const isPrimary = variant === "primary";
+
   const inner = (
     <>
-      <p className="text-[13px] font-medium text-neutral-700">{label}</p>
-      <p className="mt-3 font-serif text-2xl font-normal tabular-nums tracking-tight text-neutral-950 md:text-3xl">
+      <p className="v2-type-mono text-[9px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
+        {label}
+      </p>
+      <p
+        className={
+          isPrimary
+            ? "mt-2.5 font-serif text-2xl font-normal tabular-nums tracking-tight text-[var(--v2-ink)] md:text-[1.85rem]"
+            : "mt-2 font-serif text-lg font-normal tabular-nums tracking-tight text-[var(--v2-ink-soft)]"
+        }
+      >
         {value}
       </p>
-      {hint ? <p className="mt-2 text-[11px] leading-relaxed text-neutral-500">{hint}</p> : null}
+      {hint ? (
+        <p className="mt-2 text-[11px] leading-relaxed text-[var(--v2-ink-muted)]">{hint}</p>
+      ) : null}
     </>
   );
 
-  const shellClass = `${rrowmStudioSurface.metricCapsule} text-left transition-[border-color,box-shadow,transform] duration-300 ${
+  const surface = isPrimary
+    ? "rounded-lg border border-[var(--v2-border-strong)] bg-white px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_10px_28px_-22px_rgba(15,23,42,0.18)]"
+    : "rounded-lg border border-[var(--v2-border)] bg-white/80 px-3.5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)]";
+
+  const shellClass = `${studioV2.scope} ${surface} block w-full text-left transition-[border-color,box-shadow,transform] duration-300 ${
     onClick && !disabled
-      ? "cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(40,25,10,0.08)]"
+      ? "v2-motion-hover-subtle cursor-pointer hover:-translate-y-0.5"
       : ""
   } ${disabled ? "cursor-not-allowed opacity-45" : ""} ${className}`;
 
@@ -161,17 +181,21 @@ export function StudioInsightTile({
   onClick?: () => void;
   disabled?: boolean;
 }) {
-  const shellClass = `${rrowmStudioSurface.metricCapsule} flex min-h-[11rem] flex-col text-left transition-[border-color,box-shadow,transform] duration-300 ${
+  const shellClass = `${studioV2.scope} flex min-h-[11rem] flex-col rounded-lg border border-[var(--v2-border-strong)] bg-white px-4 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_10px_28px_-22px_rgba(15,23,42,0.18)] transition-[border-color,box-shadow,transform] duration-300 ${
     onClick && !disabled
-      ? "cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(40,25,10,0.08)]"
+      ? "v2-motion-hover-subtle cursor-pointer hover:-translate-y-0.5"
       : ""
   } ${disabled ? "cursor-not-allowed opacity-45" : ""} ${className}`;
 
   const body = (
     <>
-      <p className="text-[13px] font-medium text-neutral-700">{label}</p>
+      <p className="v2-type-mono text-[9px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
+        {label}
+      </p>
       <div className="mt-3 flex flex-1 flex-col">{children}</div>
-      {footer ? <div className="mt-4 text-[11px] leading-snug text-neutral-500">{footer}</div> : null}
+      {footer ? (
+        <div className="mt-4 text-[11px] leading-snug text-[var(--v2-ink-muted)]">{footer}</div>
+      ) : null}
     </>
   );
 

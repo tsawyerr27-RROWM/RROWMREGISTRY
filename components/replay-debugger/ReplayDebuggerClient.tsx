@@ -56,7 +56,7 @@ function eventLabel(payload: ArtworkReplayData, eventId: string): string {
 
 function diffReplayState(a: ReplayState, b: ReplayState): {
   owner: [string, string] | null;
-  verification: [string, string] | null;
+  trustTier: [string, string] | null;
   values: Array<{ currency: string; from: string; to: string }>;
   certs: [string, string] | null;
 } {
@@ -64,9 +64,9 @@ function diffReplayState(a: ReplayState, b: ReplayState): {
   const bo = shortId(b.current_owner_id);
   const owner: [string, string] | null = ao === bo ? null : [ao, bo];
 
-  const av = a.verification_status;
-  const bv = b.verification_status;
-  const verification: [string, string] | null =
+  const av = a.trust_tier;
+  const bv = b.trust_tier;
+  const trustTier: [string, string] | null =
     av === bv ? null : [String(av), String(bv)];
 
   const currencies = new Set([...Object.keys(a.value_by_currency), ...Object.keys(b.value_by_currency)]);
@@ -90,7 +90,7 @@ function diffReplayState(a: ReplayState, b: ReplayState): {
   const certs: [string, string] | null =
     as === bs ? null : [as || "–", bs || "–"];
 
-  return { owner, verification, values, certs };
+  return { owner, trustTier, values, certs };
 }
 
 type Loaded = { artworkId: string; payload: ArtworkReplayData };
@@ -171,7 +171,7 @@ export default function ReplayDebuggerClient() {
           <p className="mt-4 max-w-xl text-sm leading-relaxed text-black/60">
             Reconstruct provenance from events only. Replay state does not read{" "}
             <code className="text-xs text-black/50">current_owner_id</code> or{" "}
-            <code className="text-xs text-black/50">verification_status</code> as inputs. Those columns are
+            <code className="text-xs text-black/50">trust_tier</code> as inputs. Those columns are
             shown separately as DB cache for comparison.
           </p>
         </header>
@@ -470,8 +470,8 @@ function ReplayPanel({
               <dd className="mt-1 break-all">{shortId(stateAfter.current_owner_id)}</dd>
             </div>
             <div>
-              <dt className="text-sm text-black/40">Verification (replay)</dt>
-              <dd className="mt-1 capitalize">{stateAfter.verification_status}</dd>
+              <dt className="text-sm text-black/40">Trust tier (replay)</dt>
+              <dd className="mt-1 capitalize">{stateAfter.trust_tier.replace("_", " ")}</dd>
             </div>
             <div>
               <dt className="text-sm text-black/40">Values</dt>
@@ -520,11 +520,11 @@ function ReplayPanel({
                     </div>
                   </li>
                 ) : null}
-                {diff.verification ? (
+                {diff.trustTier ? (
                   <li>
-                    <span className="text-black/45">Verification</span>
+                    <span className="text-black/45">Trust tier</span>
                     <div className="mt-0.5">
-                      {diff.verification[0]} → {diff.verification[1]}
+                      {diff.trustTier[0]} → {diff.trustTier[1]}
                     </div>
                   </li>
                 ) : null}
@@ -543,7 +543,7 @@ function ReplayPanel({
                   </li>
                 ) : null}
                 {!diff.owner &&
-                !diff.verification &&
+                !diff.trustTier &&
                 diff.values.length === 0 &&
                 !diff.certs ? (
                   <li className="text-black/45">No replayed fields changed at this step.</li>

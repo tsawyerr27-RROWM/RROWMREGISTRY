@@ -6,6 +6,7 @@ import { WelcomeModal } from "@/components/ui/IntroModal";
 import { galleryIntroSteps } from "@/components/ui/intro-content";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { StudioShell } from "@/components/Studio/StudioShell";
+import { useStudioGuardUser } from "@/components/Studio/StudioRouteGuard";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { WorkspaceSidebarActivityFeed } from "@/components/Studio/WorkspaceSidebarActivityFeed";
 import { useAccountActivityFeed } from "@/hooks/useAccountActivityFeed";
@@ -25,6 +26,11 @@ import {
 import { DataInsightModal } from "@/components/Insights/DataInsightModal";
 import { StudioCatalogueMetricsPanels } from "@/components/Studio/StudioCatalogueMetricsPanels";
 import { GalleryInstitutionalHero } from "@/components/gallery/GalleryInstitutionalHero";
+import { OrganisationVerificationCommand } from "@/components/gallery/OrganisationVerificationCommand";
+import {
+  StudioRoleBand,
+  studioRoleBandCopy,
+} from "@/components/Studio/StudioRoleBand";
 import {
   StudioContentSlab,
   StudioInsightTile,
@@ -62,6 +68,7 @@ import {
   translateRoleInsight,
 } from "@/lib/insights-i18n";
 import { fillMessage, type MessageKey } from "@/lib/locale-messages";
+import { studioV2 } from "@/styles/studio-v2";
 import { RrowmMiniBarChart } from "@/components/ui/RrowmMiniBarChart";
 import { RecordReadinessSection } from "@/components/gallery/RecordReadinessSection";
 import { RecordIntegritySection } from "@/components/gallery/RecordIntegritySection";
@@ -206,8 +213,9 @@ type GalleryRole = "admin" | "staff";
 export default function GalleryDashboardPage() {
   const { t, region } = useLocalePreferences();
   const sb = useSupabaseBrowserLazy();
+  const guardUser = useStudioGuardUser();
+  const userId = guardUser?.userId ?? null;
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
   const [gallery, setGallery] = useState<GalleryRow | null>(null);
   const [membershipRole, setMembershipRole] = useState<GalleryRole | null>(null);
   const [artists, setArtists] = useState<ArtistRow[]>([]);
@@ -374,11 +382,13 @@ export default function GalleryDashboardPage() {
   });
 
   const load = useCallback(async () => {
-    const { data: sessionData } = await sb().auth.getSession();
-    const uid = sessionData?.session?.user?.id;
-    if (!uid) return;
+    const uid = guardUser?.userId;
+    if (!uid) {
+      setLoading(false);
+      return;
+    }
 
-    setUserId(uid);
+    setLoading(true);
 
     await sb().auth.refreshSession();
 
@@ -839,7 +849,7 @@ export default function GalleryDashboardPage() {
 
     setActivityRefreshKey((k) => k + 1);
     setLoading(false);
-  }, [sb]);
+  }, [guardUser?.userId, sb, t]);
 
   useEffect(() => {
     void load();
@@ -2033,12 +2043,16 @@ export default function GalleryDashboardPage() {
     return sortPriorityQueue(items);
   }, [artworks, gallery, integrityContext]);
 
-  if (loading || !userId) {
+  if (loading) {
     return (
       <div className="ds-page-environment min-h-screen pt-24 text-center text-sm text-neutral-500">
         {t("gallery.shell.loading")}
       </div>
     );
+  }
+
+  if (!userId) {
+    return null;
   }
 
   if (!gallery) {
@@ -2074,9 +2088,14 @@ export default function GalleryDashboardPage() {
   const awaitingVerificationCount = verifyQueue.length;
   const verificationPct =
     worksCount > 0 ? Math.round((verifiedWorksCount / worksCount) * 100) : 0;
+  const certificatesIssued =
+    insightPack?.health.withCertificates ??
+    Object.values(integrityContext.hasLiveCertificateByArtworkId).filter(Boolean)
+      .length;
+  const activeDeals =
+    (representationSummary?.participation_pending ?? 0) +
+    (representationSummary?.amendments_pending ?? 0);
 
-  const identityDescription =
-    gallery.description?.trim() || "";
   const identityLocation = gallery.location?.trim() || "";
 
   return (
@@ -2098,27 +2117,39 @@ export default function GalleryDashboardPage() {
             <TestDataControls />
 
             <div className={`max-w-6xl pb-8 ${studioOverviewStackClass}`}>
+          <StudioRoleBand
+            role="organisation"
+            {...studioRoleBandCopy("organisation", t)}
+            metrics={[
+              {
+                label: t("studio.overview.worksRepresented"),
+                value: worksCount,
+              },
+              {
+                label: t("gallery.hero.worksVerified"),
+                value: verifiedWorksCount,
+              },
+              {
+                label: t("gallery.hero.verificationPending"),
+                value: awaitingVerificationCount,
+              },
+            ]}
+          />
           <GalleryInstitutionalHero
             orgName={orgName}
             slug={gallery.slug}
             verified={gallery.verified}
-            description={identityDescription || null}
             location={identityLocation || null}
             subscriptionStatus={gallery.subscription_status}
             artworks={artworks}
-            worksCount={worksCount}
-            verifiedWorksCount={verifiedWorksCount}
-            verificationPct={verificationPct}
-            awaitingVerificationCount={awaitingVerificationCount}
-            institutionFiledCount={
-              representationSummary?.institution_filed ?? 0
-            }
-            artistConfirmedCount={representationSummary?.artist_confirmed ?? 0}
+            worksOnFile={worksCount}
+            verifiedWorks={verifiedWorksCount}
+            pendingVerification={awaitingVerificationCount}
+            artistsRepresented={artists.length}
+            certificatesIssued={certificatesIssued}
+            activeDeals={activeDeals}
             participationPendingCount={
               representationSummary?.participation_pending ?? 0
-            }
-            rosterInvitesPendingCount={
-              representationSummary?.roster_invites_pending ?? 0
             }
             amendmentsPendingCount={
               representationSummary?.amendments_pending ?? 0
@@ -2129,6 +2160,30 @@ export default function GalleryDashboardPage() {
             isAdmin={isAdmin}
             onAboutWorkspace={() => setWorkspaceGuideOpen(true)}
             onGoToAmendments={scrollToGalleryAmendments}
+          />
+
+          <OrganisationVerificationCommand
+            galleryVerified={gallery.verified}
+            verifyQueue={verifyQueue}
+            verifyBusy={verifyBusy}
+            artistNameById={artistNameById}
+            hasLiveCertificateByArtworkId={
+              integrityContext.hasLiveCertificateByArtworkId
+            }
+            hasRevokedCertificateByArtworkId={
+              integrityContext.hasRevokedCertificateByArtworkId
+            }
+            onReview={(id) => {
+              const target = artworks.find((a) => a.id === id);
+              if (target) setVerifyTarget(target);
+            }}
+            onVerify={(id) => {
+              const target = artworks.find((a) => a.id === id);
+              if (target) setVerifyTarget(target);
+            }}
+            onRequestAmendment={scrollToGalleryAmendments}
+            maxVisible={5}
+            onViewAll={() => selectGallerySection("verification")}
           />
 
         {profileError ? (
@@ -2158,6 +2213,7 @@ export default function GalleryDashboardPage() {
         ) : null}
 
         <StudioContentSlab
+          className="studio-reveal opacity-[0.97]"
           title={t("gallery.intelligence.title")}
           actions={
             insightLoading ? (
@@ -2286,13 +2342,14 @@ export default function GalleryDashboardPage() {
           </div>
         </StudioContentSlab>
 
+        <div className="studio-reveal opacity-[0.96]">
         <StudioCatalogueMetricsPanels
           role="gallery"
           metrics={catalogueMetrics}
           onOpenValueInsight={() => void openInsight("value")}
         />
 
-        <StudioContentSlab compact headerless title="">
+        <StudioContentSlab compact headerless title="" className="opacity-95">
           <div className="flex flex-col gap-1.5 text-[13px] leading-snug text-neutral-600 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-6 sm:gap-y-1">
             <p className="tabular-nums">
               {fillMessage(t("gallery.summary.representedWorks"), {
@@ -2316,6 +2373,7 @@ export default function GalleryDashboardPage() {
             )}
           </div>
         </StudioContentSlab>
+        </div>
             </div>
           </>
         ) : null}
@@ -2355,9 +2413,10 @@ export default function GalleryDashboardPage() {
           <section
             ref={artistsSectionRef}
             id="gallery-represented-artists"
-            className="scroll-mt-20 overflow-hidden rounded-[1.25rem] border border-neutral-900/[0.07] bg-gradient-to-br from-white/90 via-white/70 to-neutral-50/40 shadow-[0_1px_0_rgba(15,23,42,0.05),0_24px_48px_-28px_rgba(15,23,42,0.12)] backdrop-blur-md"
+            className="studio-reveal scroll-mt-20 max-w-6xl opacity-[0.96]"
           >
-              <div className="border-b border-neutral-900/[0.06] bg-white/40 px-5 py-5 sm:px-7 sm:py-6">
+            <div className={`${studioV2.surface.filingSheet} overflow-hidden`}>
+              <div className="border-b border-[var(--v2-border)] px-5 py-5 sm:px-7 sm:py-6">
                 <div className="flex flex-wrap items-end justify-between gap-4">
                   <div>
                     <InfoTooltip text={t("gallery.roster.tooltip")} />
@@ -2490,7 +2549,8 @@ export default function GalleryDashboardPage() {
                   </>
                 )}
               </div>
-            </section>
+            </div>
+          </section>
         ) : null}
 
         {activeSection === "invitations" ? (
@@ -2531,7 +2591,7 @@ export default function GalleryDashboardPage() {
         ) : null}
 
         {activeSection === "catalogue" ? (
-          <>
+          <div className="studio-reveal max-w-6xl opacity-[0.96]">
             <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
               <div>
                 <InfoTooltip text={t("gallery.catalogue.tooltip")} />
@@ -2725,57 +2785,32 @@ export default function GalleryDashboardPage() {
                 </ul>
               )}
             </section>
-          </>
+          </div>
         ) : null}
 
         {activeSection === "verification" ? (
-            <section
-              ref={verificationSectionRef}
-              id="gallery-verification-queue"
-              className="scroll-mt-24 rounded-2xl border border-neutral-900/[0.05] bg-white/35 p-6 backdrop-blur-sm sm:p-7"
-            >
-              <InfoTooltip text={t("gallery.verification.tooltip")} />
-              <h2 className="font-serif text-lg font-normal text-neutral-950 md:text-xl">
-                {t(ORGANISATION_SECTION_LABEL_KEYS.verification)}
-              </h2>
-              {!gallery.verified ? (
-                <p className="mt-4 text-[13px] text-neutral-500">
-                  {t("gallery.verification.notVerifiedInstitution")}
-                </p>
-              ) : verifyQueue.length === 0 ? (
-                <p className="mt-4 text-[13px] text-neutral-400">
-                  {t("gallery.verification.nothingAwaiting")}
-                </p>
-              ) : (
-                <>
-                  <ul className="mt-5 divide-y divide-neutral-900/[0.05]">
-                    {verifyQueue.map((w) => (
-                      <li
-                        key={w.id}
-                        className="flex flex-wrap items-start justify-between gap-3 py-3.5 first:pt-0"
-                      >
-                        <div className="min-w-0">
-                          <p className="text-[14px] font-medium text-neutral-950">
-                            {(w.title || "").trim() || t("gallery.fallback.untitled")}
-                          </p>
-                          {w.registry_id ? (
-                            <p className="font-mono text-[10px] text-neutral-400">{w.registry_id}</p>
-                          ) : null}
-                        </div>
-                        <button
-                          type="button"
-                          disabled={verifyBusy === w.id}
-                          onClick={() => setVerifyTarget(w)}
-                          className="shrink-0 rounded-md bg-neutral-950 px-3.5 py-1.5 text-sm font-semibold text-white shadow-md shadow-neutral-900/15 transition [transition-timing-function:var(--rrowm-ease-out)] hover:bg-neutral-800 disabled:opacity-50"
-                        >
-                          {verifyBusy === w.id ? "…" : t("gallery.verification.markVerified")}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-            </section>
+          <OrganisationVerificationCommand
+            galleryVerified={gallery.verified}
+            verifyQueue={verifyQueue}
+            verifyBusy={verifyBusy}
+            artistNameById={artistNameById}
+            hasLiveCertificateByArtworkId={
+              integrityContext.hasLiveCertificateByArtworkId
+            }
+            hasRevokedCertificateByArtworkId={
+              integrityContext.hasRevokedCertificateByArtworkId
+            }
+            onReview={(id) => {
+              const target = artworks.find((a) => a.id === id);
+              if (target) setVerifyTarget(target);
+            }}
+            onVerify={(id) => {
+              const target = artworks.find((a) => a.id === id);
+              if (target) setVerifyTarget(target);
+            }}
+            onRequestAmendment={scrollToGalleryAmendments}
+            sectionRef={verificationSectionRef}
+          />
         ) : null}
 
         {activeSection === "opportunities" ? (

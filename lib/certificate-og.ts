@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
+  artworkTrustOgLabelKey,
+  parseArtworkTrustTier,
+} from "@/lib/artwork-trust-tier";
+import {
   buildCertificateShareContext,
   buildCertificateShareText,
   buildCertificateShareTitle,
@@ -15,6 +19,7 @@ import { warnSupabaseRpc } from "@/lib/supabase-rpc-error";
 
 export type CertificateOgBundle = {
   context: CertificateShareContext;
+  trustOgLine: string | null;
   indexable: boolean;
 };
 
@@ -30,38 +35,48 @@ function truncateDescription(text: string, max = 160): string {
   return `${trimmed.slice(0, max - 1).trimEnd()}…`;
 }
 
-export function resolveCertificateOgLines(context: CertificateShareContext) {
-  const title = buildCertificateShareTitle(context, tOg);
-  const description = buildCertificateShareText(context, tOg);
+export function resolveCertificateTrustOgLine(
+  context: CertificateShareContext
+): string | null {
+  const key = artworkTrustOgLabelKey(context.trustTier);
+  return key ? tOg(key) : null;
+}
+
+export function resolveCertificateOgLines(bundle: CertificateOgBundle) {
+  const title = buildCertificateShareTitle(bundle.context, tOg);
+  const body = buildCertificateShareText(bundle.context, tOg);
+  const trustLine = bundle.trustOgLine;
+  const description = truncateDescription(
+    [trustLine, body].filter(Boolean).join(" · ")
+  );
   const alt =
-    context.publicity === "full"
+    bundle.context.publicity === "full"
       ? fillMessage(tOg("certificate.share.ogAlt"), {
-          title: context.artworkTitle.trim() || "Work on file",
+          title: bundle.context.artworkTitle.trim() || "Work on file",
         })
       : tOg("certificate.share.ogAltRestricted");
 
-  return { title, description, alt };
+  return { title, description, alt, trustLine };
 }
 
 export function buildCertificateMetadata(bundle: CertificateOgBundle): Metadata {
-  const lines = resolveCertificateOgLines(bundle.context);
+  const lines = resolveCertificateOgLines(bundle);
   const canonicalUrl = certificateShareAbsoluteUrl(bundle.context.registryId, getSiteUrl());
   const ogImageUrl = certificateShareAbsoluteOgImageUrl(
     bundle.context.registryId,
     getSiteUrl()
   );
-  const description = truncateDescription(lines.description);
 
   return {
     title: lines.title,
-    description,
+    description: lines.description,
     alternates: { canonical: canonicalUrl },
     robots: bundle.indexable
       ? { index: true, follow: true }
       : { index: false, follow: false },
     openGraph: {
       title: lines.title,
-      description,
+      description: lines.description,
       url: canonicalUrl,
       siteName: "RROWM",
       type: "website",
@@ -78,7 +93,7 @@ export function buildCertificateMetadata(bundle: CertificateOgBundle): Metadata 
     twitter: {
       card: "summary_large_image",
       title: lines.title,
-      description,
+      description: lines.description,
       images: [ogImageUrl],
     },
   };
@@ -122,7 +137,7 @@ export async function loadCertificateOgBundle(
   if (artworkError) warnSupabaseRpc("certificate og artwork", artworkError);
   if (!artwork?.id) return null;
 
-  const isVerified = String(artwork.verification_status || "") === "verified";
+  const trustTier = parseArtworkTrustTier(artwork.verification_status);
 
   const { data: certRows, error: certErr } = await supabase.rpc(
     "get_certificate_public_status_single",
@@ -153,7 +168,7 @@ export async function loadCertificateOgBundle(
   if (hasCertificate) {
     const { data: certificate } = await supabase
       .from("certificates")
-      .select("issued_at")
+      .select("issued_at, certificate_class")
       .eq("artwork_id", artwork.id)
       .maybeSingle();
     issuedAt = certificate?.issued_at ?? null;
@@ -164,13 +179,16 @@ export async function loadCertificateOgBundle(
     artworkTitle: String(artwork.title || "").trim() || "Work on file",
     artistName,
     issuedAt,
-    isVerified,
+    trustTier,
     hasCertificate,
     revoked,
   });
 
+  const trustOgLine = resolveCertificateTrustOgLine(context);
+
   return {
     context,
+    trustOgLine,
     indexable: context.publicity === "full",
   };
 }

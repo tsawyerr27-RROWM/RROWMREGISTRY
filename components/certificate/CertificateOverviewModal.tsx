@@ -107,7 +107,7 @@ export function CertificateOverviewModal({ registryId, onClose }: Props) {
         registryId,
         artworkTitle: title || "Work on file",
         artistName,
-        isVerified,
+        verificationStatus,
         hasCertificate,
         revoked: isRevoked,
       })

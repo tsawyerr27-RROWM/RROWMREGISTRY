@@ -53,7 +53,7 @@ export function OrganisationExplorerContent({
     represented === "represented";
 
   return (
-    <div className="mt-10">
+    <div className="mt-6">
       <OrganisationExplorerFilters
         action={basePath}
         q={q}

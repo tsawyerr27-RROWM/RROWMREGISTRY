@@ -1,9 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { createPortal } from "react-dom";
 
 import { NotificationInboxPanel } from "@/components/notifications/NotificationInboxPanel";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { useMaxWidth767 } from "@/hooks/useMaxWidth767";
 
 type Props = {
   className?: string;
@@ -35,11 +38,16 @@ function findScrollRegion(root: HTMLElement): HTMLElement | null {
 
 export function NotificationInboxBell({ className = "", tone = "light" }: Props) {
   const { t } = useLocalePreferences();
+  const pathname = usePathname();
   const menuId = useId();
-  const rootRef = useRef<HTMLDivElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMaxWidth767();
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const portalRootRef = useRef<HTMLDivElement | null>(null);
+  const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [anchor, setAnchor] = useState<DOMRect | null>(null);
 
   const refreshUnreadCount = useCallback(async () => {
     try {
@@ -54,17 +62,52 @@ export function NotificationInboxBell({ className = "", tone = "light" }: Props)
     }
   }, []);
 
+  const updateAnchor = useCallback(() => {
+    if (!buttonRef.current) {
+      setAnchor(null);
+      return;
+    }
+    setAnchor(buttonRef.current.getBoundingClientRect());
+  }, []);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     void refreshUnreadCount();
   }, [refreshUnreadCount]);
 
   useEffect(() => {
     if (!open) return;
+    void refreshUnreadCount();
+  }, [open, refreshUnreadCount]);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    updateAnchor();
+
+    const onLayout = () => updateAnchor();
+    window.addEventListener("resize", onLayout);
+    window.addEventListener("scroll", onLayout, true);
+    return () => {
+      window.removeEventListener("resize", onLayout);
+      window.removeEventListener("scroll", onLayout, true);
+    };
+  }, [open, updateAnchor]);
+
+  useEffect(() => {
+    if (!open) return;
 
     const onPointerDown = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
+      const target = event.target as Node;
+      if (buttonRef.current?.contains(target)) return;
+      if (sheetRef.current?.contains(target)) return;
+      setOpen(false);
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
@@ -81,11 +124,11 @@ export function NotificationInboxBell({ className = "", tone = "light" }: Props)
   useEffect(() => {
     if (!open) return;
 
-    const dropdown = dropdownRef.current;
-    if (!dropdown) return;
+    const sheet = sheetRef.current;
+    if (!sheet) return;
 
     const onWheel = (event: WheelEvent) => {
-      const scrollEl = findScrollRegion(dropdown);
+      const scrollEl = findScrollRegion(sheet);
       if (!scrollEl) {
         event.preventDefault();
         return;
@@ -106,52 +149,129 @@ export function NotificationInboxBell({ className = "", tone = "light" }: Props)
       scrollEl.scrollTop = nextTop;
     };
 
-    dropdown.addEventListener("wheel", onWheel, { passive: false });
-    return () => dropdown.removeEventListener("wheel", onWheel);
+    sheet.addEventListener("wheel", onWheel, { passive: false });
+    return () => sheet.removeEventListener("wheel", onWheel);
   }, [open]);
+
+  useEffect(() => {
+    if (!open) {
+      document.body.style.overflow = "";
+      return;
+    }
+
+    if (isMobile) {
+      document.body.style.overflow = "hidden";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobile, open]);
+
+  useEffect(() => {
+    return () => {
+      const portalRoot = portalRootRef.current;
+      if (portalRoot?.parentNode) {
+        portalRoot.parentNode.removeChild(portalRoot);
+      }
+      portalRootRef.current = null;
+      document.body.style.overflow = "";
+    };
+  }, []);
 
   const buttonClass =
     tone === "dark"
       ? "text-white/85 hover:text-white"
       : "text-neutral-600 hover:text-neutral-950";
 
-  return (
-    <div ref={rootRef} className={`relative ${className}`}>
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-controls={menuId}
-        aria-label={
-          unreadCount > 0
-            ? `${t("nav.inbox")} · ${unreadCount}`
-            : t("nav.inbox")
-        }
-        onClick={() => {
-          setOpen((prev) => !prev);
-        }}
-        className={`relative inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl transition sm:min-h-0 sm:min-w-0 sm:px-2 ${buttonClass}`}
-      >
-        <BellIcon className="h-5 w-5" />
-        {unreadCount > 0 ? (
-          <span className="absolute right-1.5 top-2 h-2 w-2 rounded-full bg-[var(--v2-ink)] ring-2 ring-white/90 sm:right-0.5 sm:top-1.5" />
-        ) : null}
-      </button>
+  const desktopSheetStyle =
+    !isMobile && anchor
+      ? (() => {
+          const margin = 16;
+          const gap = 10;
+          const spaceBelow = window.innerHeight - anchor.bottom - margin;
+          const estimatedHeight = Math.min(512, window.innerHeight - margin * 2);
+          const placeAbove = spaceBelow < estimatedHeight && anchor.top > estimatedHeight;
+          return {
+            top: placeAbove
+              ? Math.max(margin, anchor.top - gap - estimatedHeight)
+              : Math.min(anchor.bottom + gap, window.innerHeight - margin),
+            right: Math.max(margin, window.innerWidth - anchor.right),
+            maxHeight: `min(32rem, calc(100dvh - ${margin * 2}px))`,
+          } as const;
+        })()
+      : undefined;
 
-      {open ? (
-        <div
-          id={menuId}
-          ref={dropdownRef}
-          className="ds-z-floating absolute right-0 top-[calc(100%+0.625rem)] z-50 flex max-h-[min(28rem,calc(100dvh-5.5rem))] w-[min(22.5rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-[1.5rem] border border-[color:rgba(185,145,90,0.16)] bg-gradient-to-b from-[#fffcf7] via-[#faf6ef] to-[#f3efe6] p-4 shadow-[0_28px_72px_-28px_rgba(40,25,10,0.22),0_8px_24px_-12px_rgba(120,90,40,0.12),inset_0_1px_0_rgba(255,255,255,0.92)] backdrop-blur-xl"
+  const portal =
+    open && mounted
+      ? createPortal(
+          <div
+            ref={portalRootRef}
+            className="command-inbox-portal fixed inset-0 z-[60] md:pointer-events-none"
+          >
+            <button
+              type="button"
+              className="command-inbox-backdrop fixed inset-0 bg-[var(--v2-ink)]/28 md:hidden motion-reduce:transition-none"
+              aria-label="Close inbox"
+              onClick={() => setOpen(false)}
+            />
+
+            <div
+              id={menuId}
+              ref={sheetRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label={t("notifications.inbox.title")}
+              style={desktopSheetStyle}
+              className={`command-inbox-sheet pointer-events-auto fixed flex max-h-[min(85dvh,40rem)] w-full flex-col overflow-hidden v2-surface-glass-dark v2-radius-modal p-1.5 shadow-[var(--v2-shadow-cinematic)] motion-reduce:transition-none md:max-h-[min(32rem,calc(100dvh-6rem))] md:w-[min(440px,calc(100vw-2rem))] ${
+                isMobile
+                  ? "inset-x-0 bottom-0 rounded-b-none rounded-t-[var(--v2-radius-modal)]"
+                  : ""
+              }`}
+            >
+              <div className="v2-surface-paper v2-radius-card flex min-h-0 flex-1 flex-col overflow-hidden">
+                <NotificationInboxPanel
+                  variant="panel"
+                  limit={8}
+                  className="min-h-0 flex-1 p-4"
+                  onUnreadCountChange={setUnreadCount}
+                  onNavigate={() => setOpen(false)}
+                  onClose={() => setOpen(false)}
+                  showClose={isMobile}
+                />
+              </div>
+            </div>
+          </div>,
+          document.body
+        )
+      : null;
+
+  return (
+    <>
+      <div className={`relative ${className}`}>
+        <button
+          ref={buttonRef}
+          type="button"
+          aria-expanded={open}
+          aria-controls={open ? menuId : undefined}
+          aria-haspopup="dialog"
+          aria-label={
+            unreadCount > 0
+              ? `${t("nav.inbox")} · ${unreadCount}`
+              : t("nav.inbox")
+          }
+          onClick={() => {
+            setOpen((prev) => !prev);
+          }}
+          className={`relative inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl transition motion-reduce:transition-none sm:min-h-0 sm:min-w-0 sm:px-2 ${buttonClass}`}
         >
-          <NotificationInboxPanel
-            variant="panel"
-            limit={8}
-            className="min-h-0 flex-1"
-            onUnreadCountChange={setUnreadCount}
-            onNavigate={() => setOpen(false)}
-          />
-        </div>
-      ) : null}
-    </div>
+          <BellIcon className="h-5 w-5" />
+          {unreadCount > 0 ? (
+            <span className="absolute right-1.5 top-2 h-2 w-2 rounded-full bg-[var(--v2-ink)] ring-2 ring-white/90 sm:right-0.5 sm:top-1.5" />
+          ) : null}
+        </button>
+      </div>
+      {portal}
+    </>
   );
 }

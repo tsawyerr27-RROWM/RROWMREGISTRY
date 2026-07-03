@@ -5,8 +5,12 @@ import {
   FIELD_RECORD_EXPLORER_PAGE_SIZE,
   type RecordExplorerCertificateFilter,
   type RecordExplorerSort,
-  type RecordExplorerVerifiedFilter,
+  type RecordExplorerTrustFilter,
 } from "@/lib/field-record-explorer-params";
+import {
+  isInstitutionallyVerified,
+  parseArtworkTrustTier,
+} from "@/lib/artwork-trust-tier";
 import {
   fieldCreativeHref,
   fieldExplorerRecordsHref,
@@ -33,6 +37,7 @@ export type RecordExplorerRow = {
   year: number | null;
   medium: string | null;
   recordVerified: boolean;
+  trustTier: ReturnType<typeof parseArtworkTrustTier>;
   artistConfirmationOnFile: boolean;
   organisationVerified: boolean;
   organisationName: string | null;
@@ -164,7 +169,7 @@ export async function fetchRecordExplorerList(
     creative: string;
     organisation: string;
     practice: string;
-    verified: RecordExplorerVerifiedFilter;
+    trust: RecordExplorerTrustFilter;
     certificate: RecordExplorerCertificateFilter;
   }
 ): Promise<{ rows: RecordExplorerRow[]; total: number; basePath: string }> {
@@ -391,7 +396,8 @@ export async function fetchRecordExplorerList(
       artist?.full_name?.trim() ||
       null;
 
-    const recordVerified = row.verification_status === "verified";
+    const recordVerified = isInstitutionallyVerified(row.verification_status);
+    const trustTier = parseArtworkTrustTier(row.verification_status);
     const cert = certificateMap.get(row.id);
     const hasCertificate = Boolean(cert);
     const certificateRevoked = Boolean(cert?.revoked);
@@ -411,8 +417,11 @@ export async function fetchRecordExplorerList(
       year: row.year,
       medium: row.medium,
       recordVerified,
+      trustTier,
       artistConfirmationOnFile:
-        recordVerified || artist?.verification_status === "verified",
+        trustTier === "self_attested" ||
+        recordVerified ||
+        artist?.verification_status === "verified",
       organisationVerified,
       organisationName,
       organisationHref: orgHref,
@@ -439,8 +448,8 @@ export async function fetchRecordExplorerList(
     }
   }
 
-  if (args.verified === "verified") {
-    enriched = enriched.filter((row) => row.recordVerified);
+  if (args.trust !== "all") {
+    enriched = enriched.filter((row) => row.trustTier === args.trust);
   }
 
   if (args.certificate === "present") {

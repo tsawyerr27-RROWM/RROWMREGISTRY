@@ -1,3 +1,8 @@
+import {
+  canParticipateInOwnershipFlow,
+  parseArtworkTrustTier,
+  type ArtworkTrustTier,
+} from "@/lib/artwork-trust-tier";
 import { fillMessage, type MessageKey } from "@/lib/locale-messages";
 import { getSiteUrl } from "@/lib/site-url";
 
@@ -8,6 +13,7 @@ export type CertificateShareContext = {
   artworkTitle: string;
   artistName?: string | null;
   issuedAt?: string | null;
+  trustTier: ArtworkTrustTier;
   publicity: CertificateSharePublicity;
   revoked?: boolean;
 };
@@ -50,11 +56,17 @@ export function certificateShareDownloadImagePath(registryId: string): string {
 }
 
 export function resolveCertificateSharePublicity(args: {
-  isVerified: boolean;
+  trustTier: ArtworkTrustTier;
   hasCertificate: boolean;
   revoked: boolean;
 }): CertificateSharePublicity {
-  if (args.isVerified && args.hasCertificate && !args.revoked) return "full";
+  if (
+    args.hasCertificate &&
+    !args.revoked &&
+    canParticipateInOwnershipFlow(args.trustTier)
+  ) {
+    return "full";
+  }
   return "restricted";
 }
 
@@ -87,18 +99,22 @@ export function buildCertificateShareContext(args: {
   artworkTitle: string;
   artistName?: string | null;
   issuedAt?: string | null;
-  isVerified: boolean;
+  verificationStatus?: string | null;
+  trustTier?: ArtworkTrustTier;
   hasCertificate: boolean;
   revoked?: boolean;
 }): CertificateShareContext {
+  const trustTier =
+    args.trustTier ?? parseArtworkTrustTier(args.verificationStatus);
   return {
     registryId: args.registryId.trim(),
     artworkTitle: args.artworkTitle,
     artistName: args.artistName ?? null,
     issuedAt: args.issuedAt ?? null,
+    trustTier,
     revoked: Boolean(args.revoked),
     publicity: resolveCertificateSharePublicity({
-      isVerified: args.isVerified,
+      trustTier,
       hasCertificate: args.hasCertificate,
       revoked: Boolean(args.revoked),
     }),

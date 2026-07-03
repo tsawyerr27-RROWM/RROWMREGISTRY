@@ -1,7 +1,6 @@
 "use client";
 
 import type { ArtworkStatusFilter, RegistrySort } from "@/lib/registry-list-params";
-import { REGISTRY_FILTER_LABELS } from "@/lib/representation-language";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 
 type Props = {
@@ -89,10 +88,9 @@ export function RegistryListFilters({
             className={selectClass}
           >
             <option value="all">{t("registry.filters.allWorks")}</option>
-            <option value="verified">{REGISTRY_FILTER_LABELS.verifiedOnly}</option>
-            <option value="pending">
-              {REGISTRY_FILTER_LABELS.participationPending}
-            </option>
+            <option value="filed">{t("trust.tier.filed.label")}</option>
+            <option value="self_attested">{t("trust.tier.self_attested.label")}</option>
+            <option value="verified">{t("trust.tier.verified.label")}</option>
           </select>
         </div>
       ) : null}

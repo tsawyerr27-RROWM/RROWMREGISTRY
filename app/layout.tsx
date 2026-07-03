@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import "./globals.css";
 import { Suspense } from "react";
 
@@ -39,8 +39,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const cookieStore = await cookies();
+  const headerStore = await headers();
   const initialRegionId =
     parseRegionId(cookieStore.get(REGION_STORAGE_KEY)?.value) ?? "gb";
+  const initialPathname = headerStore.get("x-rrowm-pathname") ?? "";
 
   return (
     <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
@@ -57,7 +59,7 @@ export default async function RootLayout({
           <div
             className={`${rrowmV2Scope} ds-z-content relative flex min-h-screen flex-col print:min-h-0`}
           >
-            <Header />
+            <Header initialPathname={initialPathname} />
             <main className="flex-1 print:min-h-0">{children}</main>
             <Footer />
             <CookieBanner />

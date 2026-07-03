@@ -15,6 +15,7 @@ import {
 } from "@/components/auth/AuthFieldStyles";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { useTelemetry } from "@/hooks/useTelemetry";
 import { fillMessage } from "@/lib/locale-messages";
 
 const allowedRoles = ["artist", "gallery", "collector"] as const;
@@ -78,6 +79,7 @@ function resolveInviteSurface(
 export function SignupClient() {
   const router = useRouter();
   const { t } = useLocalePreferences();
+  const { track } = useTelemetry();
   const sb = useSupabaseBrowserLazy();
   const searchParams = useSearchParams();
   const inviteTokenParam = useMemo(
@@ -254,6 +256,12 @@ export function SignupClient() {
     }
 
     setSubmitting(true);
+    track({
+      eventName: "signup_started",
+      surface: "auth",
+      actorRole: role,
+      metadata: { role },
+    });
     const origin =
       typeof window !== "undefined" ? window.location.origin : "";
     const completePath = `/signup/complete?${signupCompleteRedirectQs.toString()}`;
@@ -301,6 +309,12 @@ export function SignupClient() {
         );
         await acceptPendingGalleryInvite().catch(() => {});
       }
+      track({
+        eventName: "signup_completed",
+        surface: "auth",
+        actorRole: role,
+        metadata: { role, path: "instant_session" },
+      });
       deferredRouterReplace(router, "/onboarding");
       return;
     }

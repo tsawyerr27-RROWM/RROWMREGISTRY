@@ -1,5 +1,4 @@
 import {
-  FIELD_EXPLORER,
   FIELD_EXPLORER_CREATIVES,
   FIELD_EXPLORER_ORGANISATIONS,
   FIELD_EXPLORER_RECORDS,
@@ -18,7 +17,7 @@ export function fieldHomeHref(): string {
 }
 
 export function fieldExplorerHref(): string {
-  return FIELD_EXPLORER;
+  return FIELD_ROOT;
 }
 
 export function fieldExplorerCreativesHref(): string {

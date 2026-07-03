@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 
+import { FieldPageHero } from "@/components/Field/FieldPageHero";
+import { FieldExplorerInfoTooltip } from "@/components/Field/FieldExplorerInfoTooltip";
 import { FieldV2Container } from "@/components/Field/FieldV2Container";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import {
@@ -18,79 +20,60 @@ export function FieldHomeContent() {
   const { t } = useLocalePreferences();
 
   const portals = [
-    {
-      href: fieldExplorerRecordsHref(),
-      label: t("field.explorer.tab.records"),
-      body: t("field.explorer.records.orientation"),
-      signal: "registration" as const,
-    },
-    {
-      href: fieldExplorerCreativesHref(),
-      label: t("field.explorer.tab.creatives"),
-      body: t("field.explorer.creatives.orientation"),
-      signal: "valuation" as const,
-    },
+    { href: fieldExplorerRecordsHref(), label: t("field.explorer.tab.records") },
+    { href: fieldExplorerCreativesHref(), label: t("field.explorer.tab.creatives") },
     {
       href: fieldExplorerOrganisationsHref(),
       label: t("field.explorer.tab.organisations"),
-      body: t("field.explorer.organisations.orientation"),
-      signal: "transfer" as const,
     },
-    {
-      href: fieldOpportunitiesHref(),
-      label: t("field.explorer.tab.opportunities"),
-      body: t("field.opportunities.orientation"),
-      signal: "sale" as const,
-    },
+    { href: fieldOpportunitiesHref(), label: t("field.explorer.tab.opportunities") },
   ];
 
   return (
-    <FieldV2Container className="pt-4 md:pt-6">
-      <header className={`relative ${fieldV2.surface.filingMajor} p-8 lg:p-12 xl:p-14`}>
-        <p className={fieldV2.type.metaLabel}>{t("nav.fieldCommand")}</p>
-        <h1 className={`${fieldV2.type.recordTitle} mt-4 max-w-3xl`}>
-          {t("field.home.title")}
-        </h1>
-        <p className={`${fieldV2.type.metaValue} mt-6 max-w-2xl text-base`}>
-          {t("field.home.lede")}
-        </p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Link
-            href={fieldExplorerHref()}
-            className="v2-cta-primary inline-flex !min-h-0 px-5 py-2.5 text-xs"
-          >
-            {t("field.explorer.hub.title")}
-          </Link>
-          <Link
-            href={fieldVerifyHref()}
-            className="v2-cta-secondary inline-flex !min-h-0 px-5 py-2.5 text-xs"
-          >
-            {t("field.home.verifyLink")}
-          </Link>
-        </div>
-      </header>
+    <FieldV2Container className="pt-2 md:pt-3">
+      <FieldPageHero
+        title={t("field.home.title")}
+        infoTooltip={
+          <FieldExplorerInfoTooltip
+            text={
+              <>
+                <span className="block">{t("field.home.lede")}</span>
+                <span className="mt-2 block">{t("field.home.registryNote")}</span>
+              </>
+            }
+          />
+        }
+        actions={
+          <>
+            <Link
+              href={fieldExplorerHref()}
+              className="v2-cta-primary inline-flex min-h-[44px] items-center px-4 py-2.5 text-xs"
+            >
+              {t("field.explorer.hub.title")}
+            </Link>
+            <Link
+              href={fieldVerifyHref()}
+              className="v2-cta-secondary inline-flex min-h-[44px] items-center px-4 py-2.5 text-xs"
+            >
+              {t("field.home.verifyLink")}
+            </Link>
+          </>
+        }
+      />
 
-      <div className="mt-12 grid gap-5 md:grid-cols-2">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
         {portals.map((portal) => (
           <Link
             key={portal.href}
             href={portal.href}
-            className={`${fieldV2.surface.indexCard} group block p-7 md:p-8 ${fieldV2.motion.hover}`}
+            className={`${fieldV2.surface.indexCard} group flex min-h-[56px] items-center p-4 md:p-5 ${fieldV2.motion.hover}`}
           >
-            <p className={fieldV2.type.metaLabel}>{portal.label}</p>
-            <p
-              className={`${fieldV2.type.sectionTitle} mt-3 text-xl md:text-2xl`}
-            >
+            <p className={`${fieldV2.type.sectionTitle} text-lg md:text-xl`}>
               {portal.label}
             </p>
-            <p className={`${fieldV2.type.metaValue} mt-3`}>{portal.body}</p>
           </Link>
         ))}
       </div>
-
-      <p className={`${fieldV2.type.metaValue} mt-14 max-w-2xl text-sm`}>
-        {t("field.home.registryNote")}
-      </p>
     </FieldV2Container>
   );
 }

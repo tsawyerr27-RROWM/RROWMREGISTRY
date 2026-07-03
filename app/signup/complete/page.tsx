@@ -13,6 +13,7 @@ import { persistArtworkAuthInviteFromReturnPath } from "@/lib/accept-artwork-aut
 import { sanitizeAuthReturnPath } from "@/lib/auth-return-path";
 import { deferredRouterReplace } from "@/lib/deferred-app-router";
 import { resolvePostAuthRedirectPath } from "@/lib/post-auth-redirect";
+import { trackTelemetryEvent } from "@/hooks/useTelemetry";
 
 const allowedRoles = ["artist", "gallery", "collector"] as const;
 type Role = (typeof allowedRoles)[number];
@@ -33,7 +34,7 @@ function defaultDisplayName(user: User) {
 
 async function waitForUser(
   getClient: () => SupabaseClient,
-  maxAttempts = 20
+  maxAttempts = 40
 ): Promise<User | null> {
   for (let i = 0; i < maxAttempts; i++) {
     const supabase = getClient();
@@ -153,6 +154,12 @@ export default function CompleteSignupPage() {
         const dest = await resolvePostAuthRedirectPath(supabase, user.id, {
           explicitNext: nextParam,
         });
+        trackTelemetryEvent({
+          eventName: "signup_completed",
+          surface: "auth",
+          actorRole: role,
+          metadata: { role, path: "existing_profile" },
+        });
         deferredRouterReplace(router, dest);
         return;
       }
@@ -179,6 +186,12 @@ export default function CompleteSignupPage() {
       }
       const dest = await resolvePostAuthRedirectPath(supabase, user.id, {
         explicitNext: nextParam,
+      });
+      trackTelemetryEvent({
+        eventName: "signup_completed",
+        surface: "auth",
+        actorRole: role,
+        metadata: { role, path: "new_profile" },
       });
       deferredRouterReplace(router, dest);
     };

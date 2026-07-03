@@ -18,6 +18,8 @@ function isAdminRoute(pathname: string): boolean {
  */
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
+  const pathname = request.nextUrl.pathname;
+  response.headers.set("x-rrowm-pathname", pathname);
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -40,8 +42,6 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const pathname = request.nextUrl.pathname;
-
   if (
     pathname.startsWith("/studio") &&
     !studioLayoutGuardSkipsPath(pathname) &&
@@ -52,9 +52,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (isAdminRoute(request.nextUrl.pathname)) {
-    const isAdminApi = request.nextUrl.pathname.startsWith("/api/admin/");
-    const isAdminLogin = request.nextUrl.pathname === "/admin";
+  if (isAdminRoute(pathname)) {
+    const isAdminApi = pathname.startsWith("/api/admin/");
+    const isAdminLogin = pathname === "/admin";
     if (!isAdminApi && !isAdminLogin) {
       const adminSession = request.cookies.get("rrowm_admin_session");
       if (!adminSession?.value) {

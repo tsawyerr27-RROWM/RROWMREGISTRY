@@ -132,7 +132,9 @@ export function artworkCardParticipationLabel(args: {
 }
 
 export const REGISTRY_FILTER_LABELS = {
-  verifiedOnly: "Institution-linked with artist attestation on file",
+  verifiedOnly: "Institutionally verified records",
+  selfAttestedOnly: "Self-attested records",
+  filedOnly: "Filed records",
   participationPending: CANONICAL_RECORD_PHRASES.artistAttestationMayDeepen,
 } as const;
 

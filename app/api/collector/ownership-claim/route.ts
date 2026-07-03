@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getCanonicalOwner } from "@/lib/canonical-ownership-engine";
+import { canParticipateInOwnershipFlow } from "@/lib/artwork-trust-tier";
 import { logActivityEvent } from "@/lib/log-activity";
 import {
   buildOwnershipClaimNotes,
@@ -9,8 +10,10 @@ import {
 } from "@/lib/collector-ownership-claim";
 import { notifyRegistryTransferRecorded } from "@/lib/notification-hooks/registry";
 import { guardRegistryMutation } from "@/lib/registry-action-security/guards";
+import { captureRuntimeError } from "@/lib/runtime-errors";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
+import { writeTelemetryEvent } from "@/lib/telemetry";
 
 export const runtime = "nodejs";
 
@@ -45,6 +48,7 @@ function safeFilename(raw: string): string {
  * and paths are appended to notes for audit.
  */
 export async function POST(req: Request) {
+  try {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -105,9 +109,12 @@ export async function POST(req: Request) {
   if (artErr || !art?.id) {
     return NextResponse.json({ error: "Artwork not found." }, { status: 404 });
   }
-  if (String(art.verification_status || "") !== "verified") {
+  if (!canParticipateInOwnershipFlow(art.verification_status)) {
     return NextResponse.json(
-      { error: "Only verified registry works can be declared." },
+      {
+        error:
+          "Only self-attested or institutionally verified registry works can be declared.",
+      },
       { status: 400 }
     );
   }
@@ -265,9 +272,25 @@ export async function POST(req: Request) {
     toUserId: user.id,
   });
 
+  void writeTelemetryEvent({
+    eventName: "ownership_claim_completed",
+    surface: "ownership",
+    userId: user.id,
+    actorRole: "collector",
+    metadata: { artwork_id: artworkId, ownership_event_id: eventId },
+  });
+
   return NextResponse.json({
     ok: true,
     ownership_event_id: eventId,
     registry_id: (art.registry_id as string | null) ?? null,
   });
+  } catch (error) {
+    void captureRuntimeError({
+      error,
+      surface: "ownership",
+      route: "/api/collector/ownership-claim",
+    });
+    throw error;
+  }
 }

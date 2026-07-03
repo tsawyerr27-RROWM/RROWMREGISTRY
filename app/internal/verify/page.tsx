@@ -5,6 +5,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { deferredRouterPush } from "@/lib/deferred-app-router";
 import { triggerConsequenceFeedback } from "@/lib/consequence-feedback-runtime";
+import { trackTelemetryEvent } from "@/hooks/useTelemetry";
 import Image from "next/image";
 
 type PendingArtwork = {
@@ -22,46 +23,75 @@ type PendingArtwork = {
   verification_status: string;
 };
 
+type BootPhase = "loading" | "ready" | "error";
+
 export default function InternalVerify() {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [bootPhase, setBootPhase] = useState<BootPhase>("loading");
+  const [bootError, setBootError] = useState<string | null>(null);
   const [artworks, setArtworks] = useState<PendingArtwork[]>([]);
   const [approving, setApproving] = useState<string | null>(null);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
   const router = useRouter();
   const sb = useSupabaseBrowserLazy();
 
   useEffect(() => {
+    let cancelled = false;
+
     const init = async () => {
-      const res = await fetch("/api/admin/check", { credentials: "include" });
-      if (!res.ok) {
-        deferredRouterPush(router, "/admin");
-        return;
+      setBootPhase("loading");
+      setBootError(null);
+
+      try {
+        const res = await fetch("/api/admin/check", { credentials: "include" });
+        if (!res.ok) {
+          if (!cancelled) deferredRouterPush(router, "/admin");
+          return;
+        }
+        const body = (await res.json()) as { isAdmin?: boolean };
+        if (!body?.isAdmin) {
+          if (!cancelled) deferredRouterPush(router, "/admin");
+          return;
+        }
+
+        const { data: unverified, error } = await sb()
+          .from("artworks")
+          .select(
+            "id, title, registry_id, image_url, catalogue_artist_name, medium, dimensions, year_created, created_at, artist_id, filing_gallery_id, verification_status"
+          )
+          .in("verification_status", ["filed", "self_attested"])
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        if (cancelled) return;
+
+        setArtworks((unverified as PendingArtwork[]) || []);
+        setBootPhase("ready");
+        trackTelemetryEvent({
+          eventName: "verification_queue_opened",
+          surface: "verification",
+          metadata: { pending_count: (unverified as PendingArtwork[])?.length ?? 0 },
+        });
+      } catch (err) {
+        if (cancelled) return;
+        console.error("[internal/verify]", err);
+        setBootError(
+          "Could not load pending attestations. Check your connection and try again."
+        );
+        setBootPhase("error");
       }
-      const body = await res.json();
-      if (!body?.isAdmin) {
-        deferredRouterPush(router, "/admin");
-        return;
-      }
-
-      setIsAdmin(true);
-
-      const { data: unverified } = await sb()
-        .from("artworks")
-        .select(
-          "id, title, registry_id, image_url, catalogue_artist_name, medium, dimensions, year_created, created_at, artist_id, filing_gallery_id, verification_status"
-        )
-        .in("verification_status", ["unverified", "pending"])
-        .order("created_at", { ascending: false });
-
-      setArtworks((unverified as PendingArtwork[]) || []);
     };
 
-    init();
+    void init();
+    return () => {
+      cancelled = true;
+    };
   }, [router, sb]);
 
   const approveArtwork = useCallback(
     async (artwork: PendingArtwork) => {
-      if (!isAdmin || approving) return;
+      if (bootPhase !== "ready" || approving) return;
       setApproving(artwork.id);
+      setVerifyError(null);
 
       try {
         const verifyRes = await fetch("/api/admin/verify-artwork", {
@@ -72,31 +102,46 @@ export default function InternalVerify() {
         });
         const verifyBody = (await verifyRes.json()) as { error?: string };
         if (!verifyRes.ok) {
-          alert(verifyBody.error || "Verification failed.");
+          setVerifyError(verifyBody.error || "Verification could not be recorded.");
           return;
         }
 
         setArtworks((prev) => prev.filter((a) => a.id !== artwork.id));
         triggerConsequenceFeedback("sealCommit");
+      } catch {
+        setVerifyError("Verification could not be recorded. Try again.");
       } finally {
         setApproving(null);
       }
     },
-    [isAdmin, approving]
+    [approving, bootPhase]
   );
 
-  if (!isAdmin) {
+  if (bootPhase === "loading") {
     return (
-      <div className="ds-page-environment flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-black to-slate-900">
-        <p className="text-sm text-white/50">
-          Retrieving pending attestations…
-        </p>
+      <div className="ds-page-environment flex min-h-screen items-center justify-center bg-slate-950 text-white">
+        <p className="text-sm text-white/50">Retrieving pending attestations…</p>
+      </div>
+    );
+  }
+
+  if (bootPhase === "error") {
+    return (
+      <div className="ds-page-environment flex min-h-screen flex-col items-center justify-center bg-slate-950 px-6 text-center text-white">
+        <p className="max-w-md text-sm text-white/70">{bootError}</p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="mt-6 rounded-xl border border-white/20 px-5 py-2.5 text-sm text-white/90 transition hover:bg-white/10"
+        >
+          Try again
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-black to-slate-900 text-white">
+    <div className="min-h-screen bg-slate-950 text-white">
       <div className="mx-auto max-w-5xl px-4 pb-16 pt-24 sm:px-6 lg:px-8">
         <header className="mb-12 flex items-center justify-between">
           <div>
@@ -111,6 +156,12 @@ export default function InternalVerify() {
             )}
           </div>
         </header>
+
+        {verifyError ? (
+          <p className="mb-6 rounded-xl border border-red-400/30 bg-red-950/40 px-4 py-3 text-sm text-red-200">
+            {verifyError}
+          </p>
+        ) : null}
 
         {artworks.length === 0 && (
           <div className="liquid-glass-tile-dark flex flex-col items-center justify-center p-16 text-center">
@@ -144,7 +195,6 @@ export default function InternalVerify() {
               className="liquid-glass-tile-dark overflow-hidden"
             >
               <div className="flex gap-6 p-6 md:p-8">
-                {/* Thumbnail */}
                 <div className="relative h-28 w-28 flex-shrink-0 overflow-hidden rounded-lg bg-white/5 md:h-36 md:w-36">
                   {artwork.image_url ? (
                     <Image
@@ -191,35 +241,33 @@ export default function InternalVerify() {
                   )}
                 </div>
 
-                {/* Details */}
                 <div className="flex min-w-0 flex-1 flex-col justify-between">
                   <div>
                     <h2 className="text-lg font-semibold leading-tight text-white md:text-xl">
                       {artwork.title || "Untitled"}
                     </h2>
-                    {artwork.catalogue_artist_name && (
+                    {artwork.catalogue_artist_name ? (
                       <p className="mt-1 text-sm text-white/60">
                         {artwork.catalogue_artist_name}
                       </p>
-                    )}
+                    ) : null}
                     <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/40">
-                      {artwork.registry_id && (
-                        <span className="font-mono">
-                          {artwork.registry_id}
-                        </span>
-                      )}
-                      {artwork.medium && <span>{artwork.medium}</span>}
-                      {artwork.year_created && (
+                      {artwork.registry_id ? (
+                        <span className="font-mono">{artwork.registry_id}</span>
+                      ) : null}
+                      {artwork.medium ? <span>{artwork.medium}</span> : null}
+                      {artwork.year_created ? (
                         <span>{artwork.year_created}</span>
-                      )}
-                      {artwork.dimensions && <span>{artwork.dimensions}</span>}
+                      ) : null}
+                      {artwork.dimensions ? <span>{artwork.dimensions}</span> : null}
                     </div>
                     <p className="mt-2 text-xs text-white/30">
                       Registered{" "}
-                      {new Date(artwork.created_at).toLocaleDateString(
-                        "en-GB",
-                        { day: "numeric", month: "short", year: "numeric" }
-                      )}
+                      {new Date(artwork.created_at).toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
                     </p>
                   </div>
 

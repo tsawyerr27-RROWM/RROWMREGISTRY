@@ -35,6 +35,8 @@ export function isFieldOpportunitiesPath(pathname: string | null | undefined): b
 
 /** Routes that show the Field subheader (Records · Creatives · Organisations · Opportunities). */
 export function isFieldSubnavPath(pathname: string | null | undefined): boolean {
+  if (!pathname) return false;
+  if (pathname === FIELD_ROOT || pathname === FIELD_EXPLORER) return false;
   return isFieldExplorerPath(pathname) || isFieldOpportunitiesPath(pathname);
 }
 

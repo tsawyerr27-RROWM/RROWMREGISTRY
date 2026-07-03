@@ -1,10 +1,11 @@
 "use client";
 
 import { PRACTICE_TYPES } from "@/lib/practice-types";
-import type {
-  RecordExplorerCertificateFilter,
-  RecordExplorerSort,
-  RecordExplorerVerifiedFilter,
+import {
+  RECORD_EXPLORER_TRUST_FILTERS,
+  type RecordExplorerCertificateFilter,
+  type RecordExplorerSort,
+  type RecordExplorerTrustFilter,
 } from "@/lib/field-record-explorer-params";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fieldV2 } from "@/styles/field-v2";
@@ -16,7 +17,7 @@ type Props = {
   creative: string;
   organisation: string;
   practice: string;
-  verified: RecordExplorerVerifiedFilter;
+  trust: RecordExplorerTrustFilter;
   certificate: RecordExplorerCertificateFilter;
   formKey: string;
 };
@@ -28,7 +29,7 @@ export function RecordExplorerFilters({
   creative,
   organisation,
   practice,
-  verified,
+  trust,
   certificate,
   formKey,
 }: Props) {
@@ -127,17 +128,20 @@ export function RecordExplorerFilters({
         </div>
 
         <div className="lg:col-span-2">
-          <label htmlFor="field-record-verified" className={labelClass}>
-            {t("field.explorer.records.filter.verification")}
+          <label htmlFor="field-record-trust" className={labelClass}>
+            {t("field.explorer.records.filter.trust")}
           </label>
           <select
-            id="field-record-verified"
-            name="verified"
-            defaultValue={verified === "all" ? "0" : ""}
+            id="field-record-trust"
+            name="trust"
+            defaultValue={trust}
             className={selectClass}
           >
-            <option value="">{t("field.explorer.records.filter.verifiedOnly")}</option>
-            <option value="0">{t("field.explorer.records.filter.allRecords")}</option>
+            {RECORD_EXPLORER_TRUST_FILTERS.map((tier) => (
+              <option key={tier} value={tier}>
+                {t(`field.explorer.records.filter.trust.${tier}`)}
+              </option>
+            ))}
           </select>
         </div>
 

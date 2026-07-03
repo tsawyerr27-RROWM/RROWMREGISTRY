@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 
 import { RegistryCatalogueInfoTooltip } from "@/components/Registry/RegistryCatalogueInfoTooltip";
+import { StudioMobileSectionSwitcher } from "@/components/Studio/StudioMobileSectionSwitcher";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 import { workspace } from "@/styles/workspace-design";
@@ -75,7 +76,7 @@ function WorkspaceSignOutButton({
 }
 
 /**
- * Shared workspace chrome: artist-style sticky sidebar, mobile tabs, activity + sign-out.
+ * Shared workspace chrome: artist-style sticky sidebar, mobile section switcher, activity + sign-out.
  * Role-specific nav labels and main content are passed by each page.
  */
 export function WorkspaceShell({
@@ -212,52 +213,17 @@ export function WorkspaceShell({
             isTransitioning ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"
           }`}
         >
-          <div className="mb-8 flex gap-6 overflow-x-auto pb-0 [-ms-overflow-style:none] [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden">
-            {navItems.map((item) => {
-              const active =
-                activeId === item.id ||
-                Boolean(item.href && pathname?.startsWith(item.href));
-              const tabClass = `v2-motion-hover-subtle shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ${
-                active
-                  ? isLight
-                    ? "v2-surface-glass-light text-[var(--v2-near-black)]"
-                    : "bg-white/[0.1] text-white"
-                  : isLight
-                    ? "text-[var(--v2-cool-grey)] hover:bg-black/[0.03] hover:text-[var(--v2-ink-soft)]"
-                    : "text-white/55 hover:bg-white/[0.04] hover:text-white/90"
-              }`;
-              const tabInner = (
-                <span className="flex items-center gap-2">
-                  <span>{item.label}</span>
-                  {item.showDot ? (
-                    <span className="inline-flex h-2 w-2 rounded-full bg-amber-300/80" />
-                  ) : null}
-                </span>
-              );
-              if (item.href) {
-                return (
-                  <Link
-                    key={item.id}
-                    href={item.href}
-                    className={tabClass}
-                    aria-current={active ? "page" : undefined}
-                  >
-                    {tabInner}
-                  </Link>
-                );
-              }
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => onSelect(item.id)}
-                  className={tabClass}
-                >
-                  {tabInner}
-                </button>
-              );
-            })}
-          </div>
+          <StudioMobileSectionSwitcher
+            sections={navItems}
+            activeId={activeId}
+            isLight={isLight}
+            onSelect={(id) => {
+              const item = navItems.find((entry) => entry.id === id);
+              if (item?.href) return;
+              if (id === activeId) return;
+              onSelect(id);
+            }}
+          />
 
           <div
             className={`mb-8 flex flex-col gap-4 border-b pb-6 lg:hidden ${
@@ -268,7 +234,9 @@ export function WorkspaceShell({
             <WorkspaceSignOutButton onSignOut={onSignOut} isLight={isLight} />
           </div>
 
-          {children}
+          <div key={activeId} className="studio-reveal min-h-0 flex-1">
+            {children}
+          </div>
         </div>
       </div>
     </div>

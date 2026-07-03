@@ -40,7 +40,7 @@ export function OpportunityExplorerContent({
     params.window !== "all";
 
   return (
-    <div className="mt-10">
+    <div className="mt-6">
       <OpportunityExplorerFilters
         action={basePath}
         q={params.q}

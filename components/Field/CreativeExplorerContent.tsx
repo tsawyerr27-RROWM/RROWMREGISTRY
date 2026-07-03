@@ -47,7 +47,7 @@ export function CreativeExplorerContent({
     Boolean(q.trim()) || Boolean(practice) || verified === "verified";
 
   return (
-    <div className="mt-10">
+    <div className="mt-6">
       <CreativeExplorerFilters
         action={basePath}
         q={q}

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ArtworkTrustBadge } from "@/components/Registry/ArtworkTrustBadge";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import ModalShell from "@/components/ui/ModalShell";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
@@ -17,6 +18,7 @@ type ArtworkLike = {
   artist_id?: string | null;
   title?: string;
   registry_id?: string | null;
+  verification_status?: string | null;
   image_url?: string | null;
   year?: string | number | null;
   medium?: string | null;
@@ -109,6 +111,11 @@ export function ArtworkDetailModal({
                   {[artwork.year, artwork.medium].filter(Boolean).join(" · ") ||
                     "–"}
                 </p>
+                {artwork.verification_status ? (
+                  <div className="mt-4">
+                    <ArtworkTrustBadge verificationStatus={artwork.verification_status} />
+                  </div>
+                ) : null}
                 <p className="mt-3">
                   <span className="inline-flex rounded-full bg-violet-50 px-3 py-1 text-[11px] font-semibold text-violet-900 ring-1 ring-violet-200/80">
                     {valuePhase === "price_discovery"

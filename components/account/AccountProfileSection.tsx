@@ -78,7 +78,7 @@ export function AccountProfileSection(props: Props) {
             <div>
               <AccountFieldLabel>Email</AccountFieldLabel>
               <AccountReadOnlyValue muted>
-                {props.email || "—"}
+                {props.email || "-"}
               </AccountReadOnlyValue>
               <p className="mt-2 text-xs text-neutral-500">
                 Managed through your sign-in provider.

@@ -24,6 +24,7 @@ import {
   authSecondaryLinkClass,
 } from "@/components/auth/AuthFieldStyles";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
+import { useTelemetry } from "@/hooks/useTelemetry";
 
 type View = "signin" | "forgot";
 
@@ -32,6 +33,7 @@ export function LoginClient() {
   const searchParams = useSearchParams();
   const sb = useSupabaseBrowserLazy();
   const { t } = useLocalePreferences();
+  const { track } = useTelemetry();
   const nextParam = useMemo(
     () => sanitizeAuthReturnPath(searchParams.get("next")),
     [searchParams]
@@ -90,6 +92,7 @@ export function LoginClient() {
       return;
     }
     setSubmitting(true);
+    track({ eventName: "login_started", surface: "auth" });
     const supabase = sb();
     const { error } = await supabase.auth.signInWithPassword({
       email: cleanEmail,
@@ -119,6 +122,7 @@ export function LoginClient() {
     const dest = await resolvePostAuthRedirectPath(supabase, user.id, {
       explicitNext: nextParam,
     });
+    track({ eventName: "login_completed", surface: "auth" });
     deferredRouterReplace(router, dest);
   };
 
@@ -131,6 +135,7 @@ export function LoginClient() {
       return;
     }
     setSubmitting(true);
+    track({ eventName: "password_reset_requested", surface: "auth" });
     const supabase = sb();
     const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
       redirectTo: buildAuthCallbackUrl(PASSWORD_RESET_RETURN_PATH),
