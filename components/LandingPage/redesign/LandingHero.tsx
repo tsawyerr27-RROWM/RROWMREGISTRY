@@ -44,10 +44,6 @@ export function LandingHero() {
         <LandingContainer className="w-full">
           <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-10 xl:gap-16">
             <motion.div style={{ opacity: copyOpacity, y: copyY }}>
-              <p className={`${landingType.signal} mb-8 md:mb-10`}>
-                {t("landing.v2.hero.eyebrow")}
-              </p>
-
               <h1
                 id="landing-hero-heading"
                 className={`${landingType.kinetic} max-w-[14ch] text-[clamp(3rem,8vw,5.75rem)] leading-[0.96] text-[var(--landing-charcoal)]`}

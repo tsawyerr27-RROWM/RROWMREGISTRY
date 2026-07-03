@@ -46,10 +46,11 @@ export function Footer() {
         <div className="relative mx-auto w-full max-w-[min(100%,76rem)]">
           <div className="flex flex-col gap-14 lg:flex-row lg:items-start lg:justify-between lg:gap-16">
             <div className="max-w-md lg:max-w-sm">
-              <Link href="/" className="inline-flex max-w-[180px] shrink-0" aria-label="RROWM home">
+              <Link href="/" className="inline-flex shrink-0" aria-label="RROWM home">
                 <RrowmLogo
-                  sizes="(max-width: 430px) min(148px, 40vw), 180px"
-                  className="rrowm-logo-crisp rrowm-logo-crisp--on-dark h-11 w-auto max-h-11 max-w-full shrink-0 object-contain object-left"
+                  variant="mark"
+                  sizes="88px"
+                  className="rrowm-logo-crisp--on-dark h-[88px] w-[88px] shrink-0"
                 />
               </Link>
               <p className="mt-3 v2-type-mono text-[10px] uppercase tracking-[0.2em] text-white/35">

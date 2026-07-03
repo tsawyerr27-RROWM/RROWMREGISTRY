@@ -296,11 +296,12 @@ export default function Header({ initialPathname = "" }: { initialPathname?: str
             aria-label="RROWM home"
           >
             <RrowmLogo
+              variant="header"
               priority
-              sizes="(max-width: 767px) 148px, 220px"
-              className={`rrowm-logo-crisp h-11 w-[148px] max-w-[min(148px,42vw)] object-contain object-left transition-opacity duration-500 group-hover:opacity-90 motion-reduce:transition-none md:h-11 md:w-[200px] md:max-w-[200px] ${
+              sizes="(max-width: 767px) 88px, 220px"
+              className={
                 commandBarImmersiveDark ? "rrowm-logo-crisp--on-dark" : ""
-              }`}
+              }
             />
           </Link>
 
