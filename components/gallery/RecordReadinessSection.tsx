@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { StudioContentSlab } from "@/components/Studio/StudioContentSlab";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import type { MessageKey } from "@/lib/locale-messages";
 import {
@@ -14,6 +14,8 @@ import {
   translateOpsActionLabel,
   translateReadinessReason,
 } from "@/lib/gallery-ops-i18n";
+import { semanticTextClass } from "@/lib/registry-semantic-signals";
+import { studioV2 } from "@/styles/studio-v2";
 
 type Props = {
   artworks: ReadinessArtworkFields[];
@@ -23,11 +25,14 @@ type Props = {
 };
 
 function statusPillClass(status: RecordReadinessStatus): string {
-  if (status === "ready")
-    return "bg-emerald-500/10 text-emerald-900 ring-1 ring-emerald-900/10";
-  if (status === "needs_attention")
-    return "bg-amber-500/10 text-amber-950 ring-1 ring-amber-900/12";
-  return "bg-neutral-900/[0.06] text-neutral-800 ring-1 ring-black/[0.06]";
+  const base = "inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1";
+  if (status === "ready") {
+    return `${base} border border-[var(--v2-seal-border)] bg-[var(--v2-paper-bone)] text-[var(--v2-ink)] ring-transparent`;
+  }
+  if (status === "needs_attention") {
+    return `${base} bg-[var(--v2-amber-exception-dim)] text-[var(--v2-ink)] ring-[var(--v2-amber-exception)]/20`;
+  }
+  return `${base} bg-neutral-900/[0.04] text-[var(--v2-ink-muted)] ring-black/[0.06]`;
 }
 
 const STATUS_KEYS: Record<RecordReadinessStatus, MessageKey> = {
@@ -75,53 +80,52 @@ export function RecordReadinessSection({
     });
 
   return (
-    <section className="mb-8 rounded-2xl border border-neutral-900/[0.06] bg-white/50 p-6 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-sm sm:p-7">
-      <InfoTooltip text={t("gallery.readiness.tooltip")} />
-      <h2 className="font-serif text-lg font-normal text-neutral-950 md:text-xl">
-        {t("gallery.readiness.title")}
-      </h2>
-
-      <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-[13px] tabular-nums text-neutral-700">
+    <StudioContentSlab
+      className="mb-8"
+      title={t("gallery.readiness.title")}
+      subtitle={t("gallery.readiness.tooltip")}
+    >
+      <div className="flex flex-wrap gap-x-6 gap-y-2 text-[13px] tabular-nums text-[var(--v2-ink-muted)]">
         <span>
-          <span className="font-medium text-emerald-900/90">{counts.ready}</span>{" "}
+          <span className={`font-medium ${semanticTextClass("certification")}`}>
+            {counts.ready}
+          </span>{" "}
           {t("gallery.readiness.ready")}
         </span>
         <span>
-          <span className="font-medium text-amber-950/90">
+          <span className={`font-medium ${semanticTextClass("correction")}`}>
             {counts.needs_attention}
           </span>{" "}
           {t("gallery.readiness.needsAttention")}
         </span>
         <span>
-          <span className="font-medium text-neutral-900">{counts.incomplete}</span>{" "}
+          <span className="font-medium text-[var(--v2-ink)]">{counts.incomplete}</span>{" "}
           {t("gallery.readiness.incomplete")}
         </span>
       </div>
 
       {affected.length === 0 ? (
-        <p className="mt-5 text-[13px] text-neutral-600">
+        <p className="mt-5 text-[13px] text-[var(--v2-ink-muted)]">
           {t("gallery.readiness.allPass")}
         </p>
       ) : (
-        <ul className="mt-6 divide-y divide-neutral-900/[0.06] border-t border-neutral-900/[0.06] pt-4">
+        <ul className="mt-6 divide-y divide-[var(--v2-border)] border-t border-[var(--v2-border)] pt-4">
           {affected.map(({ artwork, status, reasonCode, action }) => (
             <li
               key={artwork.id}
-              className="flex flex-col gap-2 py-4 first:pt-0 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
+              className={`${studioV2.scope} flex flex-col gap-2 py-4 first:pt-0 sm:flex-row sm:items-start sm:justify-between sm:gap-4`}
             >
               <div className="min-w-0 flex-1">
-                <p className="text-[14px] font-medium text-neutral-950">
+                <p className="text-[14px] font-medium text-[var(--v2-ink)]">
                   {displayTitle(artwork, t("gallery.fallback.untitled"))}
                 </p>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <span
-                    className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${statusPillClass(status)}`}
-                  >
+                  <span className={statusPillClass(status)}>
                     {status === "needs_attention" ? "⚠ " : null}
                     {t(STATUS_KEYS[status])}
                   </span>
                 </div>
-                <p className="mt-1.5 text-[12px] leading-snug text-neutral-600">
+                <p className="mt-1.5 text-[12px] leading-snug text-[var(--v2-ink-muted)]">
                   {reasonCode ? translateReadinessReason(reasonCode, t) : null}
                 </p>
               </div>
@@ -129,7 +133,7 @@ export function RecordReadinessSection({
                 {action?.kind === "link" ? (
                   <Link
                     href={action.href}
-                    className="text-[12px] font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-4 transition hover:text-neutral-950 hover:decoration-neutral-500"
+                    className="text-[12px] font-medium text-[var(--v2-ink-soft)] underline decoration-[var(--v2-border-strong)] underline-offset-4 transition hover:text-[var(--v2-ink)]"
                   >
                     {translateOpsActionLabel(action.labelKey, t)}
                   </Link>
@@ -137,7 +141,7 @@ export function RecordReadinessSection({
                   <button
                     type="button"
                     onClick={onGoToRoster}
-                    className="text-left text-[12px] font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-4 transition hover:text-neutral-950 hover:decoration-neutral-500"
+                    className="text-left text-[12px] font-medium text-[var(--v2-ink-soft)] underline decoration-[var(--v2-border-strong)] underline-offset-4 transition hover:text-[var(--v2-ink)]"
                   >
                     {translateOpsActionLabel(action.labelKey, t)}
                   </button>
@@ -147,6 +151,6 @@ export function RecordReadinessSection({
           ))}
         </ul>
       )}
-    </section>
+    </StudioContentSlab>
   );
 }

@@ -58,6 +58,12 @@ export function navigateToCollectorSection(
   deferredRouterPush(router, "/studio/collector");
 }
 
+/** Canonical Studio holding detail — `/studio/artwork/:id` redirects to legacy handler. */
+export function studioCollectorArtworkHref(registryId: string): string {
+  const clean = registryId.trim();
+  return `/studio/artwork/${encodeURIComponent(clean)}`;
+}
+
 export function consumePendingCollectorSection(): CollectorSectionId | null {
   if (typeof window === "undefined") return null;
   try {

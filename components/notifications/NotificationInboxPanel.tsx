@@ -26,6 +26,7 @@ import {
 } from "@/lib/registry-semantic-signals";
 import { STUDIO_INBOX_HREF } from "@/lib/studio-nav/studio-utility-nav";
 import type { MessageKey } from "@/lib/locale-messages";
+import { registryV2 } from "@/styles/registry-v2";
 
 type Props = {
   variant?: "panel" | "page";
@@ -65,8 +66,8 @@ function notificationSignalMarker(
   if (semanticEvent === "certification") {
     return (
       <span
-        className={`${semanticStampClass("certification")} mt-1 shrink-0 scale-[0.82] origin-left ${
-          unread ? "" : "opacity-75"
+        className={`${semanticStampClass("certification")} mt-0.5 shrink-0 scale-[0.78] origin-left ${
+          unread ? "" : "opacity-70"
         }`}
         aria-hidden
       />
@@ -75,8 +76,8 @@ function notificationSignalMarker(
 
   return (
     <span
-      className={`mt-2 shrink-0 ${semanticDotClass(semanticEvent)} ${
-        unread ? "" : "opacity-70"
+      className={`mt-1.5 shrink-0 ${semanticDotClass(semanticEvent)} ${
+        unread ? "" : "opacity-65"
       }`}
       aria-hidden
     />
@@ -92,14 +93,27 @@ function notificationItemClass(
     : "border-l-[var(--v2-border)]";
 
   return [
-    "group block w-full border border-[var(--v2-border)] border-l-2 bg-white/95 px-3.5 py-3 text-left",
+    "group block w-full border-l-2 py-3 pl-3 pr-1 text-left",
     accent,
-    "transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
-    "hover:border-[var(--v2-border-strong)] hover:bg-white",
-    unread
-      ? "shadow-[0_8px_20px_-16px_rgba(15,23,42,0.14)] ring-1 ring-[var(--v2-border)]"
-      : "opacity-90 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)]",
+    "transition-[background-color,border-color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+    unread ? "bg-[var(--v2-paper-bone)]/35" : "opacity-90",
+    "hover:bg-[var(--v2-paper-bone)]/55",
   ].join(" ");
+}
+
+function CloseIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      aria-hidden
+    >
+      <path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  );
 }
 
 export function NotificationInboxPanel({
@@ -242,12 +256,12 @@ export function NotificationInboxPanel({
     const semanticEvent = notificationSemanticEvent(notification.type);
 
     const content = (
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2.5">
         {notificationSignalMarker(semanticEvent, unread)}
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
             <p
-              className={`v2-type-display text-[15px] leading-snug text-[var(--v2-ink)] ${
+              className={`font-serif text-[15px] leading-snug tracking-[-0.01em] text-[var(--v2-ink)] ${
                 unread ? "font-medium" : "font-normal"
               }`}
             >
@@ -256,13 +270,13 @@ export function NotificationInboxPanel({
             {timeLabel ? (
               <time
                 dateTime={notification.created_at}
-                className="v2-type-mono text-[10px] tabular-nums text-[var(--v2-ink-muted)]"
+                className={`${registryV2.type.monoId} shrink-0 text-[10px] text-[var(--v2-ink-muted)]`}
               >
                 {timeLabel}
               </time>
             ) : null}
           </div>
-          <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--v2-ink-soft)]">
+          <p className="mt-1 text-[13px] leading-relaxed text-[var(--v2-ink-soft)]">
             {notification.body}
           </p>
         </div>
@@ -305,11 +319,13 @@ export function NotificationInboxPanel({
     ] as MessageKey;
 
     return (
-      <section key={section} className="space-y-2">
-        <h3 className="v2-type-label px-0.5 text-[10px] tracking-[0.2em] text-[var(--v2-ink-muted)]">
+      <section key={section}>
+        <h3 className={`${registryV2.type.metaLabel} mb-2 text-[var(--v2-ink-muted)]`}>
           {t(labelKey)}
         </h3>
-        <ul className="space-y-2">{items.map(renderNotificationItem)}</ul>
+        <ul className="divide-y divide-[var(--v2-border)] border-y border-[var(--v2-border)]">
+          {items.map(renderNotificationItem)}
+        </ul>
       </section>
     );
   };
@@ -317,15 +333,15 @@ export function NotificationInboxPanel({
   const grouped = groupNotificationsByInboxSection(notifications);
 
   const listBody = loading ? (
-    <p className="px-0.5 text-sm text-[var(--v2-ink-muted)]">{t("common.processing")}</p>
+    <p className="text-sm text-[var(--v2-ink-muted)]">{t("common.processing")}</p>
   ) : error ? (
-    <p className="px-0.5 text-sm text-[var(--v2-ink-soft)]">{error}</p>
+    <p className="text-sm text-[var(--v2-ink-soft)]">{error}</p>
   ) : notifications.length === 0 ? (
-    <p className="px-0.5 text-sm leading-relaxed text-[var(--v2-ink-muted)]">
+    <p className="py-6 text-center text-sm leading-relaxed text-[var(--v2-ink-muted)]">
       {t("notifications.inbox.empty")}
     </p>
   ) : (
-    <div className="space-y-5 pr-0.5">
+    <div className="space-y-5">
       {NOTIFICATION_INBOX_SECTIONS.map((section) =>
         renderSection(section, grouped[section])
       )}
@@ -333,16 +349,16 @@ export function NotificationInboxPanel({
   );
 
   const scrollRegionClass =
-    "min-h-0 flex-1 overflow-y-auto overscroll-contain [scrollbar-gutter:stable] [scrollbar-width:thin] [scrollbar-color:rgba(120,90,40,0.22)_transparent]";
+    "min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] [scrollbar-gutter:stable] [scrollbar-width:thin] [scrollbar-color:rgba(120,90,40,0.18)_transparent]";
 
   if (variant === "page") {
     return (
       <section
-        className={`rounded-[1.25rem] border border-[var(--v2-border)] v2-surface-paper p-6 md:p-9 ${className}`}
+        className={`field-explorer-hero ${registryV2.surface.filingMajor} p-6 md:p-9 ${className}`}
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="v2-type-display text-2xl font-normal tracking-tight text-[var(--v2-ink)] md:text-[1.75rem]">
+            <h2 className={`${registryV2.type.sectionTitle} text-[1.75rem] md:text-[1.85rem]`}>
               {t("notifications.inbox.title")}
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-[var(--v2-ink-soft)]">
@@ -354,7 +370,7 @@ export function NotificationInboxPanel({
               type="button"
               onClick={() => void markAllRead()}
               disabled={markingAll}
-              className="v2-type-mono shrink-0 text-[10px] text-[var(--v2-ink-muted)] underline decoration-[var(--v2-border)] underline-offset-4 transition hover:text-[var(--v2-ink)] disabled:opacity-50 motion-reduce:transition-none"
+              className={`${registryV2.type.monoId} shrink-0 text-[10px] text-[var(--v2-ink-muted)] underline decoration-[var(--v2-border)] underline-offset-4 transition hover:text-[var(--v2-ink)] disabled:opacity-50 motion-reduce:transition-none`}
             >
               {markingAll
                 ? t("common.processing")
@@ -372,34 +388,34 @@ export function NotificationInboxPanel({
 
   return (
     <section
-      className={`flex min-h-0 flex-1 flex-col overflow-hidden ${className}`}
+      className={`relative flex min-h-0 flex-1 flex-col overflow-hidden ${className}`}
     >
-      <header className="relative shrink-0 pb-3">
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--v2-cobalt-signal-dim)] to-transparent opacity-70"
-          aria-hidden
-        />
-        <div className="flex items-start justify-between gap-3 pt-0.5">
-          <div className="min-w-0">
-            <p className="v2-type-label text-[10px] tracking-[0.2em] text-[var(--v2-ink-muted)]">
-              Command inbox
+      <header className="relative z-[2] shrink-0 border-b border-[var(--v2-border)] pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className={`${registryV2.type.metaLabel} text-[var(--v2-ink-muted)]`}>
+              {t("nav.inbox")}
             </p>
-            <h2 className="v2-type-display mt-1 text-lg font-normal tracking-tight text-[var(--v2-ink)]">
-              {t("notifications.inbox.title")}
-            </h2>
-            {unreadCount > 0 ? (
-              <p className="mt-1 v2-type-mono text-[10px] text-[var(--v2-ink-muted)]">
-                {unreadCount} unread
-              </p>
-            ) : null}
+            <div className="mt-1 flex flex-wrap items-center gap-2.5">
+              <h2
+                className={`${registryV2.type.sectionTitle} min-w-0 text-[1.35rem] leading-[1.08] md:text-[1.5rem]`}
+              >
+                {t("notifications.inbox.title")}
+              </h2>
+              {unreadCount > 0 ? (
+                <span className="studio-execution-stamp studio-execution-stamp--active tabular-nums">
+                  {unreadCount}
+                </span>
+              ) : null}
+            </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1">
             {unreadCount > 0 ? (
               <button
                 type="button"
                 onClick={() => void markAllRead()}
                 disabled={markingAll}
-                className="v2-type-mono rounded-full border border-[var(--v2-border)] bg-white/90 px-2.5 py-1 text-[10px] text-[var(--v2-ink-soft)] transition hover:border-[var(--v2-border-strong)] hover:text-[var(--v2-ink)] disabled:opacity-50 motion-reduce:transition-none"
+                className={`${registryV2.type.monoId} hidden min-h-[44px] items-center px-2 text-[10px] text-[var(--v2-ink-muted)] underline decoration-[var(--v2-border)] underline-offset-4 transition hover:text-[var(--v2-ink)] disabled:opacity-50 motion-reduce:transition-none sm:inline-flex md:min-h-0`}
               >
                 {markingAll
                   ? t("common.processing")
@@ -410,28 +426,38 @@ export function NotificationInboxPanel({
               <button
                 type="button"
                 onClick={onClose}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--v2-border)] text-[var(--v2-ink-muted)] transition hover:text-[var(--v2-ink)] motion-reduce:transition-none"
-                aria-label="Close inbox"
+                className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-[var(--v2-ink-muted)] transition hover:bg-[var(--v2-paper-bone)]/60 hover:text-[var(--v2-ink)] motion-reduce:transition-none"
+                aria-label={t("common.cancel")}
               >
-                <span aria-hidden className="text-lg leading-none">
-                  ×
-                </span>
+                <CloseIcon className="h-5 w-5" />
               </button>
             ) : null}
           </div>
         </div>
+        {unreadCount > 0 ? (
+          <button
+            type="button"
+            onClick={() => void markAllRead()}
+            disabled={markingAll}
+            className={`${registryV2.type.monoId} mt-2 min-h-[44px] text-left text-[10px] text-[var(--v2-ink-muted)] underline decoration-[var(--v2-border)] underline-offset-4 transition hover:text-[var(--v2-ink)] disabled:opacity-50 motion-reduce:transition-none sm:hidden`}
+          >
+            {markingAll
+              ? t("common.processing")
+              : t("notifications.inbox.markAllRead")}
+          </button>
+        ) : null}
       </header>
 
       {actionError ? (
-        <p className="shrink-0 px-0.5 pb-2 text-xs leading-relaxed text-red-800/90">
+        <p className="relative z-[2] shrink-0 pt-2 text-xs leading-relaxed text-red-800/90">
           {actionError}
         </p>
       ) : null}
 
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden pt-3">
         {fadeTop ? (
           <div
-            className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-6 bg-gradient-to-b from-white via-white/85 to-transparent"
+            className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-5 bg-gradient-to-b from-[var(--v2-paper-bone,#f4efe6)] to-transparent"
             aria-hidden
           />
         ) : null}
@@ -439,13 +465,13 @@ export function NotificationInboxPanel({
           ref={scrollRef}
           data-notification-scroll
           onScroll={updateScrollFades}
-          className={`${scrollRegionClass} px-0.5 py-0.5`}
+          className={scrollRegionClass}
         >
           {listBody}
         </div>
         {fadeBottom ? (
           <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-6 bg-gradient-to-t from-white via-white/85 to-transparent"
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-5 bg-gradient-to-t from-[var(--v2-paper-bone,#f4efe6)] to-transparent"
             aria-hidden
           />
         ) : null}
@@ -460,7 +486,7 @@ export function NotificationInboxPanel({
               deferredRouterPush(router, STUDIO_INBOX_HREF);
               onNavigate?.();
             }}
-            className="v2-type-mono inline-flex items-center text-[10px] text-[var(--v2-ink-soft)] underline decoration-[var(--v2-border)] underline-offset-4 transition hover:text-[var(--v2-ink)] motion-reduce:transition-none"
+            className={`${registryV2.type.monoId} inline-flex min-h-[44px] items-center text-[10px] text-[var(--v2-ink-soft)] underline decoration-[var(--v2-border)] underline-offset-4 transition hover:text-[var(--v2-ink)] motion-reduce:transition-none sm:min-h-0`}
           >
             {t("notifications.inbox.viewAll")}
           </Link>

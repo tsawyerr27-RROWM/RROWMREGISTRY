@@ -4,7 +4,7 @@ import Link from "next/link";
 import { GovernanceSectionShell } from "@/components/Studio/GovernanceSectionShell";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fillMessage } from "@/lib/locale-messages";
-import { workspace } from "@/styles/workspace-design";
+import { studioV2 } from "@/styles/studio-v2";
 
 export type ParticipationPendingWork = {
   artwork_id: string;
@@ -52,7 +52,7 @@ export function GalleryRecordDepthSection({
       title={t("gallery.participation.title")}
       description={description}
       badge={
-        <span className={workspace.card.pill}>
+        <span className="studio-execution-stamp studio-execution-stamp--active">
           {items.length}{" "}
           {items.length === 1
             ? t("gallery.participation.record")
@@ -64,7 +64,7 @@ export function GalleryRecordDepthSection({
           <button
             type="button"
             onClick={onGoToInvitations}
-            className="rounded-xl border border-neutral-900/[0.12] bg-white/90 px-4 py-2.5 text-xs font-medium text-neutral-800 transition hover:bg-neutral-50"
+            className="v2-cta-secondary px-4 py-2.5 text-xs"
           >
             {t("gallery.participation.inviteAuthenticate")}
           </button>
@@ -79,7 +79,7 @@ export function GalleryRecordDepthSection({
           return (
             <li
               key={row.artwork_id}
-              className="flex flex-col gap-3 rounded-xl border border-neutral-900/[0.06] bg-white/70 p-4 sm:flex-row sm:items-center sm:justify-between"
+              className={`${studioV2.surface.filingSheet} flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-5`}
             >
               <div className="flex min-w-0 flex-1 gap-3">
                 <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-neutral-100 ring-1 ring-neutral-900/[0.06]">
@@ -101,9 +101,11 @@ export function GalleryRecordDepthSection({
                     {title}
                   </p>
                   {reg ? (
-                    <p className={`mt-0.5 ${workspace.type.registryId}`}>{reg}</p>
+                    <p className="mt-0.5 v2-type-mono text-[10px] tracking-[0.08em] text-[var(--v2-cool-grey)]">
+                      {reg}
+                    </p>
                   ) : null}
-                  <p className={`mt-1 ${workspace.type.metaQuiet}`}>
+                  <p className="mt-1 text-[12px] text-[var(--v2-ink-muted)]">
                     {row.artist_name || t("gallery.participation.associatedArtist")}
                     {when
                       ? fillMessage(t("gallery.participation.institutionLayer"), {
@@ -126,7 +128,7 @@ export function GalleryRecordDepthSection({
                   <button
                     type="button"
                     onClick={() => onInviteWork(row.artwork_id)}
-                    className="rounded-lg border border-neutral-900/10 bg-white px-2.5 py-1 text-[10px] font-medium text-neutral-800 transition hover:bg-neutral-50"
+                    className="v2-cta-secondary px-2.5 py-1 text-[10px]"
                   >
                     {t("gallery.participation.inviteAuthenticate")}
                   </button>

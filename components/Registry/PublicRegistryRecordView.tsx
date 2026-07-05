@@ -36,7 +36,7 @@ import {
 import { translateProvenanceInsight } from "@/lib/archival-provenance-i18n";
 import { buildCertificateShareContext } from "@/lib/certificate-share";
 import { buildVerificationShareContext } from "@/lib/verification-share";
-import { fieldCreativeHref, fieldRecordHref } from "@/lib/field-nav";
+import { fieldCollectorHref, fieldCreativeHref, fieldRecordHref } from "@/lib/field-nav";
 import {
   certificateClassForTrustTier,
   certificateClassTitleKey,
@@ -209,7 +209,7 @@ export function PublicRegistryRecordView({
         <>
           {t("registry.record.heldBy")}{" "}
           <Link
-            href={`/collector-studio/${encodeURIComponent(currentOwner.slug)}`}
+            href={fieldCollectorHref(currentOwner.slug)}
             className="underline decoration-neutral-300 underline-offset-4 transition hover:decoration-neutral-500"
           >
             {currentOwner.display_name}

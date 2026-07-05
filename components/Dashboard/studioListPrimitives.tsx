@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { studioV2 } from "@/styles/studio-v2";
+
 /**
  * Studio list search + filter tones — softer than pure white so controls blend
  * with section backgrounds (light gradient vs dark studio panels).
@@ -126,7 +128,9 @@ export function StudioNoMatchesBanner({
   children: ReactNode;
 }) {
   return (
-    <div className="liquid-glass-tile !rounded-2xl px-8 py-12 text-center text-sm text-neutral-600">
+    <div
+      className={`${studioV2.surface.filingSheet} px-8 py-12 text-center text-sm text-[var(--v2-ink-muted)]`}
+    >
       {children}
     </div>
   );

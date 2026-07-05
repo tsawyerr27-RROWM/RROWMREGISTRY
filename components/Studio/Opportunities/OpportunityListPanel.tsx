@@ -8,7 +8,7 @@ import {
 } from "@/lib/opportunity-editor";
 import { fillMessage } from "@/lib/locale-messages";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
-import { rrowmButton } from "@/styles/rrowm-theme";
+import { ExperienceEmptyState } from "@/components/ui/ExperienceEmptyState";
 import { studioV2 } from "@/styles/studio-v2";
 
 type Props = {
@@ -49,7 +49,7 @@ export function OpportunityListPanel({
         <button
           type="button"
           onClick={onCreate}
-          className={`shrink-0 ${rrowmButton.primaryEconomic}`}
+          className="v2-cta-primary shrink-0 px-4 py-2.5 text-sm"
         >
           {t("studio.opportunities.create")}
         </button>
@@ -60,9 +60,18 @@ export function OpportunityListPanel({
       </p>
 
       {loading ? (
-        <p className="mt-8 text-sm text-neutral-500">{t("studio.opportunities.loading")}</p>
+        <p className="mt-8 text-sm text-[var(--v2-ink-muted)]">{t("studio.opportunities.loading")}</p>
       ) : briefs.length === 0 && !isCreating ? (
-        <p className="mt-8 text-sm text-neutral-600">{t("studio.opportunities.empty")}</p>
+        <ExperienceEmptyState
+          className="mt-8 max-w-none"
+          title={t("studio.opportunities.empty")}
+          body={t("studio.opportunities.lede")}
+          action={
+            <button type="button" onClick={onCreate} className="v2-cta-primary px-6 py-3 text-xs">
+              {t("studio.opportunities.create")}
+            </button>
+          }
+        />
       ) : (
         <ul className={`${studioV2.scope} mt-6 flex-1 space-y-3 overflow-y-auto pr-1`}>
           {briefs.map((brief) => {

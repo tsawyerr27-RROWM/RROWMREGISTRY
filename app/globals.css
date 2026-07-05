@@ -3962,12 +3962,19 @@ body.v2-consequence-lock {
 }
 
 .command-inbox-sheet {
-  max-width: 440px;
+  max-width: 400px;
+}
+
+@media (min-width: 768px) {
+  .command-inbox-sheet {
+    animation: command-inbox-fade-in 0.22s ease;
+  }
 }
 
 @media (max-width: 767px) {
   .command-inbox-sheet {
     animation: command-inbox-sheet-up 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+    padding-top: env(safe-area-inset-top, 0px);
   }
 
   .command-inbox-backdrop {

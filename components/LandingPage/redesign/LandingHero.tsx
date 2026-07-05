@@ -40,7 +40,7 @@ export function LandingHero() {
       <div className="landing-hero-projection pointer-events-none absolute right-0 top-[8%] z-0 h-[50%] w-[min(52vw,32rem)]" aria-hidden />
       <div className="landing-paper-grain pointer-events-none absolute inset-0 z-[1] opacity-[0.14]" aria-hidden />
 
-      <div className="sticky top-0 z-10 flex min-h-[100svh] items-center pt-20 sm:pt-24 md:pt-28">
+      <div className="sticky top-0 z-10 flex min-h-[100svh] items-center pt-28">
         <LandingContainer className="w-full">
           <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-10 xl:gap-16">
             <motion.div style={{ opacity: copyOpacity, y: copyY }}>

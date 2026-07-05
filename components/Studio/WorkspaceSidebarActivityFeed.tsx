@@ -28,7 +28,7 @@ export function WorkspaceSidebarActivityFeed({
   const { items, loading } = useAccountActivityFeed(userId, limit, refreshKey);
 
   const resolvedEmpty = emptyMessage ?? t("studio.shell.noActivity");
-  const resolvedLoading = loadingMessage ?? t("collector.activity.loading");
+  const resolvedLoading = loadingMessage ?? t("studio.activity.loading");
 
   if (loading) {
     return (

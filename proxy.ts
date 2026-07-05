@@ -16,7 +16,7 @@ function isAdminRoute(pathname: string): boolean {
  * Studio routes require authentication — unauthenticated visitors are redirected
  * to /login with a return path. Admin/internal routes use the admin session gate.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const response = NextResponse.next();
   const pathname = request.nextUrl.pathname;
   response.headers.set("x-rrowm-pathname", pathname);

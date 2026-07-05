@@ -350,9 +350,9 @@ export default function Header({ initialPathname = "" }: { initialPathname?: str
                 <>
                   <NotificationInboxBell tone={commandBarTone} />
                   <Link
-                    href="/studio/account"
+                    href={studioHref}
                     className="rrowm-command-bar-icon-btn v2-motion-hover-subtle hidden lg:inline-flex"
-                    aria-label={t("nav.myAccount")}
+                    aria-label={t("nav.studio")}
                   >
                     <ProfileIcon className="h-[1.125rem] w-[1.125rem]" />
                   </Link>

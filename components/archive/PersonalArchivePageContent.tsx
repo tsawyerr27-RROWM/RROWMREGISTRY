@@ -69,11 +69,14 @@ export function PersonalArchivePageContent() {
 
   if (items.length === 0) {
     return (
-      <div className="rounded-2xl border border-black/[0.06] bg-gradient-to-br from-white/90 to-neutral-50/60 px-8 py-14 text-center shadow-sm md:px-12">
-        <h2 className="font-serif text-2xl font-normal tracking-tight text-neutral-950">
+      <div className="rounded-lg border border-[var(--v2-border)] bg-white/90 px-8 py-14 text-center md:px-12">
+        <p className="v2-type-mono text-[10px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
+          {t("archive.nav.personalArchive")}
+        </p>
+        <h2 className="mt-3 font-serif text-2xl font-normal tracking-tight text-[var(--v2-ink)]">
           {t("archive.empty.title")}
         </h2>
-        <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-neutral-600">
+        <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-[var(--v2-ink-muted)]">
           {t("archive.empty.body")}
         </p>
         <Link

@@ -28,12 +28,9 @@ export function Footer() {
         >
           <div className="archive-footer__scan pointer-events-none absolute inset-0 opacity-[0.35]" aria-hidden />
           <div className="relative mx-auto max-w-[min(100%,76rem)]">
-            <p className="v2-type-mono text-[10px] uppercase tracking-[0.24em] text-white/40">
-              RROWM
-            </p>
             <h2
               id="landing-footer-closing"
-              className="mt-8 max-w-[18ch] font-serif text-[clamp(2.5rem,5.5vw,4.25rem)] font-normal leading-[1.02] tracking-[-0.03em] text-[var(--v2-paper-bone,#f4efe6)]"
+              className="max-w-[18ch] font-serif text-[clamp(2.5rem,5.5vw,4.25rem)] font-normal leading-[1.02] tracking-[-0.03em] text-[var(--v2-paper-bone,#f4efe6)]"
             >
               {t("landing.v2.footer.closing")}
             </h2>
@@ -53,12 +50,6 @@ export function Footer() {
                   className="rrowm-logo-crisp--on-dark h-[88px] w-[88px] shrink-0"
                 />
               </Link>
-              <p className="mt-3 v2-type-mono text-[10px] uppercase tracking-[0.2em] text-white/35">
-                RROWM
-              </p>
-              <p className="mt-6 font-serif text-[1.05rem] leading-relaxed text-white/72 md:text-[1.1rem]">
-                {t("footer.blurb")}
-              </p>
             </div>
 
             <ArchiveFooterNav t={t} />
@@ -152,12 +143,9 @@ function ArchiveFooterNav({
         >
           {t("footer.twitter")}
         </a>
-        <a
-          href={"/login?next=" + encodeURIComponent("/studio/creative")}
-          className={linkClass}
-        >
+        <Link href="/login" className={linkClass}>
           {t("footer.signIn")}
-        </a>
+        </Link>
         <DashboardNavLink className={linkClass}>{t("footer.account")}</DashboardNavLink>
       </div>
     </nav>

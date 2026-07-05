@@ -16,6 +16,7 @@ import {
   consumePendingGallerySection,
   ORGANISATION_SECTION_LABEL_KEYS,
 } from "@/lib/studio-nav";
+import { fieldCreativeHref, fieldRecordHref } from "@/lib/field-nav";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 import { triggerConsequenceFeedback } from "@/lib/consequence-feedback-runtime";
 import { TestDataControls } from "@/components/Admin/TestDataControls";
@@ -95,6 +96,8 @@ import ModalShell from "@/components/ui/ModalShell";
 import { OrganisationOpportunitiesSection } from "@/components/Studio/OrganisationOpportunitiesSection";
 import { RepresentationAmendmentsSection } from "@/components/Studio/RepresentationAmendmentsSection";
 import { EndRepresentationModal } from "@/components/Studio/EndRepresentationModal";
+import { RouteLoadingShell } from "@/components/ui/RouteLoadingShell";
+import { semanticTextClass } from "@/lib/registry-semantic-signals";
 import {
   GalleryRegistrationOutcome,
   type GalleryRegistrationOutcomeData,
@@ -2045,14 +2048,18 @@ export default function GalleryDashboardPage() {
 
   if (loading) {
     return (
-      <div className="ds-page-environment min-h-screen pt-24 text-center text-sm text-neutral-500">
-        {t("gallery.shell.loading")}
+      <div className="ds-page-environment min-h-screen">
+        <RouteLoadingShell label={t("gallery.shell.loading")} />
       </div>
     );
   }
 
   if (!userId) {
-    return null;
+    return (
+      <div className="ds-page-environment min-h-screen">
+        <RouteLoadingShell label={t("gallery.shell.loading")} />
+      </div>
+    );
   }
 
   if (!gallery) {
@@ -2190,12 +2197,12 @@ export default function GalleryDashboardPage() {
           <p className="text-[13px] text-red-800">{profileError}</p>
         ) : null}
         {successMessage ? (
-          <p className="text-[13px] text-emerald-900/90">
+          <p className="rounded-lg border border-[var(--v2-border)] bg-white px-4 py-3 text-[13px] text-[var(--v2-ink-muted)]">
             {successMessage}{" "}
             <button
               type="button"
               onClick={() => setSuccessMessage(null)}
-              className="font-medium underline underline-offset-4"
+              className="font-medium text-[var(--v2-ink)] underline underline-offset-4"
             >
               {t("gallery.shell.dismiss")}
             </button>
@@ -2230,7 +2237,7 @@ export default function GalleryDashboardPage() {
               disabled={worksCount === 0}
               footer={t("gallery.intelligence.tapCatalogueDetail")}
             >
-              <p className="font-serif text-3xl tabular-nums leading-none text-neutral-950">
+              <p className="font-serif text-2xl font-normal tabular-nums leading-none tracking-tight text-[var(--v2-ink)] md:text-[1.85rem]">
                 {worksCount}
               </p>
               <p className="mt-1 text-[12px] text-neutral-500">
@@ -2278,7 +2285,7 @@ export default function GalleryDashboardPage() {
               {insightPack ? (
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div>
-                    <p className="font-serif text-xl tabular-nums text-neutral-950">
+                    <p className="font-serif text-lg font-normal tabular-nums tracking-tight text-[var(--v2-ink)]">
                       {insightPack.health.fullyVerified}
                     </p>
                     <p className="mt-1 text-[11px] font-medium text-neutral-600">
@@ -2286,7 +2293,7 @@ export default function GalleryDashboardPage() {
                     </p>
                   </div>
                   <div>
-                    <p className="font-serif text-xl tabular-nums text-neutral-950">
+                    <p className="font-serif text-lg font-normal tabular-nums tracking-tight text-[var(--v2-ink)]">
                       {insightPack.health.withCertificates}
                     </p>
                     <p className="mt-1 text-[11px] font-medium text-neutral-600">
@@ -2294,7 +2301,7 @@ export default function GalleryDashboardPage() {
                     </p>
                   </div>
                   <div>
-                    <p className="font-serif text-xl tabular-nums text-amber-900/90">
+                    <p className="font-serif text-lg font-normal tabular-nums tracking-tight text-amber-900/90">
                       {insightPack.health.missingVerification}
                     </p>
                     <p className="mt-1 text-[11px] font-medium text-neutral-600">
@@ -2419,8 +2426,13 @@ export default function GalleryDashboardPage() {
               <div className="border-b border-[var(--v2-border)] px-5 py-5 sm:px-7 sm:py-6">
                 <div className="flex flex-wrap items-end justify-between gap-4">
                   <div>
-                    <InfoTooltip text={t("gallery.roster.tooltip")} />
-                    <h2 className="font-serif text-[1.35rem] font-normal text-neutral-950 md:text-[1.75rem]">
+                    <p className={`${studioV2.type.railLabel} text-[var(--v2-ink-muted)]`}>
+                      {t("gallery.nav.roster")}
+                    </p>
+                    <div className="mt-2">
+                      <InfoTooltip text={t("gallery.roster.tooltip")} />
+                    </div>
+                    <h2 className="mt-2 font-serif text-[1.35rem] font-normal text-[var(--v2-ink)] md:text-[1.75rem]">
                       {t(ORGANISATION_SECTION_LABEL_KEYS.roster)}
                     </h2>
                   </div>
@@ -2437,7 +2449,7 @@ export default function GalleryDashboardPage() {
 
               <div className="p-5 sm:p-7">
                 {artists.length === 0 ? (
-                  <div className="rounded-[1.25rem] border border-dashed border-neutral-900/15 bg-gradient-to-br from-neutral-50/80 via-white/55 to-white/40 px-6 py-12 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
+                  <div className="rounded-lg border border-dashed border-[var(--v2-border-strong)] bg-white/80 px-6 py-12 text-center">
                     <p className="font-serif text-lg text-neutral-900">
                       {t("gallery.roster.noArtists")}
                     </p>
@@ -2448,7 +2460,7 @@ export default function GalleryDashboardPage() {
                       <button
                         type="button"
                         onClick={() => goToInvitationsSection()}
-                        className="mt-8 inline-flex items-center rounded-full bg-neutral-950 px-5 py-2.5 text-[13px] font-semibold text-white shadow-md shadow-neutral-900/20 transition hover:bg-neutral-800"
+                        className="v2-cta-primary mt-8 min-h-[44px] px-5 py-2.5 text-[13px]"
                       >
                         {t("gallery.roster.goToInvitations")}
                       </button>
@@ -2472,10 +2484,10 @@ export default function GalleryDashboardPage() {
                         const initial = name.trim().charAt(0).toUpperCase() || "?";
                         return (
                           <li key={a.id}>
-                            <div className="group flex gap-4 rounded-xl border border-neutral-900/[0.06] bg-white/50 p-4 transition hover:border-neutral-900/12 hover:bg-white/90 hover:shadow-[0_8px_24px_-12px_rgba(15,23,42,0.15)] sm:items-center sm:justify-between sm:p-5">
+                            <div className="group flex gap-4 rounded-lg border border-[var(--v2-border)] bg-white px-4 py-4 transition hover:border-[var(--v2-border-strong)] sm:items-center sm:justify-between sm:p-5">
                               <div className="flex min-w-0 flex-1 items-start gap-4 sm:items-center">
                                 <div
-                                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-neutral-100 to-neutral-200/80 font-serif text-lg font-normal text-neutral-600 ring-1 ring-black/[0.05]"
+                                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[var(--v2-border)] bg-[var(--v2-paper-bone,#f4efe6)] font-serif text-lg font-normal text-[var(--v2-ink-soft)]"
                                   aria-hidden
                                 >
                                   {initial}
@@ -2487,7 +2499,7 @@ export default function GalleryDashboardPage() {
                                   <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
                                     {a.slug ? (
                                       <Link
-                                        href={`/artist/${a.slug}`}
+                                        href={fieldCreativeHref(a.slug)}
                                         className="text-[12px] font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-4 transition hover:text-neutral-900"
                                       >
                                         {t("gallery.roster.viewPublicProfile")}
@@ -2504,10 +2516,10 @@ export default function GalleryDashboardPage() {
                                 <span
                                   className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ${
                                     represented
-                                      ? "bg-emerald-500/12 text-emerald-900"
+                                      ? "border border-[var(--v2-seal-border)] bg-[var(--v2-paper-bone)] text-[var(--v2-ink)]"
                                       : historical
                                         ? "bg-neutral-500/12 text-neutral-700"
-                                        : "bg-amber-500/12 text-amber-950/90"
+                                        : "bg-[var(--v2-amber-exception-dim)] text-[var(--v2-ink)]"
                                   }`}
                                 >
                                   {represented
@@ -2594,15 +2606,20 @@ export default function GalleryDashboardPage() {
           <div className="studio-reveal max-w-6xl opacity-[0.96]">
             <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
               <div>
-                <InfoTooltip text={t("gallery.catalogue.tooltip")} />
-                <h2 className="font-serif text-[1.35rem] font-normal text-neutral-950 md:text-[1.75rem]">
+                <p className={`${studioV2.type.railLabel} text-[var(--v2-ink-muted)]`}>
+                  {t("gallery.nav.catalogue")}
+                </p>
+                <div className="mt-2">
+                  <InfoTooltip text={t("gallery.catalogue.tooltip")} />
+                </div>
+                <h2 className="mt-2 font-serif text-[1.35rem] font-normal text-[var(--v2-ink)] md:text-[1.75rem]">
                   {t(ORGANISATION_SECTION_LABEL_KEYS.catalogue)}
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={openRegisterWorkspace}
-                className="rounded-xl bg-neutral-950 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-neutral-800"
+                className="v2-cta-primary min-h-[44px] px-5 py-2.5 text-sm"
               >
                 {t("gallery.catalogue.registerWork")}
               </button>
@@ -2673,25 +2690,24 @@ export default function GalleryDashboardPage() {
                 }, 220);
               }}
             />
-            <section className="rounded-2xl border border-neutral-900/[0.05] bg-white/40 p-6 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-sm sm:p-7">
-              <div className="flex flex-wrap items-baseline justify-between gap-3">
-                <h2 className="font-serif text-lg font-normal text-neutral-950 md:text-xl">
-                  {t("gallery.catalogue.registeredWorks")}
-                </h2>
-                {worksCount > 0 ? (
-                  <span className="text-[11px] tabular-nums text-neutral-400">
+            <StudioContentSlab
+              title={t("gallery.catalogue.registeredWorks")}
+              actions={
+                worksCount > 0 ? (
+                  <span className="v2-type-mono text-[10px] tracking-[0.1em] text-[var(--v2-cool-grey)]">
                     {fillMessage(t("gallery.catalogue.inCatalogue"), {
                       count: String(worksCount),
                     })}
                   </span>
-                ) : null}
-              </div>
+                ) : null
+              }
+            >
               {artworks.length === 0 ? (
-                <p className="mt-4 text-[13px] text-neutral-500">
+                <p className="text-[13px] text-[var(--v2-ink-muted)]">
                   {t("gallery.catalogue.empty")}
                 </p>
               ) : (
-                <ul className="mt-6 max-h-[min(70vh,36rem)] divide-y divide-neutral-900/[0.05] overflow-y-auto pr-1">
+                <ul className="max-h-[min(70vh,36rem)] divide-y divide-[var(--v2-border)] overflow-y-auto pr-1">
                   {artworks.map((w) => {
                     const linkedName = w.artist_id
                       ? artistNameById.get(w.artist_id)
@@ -2725,9 +2741,9 @@ export default function GalleryDashboardPage() {
                     return (
                       <li
                         key={w.id}
-                        className="group flex gap-3 py-3.5 first:pt-0 transition-colors hover:bg-white/35"
+                        className="group flex gap-3 py-3.5 first:pt-0 transition-colors hover:bg-[var(--v2-paper-bone)]/40"
                       >
-                        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-gradient-to-br from-neutral-100 to-neutral-200/80 ring-1 ring-black/[0.04]">
+                        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border border-[var(--v2-border)] bg-[var(--v2-paper-bone,#f4efe6)]">
                           {w.image_url ? (
                             <img
                               src={w.image_url}
@@ -2740,7 +2756,7 @@ export default function GalleryDashboardPage() {
                           <Link
                             href={
                               w.registry_id
-                                ? `/registry/${encodeURIComponent(w.registry_id)}`
+                                ? fieldRecordHref(w.registry_id)
                                 : "#"
                             }
                             className="text-[14px] font-medium text-neutral-950 underline decoration-neutral-200/90 underline-offset-2 transition hover:decoration-neutral-500"
@@ -2760,7 +2776,9 @@ export default function GalleryDashboardPage() {
                         <div className="flex shrink-0 flex-col items-end gap-2 pt-0.5">
                           <span
                             className={`inline-block text-sm font-medium ${
-                              verified ? "text-emerald-800/90" : "text-neutral-400"
+                              verified
+                                ? semanticTextClass("certification")
+                                : "text-[var(--v2-cool-grey)]"
                             }`}
                           >
                             {statusLabel}
@@ -2784,7 +2802,7 @@ export default function GalleryDashboardPage() {
                   })}
                 </ul>
               )}
-            </section>
+            </StudioContentSlab>
           </div>
         ) : null}
 

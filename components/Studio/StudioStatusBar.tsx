@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 
+import { studioCollectorArtworkHref } from "@/lib/studio-nav";
+
 export type StudioAttentionLink = {
   registryId: string;
   title: string;
@@ -44,7 +46,7 @@ function AttentionCard({
           {preview.map((it) => (
             <li key={it.registryId}>
               <Link
-                href={`/collector-studio/artwork/${encodeURIComponent(it.registryId)}`}
+                href={studioCollectorArtworkHref(it.registryId)}
                 className="block truncate text-sm text-neutral-700 decoration-neutral-300 underline-offset-4 transition hover:text-neutral-950 hover:underline"
               >
                 {it.title}

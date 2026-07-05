@@ -21,6 +21,7 @@ import {
   semanticStampClass,
 } from "@/lib/registry-semantic-signals";
 import { registryV2 } from "@/styles/registry-v2";
+import { studioV2 } from "@/styles/studio-v2";
 
 type LatestOwner = {
   transfer_type?: string | null;
@@ -138,10 +139,10 @@ function TransferDots({
     >
       {Array.from({ length: n }).map((_, i) => (
         <span key={i} className="flex items-center">
-          <span className="h-2 w-2 rounded-full bg-gradient-to-br from-neutral-400/70 to-neutral-300/50 shadow-sm ring-1 ring-neutral-200/80" />
+          <span className="h-2 w-2 rounded-full border border-[var(--v2-border-strong)] bg-[var(--v2-paper-bone,#f4efe6)]" />
           {i < n - 1 ? (
             <span
-              className="mx-0.5 h-px w-2.5 bg-gradient-to-r from-neutral-300/80 to-neutral-200/40"
+              className="mx-0.5 h-px w-2.5 bg-[var(--v2-border)]"
               aria-hidden
             />
           ) : null}
@@ -176,7 +177,15 @@ export function OwnershipSection({
     totalOwnershipCount > 0 && filteredArtworks.length === 0;
 
   return (
-    <div className="space-y-12">
+    <div className={`${studioV2.scope} studio-reveal space-y-8`}>
+      <div className="border-b border-[var(--v2-border)] pb-5">
+        <p className="v2-type-mono text-[10px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
+          {t("studio.shell.onFile")}
+        </p>
+        <h2 className="v2-type-display mt-2 text-[1.5rem] leading-none text-[var(--v2-ink)] md:text-[1.75rem]">
+          {t("studio.nav.ownership")}
+        </h2>
+      </div>
       {!isTrulyEmpty ? (
         <>
           <StudioSearchRow
@@ -227,7 +236,7 @@ export function OwnershipSection({
       ) : null}
 
       {noMatches ? (
-        <div className="rounded-2xl border border-neutral-200/90 bg-white/80 px-8 py-12 text-center text-[15px] text-neutral-600 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)]">
+        <div className="rounded-lg border border-[var(--v2-border)] bg-white/85 px-6 py-10 text-center text-[15px] text-[var(--v2-ink-muted)]">
           {t("studio.ownership.noMatches")}
         </div>
       ) : null}
@@ -410,7 +419,7 @@ export function OwnershipSection({
           })}
         </div>
       ) : isTrulyEmpty ? (
-        <div className="rounded-2xl border border-neutral-200/90 bg-white/80 p-10 text-center shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)] md:p-14">
+        <div className={`${studioV2.surface.filingSheet} p-10 text-center md:p-14`}>
           <p className="text-xs text-neutral-500">
             {t("studio.ownership.emptyLabel")}
           </p>

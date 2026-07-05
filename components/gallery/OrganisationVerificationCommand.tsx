@@ -66,7 +66,12 @@ export function OrganisationVerificationCommand({
       <div className={`${studioV2.surface.filingSheetMajor} px-5 py-6 sm:px-7 sm:py-8`}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <InfoTooltip text={t("gallery.verification.tooltip")} theme="light" />
+            <p className={`${studioV2.type.railLabel} text-[var(--v2-ink-muted)]`}>
+              {t("gallery.nav.verification")}
+            </p>
+            <div className="mt-2">
+              <InfoTooltip text={t("gallery.verification.tooltip")} theme="light" />
+            </div>
             <h2 className="mt-2 font-serif text-[1.35rem] font-normal tracking-[-0.02em] text-[var(--v2-ink)] md:text-[1.65rem]">
               {t("gallery.organisation.verificationCommand")}
             </h2>

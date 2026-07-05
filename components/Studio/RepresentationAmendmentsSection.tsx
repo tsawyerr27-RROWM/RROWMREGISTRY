@@ -13,7 +13,8 @@ import {
   buildProposedChangesPayload,
   proposedChangeFieldLabel,
 } from "@/lib/representation-amendments";
-import { workspace } from "@/styles/workspace-design";
+import { studioV2 } from "@/styles/studio-v2";
+import { studioFilingForm } from "@/styles/studio-filing-form";
 
 export type AmendmentArtworkOption = {
   id: string;
@@ -89,10 +90,8 @@ function viewerIsRequester(
   return viewer === "gallery";
 }
 
-const primaryBtn =
-  "rounded-xl bg-neutral-950 px-4 py-2.5 text-xs font-semibold text-white transition enabled:hover:bg-neutral-800 disabled:opacity-50";
-const secondaryBtn =
-  "rounded-xl border border-neutral-900/[0.1] bg-white/90 px-4 py-2.5 text-xs font-medium text-neutral-800 transition enabled:hover:bg-neutral-50 disabled:opacity-50";
+const primaryBtn = "v2-cta-primary px-4 py-2.5 text-xs disabled:opacity-50";
+const secondaryBtn = "v2-cta-secondary px-4 py-2.5 text-xs disabled:opacity-50";
 
 /**
  * Phase D: amendment requests between artist and institution.
@@ -183,7 +182,7 @@ export function RepresentationAmendmentsSection({
         description={t("studio.amendments.description")}
         badge={
           pendingForViewer.length > 0 ? (
-            <span className={workspace.card.pill}>
+            <span className="studio-execution-stamp studio-execution-stamp--active">
               {pendingForViewer.length === 1
                 ? t("studio.amendments.responseNeeded")
                 : fillMessage(t("studio.amendments.responsesNeeded"), {
@@ -223,19 +222,23 @@ export function RepresentationAmendmentsSection({
               return (
                 <li
                   key={row.id}
-                  className="rounded-xl border border-neutral-900/[0.06] bg-white/70 p-5 shadow-[0_12px_40px_-32px_rgba(15,23,42,0.12)] backdrop-blur-sm"
+                  className={`${studioV2.surface.filingSheetMajor} relative overflow-hidden px-4 py-5 sm:px-5 sm:py-6`}
                 >
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <span
+                    className="pointer-events-none absolute inset-y-0 left-0 w-0.5 bg-[var(--v2-amber-exception)] opacity-80"
+                    aria-hidden
+                  />
+                  <div className="relative z-[1] flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0 flex-1">
                       <p className="text-[15px] font-medium text-neutral-900">
                         {title}
                       </p>
                       {reg ? (
-                        <p className={`mt-0.5 ${workspace.type.registryId}`}>
+                        <p className="mt-0.5 v2-type-mono text-[10px] tracking-[0.08em] text-[var(--v2-cool-grey)]">
                           {reg}
                         </p>
                       ) : null}
-                      <p className={`mt-1.5 ${workspace.type.metaQuiet}`}>
+                      <p className="mt-1.5 text-[12px] text-[var(--v2-ink-muted)]">
                         {viewer === "artist"
                           ? gname
                           : artistNm || t("studio.amendments.representedArtist")}
@@ -249,7 +252,7 @@ export function RepresentationAmendmentsSection({
                         {row.notes}
                       </p>
                       {Object.keys(row.proposed_changes).length > 0 ? (
-                        <ul className="mt-3 space-y-1 rounded-lg border border-neutral-900/[0.05] bg-neutral-50/60 px-3 py-2.5 text-sm text-neutral-700">
+                        <ul className="mt-3 space-y-1 rounded-lg border border-[var(--v2-border)] bg-[var(--v2-paper-bone)]/40 px-3 py-2.5 text-sm text-[var(--v2-ink-muted)]">
                           {Object.entries(row.proposed_changes).map(([k, v]) => (
                             <li key={k}>
                               <span className="font-medium text-neutral-900">
@@ -264,7 +267,7 @@ export function RepresentationAmendmentsSection({
                         {statusLabel(row.status, t)}
                       </p>
                       {row.resolution_notes ? (
-                        <p className={`mt-1 ${workspace.type.metaQuiet}`}>
+                        <p className="mt-1 text-[12px] text-[var(--v2-ink-muted)]">
                           {t("studio.amendments.resolution")} {row.resolution_notes}
                         </p>
                       ) : null}
@@ -294,7 +297,7 @@ export function RepresentationAmendmentsSection({
                                   [row.id]: e.target.value,
                                 }))
                               }
-                              className={workspace.modal.field}
+                              className={studioFilingForm.field}
                             />
                           </label>
                           <div className="flex flex-wrap gap-2">
@@ -339,7 +342,7 @@ export function RepresentationAmendmentsSection({
           </ul>
         )}
 
-        <p className={`${workspace.type.metaQuiet} mt-6 border-t border-neutral-900/[0.06] pt-4`}>
+        <p className="mt-6 border-t border-[var(--v2-border)] pt-4 text-[12px] text-[var(--v2-ink-muted)]">
           {translateRepresentationPhrase("priorFilingsRemainVisible", t)}
         </p>
       </GovernanceSectionShell>
@@ -359,11 +362,11 @@ export function RepresentationAmendmentsSection({
             </p>
           ) : null}
           <label className="mt-5 block">
-            <span className={workspace.type.label}>{t("studio.amendments.workFallback")}</span>
+            <span className={studioFilingForm.label}>{t("studio.amendments.workFallback")}</span>
             <select
               value={artworkId}
               onChange={(e) => setArtworkId(e.target.value)}
-              className={workspace.modal.field}
+              className={`${studioFilingForm.field} ${studioFilingForm.select}`}
             >
               {artworkOptions.map((o) => (
                 <option key={o.id} value={o.id}>
@@ -374,14 +377,14 @@ export function RepresentationAmendmentsSection({
             </select>
           </label>
           <label className="mt-4 block">
-            <span className={workspace.type.label}>
+            <span className={studioFilingForm.label}>
               {t("studio.valueEvent.noteOptional")} *
             </span>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className={workspace.modal.field}
+              className={`${studioFilingForm.field} ${studioFilingForm.textarea}`}
             />
           </label>
           <div className="mt-5">
@@ -392,25 +395,25 @@ export function RepresentationAmendmentsSection({
               placeholder={t("studio.form.title")}
               value={fTitle}
               onChange={(e) => setFTitle(e.target.value)}
-              className={workspace.modal.field}
+              className={studioFilingForm.field}
             />
             <input
               placeholder={t("studio.form.year")}
               value={fYear}
               onChange={(e) => setFYear(e.target.value)}
-              className={workspace.modal.field}
+              className={studioFilingForm.field}
             />
             <input
               placeholder={t("studio.form.medium")}
               value={fMedium}
               onChange={(e) => setFMedium(e.target.value)}
-              className={workspace.modal.field}
+              className={studioFilingForm.field}
             />
             <input
               placeholder={t("studio.form.dimensions")}
               value={fDimensions}
               onChange={(e) => setFDimensions(e.target.value)}
-              className={workspace.modal.field}
+              className={studioFilingForm.field}
             />
           </div>
           <textarea
@@ -418,14 +421,14 @@ export function RepresentationAmendmentsSection({
             value={fDescription}
             onChange={(e) => setFDescription(e.target.value)}
             rows={2}
-            className={`${workspace.modal.field} mt-3`}
+            className={`${studioFilingForm.field} ${studioFilingForm.textarea} mt-3`}
           />
           <div className="mt-6 flex justify-end gap-2">
             <button
               type="button"
               disabled={requestBusy}
               onClick={() => setRequestOpen(false)}
-              className="rounded-xl px-4 py-2.5 text-sm text-neutral-600"
+              className="v2-cta-secondary px-4 py-2.5 text-sm"
             >
               {t("common.cancel")}
             </button>

@@ -21,10 +21,8 @@ import {
   dealEditorSections,
   type DealEditorSectionId,
 } from "@/lib/deal-editor";
-import {
-  rrowmButton,
-  rrowmEconomicSurface,
-} from "@/styles/rrowm-theme";
+import { studioFilingForm } from "@/styles/studio-filing-form";
+import { studioV2 } from "@/styles/studio-v2";
 import {
   buildDealTermsPayload,
   buildDealTitle,
@@ -308,25 +306,27 @@ export function DealEditorWorkspace({ userId, preset, onBack }: Props) {
   };
 
   return (
-    <div className="rrowm-zone-economic min-h-0">
-      <header className={rrowmEconomicSurface.stickyHeader}>
+    <div className={`${studioV2.scope} min-h-0`}>
+      <header className={`${studioV2.surface.filingSheetMajor} sticky top-[calc(4.5rem+env(safe-area-inset-top,0px))] z-20 mb-8 px-6 py-6 sm:px-8 sm:py-7`}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <button
               type="button"
               onClick={onBack}
               disabled={busy}
-              className="text-sm font-medium text-neutral-600 transition hover:text-neutral-950 disabled:opacity-50"
+              className="v2-type-mono text-[10px] uppercase tracking-[0.14em] text-[var(--v2-ink-muted)] transition hover:text-[var(--v2-ink)] disabled:opacity-50"
             >
               ← Back to deals
             </button>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <h2 className="font-serif text-2xl text-neutral-950 md:text-3xl">{displayTitle}</h2>
-              <span className="rounded-full border border-neutral-200 bg-white px-2.5 py-0.5 text-[11px] font-medium text-neutral-600">
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <h2 className="font-serif text-2xl font-normal tracking-tight text-[var(--v2-ink)] md:text-[1.85rem]">
+                {displayTitle}
+              </h2>
+              <span className="rounded-full border border-[var(--v2-border)] bg-white/80 px-2.5 py-0.5 v2-type-mono text-[10px] uppercase tracking-[0.12em] text-[var(--v2-ink-muted)]">
                 Draft proposal
               </span>
             </div>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-neutral-600">
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--v2-ink-muted)]">
               Draft a formal proposal for a trusted cultural transaction on the registry.
             </p>
           </div>
@@ -336,7 +336,7 @@ export function DealEditorWorkspace({ userId, preset, onBack }: Props) {
               type="button"
               disabled={busy || !canSend}
               onClick={() => void submit()}
-              className={rrowmButton.primaryEconomic}
+              className="v2-cta-primary min-h-[44px] px-5 py-2.5 text-xs disabled:opacity-50"
             >
               {busy ? "Sending…" : "Send proposal"}
             </button>
@@ -345,9 +345,9 @@ export function DealEditorWorkspace({ userId, preset, onBack }: Props) {
       </header>
 
       {error ? (
-        <p className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
-          {error}
-        </p>
+        <div className="mb-6 rounded-lg border border-[var(--v2-amber-exception-dim)] bg-[var(--v2-amber-exception-dim)]/30 px-4 py-3">
+          <p className="text-sm leading-relaxed text-[var(--v2-ink)]">{error}</p>
+        </div>
       ) : null}
 
       <div className="grid gap-8 lg:grid-cols-[minmax(200px,16rem)_minmax(0,1fr)] lg:items-start">

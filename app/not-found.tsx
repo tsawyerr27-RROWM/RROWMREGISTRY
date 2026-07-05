@@ -1,8 +1,5 @@
-export default function NotFound() {
-  return (
-    <div style={{ padding: 40 }}>
-      <h1>Not found</h1>
-    </div>
-  );
-}
+import { ArchiveNotFoundShell } from "@/components/ui/ArchiveNotFoundShell";
 
+export default function NotFound() {
+  return <ArchiveNotFoundShell />;
+}

@@ -2,8 +2,15 @@
 
 import { useMemo, type CSSProperties } from "react";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
-import { ExperienceEmptyStateButton } from "@/components/ui/ExperienceEmptyState";
+import {
+  ExperienceEmptyStateButton,
+} from "@/components/ui/ExperienceEmptyState";
+import { ArchiveGalleryGrid } from "@/components/Studio/ArchiveGalleryGrid";
 import { CreativeArtworkSlab } from "@/components/Studio/CreativeArtworkSlab";
+import {
+  StudioViewToggle,
+  useStudioViewMode,
+} from "@/components/Studio/StudioViewToggle";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import {
   StudioSearchRow,
@@ -100,6 +107,7 @@ export function ArtworksSection({
   onSelfAttest,
 }: ArtworksSectionProps) {
   const { t } = useLocalePreferences();
+  const [worksView, setWorksView] = useStudioViewMode("creative.worksView");
   const accent = useMemo(
     () => studioArtworksAccentTheme(studioArtworksAccent),
     [studioArtworksAccent]
@@ -119,34 +127,43 @@ export function ArtworksSection({
       </div>
 
       {!isTrulyEmpty ? (
-        <StudioSearchRow
-          tone="light"
-          searchQuery={searchQuery}
-          onSearchChange={onSearchChange}
-          searchPlaceholder={t("studio.search.artworks")}
-          aside={
-            <>
-              <label className="sr-only" htmlFor="artworks-filter">
-                {t("studio.filter.artworks")}
-              </label>
-              <select
-                id="artworks-filter"
-                value={artworksFilter}
-                onChange={(e) =>
-                  onArtworksFilterChange(e.target.value as ArtworksListFilter)
-                }
-                className={studioFilterSelectClass("light")}
-              >
-                <option value="all">{t("registry.filters.allWorks")}</option>
-                <option value="filed">{t("trust.tier.filed.label")}</option>
-                <option value="self_attested">{t("trust.tier.self_attested.label")}</option>
-                <option value="verified">{t("trust.tier.verified.label")}</option>
-                <option value="priced">{t("studio.filter.withDeclaredValue")}</option>
-                <option value="unpriced">{t("studio.filter.noDeclaredValue")}</option>
-              </select>
-            </>
-          }
-        />
+        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <StudioSearchRow
+            tone="light"
+            searchQuery={searchQuery}
+            onSearchChange={onSearchChange}
+            searchPlaceholder={t("studio.search.artworks")}
+            aside={
+              <>
+                <label className="sr-only" htmlFor="artworks-filter">
+                  {t("studio.filter.artworks")}
+                </label>
+                <select
+                  id="artworks-filter"
+                  value={artworksFilter}
+                  onChange={(e) =>
+                    onArtworksFilterChange(e.target.value as ArtworksListFilter)
+                  }
+                  className={studioFilterSelectClass("light")}
+                >
+                  <option value="all">{t("registry.filters.allWorks")}</option>
+                  <option value="filed">{t("trust.tier.filed.label")}</option>
+                  <option value="self_attested">{t("trust.tier.self_attested.label")}</option>
+                  <option value="verified">{t("trust.tier.verified.label")}</option>
+                  <option value="priced">{t("studio.filter.withDeclaredValue")}</option>
+                  <option value="unpriced">{t("studio.filter.noDeclaredValue")}</option>
+                </select>
+              </>
+            }
+          />
+          <StudioViewToggle
+            mode={worksView}
+            onChange={setWorksView}
+            label={t("studio.archive.viewLabel")}
+            ledgerLabel={t("studio.archive.viewLedger")}
+            galleryLabel={t("studio.archive.viewGallery")}
+          />
+        </div>
       ) : null}
 
       {noSearchMatches ? (
@@ -155,7 +172,20 @@ export function ArtworksSection({
         </div>
       ) : null}
 
-      {!noSearchMatches && filteredArtworks.length > 0 ? (
+      {!noSearchMatches && filteredArtworks.length > 0 && worksView === "gallery" ? (
+        <ArchiveGalleryGrid
+          items={filteredArtworks.map((artwork) => ({
+            id: String(artwork.id),
+            title: artwork.title || t("collector.fallback.untitled"),
+            subtitle: [artwork.year, artwork.medium].filter(Boolean).join(" · ") || undefined,
+            meta: artwork.registry_id || undefined,
+            imageUrl: artwork.image_url,
+            onClick: () => onArtworkClick(artwork),
+          }))}
+        />
+      ) : null}
+
+      {!noSearchMatches && filteredArtworks.length > 0 && worksView === "ledger" ? (
         <ul className="studio-reveal-stagger space-y-3 sm:space-y-4">
           {filteredArtworks.map((artwork, index) => {
             const artworkId = String(artwork.id ?? "");

@@ -165,6 +165,9 @@ export function LoginClient() {
   return (
     <AuthPageShell
       title={view === "signin" ? t("auth.signIn") : t("auth.resetPassword")}
+      showAccessRail={false}
+      showEnterRail={false}
+      showEnterBody={false}
       subtitle={
         view === "signin" ? (
           <>

@@ -207,7 +207,7 @@ export function ArtworkAuthenticationInviteModal({
           </p>
         ) : null}
         {success ? (
-          <p className="mt-4 text-sm text-emerald-900/90" role="status">
+          <p className="mt-4 rounded-lg border border-[var(--v2-border)] bg-white px-4 py-3 text-sm text-[var(--v2-ink-muted)]" role="status">
             {success}
           </p>
         ) : null}

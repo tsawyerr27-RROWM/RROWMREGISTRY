@@ -14,19 +14,37 @@ type Props = {
   reserveHeaderOffset?: boolean;
   /** Replace default password hint under the card; pass null to omit. */
   cardBelow?: ReactNode | null;
+  /** Mono overline above the form title (default: shown). */
+  showAccessRail?: boolean;
+  /** Left-panel mono overline on large screens (default: shown). */
+  showEnterRail?: boolean;
+  /** Left-panel body copy on large screens (default: shown). */
+  showEnterBody?: boolean;
 };
 
-function AuthNarrativePanel() {
+function AuthNarrativePanel({
+  showEnterRail = true,
+  showEnterBody = true,
+}: {
+  showEnterRail?: boolean;
+  showEnterBody?: boolean;
+}) {
   const { t } = useLocalePreferences();
 
   return (
     <div className="auth-page-narrative relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-center">
       <div className="auth-page-narrative__texture pointer-events-none absolute inset-0" aria-hidden />
       <div className="relative z-[1] max-w-md px-2 py-8">
-        <p className="v2-type-mono text-[10px] uppercase tracking-[0.24em] text-[var(--v2-ink-muted)]">
-          {t("auth.enterRail")}
-        </p>
-        <h2 className="mt-6 font-serif text-[clamp(2.25rem,4vw,3rem)] font-normal leading-[1.02] tracking-[-0.03em] text-[var(--v2-ink)]">
+        {showEnterRail ? (
+          <p className="v2-type-mono text-[10px] uppercase tracking-[0.24em] text-[var(--v2-ink-muted)]">
+            {t("auth.enterRail")}
+          </p>
+        ) : null}
+        <h2
+          className={`font-serif text-[clamp(2.25rem,4vw,3rem)] font-normal leading-[1.02] tracking-[-0.03em] text-[var(--v2-ink)] ${
+            showEnterRail ? "mt-6" : ""
+          }`}
+        >
           {t("auth.enterTitle")}
         </h2>
         <div className="mt-8 space-y-1 font-serif text-[1.35rem] leading-snug text-[var(--v2-ink-soft)]">
@@ -34,9 +52,11 @@ function AuthNarrativePanel() {
           <p>{t("auth.enterLine2")}</p>
           <p>{t("auth.enterLine3")}</p>
         </div>
-        <p className="mt-8 max-w-sm text-sm leading-relaxed text-[var(--v2-ink-muted)]">
-          {t("auth.enterBody")}
-        </p>
+        {showEnterBody ? (
+          <p className="mt-8 max-w-sm text-sm leading-relaxed text-[var(--v2-ink-muted)]">
+            {t("auth.enterBody")}
+          </p>
+        ) : null}
       </div>
     </div>
   );
@@ -52,6 +72,9 @@ export function AuthPageShell({
   footer,
   reserveHeaderOffset = true,
   cardBelow,
+  showAccessRail = true,
+  showEnterRail = true,
+  showEnterBody = true,
 }: Props) {
   const { t } = useLocalePreferences();
   const topPad = reserveHeaderOffset
@@ -63,17 +86,23 @@ export function AuthPageShell({
       className={`auth-page-shell ds-page-environment flex min-h-[100dvh] flex-col items-center px-4 py-10 sm:px-6 sm:py-14 md:px-8 md:py-16 ${topPad}`}
     >
       <div className={`${studioV2.scope} grid w-full max-w-6xl gap-10 lg:grid-cols-2 lg:items-center lg:gap-14`}>
-        <AuthNarrativePanel />
+        <AuthNarrativePanel showEnterRail={showEnterRail} showEnterBody={showEnterBody} />
 
         <div className="w-full max-w-[min(100%,26rem)] justify-self-center sm:max-w-md lg:max-w-none lg:justify-self-end">
           <div
             className={`${studioV2.surface.filingSheetMajor} studio-reveal relative overflow-hidden px-6 py-7 sm:px-8 sm:py-8`}
           >
             <header className="border-b border-[var(--v2-border)] pb-6 sm:pb-7">
-              <p className="v2-type-mono text-[9px] uppercase tracking-[0.22em] text-[var(--v2-ink-muted)]">
-                {t("auth.accessRail")}
-              </p>
-              <h1 className="mt-3 font-serif text-[1.65rem] font-normal leading-tight tracking-tight text-[var(--v2-ink)] sm:text-[1.85rem]">
+              {showAccessRail ? (
+                <p className="v2-type-mono text-[9px] uppercase tracking-[0.22em] text-[var(--v2-ink-muted)]">
+                  {t("auth.accessRail")}
+                </p>
+              ) : null}
+              <h1
+                className={`font-serif text-[1.65rem] font-normal leading-tight tracking-tight text-[var(--v2-ink)] sm:text-[1.85rem] ${
+                  showAccessRail ? "mt-3" : ""
+                }`}
+              >
                 {title}
               </h1>
               {subtitle ? (

@@ -1,6 +1,7 @@
 "use client";
 
 import type { DealEditorSection, DealEditorSectionId } from "@/lib/deal-editor";
+import { studioV2 } from "@/styles/studio-v2";
 
 type Props = {
   sections: DealEditorSection[];
@@ -17,10 +18,13 @@ export function DealEditorSectionNav({
 }: Props) {
   return (
     <nav
-      aria-label="Proposal sections"
-      className="lg:sticky lg:top-[calc(5rem+env(safe-area-inset-top,0px)+7.5rem)] lg:self-start"
+      aria-label="Proposal outline"
+      className={`${studioV2.scope} lg:sticky lg:top-[calc(5rem+env(safe-area-inset-top,0px)+7.5rem)] lg:self-start`}
     >
-      <p className="text-sm font-medium text-neutral-700">Proposal outline</p>
+      <p className="v2-type-mono text-[10px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
+        Filing steps
+      </p>
+      <p className="mt-2 font-serif text-[1.1rem] text-[var(--v2-ink)]">Proposal outline</p>
       <ol className="mt-4 space-y-1">
         {sections.map((section, index) => {
           const active = section.id === activeId;
@@ -30,29 +34,25 @@ export function DealEditorSectionNav({
               <button
                 type="button"
                 onClick={() => onSelect(section.id)}
-                className={`flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition ${
+                className={`flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition motion-reduce:transition-none ${
                   active
-                    ? "bg-neutral-950 text-white"
-                    : "text-neutral-700 hover:bg-white/70 hover:text-neutral-950"
+                    ? "border-[var(--v2-ink)] bg-[var(--v2-ink)] text-white"
+                    : "border-[var(--v2-border)] text-[var(--v2-ink-muted)] hover:border-[var(--v2-border-strong)] hover:text-[var(--v2-ink)]"
                 }`}
               >
                 <span
-                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-medium ${
+                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full v2-type-mono text-[10px] ${
                     active
                       ? "bg-white/15 text-white"
                       : complete
-                        ? "bg-emerald-50 text-emerald-900 ring-1 ring-emerald-900/10"
-                        : "bg-neutral-100 text-neutral-500"
+                        ? "border border-[var(--v2-lime-transfer-dim)] bg-[var(--v2-lime-transfer-dim)]/40 text-[var(--v2-ink)]"
+                        : "border border-[var(--v2-border)] bg-white text-[var(--v2-cool-grey)]"
                   }`}
                   aria-hidden
                 >
                   {index + 1}
                 </span>
-                <span className="min-w-0">
-                  <span className={`block text-sm font-medium ${active ? "text-white" : ""}`}>
-                    {section.label}
-                  </span>
-                </span>
+                <span className="min-w-0 text-sm font-medium">{section.label}</span>
               </button>
             </li>
           );

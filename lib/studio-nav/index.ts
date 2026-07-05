@@ -38,6 +38,7 @@ export {
   isCollectorSectionId,
   navigateToCollectorSection,
   consumePendingCollectorSection,
+  studioCollectorArtworkHref,
 } from "@/lib/studio-nav/collector-nav";
 
 export {

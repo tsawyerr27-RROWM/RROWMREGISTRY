@@ -4,10 +4,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { RouteLoadingShell } from "@/components/ui/RouteLoadingShell";
+import { ArtworkTrustBadge } from "@/components/Registry/ArtworkTrustBadge";
 import {
   deferredRouterRefresh,
   deferredRouterReplace,
 } from "@/lib/deferred-app-router";
+import { fieldRecordHref } from "@/lib/field-nav";
+import { studioCollectorArtworkHref } from "@/lib/studio-nav";
 import { useSupabaseBrowserLazy } from "@/hooks/useSupabaseBrowserLazy";
 import { OwnershipVerificationControls } from "@/components/Registry/OwnershipVerificationControls";
 import { StudioSaleTransferModal } from "@/components/Studio/StudioSaleTransferModal";
@@ -25,6 +29,11 @@ import {
 } from "@/lib/ownership-canonical";
 import { formatValueEventLabel } from "@/lib/format-registry-labels";
 import { getCollectorOwnedArtworkIds } from "@/lib/collector-portfolio";
+import {
+  semanticAccentBorderClass,
+  semanticDotClass,
+} from "@/lib/registry-semantic-signals";
+import { studioV2 } from "@/styles/studio-v2";
 
 function isPublicSurfaceValueVisibility(visibility: string | null | undefined) {
   return (
@@ -141,7 +150,7 @@ export function StudioArtworkClient({ registryId }: Props) {
       if (!sessionData?.session) {
         deferredRouterReplace(
           router,
-          `/login?next=${encodeURIComponent(`/collector-studio/artwork/${encodeURIComponent(cleanId)}`)}`
+          `/login?next=${encodeURIComponent(studioCollectorArtworkHref(cleanId))}`
         );
         return;
       }
@@ -241,16 +250,32 @@ export function StudioArtworkClient({ registryId }: Props) {
 
   if (loading) {
     return (
-      <div className="min-h-[50vh] flex items-center justify-center text-sm text-neutral-500">
-        Loading…
+      <div className={`${studioV2.scope} ds-page-environment min-h-screen pt-20`}>
+        <RouteLoadingShell label="Loading holding…" />
       </div>
     );
   }
 
   if (notFound || !artwork) {
     return (
-      <div className="min-h-screen rrowm-bg-page pt-24 text-center">
-        <p className="text-neutral-600">Record not found.</p>
+      <div className={`${studioV2.scope} ds-page-environment flex min-h-screen flex-col items-center justify-center px-6 pt-24 text-center`}>
+        <div className={`${studioV2.surface.filingSheet} max-w-md px-8 py-10`}>
+          <p className="v2-type-mono text-[10px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
+            Archive
+          </p>
+          <h1 className="v2-type-display mt-3 text-[1.5rem] text-[var(--v2-ink)]">
+            Record not found
+          </h1>
+          <p className="mt-3 text-sm text-[var(--v2-ink-muted)]">
+            This holding could not be located on the registry ledger.
+          </p>
+          <Link
+            href="/studio/collector"
+            className="v2-cta-secondary mt-8 inline-flex min-h-[44px] items-center px-6 py-2.5 text-xs"
+          >
+            Return to holdings
+          </Link>
+        </div>
       </div>
     );
   }
@@ -266,7 +291,7 @@ export function StudioArtworkClient({ registryId }: Props) {
       : "Certificate not recorded";
 
   return (
-    <div className="min-h-screen rrowm-bg-page pt-20 pb-16 text-neutral-900">
+    <div className={`${studioV2.scope} ds-page-environment min-h-screen pt-20 pb-16 text-[var(--v2-ink)]`}>
       {toast ? (
         <SemanticToast message={toast.message} event={toast.event} />
       ) : null}
@@ -274,11 +299,11 @@ export function StudioArtworkClient({ registryId }: Props) {
       <main className="mx-auto max-w-4xl px-5 md:px-8">
 
         {!isOwner ? (
-          <div className="rounded-2xl border border-amber-200/80 bg-amber-50/90 px-5 py-4 text-sm text-amber-950">
+          <div className={`${studioV2.surface.filingSheet} border-l-2 border-[var(--v2-amber-exception)] px-5 py-4 text-sm text-[var(--v2-ink-muted)]`}>
             This work isn’t in your collection as current owner.{" "}
             <Link
-              href={`/registry/${encodeURIComponent(cleanId)}`}
-              className="font-medium underline decoration-amber-400 underline-offset-4"
+              href={fieldRecordHref(cleanId)}
+              className="font-medium text-[var(--v2-ink)] underline decoration-[var(--v2-border-strong)] underline-offset-4"
             >
               View the public registry record
             </Link>
@@ -287,8 +312,8 @@ export function StudioArtworkClient({ registryId }: Props) {
         ) : null}
 
         <div className="mt-8 grid gap-10 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] md:items-start">
-          <div className="overflow-hidden rounded-2xl border border-black/[0.06] bg-white/60 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-            <div className="aspect-[4/3] bg-neutral-100">
+          <div className={`${studioV2.surface.filingSheetMajor} overflow-hidden`}>
+            <div className="aspect-[4/3] bg-[var(--v2-paper-sunk,#efe9df)]">
               {imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -297,33 +322,26 @@ export function StudioArtworkClient({ registryId }: Props) {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="flex h-full items-center justify-center text-sm text-neutral-400">
-                  No image
+                <div className="flex h-full items-center justify-center v2-type-mono text-[10px] uppercase tracking-[0.14em] text-[var(--v2-ink-muted)]">
+                  No image on file
                 </div>
               )}
             </div>
             <div className="space-y-3 px-5 py-5">
-              <h1 className="font-serif text-3xl font-normal leading-tight tracking-tight text-neutral-950 md:text-4xl">
+              <p className="v2-type-mono text-[10px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
+                Holding
+              </p>
+              <h1 className="v2-type-display text-[1.75rem] leading-[1.08] text-[var(--v2-ink)] md:text-[2rem]">
                 {title}
               </h1>
-              <p className="text-sm text-neutral-600">{artistName}</p>
-              <p className="font-mono text-[11px] text-neutral-400">{cleanId}</p>
+              <p className="text-sm text-[var(--v2-ink-muted)]">{artistName}</p>
+              <p className="v2-type-mono text-[11px] tracking-[0.08em] text-[var(--v2-cool-grey)]">{cleanId}</p>
               <div className="flex flex-wrap gap-2 pt-1">
-                <span
-                  className={
-                    verificationStatus === "verified"
-                      ? "rounded-full bg-emerald-50 px-2.5 py-0.5 text-sm font-medium text-emerald-800 ring-1 ring-emerald-200/80"
-                      : "rounded-full bg-neutral-100 px-2.5 py-0.5 text-sm font-medium text-neutral-600 ring-1 ring-black/[0.06]"
-                  }
-                >
-                  {verificationStatus === "verified"
-                    ? "Verified"
-                    : "Verification not recorded"}
-                </span>
-                <span className="rounded-full bg-white/80 px-2.5 py-0.5 text-[10px] font-medium text-neutral-600 ring-1 ring-black/[0.06]">
+                <ArtworkTrustBadge verificationStatus={verificationStatus} />
+                <span className="v2-type-mono rounded-md border border-[var(--v2-border)] bg-white/80 px-2.5 py-0.5 text-[10px] uppercase tracking-[0.1em] text-[var(--v2-ink-muted)]">
                   {certLabel}
                 </span>
-                <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-medium ${ownerBadge.className}`}>
+                <span className={`v2-type-mono rounded-md border border-[var(--v2-border)] bg-white/80 px-2.5 py-0.5 text-[10px] uppercase tracking-[0.1em] ${ownerBadge.className}`}>
                   Ownership · {ownerBadge.label}
                 </span>
               </div>
@@ -331,35 +349,35 @@ export function StudioArtworkClient({ registryId }: Props) {
           </div>
 
           <div className="space-y-5">
-            <div className="rounded-2xl border border-black/[0.06] bg-white/60 px-5 py-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-              <h2 className="text-base font-semibold text-neutral-900">
+            <div className={`${studioV2.surface.filingSheet} px-5 py-5`}>
+              <p className="v2-type-mono text-[10px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
                 Actions
-              </h2>
+              </p>
               <div className="mt-4 flex flex-col gap-3">
                 {isOwner && saleContext.unresolved && saleContext.sale ? (
                   <button
                     type="button"
                     onClick={() => setSaleModalOpen(true)}
-                    className="rounded-2xl bg-neutral-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-neutral-800"
+                    className="v2-cta-primary min-h-[44px] px-4 py-3 text-xs"
                   >
                     Record sale transfer
                   </button>
                 ) : null}
                 <Link
-                  href={`/registry/${encodeURIComponent(cleanId)}`}
-                  className="rounded-2xl border border-black/[0.08] bg-white/80 px-4 py-3 text-center text-sm font-medium text-neutral-800 transition hover:bg-white"
+                  href={fieldRecordHref(cleanId)}
+                  className="v2-cta-secondary inline-flex min-h-[44px] items-center justify-center px-4 py-3 text-xs"
                 >
                   Open public registry record
                 </Link>
                 {String(artwork.verification_status) === "verified" ? (
                   <Link
                     href={`/certificate/${encodeURIComponent(cleanId)}`}
-                    className="rounded-2xl border border-black/[0.08] bg-white/80 px-4 py-3 text-center text-sm font-medium text-neutral-800 transition hover:bg-white"
+                    className="v2-cta-secondary inline-flex min-h-[44px] items-center justify-center px-4 py-3 text-xs"
                   >
                     Certificate (sign-in required)
                   </Link>
                 ) : (
-                  <p className="text-xs leading-relaxed text-neutral-500">
+                  <p className="text-xs leading-relaxed text-[var(--v2-ink-muted)]">
                     Certificates are available once the work is verified.
                   </p>
                 )}
@@ -367,10 +385,10 @@ export function StudioArtworkClient({ registryId }: Props) {
             </div>
 
             {latestOwnershipRow && isOwner ? (
-              <div className="rounded-2xl border border-black/[0.06] bg-white/60 px-4 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                <h2 className="text-base font-semibold text-neutral-900">
+              <div className={`${studioV2.surface.filingSheet} px-4 py-4`}>
+                <p className="v2-type-mono text-[10px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
                   Verification
-                </h2>
+                </p>
                 <div className="group mt-3">
                   <OwnershipVerificationControls
                     eventId={String((latestOwnershipRow as { id?: string }).id)}
@@ -378,7 +396,7 @@ export function StudioArtworkClient({ registryId }: Props) {
                     verificationStatus={(latestOwnershipRow as { verification_status?: unknown }).verification_status}
                     hasSession={Boolean(user)}
                     userIsAdmin={Boolean(profile?.is_admin)}
-                    loginNextPath={`/collector-studio/artwork/${encodeURIComponent(cleanId)}`}
+                    loginNextPath={studioCollectorArtworkHref(cleanId)}
                   />
                 </div>
               </div>
@@ -387,7 +405,10 @@ export function StudioArtworkClient({ registryId }: Props) {
         </div>
 
         <section className="mt-14 space-y-4">
-          <h2 className="font-serif text-xl font-normal text-neutral-950">
+          <p className="v2-type-mono text-[10px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
+            Provenance
+          </p>
+          <h2 className="v2-type-display text-[1.35rem] text-[var(--v2-ink)]">
             Provenance timeline
           </h2>
           <div className="space-y-3">
@@ -399,10 +420,10 @@ export function StudioArtworkClient({ registryId }: Props) {
               return (
                 <div
                   key={String(ev.id ?? idx)}
-                  className="rounded-2xl border border-black/[0.06] bg-white/60 px-4 py-3 text-sm shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
+                  className={`${studioV2.surface.filingSheet} ${semanticAccentBorderClass("transfer")} px-4 py-3 text-sm`}
                 >
                   <div className="flex flex-wrap items-baseline gap-2">
-                    <span className="font-medium text-neutral-900">
+                    <span className="font-medium text-[var(--v2-ink)]">
                       {formatOwnershipOwnerPrimary(ev, {
                         viewerUserId: user?.id,
                         artworkArtistId: String(artwork.artist_id || ""),
@@ -411,7 +432,7 @@ export function StudioArtworkClient({ registryId }: Props) {
                     </span>
                     <span className={b.className}>{b.label}</span>
                   </div>
-                  <p className="mt-1 text-xs text-neutral-500">
+                  <p className="mt-1 v2-type-mono text-[11px] text-[var(--v2-ink-muted)]">
                     {String((ev as { transfer_type?: string }).transfer_type || "").replaceAll("_", " ")} ·{" "}
                     {ev.created_at
                       ? new Date(String(ev.created_at)).toLocaleString()
@@ -425,21 +446,29 @@ export function StudioArtworkClient({ registryId }: Props) {
 
         <section className="mt-12 space-y-4">
           <InfoTooltip text="Transaction infrastructure expanding soon" />
-          <h2 className="font-serif text-xl font-normal text-neutral-950">
+          <p className="v2-type-mono text-[10px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
+            Valuation
+          </p>
+          <h2 className="v2-type-display text-[1.35rem] text-[var(--v2-ink)]">
             Value history
           </h2>
           {publicValues.length === 0 ? (
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-[var(--v2-ink-muted)]">
               No public or certificate-visible value events.
             </p>
           ) : (
-            <ul className="space-y-2">
+            <ul className="relative space-y-2 pl-4">
+              <div className="pointer-events-none absolute bottom-0 left-0 top-0 w-px bg-[var(--v2-border-strong)]" />
               {publicValues.map((v) => (
                 <li
                   key={String(v.id)}
-                  className="rounded-2xl border border-black/[0.06] bg-white/60 px-4 py-3 text-sm shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
+                  className={`${studioV2.surface.filingSheet} relative px-4 py-3 text-sm`}
                 >
-                  <span className="text-neutral-800">
+                  <span
+                    className={`absolute -left-[5px] top-4 h-2 w-2 rounded-full border border-white ${semanticDotClass("valuation")}`}
+                    aria-hidden
+                  />
+                  <span className="text-[var(--v2-ink)]">
                     {formatValueEventLabel(String(v.value_type || ""))}
                     {v.declared_value != null && v.declared_value !== ""
                       ? ` · ${new Intl.NumberFormat("en-US", {
@@ -449,7 +478,7 @@ export function StudioArtworkClient({ registryId }: Props) {
                         }).format(Number(v.declared_value))}`
                       : ""}
                   </span>
-                  <span className="ml-2 text-xs text-neutral-400">
+                  <span className="ml-2 v2-type-mono text-[11px] text-[var(--v2-ink-muted)]">
                     {v.created_at
                       ? new Date(String(v.created_at)).toLocaleDateString()
                       : ""}

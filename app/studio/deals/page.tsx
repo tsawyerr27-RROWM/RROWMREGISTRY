@@ -33,7 +33,18 @@ function StudioDealsContent() {
   }
 
   if (!userId || !role) {
-    return null;
+    return (
+      <div className={`min-h-[100dvh] ${workspace.atmosphere.environment}`}>
+        <div className="mx-auto max-w-3xl px-6 py-16">
+          <h1 className="font-serif text-3xl font-normal tracking-tight text-neutral-950">
+            Deals
+          </h1>
+          <p className="mt-3 text-[15px] leading-relaxed text-neutral-500">
+            Loading workspace.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (

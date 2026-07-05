@@ -14,6 +14,7 @@ import {
   semanticDotClass,
   type RegistrySemanticEvent,
 } from "@/lib/registry-semantic-signals";
+import { studioCollectorArtworkHref } from "@/lib/studio-nav";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 import {
@@ -129,7 +130,7 @@ export function CollectorStudioActivityPreview({
             ? t("collector.activity.saleTransferPending")
             : t("collector.activity.valueRecorded"),
           detail: fillMessage(t("collector.activity.detail"), { title, kind }),
-          href: reg ? `/collector-studio/artwork/${encodeURIComponent(reg)}` : undefined,
+          href: reg ? studioCollectorArtworkHref(reg) : undefined,
           pinned: priVe.has(rawId),
           signal: priVe.has(rawId) ? "sale" : undefined,
         });
@@ -160,7 +161,7 @@ export function CollectorStudioActivityPreview({
                 status,
               })
             : fillMessage(t("collector.activity.detail"), { title, kind }),
-          href: reg ? `/collector-studio/artwork/${encodeURIComponent(reg)}` : undefined,
+          href: reg ? studioCollectorArtworkHref(reg) : undefined,
           pinned: priOe.has(rawOeId) || claimed,
           signal: priOe.has(rawOeId) || claimed ? "transfer" : undefined,
         });
@@ -176,7 +177,7 @@ export function CollectorStudioActivityPreview({
           created_at: String(r.created_at || ""),
           label: t("collector.activity.verification"),
           detail: fillMessage(t("collector.activity.detail"), { title, kind }),
-          href: reg ? `/collector-studio/artwork/${encodeURIComponent(reg)}` : undefined,
+          href: reg ? studioCollectorArtworkHref(reg) : undefined,
         });
       }
 
@@ -196,7 +197,7 @@ export function CollectorStudioActivityPreview({
           ),
           detail: "",
           href: reg
-            ? `/collector-studio/artwork/${encodeURIComponent(reg)}`
+            ? studioCollectorArtworkHref(reg)
             : undefined,
         });
       }

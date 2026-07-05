@@ -132,9 +132,9 @@ export function CollectorWorkspaceOverview({ snapshot }: Props) {
         />
       </div>
       {notes.length > 0 ? (
-        <ul className="mt-8 space-y-2 border-t border-neutral-900/[0.06] pt-8">
+        <ul className="mt-8 space-y-2 border-t border-[var(--v2-border)] pt-8">
           {notes.map((line) => (
-            <li key={line} className="text-[15px] leading-relaxed text-neutral-600">
+            <li key={line} className="text-[15px] leading-relaxed text-[var(--v2-ink-muted)]">
               {line}
             </li>
           ))}

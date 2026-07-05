@@ -27,6 +27,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CertificateOverviewModal } from "@/components/certificate/CertificateOverviewModal";
 import { RegisterModal } from "@/components/Dashboard/RegisterModal";
+import { RouteLoadingShell } from "@/components/ui/RouteLoadingShell";
 import {
   ArtworksSection,
   type ArtworksListFilter,
@@ -1849,15 +1850,8 @@ const handleRegisterArtwork = async () => {
 
   if (pageLoading) {
     return (
-      <div className="ds-page-environment flex min-h-screen flex-col items-center justify-center px-6 pt-20 text-neutral-900">
-        <div
-          className="h-9 w-9 animate-spin rounded-full border-2 border-neutral-200 border-t-neutral-900"
-          aria-hidden
-        />
-        <p className="mt-8 text-sm font-medium text-neutral-500">
-          RROWM
-        </p>
-        <p className="mt-2 text-sm text-neutral-700">{t("studio.loading.opening")}</p>
+      <div className="ds-page-environment min-h-screen pt-20 text-neutral-900">
+        <RouteLoadingShell label={t("studio.loading.opening")} />
       </div>
     );
   }
@@ -2562,10 +2556,6 @@ return (
     >
       {selectedArtwork && showOwnershipLedgerModal && (
         <>
-          <div
-            className="pointer-events-none absolute left-0 right-0 top-0 z-10 h-px bg-gradient-to-r from-transparent via-emerald-400/45 to-transparent"
-            aria-hidden
-          />
           {(() => {
             const saleEvent = [...valueHistory]
               .reverse()
@@ -2592,16 +2582,16 @@ return (
               : "";
 
             return (
-              <div className="relative mb-8 overflow-hidden rounded-2xl border border-amber-200/90 bg-gradient-to-br from-amber-50 via-white to-neutral-50/90 px-6 py-5 text-amber-950 shadow-[0_20px_48px_-28px_rgba(120,53,15,0.12)] ring-1 ring-amber-200/80">
+              <div className={`${studioV2.surface.filingSheet} relative mb-8 overflow-hidden border-l-2 border-[var(--v2-amber-exception)] px-6 py-5`}>
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-amber-900/85">
+                    <p className="v2-type-mono text-[10px] uppercase tracking-[0.18em] text-[var(--v2-amber-exception)]">
                       {t("studio.ledger.saleRecorded")}
                     </p>
-                    <p className="mt-2 text-sm text-amber-950/90">
+                    <p className="mt-2 text-sm text-[var(--v2-ink-muted)]">
                       {t("studio.ledger.completeTransfer")}
                     </p>
-                    <p className="mt-2 text-xs text-amber-800/85">
+                    <p className="mt-2 v2-type-mono text-[11px] text-[var(--v2-ink-muted)]">
                       {new Intl.NumberFormat("en-US", {
                         style: "currency",
                         currency: prefillCurrency,
@@ -2627,7 +2617,7 @@ return (
                               : "secondary",
                         }));
                       }}
-                      className="rounded-2xl bg-amber-300 px-5 py-2.5 text-sm font-semibold text-amber-950 shadow-sm transition hover:bg-amber-200"
+                      className="v2-cta-secondary min-h-[44px] px-5 py-2.5 text-xs"
                     >
                       {t("studio.ledger.recordTransferDetails")}
                     </button>
@@ -2977,13 +2967,13 @@ return (
           {/* Content */}
           <div className="grid gap-8 xl:gap-10 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
             {/* Value Timeline */}
-            <div className="rounded-2xl border border-emerald-200/80 bg-gradient-to-b from-white via-emerald-50/40 to-neutral-50/90 p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.95)] md:p-8">
+            <div className={`${studioV2.surface.filingSheet} p-6 md:p-8`}>
               <div className="mb-6 flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-semibold text-emerald-800/85">
+                  <p className="v2-type-mono text-[10px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
                     {t("studio.artworkDetail.valueHistory")}
                   </p>
-                  <p className="mt-1 text-sm text-neutral-600">
+                  <p className="mt-1 text-sm text-[var(--v2-ink-muted)]">
                     {t("studio.ledger.valueHistorySubtitle")}
                   </p>
                 </div>
@@ -3006,9 +2996,9 @@ return (
               ) : null}
 
               <div className="relative min-h-0">
-                <div className="pointer-events-none absolute bottom-0 left-2 top-2 w-px bg-gradient-to-b from-emerald-400/80 via-emerald-400/40 to-emerald-500/10" />
+                <div className="pointer-events-none absolute bottom-0 left-2 top-2 w-px bg-[var(--v2-border-strong)]" />
                 <div
-                  className="max-h-[min(52vh,34rem)] space-y-4 overflow-y-auto overscroll-y-contain pl-8 pr-1 [scrollbar-color:rgba(16,185,129,0.35)_transparent] [scrollbar-width:thin]"
+                  className="max-h-[min(52vh,34rem)] space-y-4 overflow-y-auto overscroll-y-contain pl-8 pr-1 [scrollbar-color:rgba(15,23,42,0.12)_transparent] [scrollbar-width:thin]"
                 >
                   {valueHistory.length === 0 && (
                     <p className="text-neutral-500 text-sm">
@@ -3019,7 +3009,7 @@ return (
                   {valueHistory.map((event) => (
                     <div
                       key={event.id}
-                      className="flex justify-between gap-4 rounded-xl border border-neutral-200/90 bg-white/80 px-3 py-3 text-neutral-800"
+                      className="flex justify-between gap-4 rounded-xl border border-[var(--v2-border)] bg-white/90 px-3 py-3 text-[var(--v2-ink)]"
                     >
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
@@ -3041,7 +3031,7 @@ return (
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-semibold text-emerald-900">
+                        <p className="text-lg font-semibold tabular-nums text-[var(--v2-ink)]">
                           {new Intl.NumberFormat("en-US", {
                             style: "currency",
                             currency: event.currency || "USD",
@@ -3061,16 +3051,16 @@ return (
 
             {/* Ownership Timeline */}
             <div className="space-y-6">
-              <div className="rounded-2xl border border-neutral-200/90 bg-white/70 p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)] md:p-6">
-                <p className="text-xs font-semibold text-emerald-800/85">
+              <div className={`${studioV2.surface.filingSheet} p-5 md:p-6`}>
+                <p className="v2-type-mono text-[10px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
                   {t("studio.ledger.ownershipHistory")}
                 </p>
-                <p className="mt-1 text-sm text-neutral-600">
+                <p className="mt-1 text-sm text-[var(--v2-ink-muted)]">
                   {t("studio.ledger.ownershipHistorySubtitle")}
                 </p>
 
                 <div className="relative mt-5">
-                  <div className="pointer-events-none absolute bottom-0 left-2 top-2 w-px bg-gradient-to-b from-neutral-300/80 via-neutral-200/40 to-transparent" />
+                  <div className="pointer-events-none absolute bottom-0 left-2 top-2 w-px bg-[var(--v2-border-strong)]" />
                   <div className="h-[min(42vh,18rem)] space-y-5 overflow-y-auto overscroll-y-contain pl-8 pr-1 [scrollbar-color:rgba(15,23,42,0.15)_transparent] [scrollbar-width:thin]">
                   {ownershipHistory.length === 0 && (
                     <p className="text-neutral-500 text-sm mt-4">

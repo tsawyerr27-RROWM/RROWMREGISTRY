@@ -13,7 +13,9 @@ import { useLocalePreferences } from "@/components/providers/LocalePreferencesPr
 import {
   buildCollectorNavItems,
   consumePendingCollectorSection,
+  studioCollectorArtworkHref,
 } from "@/lib/studio-nav";
+import { fieldCollectorHref } from "@/lib/field-nav";
 import { fillMessage } from "@/lib/locale-messages";
 import type { PendingAcquisitionRow } from "@/lib/acquisition-ownership-loop";
 import {
@@ -38,6 +40,8 @@ import { translateOwnershipStatusLabel } from "@/lib/ownership-ledger-i18n";
 import { getUnresolvedSaleSignals } from "@/lib/studio-signals";
 import { testModeEnabled } from "@/lib/test-mode";
 import { TestDataControls } from "@/components/Admin/TestDataControls";
+import { studioFilterSelectClass } from "@/components/Dashboard/studioListPrimitives";
+import { RouteLoadingShell } from "@/components/ui/RouteLoadingShell";
 import { CollectorStudioActivityPreview } from "@/components/Studio/CollectorStudioActivityPreview";
 import { CollectorHoldingSlab } from "@/components/Studio/CollectorHoldingSlab";
 import { CollectorHoldingsGallery } from "@/components/Studio/CollectorHoldingsGallery";
@@ -54,6 +58,7 @@ import { CollectorWorkspaceOverview } from "@/components/Studio/CollectorWorkspa
 import { StudioCatalogueMetricsPanels } from "@/components/Studio/StudioCatalogueMetricsPanels";
 import {
   StudioContentSlab,
+  StudioMetricTile,
   studioOverviewStackClass,
 } from "@/components/Studio/StudioContentSlab";
 import { DataInsightModal } from "@/components/Insights/DataInsightModal";
@@ -490,7 +495,7 @@ export default function CollectorStudioPage() {
   const publicCollectionHref = useMemo(() => {
     const s = collectorProfile?.slug?.trim();
     if (!s) return null;
-    return `/collector-studio/${encodeURIComponent(s)}`;
+    return fieldCollectorHref(s);
   }, [collectorProfile?.slug]);
 
   const heroPreviewArtworks = useMemo(
@@ -512,7 +517,7 @@ export default function CollectorStudioPage() {
         text: fillMessage(t("collector.attention.verificationPending"), {
           title: x.title,
         }),
-        href: `/collector-studio/artwork/${encodeURIComponent(x.registryId)}`,
+        href: studioCollectorArtworkHref(x.registryId),
       });
     }
     for (const x of studioAttention.unresolvedSales) {
@@ -521,7 +526,7 @@ export default function CollectorStudioPage() {
         text: fillMessage(t("collector.attention.transferResolve"), {
           title: x.title,
         }),
-        href: `/collector-studio/artwork/${encodeURIComponent(x.registryId)}`,
+        href: studioCollectorArtworkHref(x.registryId),
       });
     }
     for (const x of studioAttention.claimed) {
@@ -530,7 +535,7 @@ export default function CollectorStudioPage() {
         text: fillMessage(t("collector.attention.claimInProgress"), {
           title: x.title,
         }),
-        href: `/collector-studio/artwork/${encodeURIComponent(x.registryId)}`,
+        href: studioCollectorArtworkHref(x.registryId),
       });
     }
     return items;
@@ -630,12 +635,8 @@ export default function CollectorStudioPage() {
 
   if (loading) {
     return (
-      <div className="ds-page-environment relative min-h-screen pt-28 text-neutral-900">
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-neutral-900/10 to-transparent"
-          aria-hidden
-        />
-        <p className="text-center text-sm text-neutral-500">{t("collector.shell.loading")}</p>
+      <div className="ds-page-environment min-h-screen pt-28 text-neutral-900">
+        <RouteLoadingShell label={t("collector.shell.loading")} />
       </div>
     );
   }
@@ -656,7 +657,11 @@ export default function CollectorStudioPage() {
   }
 
   if (!userId) {
-    return null;
+    return (
+      <div className="ds-page-environment min-h-screen pt-28 text-neutral-900">
+        <RouteLoadingShell label={t("collector.shell.loading")} />
+      </div>
+    );
   }
 
   const snap = collectionSnapshot;
@@ -765,9 +770,13 @@ export default function CollectorStudioPage() {
                   {pendingAcquisitions.slice(0, 4).map((item) => (
                     <li
                       key={item.provenance_transfer_id}
-                      className="flex gap-3 rounded-xl border border-amber-200/40 bg-amber-50/40 p-3"
+                      className="relative flex gap-3 overflow-hidden rounded-xl border border-[var(--v2-border)] bg-white/90 p-3"
                     >
-                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-neutral-200/80">
+                      <span
+                        className="pointer-events-none absolute inset-y-0 left-0 w-0.5 bg-[var(--v2-amber-exception)] opacity-80"
+                        aria-hidden
+                      />
+                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-[var(--v2-paper-sunk,#efe9df)]">
                         {item.image_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
@@ -787,7 +796,7 @@ export default function CollectorStudioPage() {
                         {item.accept_href ? (
                           <Link
                             href={item.accept_href}
-                            className="mt-2 inline-flex rounded-lg bg-neutral-950 px-3 py-1.5 text-[12px] font-medium text-white transition hover:bg-neutral-800"
+                            className="v2-cta-primary mt-2 inline-flex min-h-[36px] items-center px-3 py-1.5 text-[11px]"
                           >
                             Confirm receipt
                           </Link>
@@ -810,32 +819,22 @@ export default function CollectorStudioPage() {
                     onClick={() => void openInsight("health")}
                     className="grid w-full gap-4 text-left sm:grid-cols-3"
                   >
-                    <div className="rounded-2xl border border-neutral-900/[0.06] bg-white/70 px-5 py-4">
-                      <p className="text-[13px] font-medium text-neutral-700">
-                        {t("collector.hero.verifiedOwnership")}
-                      </p>
-                      <p className="mt-2 font-serif text-2xl tabular-nums text-neutral-950">
-                        {snap && snap.held > 0
+                    <StudioMetricTile
+                      label={t("collector.hero.verifiedOwnership")}
+                      value={
+                        snap && snap.held > 0
                           ? `${Math.round((snap.verifiedOwnership / snap.held) * 100)}%`
-                          : "–"}
-                      </p>
-                    </div>
-                    <div className="rounded-2xl border border-neutral-900/[0.06] bg-white/70 px-5 py-4">
-                      <p className="text-[13px] font-medium text-neutral-700">
-                        {t("collector.hero.continuity")}
-                      </p>
-                      <p className="mt-2 font-serif text-2xl tabular-nums text-neutral-950">
-                        {intelligenceItems.length}
-                      </p>
-                    </div>
-                    <div className="rounded-2xl border border-neutral-900/[0.06] bg-white/70 px-5 py-4">
-                      <p className="text-[13px] font-medium text-neutral-700">
-                        {t("studio.insight.bar.certified")}
-                      </p>
-                      <p className="mt-2 font-serif text-2xl tabular-nums text-neutral-950">
-                        {snap?.certificatesAvailable ?? 0}
-                      </p>
-                    </div>
+                          : "–"
+                      }
+                    />
+                    <StudioMetricTile
+                      label={t("collector.hero.continuity")}
+                      value={intelligenceItems.length}
+                    />
+                    <StudioMetricTile
+                      label={t("studio.insight.bar.certified")}
+                      value={snap?.certificatesAvailable ?? 0}
+                    />
                   </button>
                 </StudioContentSlab>
 
@@ -871,7 +870,7 @@ export default function CollectorStudioPage() {
                 onChange={(e) =>
                   setPortfolioFilter(e.target.value as CollectorPortfolioFilter)
                 }
-                className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-[13px] text-neutral-800"
+                className={studioFilterSelectClass("light")}
               >
                 <option value="current">
                   Current ({rows.length})
@@ -925,7 +924,7 @@ export default function CollectorStudioPage() {
 
           {pendingAcquisitions.length > 0 ? (
             <div className="mt-8 space-y-3">
-              <h3 className="text-[13px] font-medium uppercase tracking-[0.12em] text-amber-900/70">
+              <h3 className="v2-type-mono text-[10px] uppercase tracking-[0.18em] text-[var(--v2-amber-exception)]">
                 Pending acquisitions
               </h3>
               <ul className="space-y-3">
@@ -963,7 +962,7 @@ export default function CollectorStudioPage() {
                             {item.accept_href ? (
                               <Link
                                 href={item.accept_href}
-                                className="rounded-xl bg-neutral-950 px-4 py-2 text-[13px] font-medium text-white transition hover:bg-neutral-800"
+                                className="v2-cta-primary inline-flex min-h-[40px] items-center px-4 py-2 text-xs"
                               >
                                 Confirm receipt
                               </Link>
@@ -971,7 +970,7 @@ export default function CollectorStudioPage() {
                             {item.deal_id ? (
                               <Link
                                 href={`/studio/deals?deal=${encodeURIComponent(item.deal_id)}`}
-                                className="rounded-xl border border-neutral-900/10 bg-white px-4 py-2 text-[13px] font-medium text-neutral-800 transition hover:bg-neutral-50"
+                                className="v2-cta-secondary inline-flex min-h-[40px] items-center px-4 py-2 text-xs"
                               >
                                 Open deal
                               </Link>
@@ -1007,7 +1006,7 @@ export default function CollectorStudioPage() {
                         ? `/registry/${encodeURIComponent(r.registry_id)}/ledger`
                         : "#")
                     : r.registry_id
-                      ? `/collector-studio/artwork/${encodeURIComponent(r.registry_id)}`
+                      ? studioCollectorArtworkHref(r.registry_id)
                       : "#",
                   title: (r.title || "").trim() || t("collector.fallback.untitled"),
                   artist:
@@ -1045,7 +1044,7 @@ export default function CollectorStudioPage() {
                 const href = isPending
                   ? r.accept_href || (r.registry_id ? `/registry/${encodeURIComponent(r.registry_id)}/ledger` : "#")
                   : r.registry_id
-                    ? `/collector-studio/artwork/${encodeURIComponent(r.registry_id)}`
+                    ? studioCollectorArtworkHref(r.registry_id)
                     : "#";
                 const cert = certByArtwork[r.id];
                 return (
@@ -1075,12 +1074,17 @@ export default function CollectorStudioPage() {
       ) : null}
 
       {activeSection === "attention" ? (
-        <section>
-          <h2 className="font-serif text-xl font-normal text-neutral-900">
-            {t("collector.attention.title")}
-          </h2>
+        <section className="studio-reveal max-w-6xl">
+          <div className="border-b border-[var(--v2-border)] pb-5">
+            <p className="v2-type-mono text-[10px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
+              {t("collector.archive.rail")}
+            </p>
+            <h2 className="v2-type-display mt-2 text-[1.5rem] leading-none text-[var(--v2-ink)] md:text-[1.75rem]">
+              {t("collector.attention.title")}
+            </h2>
+          </div>
           {intelligenceItems.length === 0 ? (
-            <p className="mt-8 text-sm leading-relaxed text-neutral-500">
+            <p className="mt-8 text-sm leading-relaxed text-[var(--v2-ink-muted)]">
               {t("collector.attention.empty")}
             </p>
           ) : (

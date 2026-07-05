@@ -8,7 +8,6 @@ import { ArtworksHeroPreview } from "@/components/Dashboard/ArtworksHeroPreview"
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 import { fillMessage } from "@/lib/locale-messages";
-import { rrowmButton } from "@/styles/rrowm-theme";
 import { studioV2 } from "@/styles/studio-v2";
 import { publicPath } from "@/components/workspace/WorkspaceHeroPrimitives";
 
@@ -127,7 +126,7 @@ export function CollectorWorkspaceHero({
               <button
                 type="button"
                 onClick={() => onGoToSection("works")}
-                className={rrowmButton.primaryEconomic}
+                className="v2-cta-primary min-h-[44px] px-6 py-2.5 text-xs"
               >
                 {t("collector.hero.viewWorks")}
               </button>
@@ -135,7 +134,7 @@ export function CollectorWorkspaceHero({
                 <button
                   type="button"
                   onClick={() => onGoToSection("attention")}
-                  className={rrowmButton.secondary}
+                  className="v2-cta-secondary min-h-[44px] px-6 py-2.5 text-xs"
                 >
                   {fillMessage(t("collector.hero.openAttention"), {
                     count: String(snapshot.attentionCount),

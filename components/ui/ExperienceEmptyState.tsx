@@ -1,19 +1,17 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { studioV2 } from "@/styles/studio-v2";
+
 type ExperienceEmptyStateProps = {
   title: string;
   body: string;
-  /** Optional slot between body and action (e.g. one input before a single submit) */
   betweenBodyAndAction?: ReactNode;
-  /** Single primary action — omit for copy-only states */
   action?: ReactNode;
   className?: string;
 };
 
-/**
- * Centered, editorial empty state: one calm message and one primary action.
- */
+/** Institutional archive empty state — filing sheet, serif heading, calm copy. */
 export function ExperienceEmptyState({
   title,
   body,
@@ -23,18 +21,16 @@ export function ExperienceEmptyState({
 }: ExperienceEmptyStateProps) {
   return (
     <div
-      className={`rrowm-surface mx-auto max-w-md px-11 py-16 text-center md:px-12 md:py-[4.25rem] ${className}`}
+      className={`${studioV2.scope} ${studioV2.surface.filingSheet} mx-auto max-w-md px-8 py-14 text-center md:px-10 md:py-16 ${className}`}
     >
-      <h3 className="font-serif text-[1.35rem] font-normal leading-snug tracking-tight text-neutral-950 md:text-2xl">
+      <h3 className="font-serif text-[1.35rem] font-normal leading-snug tracking-tight text-[var(--v2-ink)] md:text-[1.65rem]">
         {title}
       </h3>
-      <p className="mt-5 text-sm leading-[1.65] text-neutral-600">{body}</p>
+      <p className="mt-5 text-sm leading-[1.65] text-[var(--v2-ink-muted)]">{body}</p>
       {betweenBodyAndAction ? (
         <div className="mt-9 text-left">{betweenBodyAndAction}</div>
       ) : null}
-      {action ? (
-        <div className="mt-11 flex justify-center">{action}</div>
-      ) : null}
+      {action ? <div className="mt-10 flex justify-center">{action}</div> : null}
     </div>
   );
 }
@@ -49,11 +45,7 @@ export function ExperienceEmptyStateButton({
   onClick,
 }: ExperienceEmptyStateButtonProps) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="rounded-2xl bg-neutral-900 px-8 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
-    >
+    <button type="button" onClick={onClick} className="v2-cta-primary min-h-[44px] px-8 py-3 text-xs">
       {label}
     </button>
   );
@@ -64,15 +56,9 @@ type ExperienceEmptyStateLinkProps = {
   href: string;
 };
 
-export function ExperienceEmptyStateLink({
-  label,
-  href,
-}: ExperienceEmptyStateLinkProps) {
+export function ExperienceEmptyStateLink({ label, href }: ExperienceEmptyStateLinkProps) {
   return (
-    <Link
-      href={href}
-      className="inline-flex rounded-xl bg-neutral-950 px-8 py-3.5 text-sm font-medium text-white transition duration-200 ease-out hover:bg-neutral-900"
-    >
+    <Link href={href} className="v2-cta-primary inline-flex min-h-[44px] items-center px-8 py-3 text-xs">
       {label}
     </Link>
   );
@@ -83,14 +69,10 @@ type ExperienceSubtleHintProps = {
   className?: string;
 };
 
-/** Short, non-banner guidance; omit when no longer needed */
-export function ExperienceSubtleHint({
-  children,
-  className = "",
-}: ExperienceSubtleHintProps) {
+export function ExperienceSubtleHint({ children, className = "" }: ExperienceSubtleHintProps) {
   return (
     <p
-      className={`liquid-glass-inset px-7 py-5 text-center text-sm leading-[1.65] text-neutral-600 ${className}`}
+      className={`rounded-lg border border-[var(--v2-border)] bg-white/85 px-6 py-4 text-center text-sm leading-[1.65] text-[var(--v2-ink-muted)] ${className}`}
     >
       {children}
     </p>

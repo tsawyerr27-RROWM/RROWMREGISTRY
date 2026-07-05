@@ -723,6 +723,11 @@ export type MessageKey =
   | "auth.enterLine3"
   | "auth.enterBody"
   | "auth.accessRail"
+  | "notFound.rail"
+  | "notFound.title"
+  | "notFound.body"
+  | "notFound.returnLabel"
+  | "notFound.home"
   | "cookie.message"
   | "cookie.privacy"
   | "cookie.terms"
@@ -946,6 +951,10 @@ export type MessageKey =
   | "studio.shell.catalogueActivity"
   | "studio.shell.browseCatalogue"
   | "studio.shell.noActivity"
+  | "studio.activity.loading"
+  | "studio.archive.viewLabel"
+  | "studio.archive.viewLedger"
+  | "studio.archive.viewGallery"
   | "studio.shell.section"
   | "studio.shell.onFile"
   | "studio.shell.openSectionSwitcher"
@@ -3066,7 +3075,7 @@ const EN: Record<MessageKey, string> = {
   "landing.v2.visual.lineStewardship": "Stewardship, current holder",
   "landing.v2.visual.lineVerified": "Verification on file",
   "landing.v2.visual.lineIssued": "Certificate issued",
-  "landing.v2.visual.artworkEmber": "After the Last Frequency",
+  "landing.v2.visual.artworkEmber": "Signal in the Meridian",
   "landing.v2.visual.artworkCobalt": "Electric Field Studies III",
   "landing.v2.visual.artworkLime": "Chromatic Drift No. 12",
   "landing.v2.showcase.eyebrow": "The registry file",
@@ -3200,6 +3209,11 @@ const EN: Record<MessageKey, string> = {
   "auth.enterBody":
     "The cultural operating system for registry, verification, and exchange.",
   "auth.accessRail": "ACCESS NODE",
+  "notFound.rail": "ARCHIVE",
+  "notFound.title": "Record not found",
+  "notFound.body": "The requested record, page or route could not be located.",
+  "notFound.returnLabel": "Return to",
+  "notFound.home": "Home",
   "cookie.message":
     "We use cookies to maintain core functionality and improve the experience.",
   "cookie.privacy": "Privacy",
@@ -3464,6 +3478,10 @@ const EN: Record<MessageKey, string> = {
   "studio.shell.catalogueActivity": "Catalogue activity",
   "studio.shell.browseCatalogue": "Browse public gallery",
   "studio.shell.noActivity": "No recent activity yet.",
+  "studio.activity.loading": "Loading…",
+  "studio.archive.viewLabel": "View",
+  "studio.archive.viewLedger": "Ledger",
+  "studio.archive.viewGallery": "Gallery",
   "studio.shell.section": "SECTION",
   "studio.shell.onFile": "ON FILE",
   "studio.shell.openSectionSwitcher": "Open section switcher",
@@ -5842,6 +5860,11 @@ const DE: Record<MessageKey, string> = {
   "auth.enterBody":
     "Das kulturelle Betriebssystem für Register, Verifizierung und Austausch.",
   "auth.accessRail": "ZUGANGSKNOTEN",
+  "notFound.rail": "ARCHIV",
+  "notFound.title": "Eintrag nicht gefunden",
+  "notFound.body": "Der angeforderte Eintrag, die Seite oder die Route konnte nicht gefunden werden.",
+  "notFound.returnLabel": "Zurück zu",
+  "notFound.home": "Startseite",
   "cookie.message":
     "Wir verwenden Cookies für Kernfunktionen und zur Verbesserung der Erfahrung.",
   "cookie.privacy": "Datenschutz",
@@ -6028,6 +6051,10 @@ const DE: Record<MessageKey, string> = {
   "studio.shell.catalogueActivity": "Katalogaktivität",
   "studio.shell.browseCatalogue": "Öffentliche Galerie durchsuchen",
   "studio.shell.noActivity": "Noch keine Aktivität.",
+  "studio.activity.loading": "Wird geladen…",
+  "studio.archive.viewLabel": "Ansicht",
+  "studio.archive.viewLedger": "Register",
+  "studio.archive.viewGallery": "Galerie",
   "studio.shell.section": "BEREICH",
   "studio.shell.onFile": "AKTIV",
   "studio.shell.openSectionSwitcher": "Bereichsauswahl öffnen",
@@ -7946,6 +7973,11 @@ const FR: Record<MessageKey, string> = {
   "auth.enterBody":
     "Le système d'exploitation culturel pour le registre, la vérification et l'échange.",
   "auth.accessRail": "NŒUD D'ACCÈS",
+  "notFound.rail": "ARCHIVE",
+  "notFound.title": "Enregistrement introuvable",
+  "notFound.body": "L'enregistrement, la page ou la route demandée n'a pas pu être localisée.",
+  "notFound.returnLabel": "Retour à",
+  "notFound.home": "Accueil",
   "cookie.message":
     "Nous utilisons des cookies pour les fonctions essentielles et améliorer l'expérience.",
   "cookie.privacy": "Confidentialité",
@@ -8132,6 +8164,10 @@ const FR: Record<MessageKey, string> = {
   "studio.shell.catalogueActivity": "Activité catalogue",
   "studio.shell.browseCatalogue": "Parcourir la galerie publique",
   "studio.shell.noActivity": "Aucune activité récente.",
+  "studio.activity.loading": "Chargement…",
+  "studio.archive.viewLabel": "Vue",
+  "studio.archive.viewLedger": "Registre",
+  "studio.archive.viewGallery": "Galerie",
   "studio.shell.section": "SECTION",
   "studio.shell.onFile": "ACTIF",
   "studio.shell.openSectionSwitcher": "Ouvrir le sélecteur de section",
@@ -10048,6 +10084,11 @@ const JA: Record<MessageKey, string> = {
   "auth.enterBody":
     "レジストリ、検証、取引のための文化的オペレーティングシステム。",
   "auth.accessRail": "アクセスノード",
+  "notFound.rail": "アーカイブ",
+  "notFound.title": "記録が見つかりません",
+  "notFound.body": "要求された記録、ページ、またはルートを特定できませんでした。",
+  "notFound.returnLabel": "戻る",
+  "notFound.home": "ホーム",
   "cookie.message":
     "基本機能と体験向上のために Cookie を使用しています。",
   "cookie.privacy": "プライバシー",
@@ -10232,6 +10273,10 @@ const JA: Record<MessageKey, string> = {
   "studio.shell.catalogueActivity": "カタログアクティビティ",
   "studio.shell.browseCatalogue": "公開ギャラリーを見る",
   "studio.shell.noActivity": "最近のアクティビティはありません。",
+  "studio.activity.loading": "読み込み中…",
+  "studio.archive.viewLabel": "表示",
+  "studio.archive.viewLedger": "台帳",
+  "studio.archive.viewGallery": "ギャラリー",
   "studio.shell.section": "セクション",
   "studio.shell.onFile": "表示中",
   "studio.shell.openSectionSwitcher": "セクション切替を開く",

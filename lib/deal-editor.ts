@@ -1,6 +1,7 @@
-import { rrowmEconomicSurface } from "@/styles/rrowm-theme";
+import { studioFilingForm } from "@/styles/studio-filing-form";
+import { studioV2 } from "@/styles/studio-v2";
 
-export const DEAL_EDITOR_INPUT_CLASS = rrowmEconomicSurface.input;
+export const DEAL_EDITOR_INPUT_CLASS = studioFilingForm.field;
 
 export const DEAL_EDITOR_CORRESPONDENCE_CLASS = `${DEAL_EDITOR_INPUT_CLASS} min-h-[14rem] resize-y text-[15px] leading-relaxed`;
 
@@ -50,4 +51,4 @@ export function dealEditorSections(requireCounterparty: boolean): DealEditorSect
   return DEAL_EDITOR_SECTIONS.filter((section) => section.id !== "counterparty");
 }
 
-export const DEAL_EDITOR_SECTION_CARD = `${rrowmEconomicSurface.section} scroll-mt-32`;
+export const DEAL_EDITOR_SECTION_CARD = `${studioV2.surface.filingSheet} scroll-mt-32 px-6 py-7 sm:px-8 sm:py-8`;

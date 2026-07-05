@@ -4,11 +4,11 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 
 import { ArtworksHeroPreview } from "@/components/Dashboard/ArtworksHeroPreview";
+import { StudioMetricTile } from "@/components/Studio/StudioContentSlab";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fieldOrganisationHref } from "@/lib/field-nav";
 import { fillMessage } from "@/lib/locale-messages";
 import type { MessageKey } from "@/lib/locale-messages";
-import { rrowmButton } from "@/styles/rrowm-theme";
 import { studioV2 } from "@/styles/studio-v2";
 import { publicPath } from "@/components/workspace/WorkspaceHeroPrimitives";
 
@@ -151,14 +151,12 @@ export function GalleryInstitutionalHero({
                   <div
                     key={metric.label}
                     style={{ "--reveal-index": index } as CSSProperties}
-                    className="rounded-lg border border-[var(--v2-border-strong)] bg-white px-3 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_10px_28px_-22px_rgba(15,23,42,0.18)] sm:px-3.5 sm:py-4"
                   >
-                    <dt className="v2-type-mono text-[9px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
-                      {metric.label}
-                    </dt>
-                    <dd className="mt-2 font-serif text-[1.65rem] tabular-nums leading-none tracking-tight text-[var(--v2-ink)] sm:text-[2rem]">
-                      {formatMetric(metric.value)}
-                    </dd>
+                    <StudioMetricTile
+                      label={metric.label}
+                      value={formatMetric(metric.value)}
+                      variant="primary"
+                    />
                   </div>
                 ))}
               </dl>
@@ -168,14 +166,12 @@ export function GalleryInstitutionalHero({
                   <div
                     key={metric.label}
                     style={{ "--reveal-index": index + 3 } as CSSProperties}
-                    className="rounded-lg border border-[var(--v2-border)] bg-white/80 px-2.5 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] sm:px-3"
                   >
-                    <dt className="v2-type-mono text-[9px] uppercase tracking-[0.18em] text-[var(--v2-ink-muted)]">
-                      {metric.label}
-                    </dt>
-                    <dd className="mt-1.5 font-serif text-lg tabular-nums leading-none text-[var(--v2-ink-soft)] sm:text-xl">
-                      {formatMetric(metric.value)}
-                    </dd>
+                    <StudioMetricTile
+                      label={metric.label}
+                      value={formatMetric(metric.value)}
+                      variant="secondary"
+                    />
                   </div>
                 ))}
               </dl>
@@ -209,25 +205,25 @@ export function GalleryInstitutionalHero({
             ) : null}
 
             <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-[var(--v2-border)] pt-6">
-              <button type="button" onClick={onRegister} className={rrowmButton.primaryEconomic}>
+              <button type="button" onClick={onRegister} className="v2-cta-primary px-5 py-2.5 text-sm">
                 {t("gallery.hero.registerWork")}
               </button>
               <button
                 type="button"
                 onClick={() => onGoToSection("verification")}
-                className={rrowmButton.secondary}
+                className="v2-cta-secondary px-5 py-2.5 text-sm"
               >
                 {t("gallery.hero.trustAndCerts")}
               </button>
               <button
                 type="button"
                 onClick={() => onGoToSection("catalogue")}
-                className={rrowmButton.secondary}
+                className="v2-cta-secondary px-5 py-2.5 text-sm"
               >
                 {t("gallery.hero.openCatalogue")}
               </button>
               {isAdmin ? (
-                <button type="button" onClick={onInvite} className={rrowmButton.secondary}>
+                <button type="button" onClick={onInvite} className="v2-cta-secondary px-5 py-2.5 text-sm">
                   {t("gallery.hero.inviteToAuthenticate")}
                 </button>
               ) : null}
