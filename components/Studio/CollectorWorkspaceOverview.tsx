@@ -1,5 +1,6 @@
 "use client";
 
+import { CollectorHoldingsEmptyState } from "@/components/Studio/CollectorHoldingsEmptyState";
 import { StudioContentSlab, StudioMetricTile } from "@/components/Studio/StudioContentSlab";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fillMessage } from "@/lib/locale-messages";
@@ -27,9 +28,11 @@ export function CollectorWorkspaceOverview({ snapshot }: Props) {
         title={t("collector.overview.srOnly")}
         subtitle={t("collector.hero.tooltip")}
       >
-        <p className="max-w-2xl text-[15px] leading-relaxed text-neutral-600">
-          {t("collector.overview.empty")}
-        </p>
+        <CollectorHoldingsEmptyState
+          title={t("collector.overview.emptyTitle")}
+          body={t("collector.overview.empty")}
+          className="max-w-none border-0 bg-transparent px-0 py-0 shadow-none"
+        />
       </StudioContentSlab>
     );
   }

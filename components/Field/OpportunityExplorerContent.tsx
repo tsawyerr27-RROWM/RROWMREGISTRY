@@ -69,7 +69,11 @@ export function OpportunityExplorerContent({
                   {t("field.opportunities.empty.browseAll")}
                 </Link>
               </>
-            ) : null
+            ) : (
+              <Link href="/get-started" className="v2-cta-primary !min-h-0 px-5 py-2.5 text-xs">
+                {t("nav.takePart")}
+              </Link>
+            )
           }
         />
       ) : (

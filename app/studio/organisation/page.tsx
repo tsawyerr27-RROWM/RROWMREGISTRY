@@ -2107,7 +2107,12 @@ export default function GalleryDashboardPage() {
 
   return (
     <>
-      <WelcomeModal role="gallery" steps={galleryIntroSteps} />
+      <WelcomeModal
+        role="gallery"
+        steps={galleryIntroSteps}
+        finalCtaLabel={t("gallery.hero.registerWork")}
+        onFinalCta={openRegisterWorkspace}
+      />
       <StudioShell
         role="gallery"
         userId={userId}

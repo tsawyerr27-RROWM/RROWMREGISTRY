@@ -13,6 +13,7 @@ type ModalShellProps = {
   onClose: () => void;
   children: ReactNode;
   panelClassName?: string;
+  innerClassName?: string;
   overlayClassName?: string;
   closeClassName?: string;
   tone?: ModalTone;
@@ -49,6 +50,7 @@ export default function ModalShell({
   onClose,
   children,
   panelClassName,
+  innerClassName,
   overlayClassName,
   closeClassName,
   tone = "light",
@@ -129,7 +131,9 @@ export default function ModalShell({
         >
           Close
         </button>
-        <div className={studioV2.modal.inner}>{children}</div>
+        <div className={[studioV2.modal.inner, innerClassName].filter(Boolean).join(" ")}>
+          {children}
+        </div>
       </div>
     </div>,
     document.body

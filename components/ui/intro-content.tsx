@@ -64,9 +64,9 @@ export const artistIntroSteps: IntroStep[] = [
     title: "Register and verify",
     body: (
       <p>
-        Each work you register receives a unique registry ID. Once verified, either
-        by you or through an institutional filing, a cryptographic certificate is
-        generated and attached to the record permanently.
+        Each work you register receives a unique registry ID. After attestation or
+        institutional verification, a cryptographic certificate is generated and
+        attached to the record permanently.
       </p>
     ),
     icon: VerifyIcon,
@@ -75,7 +75,7 @@ export const artistIntroSteps: IntroStep[] = [
     title: "Certificates and provenance",
     body: (
       <p>
-        Certificates are generated automatically when authorship is authenticated.
+        Certificates are generated when authorship is attested or verified.
         Ownership transfers create a provenance chain that follows the work across
         custodians, building a tamper-evident chronology.
       </p>

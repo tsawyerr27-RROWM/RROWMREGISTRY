@@ -1950,7 +1950,12 @@ const selectedLedgerCanRecordValue =
 
 return (
   <>
-    <WelcomeModal role="artist" steps={artistIntroSteps} />
+    <WelcomeModal
+      role="artist"
+      steps={artistIntroSteps}
+      finalCtaLabel={t("studio.registerArtwork")}
+      onFinalCta={() => setShowRegisterModal(true)}
+    />
     {toast && (
       <div className="fixed right-6 top-24 z-50 pointer-events-none">
         <div
@@ -2258,7 +2263,7 @@ return (
           </div>
         )}
 
-        {activeSection === "Artworks" && registrationOutcome ? (
+        {registrationOutcome ? (
           <div className={`${studioV2.surface.filingSheetMajor} mb-8 p-5 md:p-6`}>
             <p className={studioV2.type.railLabel}>{t("studio.register.outcome.eyebrow")}</p>
             <h2 className={`${studioV2.type.sectionTitle} mt-2`}>
@@ -2364,6 +2369,7 @@ return (
             onCertificatesFilterChange={setCertificatesListFilter}
             filteredCertificates={filteredCertificates}
             totalCertificateCount={certifiedArtworksForUi.length}
+            filedArtworkCount={artworks.length}
             onArtworkClick={(artwork) => {
               setCertificateOverviewRegistryId(null);
               setArtworkDetail(artwork);
@@ -2379,6 +2385,12 @@ return (
               setSelectedArtwork(null);
               setShowOwnershipLedgerModal(false);
               setShowRegisterModal(true);
+            }}
+            onAttestClick={() => {
+              setArtworkDetail(null);
+              setSelectedArtwork(null);
+              setShowOwnershipLedgerModal(false);
+              selectStudioSection("Artworks");
             }}
           />
         )}

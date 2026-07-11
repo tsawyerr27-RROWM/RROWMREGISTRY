@@ -26,9 +26,11 @@ type CertificatesSectionProps = {
   onCertificatesFilterChange: (value: CertificatesListFilter) => void;
   filteredCertificates: any[];
   totalCertificateCount: number;
+  filedArtworkCount: number;
   onArtworkClick: (artwork: any) => void;
   onOpenCertificateOverview: (registryId: string) => void;
   onRegisterClick: () => void;
+  onAttestClick: () => void;
 };
 
 export function CertificatesSection({
@@ -38,15 +40,18 @@ export function CertificatesSection({
   onCertificatesFilterChange,
   filteredCertificates,
   totalCertificateCount,
+  filedArtworkCount,
   onArtworkClick,
   onOpenCertificateOverview: _onOpenCertificateOverview,
   onRegisterClick,
+  onAttestClick,
 }: CertificatesSectionProps) {
   const { t } = useLocalePreferences();
   const [certificatesView, setCertificatesView] = useStudioViewMode(
     "creative.certificatesView"
   );
   const isTrulyEmpty = totalCertificateCount === 0;
+  const emptyAwaitingVerification = isTrulyEmpty && filedArtworkCount > 0;
   const noMatches =
     totalCertificateCount > 0 && filteredCertificates.length === 0;
 
@@ -170,12 +175,18 @@ export function CertificatesSection({
             {t("studio.certificates.emptyTitle")}
           </h3>
           <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-[var(--v2-ink-muted)]">
-            Certificates issued for verified works will appear in this archive.
+            {emptyAwaitingVerification
+              ? t("studio.certificates.emptyBodyAwaitingVerify")
+              : t("studio.certificates.emptyBody")}
           </p>
           <div className="mt-10 flex justify-center">
             <ExperienceEmptyStateButton
-              label={t("studio.registerArtwork")}
-              onClick={onRegisterClick}
+              label={
+                emptyAwaitingVerification
+                  ? t("studio.certificates.emptyCtaAttest")
+                  : t("studio.registerArtwork")
+              }
+              onClick={emptyAwaitingVerification ? onAttestClick : onRegisterClick}
             />
           </div>
         </div>

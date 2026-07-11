@@ -123,13 +123,30 @@ export function CollectorWorkspaceHero({
             </dl>
 
             <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-[var(--v2-border)] pt-6">
-              <button
-                type="button"
-                onClick={() => onGoToSection("works")}
-                className="v2-cta-primary min-h-[44px] px-6 py-2.5 text-xs"
-              >
-                {t("collector.hero.viewWorks")}
-              </button>
+              {metrics.holdings === 0 ? (
+                <>
+                  <Link
+                    href="/collector-studio/claim-ownership"
+                    className="v2-cta-primary min-h-[44px] px-6 py-2.5 text-xs"
+                  >
+                    {t("collector.empty.claimOwnership")}
+                  </Link>
+                  <Link
+                    href={fieldExplorerRecordsHref()}
+                    className="v2-cta-secondary min-h-[44px] px-6 py-2.5 text-xs"
+                  >
+                    {t("collector.empty.browseRegistry")}
+                  </Link>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onGoToSection("works")}
+                  className="v2-cta-primary min-h-[44px] px-6 py-2.5 text-xs"
+                >
+                  {t("collector.hero.viewWorks")}
+                </button>
+              )}
               {snapshot.attentionCount > 0 ? (
                 <button
                   type="button"

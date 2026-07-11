@@ -289,7 +289,7 @@ export function OnboardingClient() {
     return (
       <AuthPageShell
         title="How you take part"
-        subtitle="Choose the role that best describes how you participate. You can refine details on the next screen."
+        subtitle="Choose the role that best describes how you participate. You are joining the first cohort helping establish the Registry."
         cardBelow={
           <p className="text-[13px] leading-relaxed text-neutral-600">
             Register works · Verify authorship · Preserve provenance · Enable
@@ -302,7 +302,7 @@ export function OnboardingClient() {
             [
               {
                 id: "artist" as const,
-                title: "Artist",
+                title: "Creative",
                 line: "Catalogue your represented works and build a verified public presence.",
                 icon: (
                   <svg width="20" height="20" fill="none" viewBox="0 0 24 24" className="text-violet-500">
@@ -325,7 +325,7 @@ export function OnboardingClient() {
               {
                 id: "gallery" as const,
                 title: "Gallery / Institution",
-                line: "File works on behalf of represented artists and manage your roster.",
+                line: "Free registry infrastructure to file works, run verification, and publish opportunities for your roster.",
                 icon: (
                   <svg width="20" height="20" fill="none" viewBox="0 0 24 24" className="text-emerald-500">
                     <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M3 21h18M5 21V7l7-4 7 4v14" />
@@ -477,7 +477,7 @@ export function OnboardingClient() {
     return (
       <AuthPageShell
         title="Name your institution"
-        subtitle="This is the label artists and the public see next to institutional association."
+        subtitle="Organisation Studio is free registry infrastructure. This is the label artists and the public see next to institutional association."
         cardBelow={null}
       >
         <form onSubmit={(e) => void submitGallery(e)} className="space-y-5">

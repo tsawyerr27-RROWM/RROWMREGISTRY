@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, type ReactNode } from "react";
+import Link from "next/link";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 type IntroStep = {
@@ -17,6 +18,12 @@ type Props = {
   welcomeTitle?: string;
   /** If true, show even if previously dismissed (e.g. triggered by sessionStorage flag). */
   forceOpen?: boolean;
+  /** Label for the final step CTA — defaults to dismiss-only when omitted. */
+  finalCtaLabel?: string;
+  /** Optional href for the final CTA (e.g. claim flow). */
+  finalCtaHref?: string;
+  /** Optional action when the final CTA is clicked (runs before dismiss). */
+  onFinalCta?: () => void;
 };
 
 /**
@@ -28,6 +35,9 @@ export function IntroModal({
   steps,
   welcomeTitle,
   forceOpen = false,
+  finalCtaLabel,
+  finalCtaHref,
+  onFinalCta,
 }: Props) {
   const [visible, setVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -55,6 +65,13 @@ export function IntroModal({
       } catch { /* ignore */ }
     }, 250);
   }, [storageKey]);
+
+  const handleFinalCta = useCallback(() => {
+    onFinalCta?.();
+    dismiss();
+  }, [dismiss, onFinalCta]);
+
+  const finalLabel = finalCtaLabel ?? "Close";
 
   if (!visible || steps.length === 0) return null;
 
@@ -141,12 +158,22 @@ export function IntroModal({
               </button>
             ) : null}
             {isLast ? (
-              <button
-                onClick={dismiss}
-                className="rounded-xl bg-neutral-950 px-5 py-2.5 text-sm font-medium text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)] transition hover:bg-neutral-800"
-              >
-                Get started
-              </button>
+              finalCtaHref ? (
+                <Link
+                  href={finalCtaHref}
+                  onClick={dismiss}
+                  className="rounded-xl bg-neutral-950 px-5 py-2.5 text-sm font-medium text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)] transition hover:bg-neutral-800"
+                >
+                  {finalLabel}
+                </Link>
+              ) : (
+                <button
+                  onClick={onFinalCta ? handleFinalCta : dismiss}
+                  className="rounded-xl bg-neutral-950 px-5 py-2.5 text-sm font-medium text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)] transition hover:bg-neutral-800"
+                >
+                  {finalLabel}
+                </button>
+              )
             ) : (
               <button
                 onClick={() => setCurrentStep((s) => s + 1)}
@@ -169,9 +196,15 @@ export function IntroModal({
 export function WelcomeModal({
   role,
   steps,
+  finalCtaLabel,
+  finalCtaHref,
+  onFinalCta,
 }: {
   role: "artist" | "collector" | "gallery";
   steps: IntroStep[];
+  finalCtaLabel?: string;
+  finalCtaHref?: string;
+  onFinalCta?: () => void;
 }) {
   const [show, setShow] = useState(false);
 
@@ -193,6 +226,9 @@ export function WelcomeModal({
       steps={steps}
       welcomeTitle="Welcome to RROWM"
       forceOpen
+      finalCtaLabel={finalCtaLabel}
+      finalCtaHref={finalCtaHref}
+      onFinalCta={onFinalCta}
     />
   );
 }

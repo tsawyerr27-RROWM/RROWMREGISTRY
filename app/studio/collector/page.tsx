@@ -49,6 +49,7 @@ import {
   StudioViewToggle,
   useStudioViewMode,
 } from "@/components/Studio/StudioViewToggle";
+import { CollectorHoldingsEmptyState } from "@/components/Studio/CollectorHoldingsEmptyState";
 import { CollectorWorkspaceHero } from "@/components/Studio/CollectorWorkspaceHero";
 import {
   StudioRoleBand,
@@ -684,7 +685,12 @@ export default function CollectorStudioPage() {
 
   return (
     <>
-    <WelcomeModal role="collector" steps={collectorIntroSteps} />
+    <WelcomeModal
+      role="collector"
+      steps={collectorIntroSteps}
+      finalCtaLabel={t("collector.empty.claimOwnership")}
+      finalCtaHref="/collector-studio/claim-ownership"
+    />
     <StudioShell
       role="collector"
       userId={userId}
@@ -986,13 +992,8 @@ export default function CollectorStudioPage() {
           ) : null}
 
           {sorted.length === 0 && pendingAcquisitions.length === 0 ? (
-            <div className="studio-reveal mt-10 max-w-xl border border-[var(--v2-border)] bg-white/80 px-5 py-6 sm:px-6 sm:py-7">
-              <p className="v2-type-display text-[1.25rem] leading-snug text-[var(--v2-ink)]">
-                {t("collector.works.emptyTitle")}
-              </p>
-              <p className="mt-3 text-sm leading-relaxed text-[var(--v2-ink-muted)]">
-                {t("collector.works.emptyBody")}
-              </p>
+            <div className="studio-reveal mt-10">
+              <CollectorHoldingsEmptyState />
             </div>
           ) : worksView === "gallery" ? (
             <CollectorHoldingsGallery
@@ -1084,9 +1085,18 @@ export default function CollectorStudioPage() {
             </h2>
           </div>
           {intelligenceItems.length === 0 ? (
-            <p className="mt-8 text-sm leading-relaxed text-[var(--v2-ink-muted)]">
-              {t("collector.attention.empty")}
-            </p>
+            rows.length === 0 && pendingAcquisitions.length === 0 ? (
+              <div className="mt-10">
+                <CollectorHoldingsEmptyState
+                  title={t("collector.attention.emptyNoHoldingsTitle")}
+                  body={t("collector.attention.emptyNoHoldingsBody")}
+                />
+              </div>
+            ) : (
+              <p className="mt-8 text-sm leading-relaxed text-[var(--v2-ink-muted)]">
+                {t("collector.attention.empty")}
+              </p>
+            )
           ) : (
             <ul className="mt-10 space-y-6">
               {intelligenceItems.map((item) => (

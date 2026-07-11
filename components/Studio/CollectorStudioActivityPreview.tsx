@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { CLAIM_OWNERSHIP_HREF } from "@/components/Studio/CollectorHoldingsEmptyState";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { translateActivityMessage } from "@/lib/activity-i18n";
+import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 import { fillMessage } from "@/lib/locale-messages";
 import {
   translateRawVerificationStatus,
@@ -227,9 +229,25 @@ export function CollectorStudioActivityPreview({
 
   if (artworkIds.length === 0) {
     return (
-      <p className="text-xs leading-relaxed text-neutral-500">
-        {t("collector.activity.emptyHold")}
-      </p>
+      <div className="space-y-3">
+        <p className="text-xs leading-relaxed text-neutral-500">
+          {t("collector.activity.emptyHold")}
+        </p>
+        <div className="flex flex-wrap gap-3 text-xs">
+          <Link
+            href={CLAIM_OWNERSHIP_HREF}
+            className="font-medium text-neutral-800 underline decoration-neutral-900/15 underline-offset-[4px] transition hover:decoration-neutral-900/40"
+          >
+            {t("collector.empty.claimOwnership")}
+          </Link>
+          <Link
+            href={fieldExplorerRecordsHref()}
+            className="text-neutral-500 underline decoration-neutral-900/10 underline-offset-[4px] transition hover:text-neutral-800 hover:decoration-neutral-900/30"
+          >
+            {t("collector.empty.browseRegistry")}
+          </Link>
+        </div>
+      </div>
     );
   }
 

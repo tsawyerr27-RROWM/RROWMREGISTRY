@@ -1105,6 +1105,19 @@ export type MessageKey =
   | "about.audience.collectorsBody"
   | "pricing.eyebrow"
   | "pricing.title"
+  | "pricing.comingLater"
+  | "pricing.foundation.title"
+  | "pricing.foundation.description"
+  | "pricing.foundation.free"
+  | "pricing.foundation.f1"
+  | "pricing.foundation.f2"
+  | "pricing.foundation.f3"
+  | "pricing.foundation.f4"
+  | "pricing.foundation.f5"
+  | "pricing.foundation.f6"
+  | "pricing.foundation.f7"
+  | "pricing.foundation.cta"
+  | "pricing.foundation.nextStep"
   | "pricing.pro.title"
   | "pricing.pro.f1"
   | "pricing.pro.f2"
@@ -1531,8 +1544,11 @@ export type MessageKey =
   | "collector.hero.registry"
   | "collector.hero.previewEmpty"
   | "collector.hero.previewNoImages"
+  | "collector.empty.claimOwnership"
+  | "collector.empty.browseRegistry"
   | "collector.overview.srOnly"
   | "collector.overview.empty"
+  | "collector.overview.emptyTitle"
   | "collector.overview.held"
   | "collector.overview.verifiedOwnership"
   | "collector.overview.pendingTransfer"
@@ -1581,6 +1597,8 @@ export type MessageKey =
   | "collector.holding.transferCount"
   | "collector.attention.title"
   | "collector.attention.empty"
+  | "collector.attention.emptyNoHoldingsTitle"
+  | "collector.attention.emptyNoHoldingsBody"
   | "collector.attention.verificationPending"
   | "collector.attention.transferResolve"
   | "collector.attention.claimInProgress"
@@ -1745,6 +1763,9 @@ export type MessageKey =
   | "studio.certificates.open"
   | "studio.certificates.emptyLabel"
   | "studio.certificates.emptyTitle"
+  | "studio.certificates.emptyBody"
+  | "studio.certificates.emptyBodyAwaitingVerify"
+  | "studio.certificates.emptyCtaAttest"
   | "studio.ownership.filterAll"
   | "studio.ownership.filterFullCatalogue"
   | "studio.ownership.filterNeedsTransfer"
@@ -3176,11 +3197,11 @@ const EN: Record<MessageKey, string> = {
   "getStarted.artistCta": "Continue as Creative",
   "getStarted.galleryTitle": "I represent an Organisation",
   "getStarted.galleryDesc":
-    "Verified Organisation workflows: participant confirmations and listings on file for represented Creatives.",
-  "getStarted.galleryCta": "View plans and continue",
+    "Free registry infrastructure to establish your organisation's verified presence — profile, roster, filings, and opportunities on one ledger.",
+  "getStarted.galleryCta": "Create organisation",
   "getStarted.collectorTitle": "I am a Collector",
   "getStarted.collectorDesc":
-    "Browse the public catalogue, read the current record, and file custody when you hold a work.",
+    "Browse the public catalogue, confirm stewardship when a work transfers to you, or claim ownership from the Registry.",
   "getStarted.collectorCta": "Continue as Collector",
   "getStarted.catalogueTitle": "On the catalogue",
   "auth.signIn": "Sign in",
@@ -3648,25 +3669,40 @@ const EN: Record<MessageKey, string> = {
   "about.audience.collectorsLabel": "Collectors & researchers",
   "about.audience.collectorsBody":
     "using the public layer to verify what is on record before going further through authenticated channels.",
-  "pricing.eyebrow": "Organisation Studio · Paid access",
-  "pricing.title": "Choose how your Organisation Studio uses RROWM",
+  "pricing.eyebrow": "Organisation Studio",
+  "pricing.title": "Establish your organisation on the Registry",
+  "pricing.comingLater": "Coming later",
+  "pricing.foundation.title": "Foundation",
+  "pricing.foundation.description":
+    "Everything required to begin building your organisation's verified presence on the Registry.",
+  "pricing.foundation.free": "Free",
+  "pricing.foundation.f1": "Organisation profile",
+  "pricing.foundation.f2": "Register artworks",
+  "pricing.foundation.f3": "Verification workflow",
+  "pricing.foundation.f4": "Artist roster",
+  "pricing.foundation.f5": "Opportunities",
+  "pricing.foundation.f6": "Certificates",
+  "pricing.foundation.f7": "Ownership records",
+  "pricing.foundation.cta": "Create organisation",
+  "pricing.foundation.nextStep":
+    "No payment required. You will create your account on the next step.",
   "pricing.pro.title": "Organisation Professional",
-  "pricing.pro.f1": "Represented artist roster on the registry",
-  "pricing.pro.f2": "Register and maintain verified works",
-  "pricing.pro.f3": "Issue and support verification records and certificates",
-  "pricing.pro.f4": "Operate a public institutional studio presence on the registry",
-  "pricing.pro.f5": "Provide structured access for your team",
+  "pricing.pro.f1": "Advanced team permissions and roles",
+  "pricing.pro.f2": "Extended operational reporting",
+  "pricing.pro.f3": "Priority institutional support",
+  "pricing.pro.f4": "API and integration access",
+  "pricing.pro.f5": "Multi-administrator organisation workflows",
   "pricing.pro.continue": "Continue to sign up",
   "pricing.pro.nextStep": "You will create your account on the next step.",
   "pricing.enterprise.title": "Institutional Enterprise",
-  "pricing.enterprise.future": "Future paid tier",
+  "pricing.enterprise.future": "Coming later",
   "pricing.enterprise.f1": "Organisation-wide SSO and directory integration",
   "pricing.enterprise.f2": "White-label verification flows and API access",
   "pricing.enterprise.f3": "Advanced analytics, exports, and audit trails",
   "pricing.enterprise.f4": "Dedicated success manager and custom SLA",
-  "pricing.enterprise.f5": "Contracted terms and invoicing",
+  "pricing.enterprise.f5": "Contracted terms for large institutions",
   "pricing.enterprise.note":
-    "Not available for self-serve yet. Talk to us about timing and fit.",
+    "Institutional capabilities for larger organisations. Available in a future release.",
   "pricing.enterprise.contact": "Contact the registry",
   "pricing.alreadyAccount": "Already have an account?",
   "gallery.nav.studio": "Studio",
@@ -4179,9 +4215,12 @@ const EN: Record<MessageKey, string> = {
     "Works you hold will surface here with images when records include them.",
   "collector.hero.previewNoImages":
     "Images appear when works include artwork images.",
+  "collector.empty.claimOwnership": "Claim ownership",
+  "collector.empty.browseRegistry": "Browse registry",
   "collector.overview.srOnly": "Collection overview",
+  "collector.overview.emptyTitle": "No holdings on file yet",
   "collector.overview.empty":
-    "No works held yet. When you claim or receive ownership, they will appear here.",
+    "Claim ownership of a work on the Registry, or confirm receipt when a transfer is filed to you.",
   "collector.overview.held": "{count} {units} held.",
   "collector.overview.verifiedOwnership":
     "{count} verified ownership {units}.",
@@ -4215,7 +4254,7 @@ const EN: Record<MessageKey, string> = {
   "collector.works.verificationOutstanding": "Verification outstanding",
   "collector.works.emptyTitle": "No works on file.",
   "collector.works.emptyBody":
-    "Verified holdings and transfer history will appear here as works enter your collection.",
+    "Holdings appear here after you claim ownership on the Registry or confirm an inbound transfer.",
   "collector.archive.rail": "COLLECTOR",
   "collector.archive.stamp": "ARCHIVE",
   "collector.archive.title": "Collector Archive",
@@ -4235,6 +4274,9 @@ const EN: Record<MessageKey, string> = {
   "collector.holding.transferCount": "{count} transfers on record",
   "collector.attention.title": "Requiring attention",
   "collector.attention.empty": "Nothing calls for action right now.",
+  "collector.attention.emptyNoHoldingsTitle": "No custody filings yet",
+  "collector.attention.emptyNoHoldingsBody":
+    "Attention items appear when transfers, claims, or verification need your response. Record your first holding to begin.",
   "collector.attention.verificationPending":
     "Ownership verification pending: {title}",
   "collector.attention.transferResolve": "Transfer to resolve: {title}",
@@ -4442,6 +4484,11 @@ const EN: Record<MessageKey, string> = {
   "studio.certificates.open": "Open →",
   "studio.certificates.emptyLabel": "Registry certificates",
   "studio.certificates.emptyTitle": "No verified certificates yet",
+  "studio.certificates.emptyBody":
+    "Certificates issued for verified works will appear in this archive.",
+  "studio.certificates.emptyBodyAwaitingVerify":
+    "Filed works need authorship attestation or verification before a certificate can be issued.",
+  "studio.certificates.emptyCtaAttest": "Attest authorship",
   "studio.ownership.filterAll": "All records ({count})",
   "studio.ownership.filterFullCatalogue": "Full catalogue ({count})",
   "studio.ownership.filterNeedsTransfer": "Needs transfer ({count})",
@@ -5828,10 +5875,10 @@ const DE: Record<MessageKey, string> = {
   "getStarted.galleryTitle": "Ich vertrete eine Organisation",
   "getStarted.galleryDesc":
     "Verifizierte Organisations-Workflows: Bestätigungen und Einträge für vertretene Creatives in der Akte.",
-  "getStarted.galleryCta": "Pläne ansehen und fortfahren",
+  "getStarted.galleryCta": "Organisation erstellen",
   "getStarted.collectorTitle": "Ich bin Sammlerin / Sammler",
   "getStarted.collectorDesc":
-    "Öffentlichen Katalog durchsuchen, aktuellen Stand lesen und Custody einreichen, wenn Sie ein Werk halten.",
+    "Öffentlichen Katalog durchsuchen, Verwahrung bestätigen, wenn ein Werk an Sie übertragen wird, oder Eigentum im Register beanspruchen.",
   "getStarted.collectorCta": "Als Sammler fortfahren",
   "getStarted.catalogueTitle": "Im Katalog",
   "auth.signIn": "Anmelden",
@@ -6591,8 +6638,14 @@ const DE: Record<MessageKey, string> = {
   "representation.publicParticipationOnFile": "Öffentliche Teilnahme in der Akte",
   "representation.artistAttestationOnFile": "Künstlerattestierung in der Akte",
   "representation.artistAttestationMayDeepen": "Künstlerattestierung kann vertieft werden",
-  "pricing.eyebrow": "Organisations-Studio · kostenpflichtig",
-  "pricing.title": "Wählen Sie, wie Ihr Organisations-Studio RROWM nutzt",
+  "pricing.eyebrow": "Organisations-Studio",
+  "pricing.title": "Ihre Organisation im Register verankern",
+  "pricing.comingLater": "Demnächst",
+  "pricing.foundation.title": "Foundation",
+  "pricing.foundation.description":
+    "Alles, was Sie brauchen, um die verifizierte Präsenz Ihrer Organisation im Register aufzubauen.",
+  "pricing.foundation.free": "Kostenlos",
+  "pricing.foundation.cta": "Organisation erstellen",
   "pricing.pro.title": "Organisation Professional",
   "pricing.pro.continue": "Weiter zur Registrierung",
   "pricing.enterprise.title": "Institutional Enterprise",
@@ -6649,9 +6702,12 @@ const DE: Record<MessageKey, string> = {
     "Gehaltene Werke erscheinen hier mit Bildern, wenn die Akten sie enthalten.",
   "collector.hero.previewNoImages":
     "Bilder erscheinen, wenn Werke Kunstwerkbilder enthalten.",
+  "collector.empty.claimOwnership": "Eigentum beanspruchen",
+  "collector.empty.browseRegistry": "Register durchsuchen",
   "collector.overview.srOnly": "Sammlungsübersicht",
+  "collector.overview.emptyTitle": "Noch keine Bestände in der Akte",
   "collector.overview.empty":
-    "Noch keine gehaltenen Werke. Wenn Sie Eigentum beanspruchen oder erhalten, erscheinen sie hier.",
+    "Beanspruchen Sie Eigentum an einem Werk im Register oder bestätigen Sie den Eingang bei einer Übertragung.",
   "collector.overview.held": "{count} {units} gehalten.",
   "collector.overview.verifiedOwnership":
     "{count} verifizierte Eigentums-{units}.",
@@ -6685,7 +6741,7 @@ const DE: Record<MessageKey, string> = {
   "collector.works.verificationOutstanding": "Verifizierung ausstehend",
   "collector.works.emptyTitle": "Keine Werke in der Akte.",
   "collector.works.emptyBody":
-    "Verifizierte Bestände und Übertragungshistorie erscheinen hier, sobald Werke in Ihre Sammlung eingehen.",
+    "Bestände erscheinen hier, nachdem Sie Eigentum im Register beansprucht oder eine eingehende Übertragung bestätigt haben.",
   "collector.archive.rail": "COLLECTOR",
   "collector.archive.stamp": "ARCHIV",
   "collector.archive.title": "Collector Archive",
@@ -6705,6 +6761,9 @@ const DE: Record<MessageKey, string> = {
   "collector.holding.transferCount": "{count} Übertragungen in der Akte",
   "collector.attention.title": "Erfordert Aufmerksamkeit",
   "collector.attention.empty": "Derzeit ist keine Handlung nötig.",
+  "collector.attention.emptyNoHoldingsTitle": "Noch keine Verwahrungs-Einträge",
+  "collector.attention.emptyNoHoldingsBody":
+    "Aufmerksamkeitspunkte erscheinen bei Übertragungen, Ansprüchen oder Verifizierung. Erfassen Sie Ihren ersten Bestand, um zu beginnen.",
   "collector.attention.verificationPending":
     "Eigentumsverifizierung ausstehend: {title}",
   "collector.attention.transferResolve": "Zu lösende Übertragung: {title}",
@@ -6799,6 +6858,11 @@ const DE: Record<MessageKey, string> = {
   "studio.certificates.open": "Öffnen →",
   "studio.certificates.emptyLabel": "Registerzertifikate",
   "studio.certificates.emptyTitle": "Noch keine verifizierten Zertifikate",
+  "studio.certificates.emptyBody":
+    "Für verifizierte Werke ausgestellte Zertifikate erscheinen in diesem Archiv.",
+  "studio.certificates.emptyBodyAwaitingVerify":
+    "Eingereichte Werke benötigen Urheberschafts-Bestätigung oder Verifizierung, bevor ein Zertifikat ausgestellt werden kann.",
+  "studio.certificates.emptyCtaAttest": "Urheberschaft bestätigen",
   "studio.ownership.filterAll": "Alle Einträge ({count})",
   "studio.ownership.filterFullCatalogue": "Vollständiger Katalog ({count})",
   "studio.ownership.filterNeedsTransfer": "Übertragung nötig ({count})",
@@ -7941,10 +8005,10 @@ const FR: Record<MessageKey, string> = {
   "getStarted.galleryTitle": "Je représente une Organisation",
   "getStarted.galleryDesc":
     "Flux Organisation vérifiés : confirmations et listes au dossier pour les Créatifs représentés.",
-  "getStarted.galleryCta": "Voir les offres et continuer",
+  "getStarted.galleryCta": "Créer une organisation",
   "getStarted.collectorTitle": "Je suis Collectionneur",
   "getStarted.collectorDesc":
-    "Parcourez le catalogue public, lisez l'état actuel et déposez la garde lorsque vous détenez une œuvre.",
+    "Parcourez le catalogue public, confirmez la garde lorsqu'une œuvre vous est transférée, ou revendiquez la propriété sur le Registre.",
   "getStarted.collectorCta": "Continuer en tant que Collectionneur",
   "getStarted.catalogueTitle": "Sur le catalogue",
   "auth.signIn": "Connexion",
@@ -8704,8 +8768,14 @@ const FR: Record<MessageKey, string> = {
   "representation.publicParticipationOnFile": "Participation publique au dossier",
   "representation.artistAttestationOnFile": "Attestation d'artiste au dossier",
   "representation.artistAttestationMayDeepen": "L'attestation d'artiste peut s'approfondir",
-  "pricing.eyebrow": "Studio Organisation · accès payant",
-  "pricing.title": "Choisissez comment votre Studio Organisation utilise RROWM",
+  "pricing.eyebrow": "Studio Organisation",
+  "pricing.title": "Établir votre organisation sur le Registre",
+  "pricing.comingLater": "À venir",
+  "pricing.foundation.title": "Foundation",
+  "pricing.foundation.description":
+    "Tout le nécessaire pour commencer à construire la présence vérifiée de votre organisation sur le Registre.",
+  "pricing.foundation.free": "Gratuit",
+  "pricing.foundation.cta": "Créer une organisation",
   "pricing.pro.continue": "Continuer vers l'inscription",
   "pricing.enterprise.contact": "Contacter le registre",
   "about.principles.title": "Un registre conçu pour la confiance",
@@ -8760,9 +8830,12 @@ const FR: Record<MessageKey, string> = {
     "Les œuvres que vous détenez apparaîtront ici avec des images lorsque les fiches les incluent.",
   "collector.hero.previewNoImages":
     "Les images apparaissent lorsque les œuvres incluent des visuels.",
+  "collector.empty.claimOwnership": "Revendiquer la propriété",
+  "collector.empty.browseRegistry": "Parcourir le registre",
   "collector.overview.srOnly": "Aperçu de la collection",
+  "collector.overview.emptyTitle": "Aucune détention au dossier",
   "collector.overview.empty":
-    "Aucune œuvre détenue pour l'instant. Lorsque vous revendiquez ou recevez la propriété, elles apparaîtront ici.",
+    "Revendiquez la propriété d'une œuvre sur le Registre, ou confirmez la réception lorsqu'un transfert vous est adressé.",
   "collector.overview.held": "{count} {units} détenues.",
   "collector.overview.verifiedOwnership":
     "{count} fiche(s) de propriété vérifiée(s).",
@@ -8796,7 +8869,7 @@ const FR: Record<MessageKey, string> = {
   "collector.works.verificationOutstanding": "Vérification en suspens",
   "collector.works.emptyTitle": "Aucune œuvre au dossier.",
   "collector.works.emptyBody":
-    "Les détentions vérifiées et l'historique des transferts apparaîtront ici au fur et à mesure que les œuvres entrent dans votre collection.",
+    "Les détentions apparaissent ici après une revendication sur le Registre ou la confirmation d'un transfert entrant.",
   "collector.archive.rail": "COLLECTOR",
   "collector.archive.stamp": "ARCHIVE",
   "collector.archive.title": "Collector Archive",
@@ -8816,6 +8889,9 @@ const FR: Record<MessageKey, string> = {
   "collector.holding.transferCount": "{count} transferts au dossier",
   "collector.attention.title": "Nécessite une attention",
   "collector.attention.empty": "Rien n'appelle à une action pour l'instant.",
+  "collector.attention.emptyNoHoldingsTitle": "Aucun dépôt de garde pour l'instant",
+  "collector.attention.emptyNoHoldingsBody":
+    "Les éléments d'attention apparaissent lorsque transferts, revendications ou vérification requièrent votre réponse. Enregistrez votre première détention pour commencer.",
   "collector.attention.verificationPending":
     "Vérification de propriété en attente : {title}",
   "collector.attention.transferResolve": "Transfert à résoudre : {title}",
@@ -8910,6 +8986,11 @@ const FR: Record<MessageKey, string> = {
   "studio.certificates.open": "Ouvrir →",
   "studio.certificates.emptyLabel": "Certificats de registre",
   "studio.certificates.emptyTitle": "Aucun certificat vérifié pour l'instant",
+  "studio.certificates.emptyBody":
+    "Les certificats émis pour les œuvres vérifiées apparaîtront dans cette archive.",
+  "studio.certificates.emptyBodyAwaitingVerify":
+    "Les œuvres déposées nécessitent une attestation ou une vérification d'auteur avant qu'un certificat puisse être émis.",
+  "studio.certificates.emptyCtaAttest": "Attester l'auteur",
   "studio.ownership.filterAll": "Toutes les fiches ({count})",
   "studio.ownership.filterFullCatalogue": "Catalogue complet ({count})",
   "studio.ownership.filterNeedsTransfer": "Transfert requis ({count})",
@@ -10053,10 +10134,10 @@ const JA: Record<MessageKey, string> = {
   "getStarted.galleryTitle": "組織を代表しています",
   "getStarted.galleryDesc":
     "検証済み組織ワークフロー。代表クリエイティブの確認と掲載を記録に。",
-  "getStarted.galleryCta": "プランを見て続ける",
+  "getStarted.galleryCta": "組織を作成",
   "getStarted.collectorTitle": "コレクターです",
   "getStarted.collectorDesc":
-    "公開カタログを閲覧し、現在の記録を読み、保有時に保管を提出。",
+    "公開カタログを閲覧し、作品が移転された際に管理を確認するか、レジストリから所有を申請してください。",
   "getStarted.collectorCta": "コレクターとして続ける",
   "getStarted.catalogueTitle": "カタログについて",
   "auth.signIn": "サインイン",
@@ -10812,8 +10893,14 @@ const JA: Record<MessageKey, string> = {
   "representation.publicParticipationOnFile": "公開参加が記録済み",
   "representation.artistAttestationOnFile": "アーティスト証明が記録済み",
   "representation.artistAttestationMayDeepen": "アーティスト証明は深められる",
-  "pricing.eyebrow": "組織 Studio · 有料アクセス",
-  "pricing.title": "組織 Studio での RROWM の使い方を選ぶ",
+  "pricing.eyebrow": "組織 Studio",
+  "pricing.title": "レジストリに組織を設立する",
+  "pricing.comingLater": "近日公開",
+  "pricing.foundation.title": "Foundation",
+  "pricing.foundation.description":
+    "レジストリ上で組織の検証済みプレゼンスを構築するために必要なすべて。",
+  "pricing.foundation.free": "無料",
+  "pricing.foundation.cta": "組織を作成",
   "pricing.pro.continue": "登録に進む",
   "pricing.enterprise.contact": "レジストリに問い合わせ",
   "about.principles.title": "信頼のために設計されたレジストリ",
@@ -10868,9 +10955,12 @@ const JA: Record<MessageKey, string> = {
     "保有作品は、記録に画像が含まれるとここに表示されます。",
   "collector.hero.previewNoImages":
     "作品に画像が含まれると表示されます。",
+  "collector.empty.claimOwnership": "所有を申請",
+  "collector.empty.browseRegistry": "レジストリを閲覧",
   "collector.overview.srOnly": "コレクション概要",
+  "collector.overview.emptyTitle": "まだ保有記録がありません",
   "collector.overview.empty":
-    "まだ保有作品がありません。所有を申請または受け取ると、ここに表示されます。",
+    "レジストリで作品の所有を申請するか、移転が届いた際に受領を確認してください。",
   "collector.overview.held": "{count} {units}を保有。",
   "collector.overview.verifiedOwnership":
     "検証済み所有 {units} {count}件。",
@@ -10904,7 +10994,7 @@ const JA: Record<MessageKey, string> = {
   "collector.works.verificationOutstanding": "検証未完了",
   "collector.works.emptyTitle": "記録上の作品はありません。",
   "collector.works.emptyBody":
-    "検証済みの保有と移転履歴は、作品がコレクションに入るとここに表示されます。",
+    "レジストリで所有を申請するか、入庫移転を確認すると、保有がここに表示されます。",
   "collector.archive.rail": "COLLECTOR",
   "collector.archive.stamp": "ARCHIVE",
   "collector.archive.title": "Collector Archive",
@@ -10924,6 +11014,9 @@ const JA: Record<MessageKey, string> = {
   "collector.holding.transferCount": "記録上の移転 {count} 件",
   "collector.attention.title": "要確認",
   "collector.attention.empty": "現在、対応が必要な項目はありません。",
+  "collector.attention.emptyNoHoldingsTitle": "まだ保管記録がありません",
+  "collector.attention.emptyNoHoldingsBody":
+    "移転、申請、検証への対応が必要なときに要確認項目が表示されます。最初の保有を記録して始めましょう。",
   "collector.attention.verificationPending":
     "所有検証保留中：{title}",
   "collector.attention.transferResolve": "解決が必要な移転：{title}",
@@ -11017,6 +11110,11 @@ const JA: Record<MessageKey, string> = {
   "studio.certificates.open": "開く →",
   "studio.certificates.emptyLabel": "レジストリ証明書",
   "studio.certificates.emptyTitle": "まだ検証済みの証明書がありません",
+  "studio.certificates.emptyBody":
+    "検証済み作品に発行された証明書は、このアーカイブに表示されます。",
+  "studio.certificates.emptyBodyAwaitingVerify":
+    "提出済みの作品は、証明書発行前に作者証明または検証が必要です。",
+  "studio.certificates.emptyCtaAttest": "作者証明する",
   "studio.ownership.filterAll": "すべての記録 ({count})",
   "studio.ownership.filterFullCatalogue": "全カタログ ({count})",
   "studio.ownership.filterNeedsTransfer": "移転が必要 ({count})",
