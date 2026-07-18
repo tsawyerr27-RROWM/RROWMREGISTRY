@@ -954,7 +954,13 @@ export type MessageKey =
   | "studio.activity.loading"
   | "studio.archive.viewLabel"
   | "studio.archive.viewLedger"
-  | "studio.archive.viewGallery"
+  | "studio.archive.viewArchive"
+  | "studio.archive.position"
+  | "studio.archive.positionOf"
+  | "studio.archive.navigationHint"
+  | "studio.archive.roledescription"
+  | "studio.archive.openWork"
+  | "studio.archive.imageUnavailable"
   | "studio.shell.section"
   | "studio.shell.onFile"
   | "studio.shell.openSectionSwitcher"
@@ -1570,7 +1576,7 @@ export type MessageKey =
   | "collector.works.sortValue"
   | "collector.works.viewLabel"
   | "collector.works.viewLedger"
-  | "collector.works.viewGallery"
+  | "collector.works.viewArchive"
   | "collector.works.emptyPrefix"
   | "collector.works.emptyLink"
   | "collector.works.emptySuffix"
@@ -3502,7 +3508,13 @@ const EN: Record<MessageKey, string> = {
   "studio.activity.loading": "Loading…",
   "studio.archive.viewLabel": "View",
   "studio.archive.viewLedger": "Ledger",
-  "studio.archive.viewGallery": "Gallery",
+  "studio.archive.viewArchive": "Archive",
+  "studio.archive.position": "Work",
+  "studio.archive.positionOf": "of",
+  "studio.archive.navigationHint": "Use arrow keys or scroll to move through works",
+  "studio.archive.roledescription": "Living Archive",
+  "studio.archive.openWork": "Open work",
+  "studio.archive.imageUnavailable": "Image unavailable",
   "studio.shell.section": "SECTION",
   "studio.shell.onFile": "ON FILE",
   "studio.shell.openSectionSwitcher": "Open section switcher",
@@ -4243,7 +4255,7 @@ const EN: Record<MessageKey, string> = {
   "collector.works.title": "Works",
   "collector.works.viewLabel": "View",
   "collector.works.viewLedger": "Ledger",
-  "collector.works.viewGallery": "Gallery",
+  "collector.works.viewArchive": "Archive",
   "collector.works.order": "Order:",
   "collector.works.sortRecency": "Recency",
   "collector.works.sortValue": "Declared value",
@@ -6101,7 +6113,13 @@ const DE: Record<MessageKey, string> = {
   "studio.activity.loading": "Wird geladen…",
   "studio.archive.viewLabel": "Ansicht",
   "studio.archive.viewLedger": "Register",
-  "studio.archive.viewGallery": "Galerie",
+  "studio.archive.viewArchive": "Archiv",
+  "studio.archive.position": "Werk",
+  "studio.archive.positionOf": "von",
+  "studio.archive.navigationHint": "Mit Pfeiltasten oder Scrollen durch Werke navigieren",
+  "studio.archive.roledescription": "Lebendiges Archiv",
+  "studio.archive.openWork": "Werk öffnen",
+  "studio.archive.imageUnavailable": "Bild nicht verfügbar",
   "studio.shell.section": "BEREICH",
   "studio.shell.onFile": "AKTIV",
   "studio.shell.openSectionSwitcher": "Bereichsauswahl öffnen",
@@ -6730,7 +6748,7 @@ const DE: Record<MessageKey, string> = {
   "collector.works.title": "Werke",
   "collector.works.viewLabel": "Ansicht",
   "collector.works.viewLedger": "Register",
-  "collector.works.viewGallery": "Galerie",
+  "collector.works.viewArchive": "Archiv",
   "collector.works.order": "Reihenfolge:",
   "collector.works.sortRecency": "Aktualität",
   "collector.works.sortValue": "Deklarierter Wert",
@@ -8231,7 +8249,13 @@ const FR: Record<MessageKey, string> = {
   "studio.activity.loading": "Chargement…",
   "studio.archive.viewLabel": "Vue",
   "studio.archive.viewLedger": "Registre",
-  "studio.archive.viewGallery": "Galerie",
+  "studio.archive.viewArchive": "Archives",
+  "studio.archive.position": "Œuvre",
+  "studio.archive.positionOf": "sur",
+  "studio.archive.navigationHint": "Utilisez les flèches ou faites défiler pour parcourir les œuvres",
+  "studio.archive.roledescription": "Archives vivantes",
+  "studio.archive.openWork": "Ouvrir l’œuvre",
+  "studio.archive.imageUnavailable": "Image indisponible",
   "studio.shell.section": "SECTION",
   "studio.shell.onFile": "ACTIF",
   "studio.shell.openSectionSwitcher": "Ouvrir le sélecteur de section",
@@ -8858,7 +8882,7 @@ const FR: Record<MessageKey, string> = {
   "collector.works.title": "Œuvres",
   "collector.works.viewLabel": "Vue",
   "collector.works.viewLedger": "Registre",
-  "collector.works.viewGallery": "Galerie",
+  "collector.works.viewArchive": "Archives",
   "collector.works.order": "Ordre :",
   "collector.works.sortRecency": "Récence",
   "collector.works.sortValue": "Valeur déclarée",
@@ -10357,7 +10381,13 @@ const JA: Record<MessageKey, string> = {
   "studio.activity.loading": "読み込み中…",
   "studio.archive.viewLabel": "表示",
   "studio.archive.viewLedger": "台帳",
-  "studio.archive.viewGallery": "ギャラリー",
+  "studio.archive.viewArchive": "アーカイブ",
+  "studio.archive.position": "作品",
+  "studio.archive.positionOf": "/",
+  "studio.archive.navigationHint": "矢印キーまたはスクロールで作品を移動",
+  "studio.archive.roledescription": "リビングアーカイブ",
+  "studio.archive.openWork": "作品を開く",
+  "studio.archive.imageUnavailable": "画像を表示できません",
   "studio.shell.section": "セクション",
   "studio.shell.onFile": "表示中",
   "studio.shell.openSectionSwitcher": "セクション切替を開く",
@@ -10983,7 +11013,7 @@ const JA: Record<MessageKey, string> = {
   "collector.works.title": "作品",
   "collector.works.viewLabel": "表示",
   "collector.works.viewLedger": "台帳",
-  "collector.works.viewGallery": "ギャラリー",
+  "collector.works.viewArchive": "アーカイブ",
   "collector.works.order": "並び順：",
   "collector.works.sortRecency": "新しい順",
   "collector.works.sortValue": "申告価値",

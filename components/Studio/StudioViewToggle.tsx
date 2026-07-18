@@ -5,20 +5,34 @@ import {
   useArchiveViewMode,
   type ArchiveViewOption,
 } from "@/components/Studio/ArchiveViewSwitcher";
+import {
+  normalizeArchivePresentationMode,
+  type ArchivePresentationMode,
+} from "@/lib/living-archive";
 
-export type StudioViewMode = "ledger" | "gallery";
+export type StudioViewMode = ArchivePresentationMode;
 
-const LEDGER_GALLERY_MODES = ["ledger", "gallery"] as const;
+const LEDGER_ARCHIVE_MODES = ["ledger", "archive"] as const;
 
-/** Session-persisted Ledger/Gallery view mode. */
+function migrateLegacyGalleryMode(stored: string): string {
+  return normalizeArchivePresentationMode(stored);
+}
+
+/** Session-persisted Ledger/Archive view mode. */
 export function useStudioViewMode(
   storageKey: string,
-  fallback: StudioViewMode = "ledger"
-): [StudioViewMode, (mode: StudioViewMode) => void] {
-  const [mode, setMode] = useArchiveViewMode(storageKey, fallback, LEDGER_GALLERY_MODES);
+  fallback: StudioViewMode = "archive"
+): [StudioViewMode, (mode: StudioViewMode) => void, boolean] {
+  const [mode, setMode, ready] = useArchiveViewMode(
+    storageKey,
+    fallback,
+    LEDGER_ARCHIVE_MODES,
+    migrateLegacyGalleryMode
+  );
   return [
     mode as StudioViewMode,
     (next) => setMode(next),
+    ready,
   ];
 }
 
@@ -27,27 +41,39 @@ type Props = {
   onChange: (mode: StudioViewMode) => void;
   label: string;
   ledgerLabel: string;
-  galleryLabel: string;
+  archiveLabel: string;
 };
 
-/** Ledger ↔ Gallery toggle — thin wrapper over `ArchiveViewSwitcher`. */
+/** Ledger ↔ Archive toggle — thin wrapper over `ArchiveViewSwitcher`. */
 export function StudioViewToggle({
   mode,
   onChange,
   label,
   ledgerLabel,
-  galleryLabel,
+  archiveLabel,
 }: Props) {
   const options: ArchiveViewOption[] = [
     { id: "ledger", label: ledgerLabel },
-    { id: "gallery", label: galleryLabel },
+    { id: "archive", label: archiveLabel },
   ];
+
+  const handleChange = (next: StudioViewMode) => {
+    onChange(next);
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("view", next);
+    if (next === "ledger") {
+      url.searchParams.delete("work");
+      url.searchParams.delete("detail");
+    }
+    window.history.replaceState(window.history.state, "", url);
+  };
 
   return (
     <ArchiveViewSwitcher
       label={label}
       mode={mode}
-      onChange={(next) => onChange(next as StudioViewMode)}
+      onChange={(next) => handleChange(next as StudioViewMode)}
       options={options}
     />
   );

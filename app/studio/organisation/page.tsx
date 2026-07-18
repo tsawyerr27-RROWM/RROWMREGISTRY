@@ -25,6 +25,13 @@ import {
   type RegisterModalArtwork,
 } from "@/components/Dashboard/RegisterModal";
 import { DataInsightModal } from "@/components/Insights/DataInsightModal";
+import { ArtworkTrustBadge } from "@/components/Registry/ArtworkTrustBadge";
+import { LivingArchiveViewport } from "@/components/Studio/LivingArchiveViewport";
+import { ArchiveLoadingState } from "@/components/Studio/ArchiveEnginePrimitives";
+import {
+  StudioViewToggle,
+  useStudioViewMode,
+} from "@/components/Studio/StudioViewToggle";
 import { StudioCatalogueMetricsPanels } from "@/components/Studio/StudioCatalogueMetricsPanels";
 import { GalleryInstitutionalHero } from "@/components/gallery/GalleryInstitutionalHero";
 import { OrganisationVerificationCommand } from "@/components/gallery/OrganisationVerificationCommand";
@@ -69,6 +76,8 @@ import {
   translateRoleInsight,
 } from "@/lib/insights-i18n";
 import { fillMessage, type MessageKey } from "@/lib/locale-messages";
+import { adaptArchiveRecords } from "@/lib/archive-engine";
+import { createOrganisationArchiveAdapter } from "@/lib/archive-role-adapters";
 import { studioV2 } from "@/styles/studio-v2";
 import { RrowmMiniBarChart } from "@/components/ui/RrowmMiniBarChart";
 import { RecordReadinessSection } from "@/components/gallery/RecordReadinessSection";
@@ -311,12 +320,35 @@ export default function GalleryDashboardPage() {
   >("studio");
   const [workspaceGuideOpen, setWorkspaceGuideOpen] = useState(false);
   const [isTransitioningSection, setIsTransitioningSection] = useState(false);
+  const [catalogueView, setCatalogueView, catalogueViewReady] =
+    useStudioViewMode("organisation.catalogueView");
 
   useEffect(() => {
     const pending = consumePendingGallerySection();
-    if (pending) {
-      setActiveSection(pending);
-    }
+    const applyLinkedSection = () => {
+      const linkedSection = new URLSearchParams(window.location.search).get(
+        "section"
+      );
+      if (
+        linkedSection === "studio" ||
+        linkedSection === "record-depth" ||
+        linkedSection === "roster" ||
+        linkedSection === "invitations" ||
+        linkedSection === "catalogue" ||
+        linkedSection === "verification" ||
+        linkedSection === "opportunities"
+      ) {
+        setActiveSection(linkedSection);
+        return true;
+      }
+      return false;
+    };
+    if (!applyLinkedSection() && pending) setActiveSection(pending);
+    const handlePopState = () => {
+      applyLinkedSection();
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
   const [representationSummary, setRepresentationSummary] =
@@ -1007,6 +1039,19 @@ export default function GalleryDashboardPage() {
     }
     return m;
   }, [artists]);
+
+  const organisationArchiveRecords = useMemo(
+    () =>
+      adaptArchiveRecords(
+        artworks,
+        createOrganisationArchiveAdapter(
+          artistNameById,
+          t("gallery.catalogue.artistOnFile"),
+          t("gallery.fallback.untitled")
+        )
+      ),
+    [artistNameById, artworks, t]
+  );
 
   const artistNamesByIdRecord = useMemo(
     () => Object.fromEntries(Array.from(artistNameById.entries())),
@@ -2621,14 +2666,123 @@ export default function GalleryDashboardPage() {
                   {t(ORGANISATION_SECTION_LABEL_KEYS.catalogue)}
                 </h2>
               </div>
-              <button
-                type="button"
-                onClick={openRegisterWorkspace}
-                className="v2-cta-primary min-h-[44px] px-5 py-2.5 text-sm"
-              >
-                {t("gallery.catalogue.registerWork")}
-              </button>
+              <div className="flex flex-wrap items-center gap-3">
+                {catalogueViewReady ? (
+                  <StudioViewToggle
+                    mode={catalogueView}
+                    onChange={setCatalogueView}
+                    label={t("studio.archive.viewLabel")}
+                    ledgerLabel={t("studio.archive.viewLedger")}
+                    archiveLabel={t("studio.archive.viewArchive")}
+                  />
+                ) : (
+                  <div
+                    className="h-9 w-36 rounded-lg border border-[var(--v2-border)] bg-white/70"
+                    aria-hidden
+                  />
+                )}
+                <button
+                  type="button"
+                  onClick={openRegisterWorkspace}
+                  className="v2-cta-primary min-h-[44px] px-5 py-2.5 text-sm"
+                >
+                  {t("gallery.catalogue.registerWork")}
+                </button>
+              </div>
             </div>
+            {catalogueViewReady && catalogueView === "archive" ? (
+              <LivingArchiveViewport
+                ariaLabel={t("gallery.catalogue.registeredWorks")}
+                emptyLabel={t("gallery.catalogue.empty")}
+                sectionQueryValue="catalogue"
+                items={organisationArchiveRecords.map(
+                  ({ source: work, summary }) => {
+                  const authInviteComplete =
+                    authenticatedAuthInviteArtworkIds.has(work.id);
+                  const needsAuthInvite =
+                    isAdmin &&
+                    artworkNeedsAuthenticationInvite(
+                      work.id,
+                      artworkIdsAwaitingArtistAttestation,
+                      authenticatedAuthInviteArtworkIds
+                    );
+                  const pendingAuthInvite =
+                    pendingAuthInviteByArtworkId.get(work.id);
+                  const verified =
+                    String(work.verification_status || "").toLowerCase() ===
+                    "verified";
+                  const hasLiveCertificate = Boolean(
+                    integrityContext.hasLiveCertificateByArtworkId[work.id]
+                  );
+                  return {
+                    id: summary.id,
+                    registryId: summary.registryId,
+                    title: summary.title,
+                    creator: summary.creator,
+                    registryState: (
+                      <ArtworkTrustBadge
+                        verificationStatus={work.verification_status}
+                        showTooltip={false}
+                      />
+                    ),
+                    medium: summary.medium,
+                    year: summary.year,
+                    imageUrl: summary.image.url,
+                    href: work.registry_id
+                      ? fieldRecordHref(work.registry_id)
+                      : undefined,
+                    actions: (
+                      <>
+                        {!verified ? (
+                          <button
+                            type="button"
+                            disabled={verifyBusy === work.id}
+                            onClick={() => openVerifyFromIntegrity(work.id)}
+                            className="v2-cta-secondary inline-flex min-h-[44px] items-center px-4 py-2 text-xs"
+                          >
+                            {t("gallery.ops.action.verifyRecord")}
+                          </button>
+                        ) : !hasLiveCertificate ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              void issueCertificateFromIntegrity(work.id)
+                            }
+                            className="v2-cta-secondary inline-flex min-h-[44px] items-center px-4 py-2 text-xs"
+                          >
+                            {t("gallery.ops.action.issueCertificate")}
+                          </button>
+                        ) : null}
+                        {needsAuthInvite && !authInviteComplete ? (
+                          pendingAuthInvite ? (
+                            <span className="inline-flex min-h-[44px] items-center px-2 text-xs text-[var(--v2-ink-muted)]">
+                              {t("gallery.catalogue.invitationOnFile")}
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openArtworkAuthInviteForWork(work.id)
+                              }
+                              className="v2-cta-secondary inline-flex min-h-[44px] items-center px-4 py-2 text-xs"
+                            >
+                              {t(
+                                "gallery.catalogue.inviteArtistAuthenticate"
+                              )}
+                            </button>
+                          )
+                        ) : null}
+                      </>
+                    ),
+                  };
+                }
+                )}
+              />
+            ) : !catalogueViewReady ? (
+              <ArchiveLoadingState />
+            ) : null}
+            {catalogueViewReady && catalogueView === "ledger" ? (
+              <>
             <PriorityQueueSection
               items={priorityQueue}
               maxVisible={8}
@@ -2808,6 +2962,8 @@ export default function GalleryDashboardPage() {
                 </ul>
               )}
             </StudioContentSlab>
+              </>
+            ) : null}
           </div>
         ) : null}
 

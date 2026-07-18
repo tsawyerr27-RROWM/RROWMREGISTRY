@@ -47,7 +47,7 @@ export function CertificatesSection({
   onAttestClick,
 }: CertificatesSectionProps) {
   const { t } = useLocalePreferences();
-  const [certificatesView, setCertificatesView] = useStudioViewMode(
+  const [certificatesView, setCertificatesView, certificatesViewReady] = useStudioViewMode(
     "creative.certificatesView"
   );
   const isTrulyEmpty = totalCertificateCount === 0;
@@ -106,13 +106,20 @@ export function CertificatesSection({
               </>
             }
           />
-          <StudioViewToggle
-            mode={certificatesView}
-            onChange={setCertificatesView}
-            label={t("studio.archive.viewLabel")}
-            ledgerLabel={t("studio.archive.viewLedger")}
-            galleryLabel={t("studio.archive.viewGallery")}
-          />
+          {certificatesViewReady ? (
+            <StudioViewToggle
+              mode={certificatesView}
+              onChange={setCertificatesView}
+              label={t("studio.archive.viewLabel")}
+              ledgerLabel={t("studio.archive.viewLedger")}
+              archiveLabel={t("studio.archive.viewArchive")}
+            />
+          ) : (
+            <div
+              className="h-9 w-36 rounded-lg border border-[var(--v2-border)] bg-white/70"
+              aria-hidden
+            />
+          )}
         </div>
       ) : null}
 
@@ -122,7 +129,10 @@ export function CertificatesSection({
         </div>
       ) : null}
 
-      {!noMatches && filteredCertificates.length > 0 && certificatesView === "gallery" ? (
+      {!noMatches &&
+      filteredCertificates.length > 0 &&
+      certificatesViewReady &&
+      certificatesView === "archive" ? (
         <ArchiveGalleryGrid
           items={filteredCertificates.map((artwork) => ({
             id: String(artwork.id),
@@ -142,7 +152,10 @@ export function CertificatesSection({
         />
       ) : null}
 
-      {!noMatches && filteredCertificates.length > 0 && certificatesView === "ledger" ? (
+      {!noMatches &&
+      filteredCertificates.length > 0 &&
+      certificatesViewReady &&
+      certificatesView === "ledger" ? (
         <ul className="studio-reveal-stagger space-y-3 sm:space-y-4">
           {filteredCertificates.map((artwork, index) => (
             <li key={artwork.id} style={{ "--reveal-index": index } as CSSProperties}>

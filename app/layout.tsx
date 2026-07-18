@@ -31,6 +31,13 @@ const uiFont = Inter({
 export const metadata: Metadata = {
   title: "RROWM Registry",
   description: "Cultural registry infrastructure",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-32.png", type: "image/png", sizes: "32x32" },
+    ],
+    apple: [{ url: "/icon-512.png", type: "image/png", sizes: "512x512" }],
+  },
 };
 
 export default async function RootLayout({

@@ -59,6 +59,7 @@ type StudioSearchRowProps = {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   searchPlaceholder?: string;
+  searchLabel?: string;
   /** Filter dropdowns / primary actions (right column on large screens) */
   aside?: ReactNode;
   /** `light` = studio list surfaces (artworks, certificates, ownership) */
@@ -69,6 +70,7 @@ export function StudioSearchRow({
   searchQuery,
   onSearchChange,
   searchPlaceholder = "Search by title…",
+  searchLabel,
   aside,
   tone = "light",
 }: StudioSearchRowProps) {
@@ -84,6 +86,7 @@ export function StudioSearchRow({
         <input
           type="search"
           autoComplete="off"
+          aria-label={searchLabel ?? searchPlaceholder}
           placeholder={searchPlaceholder}
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}

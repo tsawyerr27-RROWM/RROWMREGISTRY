@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { createPortal } from "react-dom";
 
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
@@ -51,6 +56,8 @@ function sectionIsActive(
   );
 }
 
+const subscribeToClient = () => () => {};
+
 export function StudioMobileSectionSwitcher({
   sections,
   activeId,
@@ -60,18 +67,22 @@ export function StudioMobileSectionSwitcher({
   const { t } = useLocalePreferences();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    subscribeToClient,
+    () => true,
+    () => false
+  );
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const activeSection =
     sections.find((section) => sectionIsActive(section, activeId, pathname)) ??
     sections[0];
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    setOpen(false);
+    const frame = window.requestAnimationFrame(() => setOpen(false));
+    return () => window.cancelAnimationFrame(frame);
   }, [pathname, activeId]);
 
   useEffect(() => {
@@ -85,11 +96,47 @@ export function StudioMobileSectionSwitcher({
 
   useEffect(() => {
     if (!open) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const trigger = triggerRef.current;
+    const frame = window.requestAnimationFrame(() => {
+      closeButtonRef.current?.focus();
+    });
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setOpen(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const panel = panelRef.current;
+      if (!panel) return;
+      const focusable = Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'a[href],button:not([disabled]),[tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((element) => element.getClientRects().length > 0);
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) {
+        event.preventDefault();
+        panel.focus();
+        return;
+      }
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.removeEventListener("keydown", onKeyDown);
+      if (previousFocus?.isConnected) previousFocus.focus();
+      else trigger?.focus();
+    };
   }, [open]);
 
   const handleSelect = (id: string) => {
@@ -118,9 +165,11 @@ export function StudioMobileSectionSwitcher({
             />
 
             <div
+              ref={panelRef}
               role="dialog"
               aria-modal="true"
               aria-label={t("studio.shell.sectionSwitcherTitle")}
+              tabIndex={-1}
               className="studio-section-switcher-sheet pointer-events-auto fixed inset-x-0 bottom-0 flex max-h-[min(72dvh,28rem)] w-full flex-col overflow-hidden v2-surface-glass-dark v2-radius-modal rounded-b-none p-1.5 shadow-[var(--v2-shadow-cinematic)] motion-reduce:transition-none"
             >
               <div className="studio-section-switcher__shell v2-surface-paper v2-radius-card flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -129,6 +178,7 @@ export function StudioMobileSectionSwitcher({
                     {t("studio.shell.section")}
                   </p>
                   <button
+                    ref={closeButtonRef}
                     type="button"
                     onClick={() => setOpen(false)}
                     className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--v2-border)] text-[var(--v2-ink-muted)] transition hover:border-[var(--v2-border-strong)] hover:text-[var(--v2-ink)] motion-reduce:transition-none"
@@ -202,6 +252,7 @@ export function StudioMobileSectionSwitcher({
     <>
       <div className={`${studioV2.scope} mb-6 lg:hidden`}>
         <button
+          ref={triggerRef}
           type="button"
           aria-expanded={open}
           aria-haspopup="dialog"

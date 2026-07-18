@@ -42,9 +42,11 @@ import { testModeEnabled } from "@/lib/test-mode";
 import { TestDataControls } from "@/components/Admin/TestDataControls";
 import { studioFilterSelectClass } from "@/components/Dashboard/studioListPrimitives";
 import { RouteLoadingShell } from "@/components/ui/RouteLoadingShell";
+import { ArtworkTrustBadge } from "@/components/Registry/ArtworkTrustBadge";
 import { CollectorStudioActivityPreview } from "@/components/Studio/CollectorStudioActivityPreview";
 import { CollectorHoldingSlab } from "@/components/Studio/CollectorHoldingSlab";
-import { CollectorHoldingsGallery } from "@/components/Studio/CollectorHoldingsGallery";
+import { LivingArchiveViewport } from "@/components/Studio/LivingArchiveViewport";
+import { ArchiveLoadingState } from "@/components/Studio/ArchiveEnginePrimitives";
 import {
   StudioViewToggle,
   useStudioViewMode,
@@ -81,6 +83,8 @@ import {
   certificateStatusMapToCollectorRecord,
   fetchCertificatePublicStatusByArtworkIds,
 } from "@/lib/fetch-certificate-public-status-map";
+import { adaptArchiveRecords } from "@/lib/archive-engine";
+import { createCollectorArchiveAdapter } from "@/lib/archive-role-adapters";
 
 type Row = CollectorPortfolioRow & {
   artist_id: string | null;
@@ -121,9 +125,11 @@ export default function CollectorStudioPage() {
     Record<string, { has_certificate: boolean; revoked: boolean }>
   >({});
   const [sortMode, setSortMode] = useState<"activity" | "value">("activity");
-  const [worksView, setWorksView] = useStudioViewMode("collector.worksView");
+  const [worksView, setWorksView, worksViewReady] = useStudioViewMode(
+    "collector.worksView"
+  );
   const handleWorksViewChange = useCallback(
-    (mode: "ledger" | "gallery") => {
+    (mode: "ledger" | "archive") => {
       setWorksView(mode);
       track({
         eventName: "view_mode_changed",
@@ -183,7 +189,26 @@ export default function CollectorStudioPage() {
 
   useEffect(() => {
     const pending = consumePendingCollectorSection();
-    if (pending) setActiveSection(pending);
+    const applyLinkedSection = () => {
+      const linkedSection = new URLSearchParams(window.location.search).get(
+        "section"
+      );
+      if (
+        linkedSection === "workspace" ||
+        linkedSection === "works" ||
+        linkedSection === "attention"
+      ) {
+        setActiveSection(linkedSection);
+        return true;
+      }
+      return false;
+    };
+    if (!applyLinkedSection() && pending) setActiveSection(pending);
+    const handlePopState = () => {
+      applyLinkedSection();
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
   const selectSection = useCallback((id: string) => {
@@ -476,6 +501,18 @@ export default function CollectorStudioPage() {
     }
     return sortPortfolioRows(rows, sortMode);
   }, [portfolioFilter, pendingAcquisitions, transferredRows, rows, sortMode]);
+  const collectorArchiveRecords = useMemo(
+    () =>
+      adaptArchiveRecords(
+        sorted,
+        createCollectorArchiveAdapter(
+          artistNames,
+          t("collector.fallback.artist"),
+          t("collector.fallback.untitled")
+        )
+      ),
+    [artistNames, sorted, t]
+  );
 
   const portfolioForActivity = useMemo(
     () =>
@@ -888,19 +925,27 @@ export default function CollectorStudioPage() {
                   Sold / transferred ({transferredRows.length})
                 </option>
               </select>
-              <StudioViewToggle
-                mode={worksView}
-                onChange={handleWorksViewChange}
-                label={t("collector.works.viewLabel")}
-                ledgerLabel={t("collector.works.viewLedger")}
-                galleryLabel={t("collector.works.viewGallery")}
-              />
+              {worksViewReady ? (
+                <StudioViewToggle
+                  mode={worksView}
+                  onChange={handleWorksViewChange}
+                  label={t("collector.works.viewLabel")}
+                  ledgerLabel={t("collector.works.viewLedger")}
+                  archiveLabel={t("collector.works.viewArchive")}
+                />
+              ) : (
+                <div
+                  className="h-9 w-36 rounded-lg border border-[var(--v2-border)] bg-white/70"
+                  aria-hidden
+                />
+              )}
             </div>
             {sorted.length > 0 ? (
               <p className="text-xs text-neutral-400">
                 <span className="text-neutral-500">{t("collector.works.order")}</span>{" "}
                 <button
                   type="button"
+                  aria-pressed={sortMode === "activity"}
                   onClick={() => setSortMode("activity")}
                   className={
                     sortMode === "activity"
@@ -915,6 +960,7 @@ export default function CollectorStudioPage() {
                 </span>
                 <button
                   type="button"
+                  aria-pressed={sortMode === "value"}
                   onClick={() => setSortMode("value")}
                   className={
                     sortMode === "value"
@@ -995,33 +1041,44 @@ export default function CollectorStudioPage() {
             <div className="studio-reveal mt-10">
               <CollectorHoldingsEmptyState />
             </div>
-          ) : worksView === "gallery" ? (
-            <CollectorHoldingsGallery
-              items={sorted.map((r) => {
+          ) : worksViewReady && worksView === "archive" ? (
+            <LivingArchiveViewport
+              ariaLabel={t("collector.archive.holdingsTitle")}
+              emptyLabel={t("collector.works.emptyTitle")}
+              sectionQueryValue="works"
+              items={collectorArchiveRecords.map(({ source: r, summary }) => {
                 const isPending = r.portfolio_status === "pending_transfer";
+                const href = isPending
+                  ? r.accept_href ||
+                    (r.registry_id
+                      ? `/registry/${encodeURIComponent(r.registry_id)}/ledger`
+                      : "#")
+                  : r.registry_id
+                    ? studioCollectorArtworkHref(r.registry_id)
+                    : "#";
                 return {
-                  id: r.id,
-                  href: isPending
-                    ? r.accept_href ||
-                      (r.registry_id
-                        ? `/registry/${encodeURIComponent(r.registry_id)}/ledger`
-                        : "#")
-                    : r.registry_id
-                      ? studioCollectorArtworkHref(r.registry_id)
-                      : "#",
-                  title: (r.title || "").trim() || t("collector.fallback.untitled"),
-                  artist:
-                    r.artist_id && artistNames[r.artist_id]
-                      ? artistNames[r.artist_id]
-                      : t("collector.fallback.artist"),
-                  registryId: r.registry_id?.trim() || "–",
-                  imageUrl: r.image_url,
-                  verificationStatus: r.verification_status,
-                  isPending,
+                  id: summary.id,
+                  href,
+                  title: summary.title,
+                  creator: summary.creator,
+                  registryId: summary.registryId,
+                  registryState: isPending ? (
+                    <span className="rounded-full bg-[var(--v2-amber-exception-dim)] px-2 py-1 v2-type-mono text-[9px] uppercase tracking-[0.14em] text-[var(--v2-ink)]">
+                      {t("collector.works.transferPending")}
+                    </span>
+                  ) : (
+                    <ArtworkTrustBadge
+                      verificationStatus={r.verification_status}
+                      showTooltip={false}
+                    />
+                  ),
+                  medium: summary.medium,
+                  year: summary.year,
+                  imageUrl: summary.image.url,
                 };
               })}
             />
-          ) : (
+          ) : worksViewReady ? (
             <ul className="studio-reveal-stagger mt-8 space-y-3 sm:space-y-4">
               {sorted.map((r, index) => {
                 const reg = r.registry_id?.trim() || "–";
@@ -1070,6 +1127,8 @@ export default function CollectorStudioPage() {
                 );
               })}
             </ul>
+          ) : (
+            <ArchiveLoadingState className="mt-8" />
           )}
         </section>
       ) : null}

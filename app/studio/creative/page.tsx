@@ -18,6 +18,7 @@ import { fieldRecordHref } from "@/lib/field-nav";
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useState,
   useMemo,
   useRef,
@@ -63,6 +64,7 @@ import { workspace } from "@/styles/workspace-design";
 import {
   buildCreativeNavItems,
   consumePendingStudioSection,
+  isCreativeSectionId,
   primeCreativeSectionFromUrlQuery,
 } from "@/lib/studio-nav";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
@@ -164,7 +166,6 @@ export default function Dashboard() {
   const [endRepOpen, setEndRepOpen] = useState(false);
   const [endRepBusy, setEndRepBusy] = useState(false);
   const [artworks, setArtworks] = useState<any[]>([]);
-  const [certificateRows, setCertificateRows] = useState<any[]>([]);
   type SaleSignal = {
     artwork_id: string;
     value_event_id: string;
@@ -192,6 +193,17 @@ export default function Dashboard() {
     primeCreativeSectionFromUrlQuery();
     const pending = consumePendingStudioSection();
     if (pending) setActiveSection(pending);
+    const handlePopState = () => {
+      const section = new URLSearchParams(window.location.search).get("section");
+      if (!section) return;
+      const normalized =
+        section.toLowerCase() === "artworks"
+          ? "Artworks"
+          : section.charAt(0).toUpperCase() + section.slice(1);
+      if (isCreativeSectionId(normalized)) setActiveSection(normalized);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
   }, []);
   const [certificateOverviewRegistryId, setCertificateOverviewRegistryId] =
     useState<string | null>(null);
@@ -300,18 +312,37 @@ export default function Dashboard() {
   const refreshSelectedArtworkEventsRef = useRef<
     (artworkId: string) => Promise<void>
   >(async () => {});
+  const selectedArtworkIdRef = useRef<string | null>(null);
+  const historyRequestGenerationRef = useRef(0);
+  const catalogueRequestGenerationRef = useRef(0);
+  const catalogueAbortControllerRef = useRef<AbortController | null>(null);
+  const historyAbortControllerRef = useRef<AbortController | null>(null);
+
+  useLayoutEffect(() => {
+    selectedArtworkIdRef.current = selectedArtwork?.id
+      ? String(selectedArtwork.id)
+      : null;
+    historyRequestGenerationRef.current += 1;
+  }, [selectedArtwork?.id]);
 
   // =============================
   // FETCH
   // =============================
   const fetchArtworks = async (artistId: string) => {
+    const requestGeneration = ++catalogueRequestGenerationRef.current;
+    catalogueAbortControllerRef.current?.abort();
+    const controller = new AbortController();
+    catalogueAbortControllerRef.current = controller;
     const { data, error } = await sb()
       .from("artwork_read_model")
       .select("*")
       .eq("artist_id", artistId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .abortSignal(controller.signal);
 
+    if (requestGeneration !== catalogueRequestGenerationRef.current) return;
     if (error) {
+      if (controller.signal.aborted) return;
       console.error(error);
       setArtworks([]);
       return;
@@ -320,29 +351,34 @@ export default function Dashboard() {
     setArtworks(data || []);
     const artworkIds = (data || []).map((a: any) => a.id).filter(Boolean);
     if (artworkIds.length > 0) {
-      const [holders, transferredIds, outboundPendingIds, completedSales] =
+      const [
+        holders,
+        transferredIds,
+        outboundPendingIds,
+        completedSales,
+        ,
+        ,
+        metrics,
+      ] =
         await Promise.all([
-        getCanonicalOwners(sb(), artworkIds),
-        getTransferredArtworkIds(sb(), artistId),
-        listOutboundPendingAcquisitionArtworkIds(sb(), artistId),
-        fetchCompletedSaleByArtworkIds(sb(), artworkIds),
-      ]);
+          getCanonicalOwners(sb(), artworkIds),
+          getTransferredArtworkIds(sb(), artistId),
+          listOutboundPendingAcquisitionArtworkIds(sb(), artistId),
+          fetchCompletedSaleByArtworkIds(sb(), artworkIds),
+          fetchLatestOwnersForArtworks(artworkIds, requestGeneration),
+          fetchSaleSignalsForArtworks(artworkIds, requestGeneration),
+          fetchStudioCatalogueMetrics(sb(), {
+            role: "artist",
+            userId: artistId,
+            artworks: data || [],
+          }).catch(() => null),
+        ]);
+      if (requestGeneration !== catalogueRequestGenerationRef.current) return;
       setCanonicalHolders(holders);
       setCompletedSalesByArtworkId(completedSales);
       setTransferredArtworkIds(new Set(transferredIds));
       setOutboundPendingArtworkIds(new Set(outboundPendingIds));
-      await fetchLatestOwnersForArtworks(artworkIds);
-      await fetchSaleSignalsForArtworks(artworkIds);
-      try {
-        const metrics = await fetchStudioCatalogueMetrics(sb(), {
-          role: "artist",
-          userId: artistId,
-          artworks: data || [],
-        });
-        setCatalogueMetrics(metrics);
-      } catch {
-        setCatalogueMetrics(null);
-      }
+      setCatalogueMetrics(metrics);
     } else {
       setLatestOwners({});
       setCanonicalHolders({});
@@ -354,7 +390,9 @@ export default function Dashboard() {
     }
   };
 
-  const fetchRepresentationReviewQueue = async () => {
+  const fetchRepresentationReviewQueue = async (
+    canCommit: () => boolean = () => true
+  ) => {
     try {
       const { data, error } = await sb().rpc(
         "get_artist_representation_review_queue"
@@ -364,10 +402,11 @@ export default function Dashboard() {
           "[studio] representation review queue",
           summarizeRpcError(error)
         );
-        setRepresentationReviewQueue([]);
+        if (canCommit()) setRepresentationReviewQueue([]);
         return;
       }
       const rows = (data || []) as Record<string, unknown>[];
+      if (!canCommit()) return;
       setRepresentationReviewQueue(
         rows.map((r) => ({
           artwork_id: String(r.artwork_id ?? ""),
@@ -385,11 +424,13 @@ export default function Dashboard() {
         }))
       );
     } catch {
-      setRepresentationReviewQueue([]);
+      if (canCommit()) setRepresentationReviewQueue([]);
     }
   };
 
-  const fetchRepresentationAmendments = async () => {
+  const fetchRepresentationAmendments = async (
+    canCommit: () => boolean = () => true
+  ) => {
     try {
       const { data, error } = await sb()
         .from("representation_amendment_requests")
@@ -405,16 +446,17 @@ export default function Dashboard() {
           "[studio] representation amendments",
           summarizeRpcError(error)
         );
-        setRepresentationAmendments([]);
+        if (canCommit()) setRepresentationAmendments([]);
         return;
       }
+      if (!canCommit()) return;
       setRepresentationAmendments(
         (data || [])
           .map((x) => mapAmendmentRequestRow(x))
           .filter((x): x is RepresentationAmendmentListItem => x != null)
       );
     } catch {
-      setRepresentationAmendments([]);
+      if (canCommit()) setRepresentationAmendments([]);
     }
   };
 
@@ -540,14 +582,19 @@ export default function Dashboard() {
     }
   };
 
-  const fetchLatestOwnersForArtworks = async (artworkIds: string[]) => {
+  const fetchLatestOwnersForArtworks = async (
+    artworkIds: string[],
+    requestGeneration: number
+  ) => {
     const { data, error } = await sb()
       .from("ownership_events")
       .select(OWNERSHIP_EVENT_TRANSFER_SUMMARY_SELECT)
       .in("artwork_id", artworkIds);
 
     if (error) {
-      setLatestOwners({});
+      if (requestGeneration === catalogueRequestGenerationRef.current) {
+        setLatestOwners({});
+      }
       return;
     }
 
@@ -596,10 +643,15 @@ export default function Dashboard() {
         created_at: row.created_at ? String(row.created_at) : null,
       };
     }
-    setLatestOwners(map);
+    if (requestGeneration === catalogueRequestGenerationRef.current) {
+      setLatestOwners(map);
+    }
   };
 
-  const fetchSaleSignalsForArtworks = async (artworkIds: string[]) => {
+  const fetchSaleSignalsForArtworks = async (
+    artworkIds: string[],
+    requestGeneration: number
+  ) => {
     // Primary source: value events + robust unresolved inference.
     // Unresolved when:
     // 1) ownership_resolved = false (explicit), OR
@@ -635,7 +687,9 @@ export default function Dashboard() {
             summarizeRpcError(fallback.error)
           );
         }
-        setSaleSignals({});
+        if (requestGeneration === catalogueRequestGenerationRef.current) {
+          setSaleSignals({});
+        }
         return;
       }
       valueRows = (fallback.data || []) as Array<{
@@ -658,7 +712,9 @@ export default function Dashboard() {
       isSaleLikeValueType(String(r.value_type || ""))
     );
     if (sales.length === 0) {
-      setSaleSignals({});
+      if (requestGeneration === catalogueRequestGenerationRef.current) {
+        setSaleSignals({});
+      }
       return;
     }
 
@@ -689,33 +745,46 @@ export default function Dashboard() {
         created_at: String(row.created_at || ""),
       };
     }
-    setSaleSignals(map);
+    if (requestGeneration === catalogueRequestGenerationRef.current) {
+      setSaleSignals(map);
+    }
   };
 
   const refreshSelectedArtworkEvents = async (artworkId: string) => {
-    const { data: values } = await sb()
-      .from("value_events")
-      .select("*")
-      .eq("artwork_id", artworkId)
-      .order("created_at", { ascending: true });
+    const requestGeneration = ++historyRequestGenerationRef.current;
+    const [
+      { data: values },
+      { data: ownership },
+      { data: provenance },
+      completedSales,
+    ] = await Promise.all([
+      sb()
+        .from("value_events")
+        .select("*")
+        .eq("artwork_id", artworkId)
+        .order("created_at", { ascending: true }),
+      sb()
+        .from("ownership_events")
+        .select("*")
+        .eq("artwork_id", artworkId)
+        .order("created_at", { ascending: true }),
+      sb()
+        .from("provenance_events")
+        .select("*")
+        .eq("artwork_id", artworkId)
+        .order("occurred_at", { ascending: true }),
+      fetchCompletedSaleByArtworkIds(sb(), [artworkId]),
+    ]);
 
-    const { data: ownership } = await sb()
-      .from("ownership_events")
-      .select("*")
-      .eq("artwork_id", artworkId)
-      .order("created_at", { ascending: true });
-
-    const { data: provenance } = await sb()
-      .from("provenance_events")
-      .select("*")
-      .eq("artwork_id", artworkId)
-      .order("occurred_at", { ascending: true });
-
+    if (
+      historyRequestGenerationRef.current !== requestGeneration ||
+      selectedArtworkIdRef.current !== String(artworkId)
+    ) {
+      return;
+    }
     setValueHistory(values || []);
     setOwnershipHistory(ownership || []);
     setProvenanceHistory(provenance || []);
-
-    const completedSales = await fetchCompletedSaleByArtworkIds(sb(), [artworkId]);
     setCompletedSalesByArtworkId((prev) => ({
       ...prev,
       ...completedSales,
@@ -723,52 +792,6 @@ export default function Dashboard() {
   };
 
   refreshSelectedArtworkEventsRef.current = refreshSelectedArtworkEvents;
-
-  const fetchCertificatesForArtist = async (artistId: string) => {
-    const { data, error } = await sb()
-      .from("artwork_read_model")
-      .select(
-        `
-        id,
-        artist_id,
-        title,
-        registry_id,
-        verification_status,
-        image_url,
-        year,
-        medium,
-        created_at,
-        has_certificate,
-        certificate_revoked,
-        certificate_revoked_reason,
-        certificate_issued_at
-      `
-      )
-      .eq("artist_id", artistId)
-      .eq("has_certificate", true)
-      .eq("certificate_revoked", false)
-      .order("certificate_issued_at", { ascending: false });
-
-    if (error) {
-      console.error(
-        "[fetchCertificatesForArtist]",
-        summarizeRpcError(error),
-        error
-      );
-      setCertificateRows([]);
-      return;
-    }
-
-    if (process.env.NODE_ENV === "development") {
-      console.log(
-        "[fetchCertificatesForArtist] rows:",
-        (data ?? []).length,
-        "artistId:",
-        artistId
-      );
-    }
-    setCertificateRows(data || []);
-  };
 
   const userIsAdmin = Boolean(profile?.is_admin);
 
@@ -841,38 +864,42 @@ useEffect(() => {
       const currentUser = { id: uid, email: guardUser.email ?? undefined };
       setUser(currentUser);
 
-      const { data: profileData } = await sb()
-        .from("artists")
-        .select("*")
-        .eq("id", uid)
-        .single();
-
-      setProfile(profileData);
-      try {
-        const { data: repRaw } = await sb().rpc("get_artist_representation_state", {
-          p_artist_id: uid,
-        });
-        const rep = parseArtistRepresentationState(repRaw);
-        setRepStateActive(rep.active);
-        setRepGalleryName(null);
-        if (rep.gallery_id) {
-          const { data: gal } = await sb()
-            .from("galleries")
-            .select("name")
-            .eq("id", rep.gallery_id)
-            .maybeSingle();
-          setRepGalleryName(gal?.name ? String(gal.name) : null);
+      const fetchRepresentationState = async () => {
+        try {
+          const { data: repRaw } = await sb().rpc(
+            "get_artist_representation_state",
+            { p_artist_id: uid }
+          );
+          if (cancelled) return;
+          const rep = parseArtistRepresentationState(repRaw);
+          setRepStateActive(rep.active);
+          setRepGalleryName(null);
+          if (rep.gallery_id) {
+            const { data: gal } = await sb()
+              .from("galleries")
+              .select("name")
+              .eq("id", rep.gallery_id)
+              .maybeSingle();
+            if (cancelled) return;
+            setRepGalleryName(gal?.name ? String(gal.name) : null);
+          }
+        } catch {
+          if (cancelled) return;
+          setRepStateActive(false);
+          setRepGalleryName(null);
         }
-      } catch {
-        setRepStateActive(false);
-        setRepGalleryName(null);
-      }
-      await fetchArtworks(uid);
-      await fetchRepresentationReviewQueue();
-      await fetchRepresentationAmendments();
-      await fetchCertificatesForArtist(uid);
-      await fetchActivity(uid);
-      await fetchOwnershipClaimsForArtist(uid);
+      };
+
+      const [profileResult] = await Promise.all([
+        sb().from("artists").select("*").eq("id", uid).single(),
+        fetchRepresentationState(),
+        fetchArtworks(uid),
+        fetchRepresentationReviewQueue(() => !cancelled),
+        fetchRepresentationAmendments(() => !cancelled),
+        fetchActivity(uid, () => !cancelled),
+        fetchOwnershipClaimsForArtist(uid, () => !cancelled),
+      ]);
+      if (!cancelled) setProfile(profileResult.data);
     } catch {
       showToast(
         "error",
@@ -886,54 +913,70 @@ useEffect(() => {
   void init();
   return () => {
     cancelled = true;
+    catalogueRequestGenerationRef.current += 1;
+    catalogueAbortControllerRef.current?.abort();
   };
 }, [guardUser?.userId, guardUser?.email, sb, t]);
 
-useEffect(() => {
-  if (!user?.id) {
-    setTransferredArtworkIds(new Set());
-    return;
-  }
-  let cancelled = false;
-  void (async () => {
-    const ids = await getTransferredArtworkIds(sb(), user.id);
-    if (!cancelled) setTransferredArtworkIds(new Set(ids));
-  })();
-  return () => {
-    cancelled = true;
-  };
-}, [user?.id, sb, artworks.length]);
-
 // 2️ FETCH VALUE + OWNERSHIP EVENTS
 useEffect(() => {
-  if (!selectedArtwork) return;
+  if (!selectedArtwork?.id) {
+    historyAbortControllerRef.current?.abort();
+    setValueHistory([]);
+    setOwnershipHistory([]);
+    setProvenanceHistory([]);
+    return;
+  }
 
+  let cancelled = false;
+  const artworkId = selectedArtwork.id;
+  const requestGeneration = ++historyRequestGenerationRef.current;
+  historyAbortControllerRef.current?.abort();
+  const controller = new AbortController();
+  historyAbortControllerRef.current = controller;
+  setValueHistory([]);
+  setOwnershipHistory([]);
+  setProvenanceHistory([]);
   const fetchEvents = async () => {
-    const { data: values } = await sb()
-      .from("value_events")
-      .select("*")
-      .eq("artwork_id", selectedArtwork.id)
-      .order("created_at", { ascending: true });
-
-    const { data: ownership } = await sb()
-      .from("ownership_events")
-      .select("*")
-      .eq("artwork_id", selectedArtwork.id)
-      .order("created_at", { ascending: true });
-
-    const { data: provenance } = await sb()
-      .from("provenance_events")
-      .select("*")
-      .eq("artwork_id", selectedArtwork.id)
-      .order("occurred_at", { ascending: true });
-
+    const [{ data: values }, { data: ownership }, { data: provenance }] =
+      await Promise.all([
+        sb()
+          .from("value_events")
+          .select("*")
+          .eq("artwork_id", artworkId)
+          .order("created_at", { ascending: true })
+          .abortSignal(controller.signal),
+        sb()
+          .from("ownership_events")
+          .select("*")
+          .eq("artwork_id", artworkId)
+          .order("created_at", { ascending: true })
+          .abortSignal(controller.signal),
+        sb()
+          .from("provenance_events")
+          .select("*")
+          .eq("artwork_id", artworkId)
+          .order("occurred_at", { ascending: true })
+          .abortSignal(controller.signal),
+      ]);
+    if (
+      cancelled ||
+      historyRequestGenerationRef.current !== requestGeneration ||
+      selectedArtworkIdRef.current !== String(artworkId)
+    ) {
+      return;
+    }
     setValueHistory(values || []);
     setOwnershipHistory(ownership || []);
     setProvenanceHistory(provenance || []);
   };
 
-  fetchEvents();
-}, [selectedArtwork]);
+  void fetchEvents();
+  return () => {
+    cancelled = true;
+    controller.abort();
+  };
+}, [selectedArtwork?.id, sb]);
 
 useEffect(() => {
   if (!showOwnershipLedgerModal || !selectedArtwork) return;
@@ -979,31 +1022,28 @@ useEffect(() => {
   // Prefer certificate truth from the read-model (view adds has_certificate).
   // Fallback to showing verified if the column doesn't exist yet.
   const certifiedArtworksForUi =
-    certificateRows.length > 0
-      ? certificateRows
-      : artworks.some((a) => "has_certificate" in a)
-        ? artworks
-            .filter(
-              (a) =>
-                Boolean(a.has_certificate) && !Boolean(a.certificate_revoked)
-            )
-            .sort((a, b) => {
-              const at = a.certificate_issued_at
-                ? new Date(a.certificate_issued_at).getTime()
-                : 0;
-              const bt = b.certificate_issued_at
-                ? new Date(b.certificate_issued_at).getTime()
-                : 0;
-              return bt - at;
-            })
-        : verifiedArtworks;
+    artworks.some((a) => "has_certificate" in a)
+      ? artworks
+          .filter(
+            (a) =>
+              Boolean(a.has_certificate) && !Boolean(a.certificate_revoked)
+          )
+          .sort((a, b) => {
+            const at = a.certificate_issued_at
+              ? new Date(a.certificate_issued_at).getTime()
+              : 0;
+            const bt = b.certificate_issued_at
+              ? new Date(b.certificate_issued_at).getTime()
+              : 0;
+            return bt - at;
+          })
+      : verifiedArtworks;
 
   if (process.env.NODE_ENV === "development") {
     // Helps debug the “empty certificates section” issue.
     // eslint-disable-next-line no-console
     console.log("[dashboard] counts", {
       artworks: artworks.length,
-      certificateRows: certificateRows.length,
       certifiedArtworksForUi: certifiedArtworksForUi.length,
       searchQuery,
       activeSection,
@@ -1465,7 +1505,10 @@ useEffect(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchActivity = async (userId: string) => {
+  const fetchActivity = async (
+    userId: string,
+    canCommit: () => boolean = () => true
+  ) => {
     const { data, error } = await sb()
       .from("activity_events")
       .select("*")
@@ -1478,11 +1521,14 @@ useEffect(() => {
       return;
     }
 
-    setActivityFeed((data as any[]) || []);
+    if (canCommit()) setActivityFeed((data as any[]) || []);
   };
 
   /** Pending claims only for artworks owned by this artist (not global). */
-  const fetchOwnershipClaimsForArtist = async (artistId: string) => {
+  const fetchOwnershipClaimsForArtist = async (
+    artistId: string,
+    canCommit: () => boolean = () => true
+  ) => {
     const { data: owned, error: ownedErr } = await sb()
       .from("artworks")
       .select("id")
@@ -1490,13 +1536,13 @@ useEffect(() => {
 
     if (ownedErr) {
       console.error(ownedErr);
-      setOwnershipClaims([]);
+      if (canCommit()) setOwnershipClaims([]);
       return;
     }
 
     const ids = (owned || []).map((r: { id: string }) => r.id);
     if (ids.length === 0) {
-      setOwnershipClaims([]);
+      if (canCommit()) setOwnershipClaims([]);
       return;
     }
 
@@ -1518,11 +1564,11 @@ useEffect(() => {
 
     if (error) {
       console.error(error);
-      setOwnershipClaims([]);
+      if (canCommit()) setOwnershipClaims([]);
       return;
     }
 
-    setOwnershipClaims(data || []);
+    if (canCommit()) setOwnershipClaims(data || []);
   };
 
   const logActivity = async ({
@@ -2305,6 +2351,12 @@ return (
             }}
             filteredArtworks={filteredArtworks}
             totalArtworkCount={artworks.length}
+            creatorName={
+              profile?.display_name?.trim() ||
+              profile?.full_name?.trim() ||
+              user?.email ||
+              null
+            }
             onArtworkClick={(artwork) => {
               setArtworkDetail(artwork);
               setSelectedArtwork(artwork);

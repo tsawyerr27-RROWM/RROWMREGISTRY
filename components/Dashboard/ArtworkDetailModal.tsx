@@ -78,6 +78,7 @@ export function ArtworkDetailModal({
       isOpen
       onClose={onClose}
       tone="light"
+      ariaLabel={artwork.title || t("studio.archive.openWork")}
       panelClassName={`${studioV2.scope} relative max-h-[90vh] w-full max-w-4xl overflow-hidden`}
     >
       <div className="relative max-h-[90vh] overflow-y-auto overscroll-contain">

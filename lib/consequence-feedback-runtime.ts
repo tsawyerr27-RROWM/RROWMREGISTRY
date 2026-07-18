@@ -9,6 +9,10 @@ import {
 
 const OVERLAY_ID = "rrowm-consequence-overlay";
 
+function classTokens(className: string): string[] {
+  return className.split(/\s+/).filter(Boolean);
+}
+
 export type TriggerConsequenceFeedbackOptions = {
   /** Primary CTA (compress / acknowledge) */
   target?: HTMLElement | null;
@@ -48,22 +52,24 @@ export function triggerConsequenceFeedback(
   const { target, surface } = options;
 
   if (target) {
-    target.classList.add(consequenceFeedbackTargetClass(type));
+    const targetClasses = classTokens(consequenceFeedbackTargetClass(type));
+    target.classList.add(...targetClasses);
     if (reduced) {
       target.classList.add("v2-consequence-target--reduced");
     }
     window.setTimeout(() => {
       target.classList.remove(
-        consequenceFeedbackTargetClass(type),
+        ...targetClasses,
         "v2-consequence-target--reduced"
       );
     }, duration);
   }
 
   if (surface) {
-    surface.classList.add(consequenceFeedbackSurfaceClass(type));
+    const surfaceClasses = classTokens(consequenceFeedbackSurfaceClass(type));
+    surface.classList.add(...surfaceClasses);
     window.setTimeout(() => {
-      surface.classList.remove(consequenceFeedbackSurfaceClass(type));
+      surface.classList.remove(...surfaceClasses);
     }, duration);
   }
 

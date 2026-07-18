@@ -5,8 +5,10 @@ import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import {
   ExperienceEmptyStateButton,
 } from "@/components/ui/ExperienceEmptyState";
-import { ArchiveGalleryGrid } from "@/components/Studio/ArchiveGalleryGrid";
+import { ArtworkTrustBadge } from "@/components/Registry/ArtworkTrustBadge";
 import { CreativeArtworkSlab } from "@/components/Studio/CreativeArtworkSlab";
+import { LivingArchiveViewport } from "@/components/Studio/LivingArchiveViewport";
+import { ArchiveLoadingState } from "@/components/Studio/ArchiveEnginePrimitives";
 import {
   StudioViewToggle,
   useStudioViewMode,
@@ -20,11 +22,14 @@ import {
   type StudioArtworksAccentId,
   studioArtworksAccentTheme,
 } from "@/lib/studio-artworks-accent";
+import { canSelfAttestTrustTier } from "@/lib/artwork-trust-tier";
 import {
   canRecordValueEvent,
   resolveValuationDisabledReason,
 } from "@/lib/can-record-value-event";
 import type { MessageKey } from "@/lib/locale-messages";
+import { adaptArchiveRecords } from "@/lib/archive-engine";
+import { createCreativeArchiveAdapter } from "@/lib/archive-role-adapters";
 import { studioV2 } from "@/styles/studio-v2";
 
 export type ArtworksListFilter =
@@ -47,6 +52,7 @@ type ArtworksSectionProps = {
   onAddValueEventClick: (artwork: any) => void;
   studioArtworksAccent?: StudioArtworksAccentId;
   representingInstitutionName?: string | null;
+  creatorName?: string | null;
   viewerUserId?: string | null;
   canonicalHolders?: Record<string, { userId: string | null } | null | undefined>;
   onSelfAttest?: (artwork: { id: string; title?: string }) => void;
@@ -102,18 +108,32 @@ export function ArtworksSection({
   onArtworkClick,
   onAddValueEventClick,
   studioArtworksAccent = "violet",
+  creatorName,
   viewerUserId,
   completedSalesByArtworkId = {},
   onSelfAttest,
 }: ArtworksSectionProps) {
   const { t } = useLocalePreferences();
-  const [worksView, setWorksView] = useStudioViewMode("creative.worksView");
+  const [worksView, setWorksView, worksViewReady] = useStudioViewMode(
+    "creative.worksView"
+  );
   const accent = useMemo(
     () => studioArtworksAccentTheme(studioArtworksAccent),
     [studioArtworksAccent]
   );
   const isTrulyEmpty = totalArtworkCount === 0;
   const noSearchMatches = totalArtworkCount > 0 && filteredArtworks.length === 0;
+  const archiveRecords = useMemo(
+    () =>
+      adaptArchiveRecords(
+        filteredArtworks,
+        createCreativeArchiveAdapter(
+          creatorName,
+          t("collector.fallback.untitled")
+        )
+      ),
+    [creatorName, filteredArtworks, t]
+  );
 
   return (
     <div className={`${studioV2.scope} studio-reveal space-y-8`}>
@@ -156,13 +176,20 @@ export function ArtworksSection({
               </>
             }
           />
-          <StudioViewToggle
-            mode={worksView}
-            onChange={setWorksView}
-            label={t("studio.archive.viewLabel")}
-            ledgerLabel={t("studio.archive.viewLedger")}
-            galleryLabel={t("studio.archive.viewGallery")}
-          />
+          {worksViewReady ? (
+            <StudioViewToggle
+              mode={worksView}
+              onChange={setWorksView}
+              label={t("studio.archive.viewLabel")}
+              ledgerLabel={t("studio.archive.viewLedger")}
+              archiveLabel={t("studio.archive.viewArchive")}
+            />
+          ) : (
+            <div
+              className="h-9 w-36 rounded-lg border border-[var(--v2-border)] bg-white/70"
+              aria-hidden
+            />
+          )}
         </div>
       ) : null}
 
@@ -172,20 +199,90 @@ export function ArtworksSection({
         </div>
       ) : null}
 
-      {!noSearchMatches && filteredArtworks.length > 0 && worksView === "gallery" ? (
-        <ArchiveGalleryGrid
-          items={filteredArtworks.map((artwork) => ({
-            id: String(artwork.id),
-            title: artwork.title || t("collector.fallback.untitled"),
-            subtitle: [artwork.year, artwork.medium].filter(Boolean).join(" · ") || undefined,
-            meta: artwork.registry_id || undefined,
-            imageUrl: artwork.image_url,
-            onClick: () => onArtworkClick(artwork),
+      {!noSearchMatches &&
+      filteredArtworks.length > 0 &&
+      worksViewReady &&
+      worksView === "archive" ? (
+        <LivingArchiveViewport
+          ariaLabel={t("studio.creative.archiveTitle")}
+          emptyLabel={t("studio.artworks.noMatches")}
+          sectionQueryValue="artworks"
+          items={archiveRecords.map(({ source: artwork, summary }) => ({
+            id: summary.id,
+            title: summary.title,
+            creator: summary.creator,
+            registryId: summary.registryId,
+            registryState: (
+              <ArtworkTrustBadge
+                verificationStatus={artwork.verification_status}
+                showTooltip={false}
+              />
+            ),
+            medium: summary.medium,
+            year: summary.year,
+            imageUrl: summary.image.url,
+            onOpen: () => onArtworkClick(artwork),
+            actions: (() => {
+              const artworkId = String(artwork.id ?? "");
+              const hasCompletedSale = Boolean(
+                completedSalesByArtworkId[artworkId]
+              );
+              const canRecordValue = canRecordValueEvent({
+                userId: viewerUserId,
+                artworkId,
+                artistId: artwork.artist_id,
+                hasCompletedSale,
+              });
+              const canSelfAttest =
+                canSelfAttestTrustTier(artwork.verification_status);
+              return (
+                <>
+                  {canSelfAttest && onSelfAttest ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onSelfAttest({
+                          id: artwork.id,
+                          title: artwork.title ?? undefined,
+                        })
+                      }
+                      className="v2-cta-secondary inline-flex min-h-[44px] items-center px-4 py-2 text-xs"
+                    >
+                      {t("studio.artworks.selfAttestCta")}
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    disabled={!canRecordValue}
+                    title={
+                      canRecordValue
+                        ? undefined
+                        : t(
+                            valuationDisabledMessageKey({
+                              userId: viewerUserId,
+                              artistId: artwork.artist_id,
+                              hasCompletedSale,
+                            })
+                          )
+                    }
+                    onClick={() => {
+                      if (canRecordValue) onAddValueEventClick(artwork);
+                    }}
+                    className="v2-cta-secondary inline-flex min-h-[44px] items-center px-4 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    {t("studio.artworks.recordValue")}
+                  </button>
+                </>
+              );
+            })(),
           }))}
         />
       ) : null}
 
-      {!noSearchMatches && filteredArtworks.length > 0 && worksView === "ledger" ? (
+      {!noSearchMatches &&
+      filteredArtworks.length > 0 &&
+      worksViewReady &&
+      worksView === "ledger" ? (
         <ul className="studio-reveal-stagger space-y-3 sm:space-y-4">
           {filteredArtworks.map((artwork, index) => {
             const artworkId = String(artwork.id ?? "");
@@ -233,6 +330,8 @@ export function ArtworksSection({
             );
           })}
         </ul>
+      ) : !worksViewReady && !isTrulyEmpty && !noSearchMatches ? (
+        <ArchiveLoadingState />
       ) : isTrulyEmpty ? (
         <div
           className={`relative overflow-hidden rounded-lg border border-[var(--v2-border)] bg-white/90 px-8 py-12 text-center md:px-12 md:py-14`}
