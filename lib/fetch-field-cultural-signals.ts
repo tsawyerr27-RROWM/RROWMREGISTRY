@@ -1,6 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { isOpportunityAcceptingResponses } from "@/lib/field-opportunity-params";
+import {
+  countClosingSoonOpportunities,
+  countLiveOpportunities,
+  countPublicCreatives,
+  countPublicOrganisations,
+  countRecords,
+} from "@/lib/field-counts";
 import { parsePublicPresence } from "@/lib/public-presence";
 
 export type FieldCulturalSignalMetrics = {
@@ -101,6 +107,10 @@ async function countOwnershipEventsBetween(
   return typeof count === "number" ? count : null;
 }
 
+/**
+ * Bounded two-step lookup: artists with new artworks in the window, then a
+ * presence check on just those artists. Row volume is small (7-day window).
+ */
 async function countRecentlyActiveCreatives(
   supabase: SupabaseClient,
   sinceIso: string
@@ -140,95 +150,6 @@ async function countRecentlyActiveCreatives(
   return active.length;
 }
 
-async function countClosingSoonBriefs(
-  supabase: SupabaseClient,
-  now: Date
-): Promise<number | null> {
-  const horizon = new Date(now.getTime() + 72 * MS_DAY);
-
-  const { data, error } = await supabase
-    .from("field_briefs")
-    .select("id, opens_at, closes_at")
-    .eq("visibility_state", "published")
-    .eq("participation_mode", "open")
-    .not("closes_at", "is", null)
-    .gte("closes_at", now.toISOString())
-    .lte("closes_at", horizon.toISOString());
-
-  if (error) throw error;
-
-  return (data ?? []).filter((row) =>
-    isOpportunityAcceptingResponses({
-      opensAt: (row as { opens_at: string | null }).opens_at,
-      closesAt: (row as { closes_at: string | null }).closes_at,
-      now,
-    })
-  ).length;
-}
-
-async function countPublicCreatives(supabase: SupabaseClient): Promise<number | null> {
-  const { data, error } = await supabase
-    .from("artists")
-    .select("id, slug, public_presence");
-
-  if (error) throw error;
-
-  return (data ?? []).filter((row) => {
-    const presence = parsePublicPresence(
-      (row as { public_presence?: unknown }).public_presence
-    );
-    return presence.profile && String((row as { slug?: string }).slug ?? "").trim();
-  }).length;
-}
-
-async function countPublicOrganisations(supabase: SupabaseClient): Promise<{
-  total: number | null;
-  verifiedInstitutions: number | null;
-}> {
-  const { data, error } = await supabase
-    .from("galleries")
-    .select("id, slug, verified, public_presence");
-
-  if (error) throw error;
-
-  const publicRows = (data ?? []).filter((row) => {
-    const presence = parsePublicPresence(
-      (row as { public_presence?: unknown }).public_presence
-    );
-    return presence.profile && String((row as { slug?: string }).slug ?? "").trim();
-  });
-
-  return {
-    total: publicRows.length,
-    verifiedInstitutions: publicRows.filter(
-      (row) => (row as { verified?: boolean }).verified === true
-    ).length,
-  };
-}
-
-async function countLiveOpportunities(
-  supabase: SupabaseClient,
-  now: Date
-): Promise<number | null> {
-  const { data, error } = await supabase
-    .from("field_briefs")
-    .select("id, opens_at, closes_at, galleries(verified)")
-    .eq("visibility_state", "published")
-    .eq("participation_mode", "open");
-
-  if (error) throw error;
-
-  return (data ?? []).filter((row) => {
-    const gallery = Array.isArray(row.galleries) ? row.galleries[0] : row.galleries;
-    if (!gallery || !(gallery as { verified?: boolean }).verified) return false;
-    return isOpportunityAcceptingResponses({
-      opensAt: (row as { opens_at: string | null }).opens_at,
-      closesAt: (row as { closes_at: string | null }).closes_at,
-      now,
-    });
-  }).length;
-}
-
 /** Live cultural signals + cluster intelligence from registry activity. */
 export async function fetchFieldCulturalSignals(
   supabase: SupabaseClient,
@@ -244,15 +165,12 @@ export async function fetchFieldCulturalSignals(
   const since7d = isoDaysAgo(7, now.getTime());
   const since14d = isoDaysAgo(14, now.getTime());
 
-  let orgBundle: { total: number | null; verifiedInstitutions: number | null } = {
-    total: null,
-    verifiedInstitutions: null,
+  const haveStats = {
+    records: typeof stats?.records === "number",
+    creatives: typeof stats?.creatives === "number",
+    organisations: typeof stats?.organisations === "number",
+    opportunities: typeof stats?.opportunities === "number",
   };
-  try {
-    orgBundle = await countPublicOrganisations(supabase);
-  } catch (error) {
-    console.error("[fetchFieldCulturalSignals] organisations", error);
-  }
 
   const [
     newRecords7d,
@@ -262,9 +180,11 @@ export async function fetchFieldCulturalSignals(
     transfersPrior7d,
     closingSoon72h,
     recentlyActive7d,
-    liveOpportunities,
-    publicCreatives,
-    recordTotal,
+    verifiedInstitutions,
+    recordTotalFallback,
+    creativesFallback,
+    organisationsFallback,
+    liveOpportunitiesFallback,
   ] = await Promise.all([
     safeCount("newRecords7d", () => countArtworksCreatedBetween(supabase, since7d)),
     safeCount("newRecordsPrior7d", () =>
@@ -282,18 +202,23 @@ export async function fetchFieldCulturalSignals(
     safeCount("transfersPrior7d", () =>
       countOwnershipEventsBetween(supabase, since14d, since7d)
     ),
-    safeCount("closingSoon72h", () => countClosingSoonBriefs(supabase, now)),
+    safeCount("closingSoon72h", () => countClosingSoonOpportunities(supabase, now)),
     safeCount("recentlyActive7d", () => countRecentlyActiveCreatives(supabase, since7d)),
-    safeCount("liveOpportunities", () => countLiveOpportunities(supabase, now)),
-    safeCount("publicCreatives", () => countPublicCreatives(supabase)),
-    safeCount("recordTotal", async () => {
-      if (typeof stats?.records === "number") return stats.records;
-      const { count, error } = await supabase
-        .from("artworks")
-        .select("id", { count: "exact", head: true });
-      if (error) throw error;
-      return typeof count === "number" ? count : null;
-    }),
+    safeCount("verifiedInstitutions", () =>
+      countPublicOrganisations(supabase, { verifiedOnly: true })
+    ),
+    haveStats.records
+      ? Promise.resolve(stats!.records)
+      : safeCount("recordTotal", () => countRecords(supabase)),
+    haveStats.creatives
+      ? Promise.resolve(stats!.creatives)
+      : safeCount("publicCreatives", () => countPublicCreatives(supabase)),
+    haveStats.organisations
+      ? Promise.resolve(stats!.organisations)
+      : safeCount("publicOrganisations", () => countPublicOrganisations(supabase)),
+    haveStats.opportunities
+      ? Promise.resolve(stats!.opportunities)
+      : safeCount("liveOpportunities", () => countLiveOpportunities(supabase, now)),
   ]);
 
   return {
@@ -308,20 +233,20 @@ export async function fetchFieldCulturalSignals(
     },
     cluster: {
       records: {
-        total: recordTotal,
+        total: recordTotalFallback,
         new7d: newRecords7d,
         awaitingAttestation: verificationPending,
       },
       creatives: {
-        total: stats?.creatives ?? publicCreatives,
+        total: creativesFallback,
         recentlyActive7d,
       },
       organisations: {
-        total: stats?.organisations ?? orgBundle.total,
-        verifiedInstitutions: orgBundle.verifiedInstitutions,
+        total: organisationsFallback,
+        verifiedInstitutions,
       },
       opportunities: {
-        live: stats?.opportunities ?? liveOpportunities,
+        live: liveOpportunitiesFallback,
         closingSoon72h,
       },
     },

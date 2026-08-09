@@ -1,10 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { fetchCreativeExplorerList } from "@/lib/fetch-creative-explorer-list";
-import { fetchFieldOpportunitiesList } from "@/lib/fetch-field-opportunities-list";
-import { fetchOrganisationExplorerList } from "@/lib/fetch-organisation-explorer-list";
-import { fetchRecordExplorerList } from "@/lib/fetch-record-explorer-list";
-import { parseFieldOpportunityListParams } from "@/lib/field-opportunity-params";
+import {
+  countLiveOpportunities,
+  countPublicCreatives,
+  countPublicOrganisations,
+  countRecords,
+} from "@/lib/field-counts";
 
 export type FieldSignatureStats = {
   records: number | null;
@@ -22,10 +23,10 @@ const EMPTY_STATS: FieldSignatureStats = {
 
 async function safeTotal(
   label: string,
-  fn: () => Promise<{ total: number }>
+  fn: () => Promise<number | null>
 ): Promise<number | null> {
   try {
-    const { total } = await fn();
+    const total = await fn();
     return typeof total === "number" && Number.isFinite(total) ? total : null;
   } catch (error) {
     console.error(`[fetchFieldSignatureStats] ${label}`, error);
@@ -33,48 +34,21 @@ async function safeTotal(
   }
 }
 
-/** Live counts aligned with existing Field explorer list semantics. */
+/**
+ * Live counts aligned with existing Field explorer list semantics.
+ * Uses HEAD count queries (see lib/field-counts.ts) rather than fetching
+ * full explorer lists — only the numbers cross the wire.
+ */
 export async function fetchFieldSignatureStats(
   supabase: SupabaseClient
 ): Promise<FieldSignatureStats> {
+  const now = new Date();
+
   const [records, creatives, organisations, opportunities] = await Promise.all([
-    safeTotal("records", () =>
-      fetchRecordExplorerList(supabase, {
-        q: "",
-        sort: "recent",
-        page: 1,
-        creative: "",
-        organisation: "",
-        practice: "",
-        trust: "all",
-        certificate: "all",
-      })
-    ),
-    safeTotal("creatives", () =>
-      fetchCreativeExplorerList(supabase, {
-        q: "",
-        sort: "name_asc",
-        page: 1,
-        practice: "",
-        verified: "all",
-      })
-    ),
-    safeTotal("organisations", () =>
-      fetchOrganisationExplorerList(supabase, {
-        q: "",
-        sort: "name_asc",
-        page: 1,
-        location: "",
-        verified: "all",
-        represented: "all",
-      })
-    ),
-    safeTotal("opportunities", () =>
-      fetchFieldOpportunitiesList(
-        supabase,
-        parseFieldOpportunityListParams({ window: "open" })
-      )
-    ),
+    safeTotal("records", () => countRecords(supabase)),
+    safeTotal("creatives", () => countPublicCreatives(supabase)),
+    safeTotal("organisations", () => countPublicOrganisations(supabase)),
+    safeTotal("opportunities", () => countLiveOpportunities(supabase, now)),
   ]);
 
   if (
