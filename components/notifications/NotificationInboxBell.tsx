@@ -263,11 +263,11 @@ export function NotificationInboxBell({ className = "", tone = "light" }: Props)
           onClick={() => {
             setOpen((prev) => !prev);
           }}
-          className={`relative inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl transition motion-reduce:transition-none sm:min-h-0 sm:min-w-0 sm:px-2 ${buttonClass}`}
+          className={`rrowm-command-bar-icon-btn v2-motion-hover-subtle relative ${buttonClass}`}
         >
-          <BellIcon className="h-5 w-5" />
+          <BellIcon className="h-[1.125rem] w-[1.125rem]" />
           {unreadCount > 0 ? (
-            <span className="absolute right-1.5 top-2 h-2 w-2 rounded-full bg-[var(--v2-ink)] ring-2 ring-white/90 sm:right-0.5 sm:top-1.5" />
+            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[var(--v2-ink)] ring-2 ring-white/90" />
           ) : null}
         </button>
       </div>
