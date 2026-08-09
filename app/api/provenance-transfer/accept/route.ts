@@ -18,6 +18,37 @@ import { summarizeRpcError } from "@/lib/supabase-rpc-error";
 
 export const runtime = "nodejs";
 
+/**
+ * Guards against deal-completion injection: the `deal_id` is parsed from a
+ * transfer note whose text a seller controls, so a forged note could point at
+ * an unrelated victim deal. A linkage is authentic only when the deal is for
+ * the same artwork as the transfer AND the transfer's seller is a party to the
+ * deal. Because `initiate` requires the seller to own the artwork, an attacker
+ * cannot satisfy the artwork match for a deal they are not part of.
+ */
+function dealLinkageIsAuthentic(
+  dealRow: Record<string, unknown>,
+  transferArtworkId: string,
+  sellerUserId: string
+): boolean {
+  const dealArtworkId = String(dealRow.artwork_id ?? "").trim();
+  if (!dealArtworkId || !transferArtworkId) return false;
+  if (dealArtworkId !== transferArtworkId) return false;
+
+  const parties = new Set(
+    [
+      dealRow.participant_a_user_id,
+      dealRow.participant_b_user_id,
+      dealRow.created_by_user_id,
+    ]
+      .map((v) => String(v ?? "").trim())
+      .filter(Boolean)
+  );
+  // Seller must be a known party to the deal. If we could not resolve a seller,
+  // fail closed rather than trust an unverifiable linkage.
+  return Boolean(sellerUserId) && parties.has(sellerUserId);
+}
+
 export async function POST(req: Request) {
   let body: unknown;
   try {
@@ -175,6 +206,24 @@ export async function POST(req: Request) {
           error: dealError?.message ?? null,
         });
         lifecycleWarnings.push("deal_row_not_found");
+      } else if (!dealLinkageIsAuthentic(dealRow, artworkId, sellerUserId)) {
+        // Security: the deal_id is parsed from a transfer note that a seller can
+        // set to arbitrary text (see initiate route). Never complete a deal the
+        // transfer is not genuinely part of. A legitimate deal-linked transfer
+        // is for that deal's artwork AND its seller is a deal participant.
+        // initiate enforces the seller owns the artwork, so this pairing cannot
+        // be forged across an unrelated victim deal.
+        logProvenanceAccept("deal_linkage_rejected", {
+          buyer_user_id: user.id,
+          deal_id: dealId,
+          transfer_artwork_id: artworkId,
+          deal_artwork_id: String(
+            (dealRow as Record<string, unknown>).artwork_id ?? ""
+          ) || null,
+          seller_user_id: sellerUserId || null,
+          provenance_transfer_id: transferId || null,
+        });
+        lifecycleWarnings.push("deal_linkage_rejected");
       } else {
         const deal = mapDealRow(dealRow as Record<string, unknown>);
         const execution = await resolveDealExecution(service, {

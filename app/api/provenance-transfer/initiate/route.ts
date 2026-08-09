@@ -79,8 +79,15 @@ export async function POST(req: Request) {
       : typeof rec.transferType === "string"
         ? rec.transferType.trim()
         : "";
-  const note =
-    typeof rec.note === "string" ? rec.note.trim().slice(0, 2000) : "";
+  // Security: this is a free-text human note. Legitimate deal-linked transfers
+  // are created by /api/deals/[id]/execution with a machine note — never here —
+  // so any deal marker in user input is an injection attempt. Neutralise the
+  // exact tokens the accept-side parser keys on (deal_id=<uuid>, deal_execution)
+  // so a note can never forge a deal linkage. Defence-in-depth alongside the
+  // artwork/participant check in the accept route.
+  const note = (typeof rec.note === "string" ? rec.note.trim().slice(0, 2000) : "")
+    .replace(/deal_id\s*=\s*[0-9a-f-]{0,40}/gi, "[removed]")
+    .replace(/deal_execution/gi, "[removed]");
 
   if (!/^[0-9a-f-]{36}$/i.test(artworkId)) {
     return NextResponse.json({ error: "Invalid artwork_id." }, { status: 400 });

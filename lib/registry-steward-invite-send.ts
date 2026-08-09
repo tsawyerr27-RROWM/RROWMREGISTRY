@@ -328,7 +328,12 @@ async function sendCustodyStewardInvite(
       recipient_email: email,
       status: "pending_acceptance",
       transfer_type: transferType,
-      note: input.personalMessage || null,
+      // Security: neutralise deal markers in user-supplied text so a steward
+      // invite note cannot forge a deal linkage (see accept route guard).
+      note:
+        (input.personalMessage || "")
+          .replace(/deal_id\s*=\s*[0-9a-f-]{0,40}/gi, "[removed]")
+          .replace(/deal_execution/gi, "[removed]") || null,
       invite_token: token,
       token_expires_at: expiresAt,
     })
