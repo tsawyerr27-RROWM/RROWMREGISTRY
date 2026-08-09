@@ -14,6 +14,7 @@ import { useMaxWidth767 } from "@/hooks/useMaxWidth767";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 import { narrativeControl } from "@/styles/system-design";
+import { narrativeGutterClass } from "@/styles/narrative-layout";
 
 /**
  * Entry: full-viewport hero with local pigment field, typographic watermark, scroll depth.
@@ -80,7 +81,7 @@ export default function HeroSection() {
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-[color-mix(in_srgb,var(--rrowm-base-soft)_90%,var(--rrowm-parchment)_10%)] via-[var(--rrowm-base-soft)]/32 to-transparent" />
 
-      <div className="relative z-10 mx-auto w-full max-w-[min(100%,88rem)] px-6 md:px-14 lg:px-[max(1.5rem,calc((100vw-72rem)/2+1rem))]">
+      <div className={`relative z-10 ${narrativeGutterClass}`}>
         <div className="grid gap-12 lg:grid-cols-12 lg:items-end lg:gap-6">
           <motion.div
             className="lg:col-span-7 lg:col-start-1"

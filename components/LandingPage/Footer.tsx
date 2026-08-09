@@ -10,6 +10,7 @@ import { useLocalePreferences } from "@/components/providers/LocalePreferencesPr
 import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 import type { MessageKey } from "@/lib/locale-messages";
 import type { RegionId } from "@/lib/regions";
+import { landingGutterXClass } from "@/styles/landing-redesign";
 
 export function Footer() {
   const { regionId, setRegionId, t } = useLocalePreferences();
@@ -23,7 +24,7 @@ export function Footer() {
     >
       {isHome ? (
         <section
-          className="archive-footer__closing relative overflow-hidden px-6 pb-16 pt-24 md:px-10 md:pb-20 md:pt-28 lg:px-[max(2rem,calc((100vw-72rem)/2+1.5rem))]"
+          className={`archive-footer__closing relative overflow-hidden pb-16 pt-24 md:pb-20 md:pt-28 ${landingGutterXClass}`}
           aria-labelledby="landing-footer-closing"
         >
           <div className="archive-footer__scan pointer-events-none absolute inset-0 opacity-[0.35]" aria-hidden />
@@ -38,7 +39,7 @@ export function Footer() {
         </section>
       ) : null}
 
-      <div className="archive-footer__surface px-6 pb-[max(3rem,env(safe-area-inset-bottom,0px))] pt-12 md:px-10 md:pb-16 md:pt-14 lg:px-[max(2rem,calc((100vw-72rem)/2+1.5rem))]">
+      <div className={`archive-footer__surface pb-[max(3rem,env(safe-area-inset-bottom,0px))] pt-12 md:pb-16 md:pt-14 ${landingGutterXClass}`}>
         <div className="archive-footer__grid pointer-events-none absolute inset-0 opacity-[0.22]" aria-hidden />
         <div className="relative mx-auto w-full max-w-[min(100%,76rem)]">
           <div className="flex flex-col gap-14 lg:flex-row lg:items-start lg:justify-between lg:gap-16">

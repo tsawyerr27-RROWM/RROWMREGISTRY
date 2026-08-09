@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { FullBleed } from "@/components/LandingPage/FullBleed";
 import { control } from "@/styles/system-design";
+import { narrativeGutterClass } from "@/styles/narrative-layout";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fieldExplorerRecordsHref } from "@/lib/field-nav";
 
@@ -70,7 +71,7 @@ export function PortfolioWorkspaceSection() {
           aria-hidden
         />
 
-        <div className="relative mx-auto w-full max-w-[min(100%,88rem)] px-6 md:px-14 lg:px-[max(1.5rem,calc((100vw-72rem)/2+1rem))]">
+        <div className={`relative ${narrativeGutterClass}`}>
           <div className="lg:grid lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:items-start lg:gap-x-20 xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)] xl:gap-x-28">
             <header className="max-w-lg lg:sticky lg:top-28">
               <h2 className="font-serif text-[clamp(2rem,4vw,3.1rem)] font-normal leading-[1.08] tracking-tight text-neutral-950">

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useLocalePreferences } from "@/components/providers/LocalePreferencesProvider";
 import { fieldHomeHref } from "@/lib/field-nav";
 import type { MessageKey } from "@/lib/locale-messages";
+import { narrativeGutterClass } from "@/styles/narrative-layout";
 
 type Props = {
   titleKey: MessageKey;
@@ -15,7 +16,7 @@ export function FieldRouteStub({ titleKey, descriptionKey }: Props) {
   const { t } = useLocalePreferences();
 
   return (
-    <section className="mx-auto w-full max-w-[min(100%,88rem)] px-6 py-16 md:px-14 md:py-24 lg:px-[max(1.5rem,calc((100vw-72rem)/2+1rem))]">
+    <section className={`${narrativeGutterClass} py-16 md:py-24`}>
       <div className="max-w-2xl">
         <h1 className="font-serif text-3xl font-normal tracking-tight text-neutral-950 md:text-4xl">
           {t(titleKey)}

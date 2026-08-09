@@ -13,9 +13,13 @@ export const landingMotion = {
   driftDuration: 18,
 } as const;
 
+/** Horizontal gutter padding only — for full-bleed surfaces (e.g. footer) that manage their own width */
+export const landingGutterXClass =
+  "px-6 md:px-10 lg:px-[max(2rem,calc((100vw-72rem)/2+1.5rem))]";
+
 export const landingLayout = {
-  gutter:
-    "mx-auto w-full max-w-[min(100%,76rem)] px-6 md:px-10 lg:px-[max(2rem,calc((100vw-72rem)/2+1.5rem))]",
+  gutter: `mx-auto w-full ${landingGutterXClass}`,
+  gutterX: landingGutterXClass,
   sectionY: "py-28 md:py-36 lg:py-40",
   sectionYTight: "py-24 md:py-32",
   scrollAnchor: "scroll-mt-24",

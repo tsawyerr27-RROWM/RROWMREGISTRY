@@ -33,7 +33,7 @@ export const narrativeScrollAnchorClass = "scroll-mt-8";
  * Max-width container + horizontal gutters — matches hero, ink chapters, About.
  */
 export const narrativeGutterClass =
-  "mx-auto w-full max-w-[min(100%,88rem)] px-6 md:px-14 lg:px-[max(1.5rem,calc((100vw-72rem)/2+1rem))]";
+  "mx-auto w-full px-6 md:px-14 lg:px-[max(1.5rem,calc((100vw-72rem)/2+1rem))]";
 
 /** Vertical padding for primary narrative sections */
 export const narrativeSectionPadYClass = "py-28 md:py-40";
