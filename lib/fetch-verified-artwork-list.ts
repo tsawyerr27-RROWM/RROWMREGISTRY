@@ -4,6 +4,7 @@ import {
   type RegistrySort,
   sortToOrder,
 } from "@/lib/registry-list-params";
+import { fieldSearchIlikePattern } from "@/lib/field-search-contract";
 
 const SELECT_ARTWORKS = `
   id,
@@ -36,9 +37,8 @@ export async function fetchVerifiedArtworkList(
     .select(SELECT_ARTWORKS, { count: "exact" })
     .eq("verification_status", "verified");
 
-  const term = q.trim().replace(/,/g, " ");
-  if (term) {
-    const p = `%${term}%`;
+  const p = fieldSearchIlikePattern(q);
+  if (p) {
     query = query.or(`title.ilike.${p},registry_id.ilike.${p}`);
   }
 

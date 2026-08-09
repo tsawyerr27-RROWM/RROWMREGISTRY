@@ -116,19 +116,31 @@ export async function getPendingTransfers(
     console.warn("[ownership-resolver] list_pending_acquisition_transfers", rpcError.message);
   }
 
+  // Pending transfers are addressed by email until acceptance, when
+  // recipient_user_id is set. So we must match by BOTH recipient_user_id AND
+  // recipient_email — resolve the email first and include it in the SQL filter,
+  // otherwise email-addressed rows are never fetched and the email arm of the
+  // filter below is unreachable (they carry a null recipient_user_id).
+  const email = await resolveUserEmailForId(service, uid);
+
+  const orConditions = [`recipient_user_id.eq.${uid}`];
+  if (email) {
+    // ilike (no wildcards) = case-insensitive exact match, mirroring the JS
+    // comparison below. Emails cannot contain PostgREST-structural chars.
+    orConditions.push(`recipient_email.ilike.${email}`);
+  }
+
   const { data: transfers, error } = await service
     .from("provenance_transfers")
     .select(
       "id, artwork_id, status, invite_token, note, recipient_user_id, recipient_email, from_user_id"
     )
     .eq("status", "pending_acceptance")
-    .or(`recipient_user_id.eq.${uid}`)
+    .or(orConditions.join(","))
     .order("created_at", { ascending: false })
     .limit(50);
 
   if (error || !transfers?.length) return [];
-
-  const email = await resolveUserEmailForId(service, uid);
 
   return transfers
     .filter((row) => {

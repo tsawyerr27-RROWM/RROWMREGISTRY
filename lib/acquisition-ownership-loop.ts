@@ -4,6 +4,7 @@ import {
   dealExecutionNoteMarker,
   mapProvenanceStatusToExecution,
   mergeAcquisitionExecutionIntoTerms,
+  resolveUserEmail,
   type AcquisitionExecutionRecord,
 } from "@/lib/deal-execution";
 import { otherDealParticipant } from "@/lib/deal-permissions";
@@ -369,10 +370,19 @@ export async function listPendingAcquisitionsForUser(
       );
     }
 
+    // Match by recipient_user_id AND recipient_email: pending rows are
+    // email-addressed (null recipient_user_id) until acceptance, so a
+    // user-id-only filter misses them.
+    const email = await resolveUserEmail(service, uid);
+    const orConditions = [`recipient_user_id.eq.${uid}`];
+    if (email) {
+      orConditions.push(`recipient_email.ilike.${email}`);
+    }
+
     const { data: legacyRows, error } = await service
       .from("provenance_transfers")
       .select("id, artwork_id, status, invite_token, note")
-      .eq("recipient_user_id", uid)
+      .or(orConditions.join(","))
       .eq("status", "pending_acceptance")
       .order("created_at", { ascending: false })
       .limit(50);

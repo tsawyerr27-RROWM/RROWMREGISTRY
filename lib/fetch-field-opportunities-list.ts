@@ -88,8 +88,7 @@ export async function fetchFieldOpportunitiesList(
   let query = supabase
     .from("field_briefs")
     .select(
-      "id, title, description, sector, practices_required, brief_type, closes_at, published_at, opens_at, gallery_id, galleries(name, slug, verified)",
-      { count: "exact" }
+      "id, title, description, sector, practices_required, brief_type, closes_at, published_at, opens_at, gallery_id, galleries(name, slug, verified)"
     )
     .eq("visibility_state", "published")
     .eq("participation_mode", "open");
@@ -113,7 +112,7 @@ export async function fetchFieldOpportunitiesList(
     );
   }
 
-  const { data, error, count } = await query;
+  const { data, error } = await query;
   if (error) {
     throw error;
   }
@@ -173,7 +172,12 @@ export async function fetchFieldOpportunitiesList(
 
   cards = sortCards(cards, params.sort);
 
-  const total = params.window === "all" ? count ?? cards.length : cards.length;
+  // `cards` is the fully filtered set (verified gallery + response window), so
+  // its length is the honest total for every window. The previous SQL `count`
+  // counted rows before those JS filters and advertised empty pages. (Caveat:
+  // if opportunities ever exceed PostgREST's default row cap, push the verified
+  // filter into SQL and paginate there instead.)
+  const total = cards.length;
   const start = (params.page - 1) * FIELD_OPPORTUNITY_PAGE_SIZE;
   const rows = cards.slice(start, start + FIELD_OPPORTUNITY_PAGE_SIZE);
 

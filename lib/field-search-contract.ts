@@ -17,9 +17,21 @@ export const FIELD_SEARCH_QUERY_PARAM = "q" as const;
 
 const REGISTRY_ID_PREFIX = /^RROWM-/i;
 
-/** Normalise user input for ilike / URL params (trim, collapse commas). */
+/**
+ * Normalise user input for ilike / URL params.
+ *
+ * Strips characters that are structural in a PostgREST `.or()` filter string —
+ * commas separate conditions, parentheses group them. Left in, a natural art
+ * title like "Untitled (Study)" corrupts the filter grammar: empty results in
+ * the record lists (errors swallowed) and a 500 in the opportunities explorer
+ * (which rethrows). Replacing them with spaces keeps search usable.
+ */
 export function normalizeFieldSearchTerm(raw: string): string {
-  return raw.trim().replace(/,/g, " ");
+  return raw
+    .trim()
+    .replace(/[(),]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /** Heuristic: hub routes Registry-ID-shaped input to Field Record. */

@@ -5,6 +5,7 @@ import {
   type RegistrySort,
   sortToOrder,
 } from "@/lib/registry-list-params";
+import { fieldSearchIlikePattern } from "@/lib/field-search-contract";
 
 const SELECT_ARTIST_ARTWORKS = `
   id,
@@ -50,9 +51,8 @@ export async function fetchArtistArtworkList(
     );
   }
 
-  const term = q.trim().replace(/,/g, " ");
-  if (term) {
-    const p = `%${term}%`;
+  const p = fieldSearchIlikePattern(q);
+  if (p) {
     query = query.or(`title.ilike.${p},registry_id.ilike.${p}`);
   }
 
