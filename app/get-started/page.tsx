@@ -4,7 +4,7 @@ import { GetStartedView } from "@/components/get-started/GetStartedView";
 import { LandingPageShell } from "@/components/LandingPage/redesign";
 
 export const metadata: Metadata = {
-  title: "Take part · RROWM Registry",
+  title: "Take part",
   description:
     "Artist, institutional, or collector entry. Each path joins the same catalogue and chronology model.",
 };

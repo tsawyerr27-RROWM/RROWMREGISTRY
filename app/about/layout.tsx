@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "About · RROWM",
+  title: "About",
   description:
     "Institutional record of RROWM: cultural infrastructure for authorship, stewardship, chronology, and the Studio · Registry · Field ecosystem.",
 };

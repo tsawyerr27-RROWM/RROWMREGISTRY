@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { FieldLayoutChrome } from "@/components/Field/FieldLayoutChrome";
 
 export const metadata: Metadata = {
-  title: "The Field · RROWM",
+  title: "The Field",
   description:
     "Public discovery and presence on RROWM. Browse Creatives, Organisations, Registry records, and Opportunities.",
 };

@@ -8,7 +8,7 @@ import {
 } from "@/components/legal/LegalPageShell";
 
 export const metadata: Metadata = {
-  title: "Terms of Service · RROWM Registry",
+  title: "Terms of Service",
   description:
     "Terms governing use of the RROWM registry, verification, and user responsibilities.",
 };

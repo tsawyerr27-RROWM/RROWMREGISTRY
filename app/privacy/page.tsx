@@ -9,7 +9,7 @@ import {
 } from "@/components/legal/LegalPageShell";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy · RROWM Registry",
+  title: "Privacy Policy",
   description:
     "How RROWM handles account, ownership, value, visibility, export, and deletion.",
 };

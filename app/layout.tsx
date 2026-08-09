@@ -29,14 +29,26 @@ const uiFont = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "RROWM Registry",
-  description: "Cultural registry infrastructure",
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon-32.png", type: "image/png", sizes: "32x32" },
-    ],
-    apple: [{ url: "/icon-512.png", type: "image/png", sizes: "512x512" }],
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://rrowm.io",
+  ),
+  title: {
+    default: "RROWM Registry",
+    template: "%s · RROWM",
+  },
+  description: "A verification layer for the global art market.",
+  openGraph: {
+    type: "website",
+    siteName: "RROWM Registry",
+    title: "RROWM Registry",
+    description: "A verification layer for the global art market.",
+    url: "/",
+    locale: "en_GB",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "RROWM Registry",
+    description: "A verification layer for the global art market.",
   },
 };
 
