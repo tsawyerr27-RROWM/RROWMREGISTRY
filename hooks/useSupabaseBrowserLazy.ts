@@ -13,8 +13,9 @@ export function useSupabaseBrowserLazy(): () => SupabaseClient {
   const ref = useRef<SupabaseClient | null>(null);
   return useCallback(() => {
     if (!ref.current) {
+      // getSupabaseBrowserClient now returns a real client or throws — never null.
       ref.current = getSupabaseBrowserClient();
     }
-    return ref.current!;
+    return ref.current;
   }, []);
 }

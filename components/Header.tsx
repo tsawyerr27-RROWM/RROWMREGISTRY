@@ -142,22 +142,31 @@ export default function Header({ initialPathname = "" }: { initialPathname?: str
   }, []);
 
   useEffect(() => {
-    const supabase = sb();
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, nextSession) => {
-      setSession(nextSession ?? null);
-      if (
-        event === "INITIAL_SESSION" ||
-        event === "SIGNED_IN" ||
-        event === "SIGNED_OUT" ||
-        event === "TOKEN_REFRESHED" ||
-        event === "USER_UPDATED"
-      ) {
-        setHydrated(true);
-      }
-    });
-    return () => subscription.unsubscribe();
+    // The header is global. If the browser Supabase client is unavailable
+    // (misconfigured env), degrade to a signed-out header instead of throwing
+    // and white-screening every page.
+    let subscription: { unsubscribe: () => void } | null = null;
+    try {
+      const supabase = sb();
+      const result = supabase.auth.onAuthStateChange((event, nextSession) => {
+        setSession(nextSession ?? null);
+        if (
+          event === "INITIAL_SESSION" ||
+          event === "SIGNED_IN" ||
+          event === "SIGNED_OUT" ||
+          event === "TOKEN_REFRESHED" ||
+          event === "USER_UPDATED"
+        ) {
+          setHydrated(true);
+        }
+      });
+      subscription = result.data.subscription;
+    } catch (error) {
+      console.error("[RROWM] Header auth subscription unavailable", error);
+      setSession(null);
+      setHydrated(true);
+    }
+    return () => subscription?.unsubscribe();
   }, [sb]);
 
   useEffect(() => {
@@ -167,13 +176,18 @@ export default function Header({ initialPathname = "" }: { initialPathname?: str
       return;
     }
     void (async () => {
-      const supabase = sb();
-      const { data } = await supabase
-        .from("actor_profiles")
-        .select("role")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
-      if (!cancelled) setActorRole(data?.role ? String(data.role) : null);
+      try {
+        const supabase = sb();
+        const { data } = await supabase
+          .from("actor_profiles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .maybeSingle();
+        if (!cancelled) setActorRole(data?.role ? String(data.role) : null);
+      } catch (error) {
+        console.error("[RROWM] Header actor-role lookup failed", error);
+        if (!cancelled) setActorRole(null);
+      }
     })();
     return () => {
       cancelled = true;

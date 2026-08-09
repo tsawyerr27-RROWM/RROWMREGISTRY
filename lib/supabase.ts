@@ -1,7 +1,7 @@
 "use client";
 
 import { createBrowserClient } from "@supabase/ssr";
-import type { Session } from "@supabase/supabase-js";
+import type { Session, SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Resolve env ONLY at runtime (never at module scope)
@@ -22,9 +22,16 @@ let browserClient:
   | null = null;
 
 /**
- * Browser-only Supabase client (safe for Next.js build + SSR)
+ * Browser-only Supabase client (safe for Next.js build + SSR).
+ *
+ * Throws on misconfiguration instead of returning `null` — a null client used
+ * to be laundered through callers and blow up later as
+ * `Cannot read properties of null (reading 'auth')`, white-screening every page
+ * via the global Header. Failing fast here keeps the type honest (always a real
+ * client) so no caller needs a non-null assertion. Callers that must tolerate a
+ * missing client (e.g. the Header auth subscription) should catch this.
  */
-export function getSupabaseBrowserClient() {
+export function getSupabaseBrowserClient(): SupabaseClient {
   if (typeof window === "undefined") {
     throw new Error("[RROWM] Supabase browser client requested on the server.");
   }
@@ -32,8 +39,9 @@ export function getSupabaseBrowserClient() {
   const { url, key } = getSupabaseEnv();
 
   if (!url || !key) {
-    console.warn("[RROWM] Missing Supabase env in browser");
-    return null as any;
+    throw new Error(
+      "[RROWM] Supabase browser client unavailable: missing NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY."
+    );
   }
 
   if (!browserClient) {
