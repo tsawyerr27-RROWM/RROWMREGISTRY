@@ -1,16 +1,10 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
-
-function authorizeCron(req: Request): boolean {
-  const secret = process.env.CRON_SECRET?.trim();
-  if (!secret) return process.env.NODE_ENV !== "production";
-  const header = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
-  return header === secret;
-}
+import { authorizeCronRequest } from "@/lib/cron-auth";
 
 /** Expire stale export download links. */
 export async function POST(req: Request) {
-  if (!authorizeCron(req)) {
+  if (!authorizeCronRequest(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

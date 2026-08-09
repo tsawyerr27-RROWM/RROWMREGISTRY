@@ -68,29 +68,36 @@ export async function issueCertificateForVerifiedArtwork(
   }
 
   // Best-effort: anchor certificate hash for later audit / disclosure.
-  try {
-    const { data: certRow } = await supabase
-      .from("certificates")
-      .select("id, certificate_hash, issued_at")
-      .eq("artwork_id", artworkId)
-      .order("issued_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+  // Only on first issuance — the RPC is idempotent (created=false on repeat
+  // calls), and re-anchoring an already-issued certificate writes duplicate
+  // record_anchors rows that pollute the audit trail.
+  if (created) {
+    try {
+      const { data: certRow } = await supabase
+        .from("certificates")
+        .select("id, certificate_hash, issued_at")
+        .eq("artwork_id", artworkId)
+        .order("issued_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-    const certId = certRow?.id ? String(certRow.id) : null;
-    const certHash = String(certRow?.certificate_hash || certificate_hash).trim();
-    if (certId && certHash) {
-      await supabase.from("record_anchors").insert({
-        record_type: "certificate",
-        record_id: certId,
-        hash: /^[0-9a-f]{64}$/i.test(certHash)
-          ? certHash
-          : sha256Hex(certHash),
-        anchored_at: new Date().toISOString(),
-      });
+      const certId = certRow?.id ? String(certRow.id) : null;
+      const certHash = String(
+        certRow?.certificate_hash || certificate_hash
+      ).trim();
+      if (certId && certHash) {
+        await supabase.from("record_anchors").insert({
+          record_type: "certificate",
+          record_id: certId,
+          hash: /^[0-9a-f]{64}$/i.test(certHash)
+            ? certHash
+            : sha256Hex(certHash),
+          anchored_at: new Date().toISOString(),
+        });
+      }
+    } catch {
+      // ignore anchoring failures
     }
-  } catch {
-    // ignore anchoring failures
   }
 
   return { ok: true, created, certificate_hash };

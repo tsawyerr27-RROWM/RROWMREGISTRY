@@ -7,16 +7,10 @@ import {
 } from "@/lib/account-lifecycle/lifecycle-service";
 import { sendResendEmail } from "@/lib/emails/send-email";
 import { buildAccountPermanentlyDeletedEmail } from "@/lib/emails/account-lifecycle-email";
-
-function authorizeCron(req: Request): boolean {
-  const secret = process.env.CRON_SECRET?.trim();
-  if (!secret) return process.env.NODE_ENV !== "production";
-  const header = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
-  return header === secret;
-}
+import { authorizeCronRequest } from "@/lib/cron-auth";
 
 export async function POST(req: Request) {
-  if (!authorizeCron(req)) {
+  if (!authorizeCronRequest(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
