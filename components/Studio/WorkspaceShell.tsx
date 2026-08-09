@@ -276,11 +276,10 @@ export function WorkspaceShellFooterLinks({
         </p>
       ) : (
         <Link href="/studio/account" className={`mb-4 block text-sm font-medium transition ${link}`}>
-          {t("nav.myAccount")} →
+          {t("nav.myAccount")}
         </Link>
       )}
       <div className="flex items-center gap-2">
-        <RegistryCatalogueInfoTooltip theme={isLight ? "light" : "dark"} />
         {catalogueActive ? (
           <p
             className={`text-sm font-medium ${catalogueClass}`}
@@ -290,9 +289,10 @@ export function WorkspaceShellFooterLinks({
           </p>
         ) : (
           <Link href={fieldExplorerRecordsHref()} className={`text-sm font-medium transition ${link}`}>
-            {t("studio.shell.browseCatalogue")} →
+            {t("studio.shell.browseCatalogue")}
           </Link>
         )}
+        <RegistryCatalogueInfoTooltip theme={isLight ? "light" : "dark"} />
       </div>
       {extra}
     </>
