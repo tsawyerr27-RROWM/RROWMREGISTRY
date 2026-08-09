@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createSupabaseServiceClient } from "@/lib/supabase-service-role";
+import { verifyAdminToken } from "@/lib/admin-session";
 
 export async function GET() {
   try {
     const cookieStore = await cookies();
     const session = cookieStore.get("rrowm_admin_session");
-    if (!session?.value) {
+    const payload = await verifyAdminToken(session?.value);
+    if (!payload) {
       return NextResponse.json({ count: null }, { status: 401 });
     }
 

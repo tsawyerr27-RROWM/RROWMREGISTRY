@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
+import { verifyAdminToken } from "@/lib/admin-session";
 import { studioLayoutGuardSkipsPath } from "@/lib/studio-route-access";
 
 const ADMIN_ROUTE_PREFIXES = ["/admin", "/internal"];
@@ -57,7 +58,8 @@ export async function proxy(request: NextRequest) {
     const isAdminLogin = pathname === "/admin";
     if (!isAdminApi && !isAdminLogin) {
       const adminSession = request.cookies.get("rrowm_admin_session");
-      if (!adminSession?.value) {
+      const payload = await verifyAdminToken(adminSession?.value);
+      if (!payload) {
         return NextResponse.redirect(new URL("/admin", request.url));
       }
     }

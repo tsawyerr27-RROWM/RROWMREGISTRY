@@ -2,6 +2,8 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import { verifyAdminToken } from "@/lib/admin-session";
+
 export type AdminApiContext = {
   service: SupabaseClient;
 };
@@ -24,7 +26,8 @@ export async function requireAdminApi(
   const cookieStore = await cookies();
   const session = cookieStore.get("rrowm_admin_session");
 
-  if (!session?.value) {
+  const payload = await verifyAdminToken(session?.value);
+  if (!payload) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
 
